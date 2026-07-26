@@ -1155,3 +1155,21 @@ which `mode.svg` in the closed set does not depict state anyway. With the keys o
 the shelf the second row held nothing, and a rule with nothing on one side of it
 is a line, so the 6px spine is now the single break under the masthead.
 **Not explicitly requested** — flagged for review.
+
+## 2026-07-27 — The mode key sizes itself, and stands slightly apart
+**Decided:** Two smaller calls inside the mode control. First, `.mode-btn` sets
+its own height, padding and type in `assets/base.css` rather than joining the
+`.home-link, .repo-link` sizing rule in `index.html`, so those numbers are now
+written in two files. Second, it takes a `0.5rem` left margin inside `.keys`,
+wider than the `0.6rem` gap the two address keys keep between themselves.
+**Why:** On the first, the mode control is the only key that appears on every
+page in the family, and a tool page has no `.keys` row to inherit from, so the
+alternative was tool pages and the index sizing their corner separately, which
+is the drift the index's comment was written to prevent. Duplicated numbers that
+are checked against each other beat one page's rule that two other pages cannot
+see. On the second, the rule that used to separate the page's controls from its
+addresses is gone, and the extra gap is the only thing left saying that two of
+these keys leave the site and one acts on it.
+**Not explicitly requested** — flagged for review. Either is a one-line change:
+add `.mode-btn` to the shared selector in `index.html:58` to centralise the
+size, or drop the `.keys .mode-btn` rule for a uniform row.
