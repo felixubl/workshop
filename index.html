@@ -49,32 +49,41 @@
     justify-content: space-between;
     gap: 0.75rem clamp(1rem, 4vw, 2.5rem);
   }
-  /* The way back to fubl.org: a solid square, the bare host in mono, no arrow
-     and no mark, exactly as that site labels its own header buttons. It takes
-     the primary 2px weight and the ink ground.
+  /* The two keys, built the way the personal site builds its header buttons:
+     one shape at two ranks. Everything that decides SIZE is set once, here, so
+     the pair cannot drift apart again — the same 44px target, the same padding,
+     the same mono at the same size. Only the ground and the border weight
+     differ, and that difference IS the rank. Box-sizing is border-box, so 2px
+     on one and 1px on the other still measure the same height. */
+  .home-link,
+  .repo-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: var(--pp-target);
+    padding: 0 0.9rem;
+    border-radius: var(--pp-radius-md);
+    text-decoration: none;
+    font-family: var(--pp-font-mono);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  /* The way back to fubl.org: a solid square, the bare host in mono, exactly as
+     that site labels its own header buttons. It takes the primary 2px weight
+     and the ink ground.
 
      It does NOT cast, and hovering it does not move it. The citron key on the
      personal site does both, because there it is that page's whole licensed
      breach of law 04 — the one loud object on a page of quiet prose. Here the
-     cast is already spent, on the live tool card, and law 00 is not a
-     preference: at two breaches each carries half the weight, which is worse
-     than none. So this takes the system's ordinary button behaviour instead —
-     hover changes the ground to plate 3, press moves 1px down-right. */
+     cast belongs to the live tool cards, and law 00 is not a preference: at two
+     breaches each carries half the weight, which is worse than none. So this
+     takes the system's ordinary button behaviour instead — hover changes the
+     ground to plate 3, press moves 1px down-right. */
   .home-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    min-height: 46px;
-    padding: 0.5rem 0.9rem;
     background: var(--pp-edge);
     border: var(--pp-rule-structure) solid var(--pp-edge);
-    border-radius: var(--pp-radius-md);
     color: var(--pp-paper);
-    text-decoration: none;
-    font-family: var(--pp-font-mono);
-    font-size: 0.76rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
   }
   .home-link::before {
     content: '';
@@ -173,54 +182,23 @@
     padding-top: 0.35rem;
     border-top: var(--pp-rule-line) solid var(--pp-line);
   }
-  /* Icons here and words everywhere else, because these three are logos before
-     they are names. The negative margin pulls the first 44px hit box back so
-     the icon, not its target, lines up with the page's left edge. */
-  .socials {
-    display: flex;
-    align-items: center;
-    gap: 0.1rem;
-    margin-left: -0.6rem;
-  }
-  .socials a {
-    width: 44px;
-    height: 44px;
-    display: grid;
-    place-items: center;
-    color: var(--pp-muted);
-    /* PREPRINT underlines every link with a border, which is right for a link
-       in prose and wrong under a logo — it drew a rule under the icon row. */
-    border-bottom: 0;
-  }
-  .socials a:hover {
-    color: var(--pp-plate-3-text);
-  }
   /* The repo takes the secondary weight, because border weight IS the
-     hierarchy here: 2px is primary, 1px is secondary. The two buttons are the
-     same object at two ranks, which is how the personal site's three differ
-     from each other rather than by inventing a third ground. Lowercase because
-     both labels are addresses and not words. */
+     hierarchy here: 2px is primary, 1px is secondary. The two keys are one
+     object at two ranks, which is how the personal site's keys differ from each
+     other rather than by inventing a second ground — so everything except the
+     border weight is shared with .home-link above, and the two are the same
+     size to the pixel. Lowercase because both labels are addresses, not words.
+
+     Its mark is the GitHub logo where the primary key carries a plain square.
+     That is the one place the pair is allowed to differ in kind: fubl.org is a
+     place and takes the system's own square, while a repository is somewhere
+     specific and the reader recognises the logo before they read the path. */
   .repo-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    min-height: 38px;
-    padding: 0 0.75rem;
     background: transparent;
     color: var(--pp-ink);
     border: var(--pp-rule-line) solid var(--pp-line);
-    border-radius: var(--pp-radius-md);
-    text-decoration: none;
-    font-family: var(--pp-font-mono);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
   }
-  .repo-link::before {
-    content: '';
-    width: 0.4rem;
-    height: 0.4rem;
-    background: currentColor;
+  .repo-link svg {
     flex: none;
   }
   .repo-link:hover {
@@ -237,48 +215,12 @@
     margin-left: auto;
   }
 
-  /* The two site keys, and the note pointing at one of them. */
+  /* The two site keys. */
   .keys {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.6rem;
-  }
-
-  /* The note is the inversion of the personal site's scrawl, and deliberately
-     so. Over there the page is quiet prose and the exception is something
-     handwritten and crooked. Here the page is already loud — nineteen tilted
-     stickers, cards off axis, a plate cast out of register — so a second
-     handwritten thing is not an exception, it is more of the same. On this
-     page the licensed deviation is being STRICT: no rotation, no curve, no
-     hand.
-
-     Everything about it obeys a rule the rest of the page is breaking. It sits
-     on the axis. It is mono, which is the voice for anything stated as fact.
-     The arrow is drawn to the iconography law — 16-unit grid, horizontal and
-     45° only, square caps — so it is the one arrow here that could have come
-     out of the closed glyph set. Plate 2 at its text variant, because the note
-     is .72rem and a plate hands over below 18px.
-
-     It is a real item in the row rather than absolutely positioned: a straight
-     thing that floats off the grid would give the whole move away. */
-  .note {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    white-space: nowrap;
-    font-family: var(--pp-font-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.06em;
-    color: var(--pp-plate-2-text);
-  }
-  .note svg {
-    flex: none;
-  }
-  /* Below the fold the keys stack, the arrow stops pointing at anything, and a
-     note that points at nothing is worse than no note. */
-  @media (max-width: 820px) {
-    .note { display: none; }
   }
 
   main {
@@ -354,11 +296,18 @@
     color: var(--pp-muted);
   }
 
-  /* The live card is the one element on the page that casts (law 04). The
-     cast is the same silhouette printed again in a plate ink, off register —
+  /* The cast: the same silhouette printed again in a plate ink, off register,
      which is the plate mark itself. Hover slips it FURTHER out of register
      instead of lifting the card. Press pulls it back in. Nothing moves here
-     that a printer could not do. */
+     that a printer could not do.
+
+     This started as the page's single law 04 breach, when one tool was live.
+     With a second live tool it is no longer a breach: "the second time a
+     violation appears, it stops being one — name it, give it a slot, write its
+     states, or stop using it." This is that slot. The cast now means built and
+     open, it is declared here with its hover and press states, and it belongs
+     to .tool-card-live rather than to whichever card happened to be first. No
+     other element on the index casts. */
   .tool-card-live {
     background: var(--pp-surface);
     border: var(--pp-rule-structure) solid var(--pp-edge);
@@ -432,16 +381,6 @@
     color: var(--pp-faint);
   }
 
-  /* Below the fold point the rule stops being a rule and becomes a stack, so
-     the hard-right group gives up its corner and joins the left margin like
-     everything else. */
-  @media (max-width: 700px) {
-    .rule-end {
-      margin-left: 0;
-      width: 100%;
-      justify-content: space-between;
-    }
-  }
 </style>
 </head>
 <body>
@@ -452,21 +391,14 @@
       <h1 class="wordmark">Felix' <span class="mark-w">W</span>orkshop<span class="nails" aria-hidden="true"><i></i><i></i><i></i><i></i></span></h1>
       <div class="keys">
         <a class="home-link" href="https://fubl.org">fubl.org</a>
-        <span class="note">
-          This page is open source!
-          <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M2 8h10M8.5 4.5 12 8l-3.5 3.5"></path></svg>
-        </span>
-        <a class="repo-link" href="https://github.com/felixubl/workshop" target="_blank" rel="noopener">felixubl/workshop</a>
+        <a class="repo-link" href="https://github.com/felixubl/workshop" target="_blank" rel="noopener">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.42c.58.1.79-.25.79-.55v-2.1c-3.2.7-3.88-1.4-3.88-1.4-.53-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.18-1.49 3.14-1.18 3.14-1.18.63 1.59.24 2.76.12 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.26 5.69.42.36.79 1.06.79 2.14v3.17c0 .3.2.66.8.55A11.5 11.5 0 0 0 12 .5z"></path></svg>
+          felixubl/workshop
+        </a>
       </div>
     </div>
 
     <div class="rule-row">
-      <div class="socials">
-        <a href="https://github.com/felixubl" title="GitHub" aria-label="GitHub"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.42c.58.1.79-.25.79-.55v-2.1c-3.2.7-3.88-1.4-3.88-1.4-.53-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.18-1.49 3.14-1.18 3.14-1.18.63 1.59.24 2.76.12 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.26 5.69.42.36.79 1.06.79 2.14v3.17c0 .3.2.66.8.55A11.5 11.5 0 0 0 12 .5z"></path></svg></a>
-        <a href="https://bsky.app/profile/fubl.org" title="Bluesky" aria-label="Bluesky"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.77 3.61C8.32 5.53 11.07 9.4 12 11.48c.93-2.08 3.68-5.95 6.23-7.87 1.84-1.38 4.77-2.44 4.77.9 0 .67-.38 5.6-.6 6.4-.79 2.78-3.62 3.49-6.14 3.06 4.4.75 5.52 3.23 3.1 5.71-4.6 4.71-6.61-1.18-7.13-2.69-.1-.28-.14-.4-.14-.29 0-.11-.05.01-.14.29-.52 1.51-2.53 7.4-7.13 2.69-2.42-2.48-1.3-4.96 3.1-5.71-2.52.43-5.35-.28-6.14-3.06-.22-.8-.6-5.73-.6-6.4 0-3.34 2.93-2.28 4.77-.9z"></path></svg></a>
-        <a href="https://linkedin.com/in/felixubl" title="LinkedIn" aria-label="LinkedIn"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3V9zm6.5 0h3.83v1.64h.05c.53-1 1.83-2.06 3.77-2.06 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.35c0-1.28-.02-2.92-1.78-2.92-1.78 0-2.05 1.39-2.05 2.83V21h-4V9z"></path></svg></a>
-      </div>
-
       <div class="rule-end">
         <button class="mode-btn" type="button" data-mode-toggle data-mode-title aria-label="Toggle colour mode"></button>
       </div>
@@ -479,7 +411,7 @@
 
     <div class="tally">
       <span class="ink-bar" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-      <code>1 live · 18 in the queue</code>
+      <code>2 live · 17 in the queue</code>
     </div>
 
     <div class="tools">
@@ -490,6 +422,15 @@
           <span class="badge badge-live">Live</span>
         </div>
         <p>Draw pixel art on a grid-snapped canvas. Start from a classic sprite size (16&times;16 up to a full Game Boy screen) or type your own, then export exactly what you drew as a real SVG file.</p>
+        <span class="open">Open tool <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M2.5 8h10M8.5 4l4 4-4 4"></path></svg></span>
+      </a>
+
+      <a class="tool-card tool-card-live" href="random-numbers/">
+        <div class="tool-head">
+          <h3>Random Number Generator</h3>
+          <span class="badge badge-live">Live</span>
+        </div>
+        <p>Draw numbers from eleven distributions, from a plain uniform range through normal, exponential, binomial and Poisson to gamma and beta, in up to ten dimensions at once. Every run prints the seed it used, so any set of numbers can be drawn again, and the whole sample exports as CSV or JSON.</p>
         <span class="open">Open tool <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M2.5 8h10M8.5 4l4 4-4 4"></path></svg></span>
       </a>
 
@@ -531,14 +472,6 @@
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>Generate QR codes styled to match this site instead of plain black squares, still verified to scan cleanly, plus Wi-Fi, contact-card, and calendar-event QR codes, barcode generation and reading, and batch generation from a CSV for print-ready label sheets.</p>
-      </div>
-
-      <div class="tool-card tool-card-soon reg-3">
-        <div class="tool-head">
-          <h3>Random Number Generator</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>Draw random numbers from uniform, normal, exponential, binomial, Poisson, and other distributions, in up to ten dimensions at once, with an optional seed for reproducible runs. Export the results as a table, CSV, or JSON.</p>
       </div>
 
       <div class="tool-card tool-card-soon reg-2">
@@ -645,5 +578,6 @@
   </footer>
 
 </div>
+<script src="assets/controls.js"></script>
 </body>
 </html>

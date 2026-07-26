@@ -892,3 +892,247 @@ with it, matching the page's other mono micro-labels.
 **Not explicitly requested** — the rule weight change, keeping the year static
 (it will read 2026 next January), and leaving the dead base.css rules in place.
 Flagged for review.
+
+## 2026-07-27 — Random Number Generator built as the second live tool
+
+**Decided:** Turned the "Random Number Generator" coming-soon card into a real
+tool at `random-numbers/`, following the same three-file shape as `draw-svg/`.
+Eleven distributions (uniform continuous and integer, normal, log-normal,
+exponential, gamma, beta, binomial, Poisson, geometric, triangular), up to ten
+dimensions per draw, an optional seed, a decimals control, a summary table, and
+copy/CSV/JSON export.
+
+**Why:** Asked which backlog ideas were simple enough to build in one pass, this
+was the one card that is a single tool rather than a toolkit, so building it
+retires the card outright instead of leaving a partly-filled category. It also
+needs no dependency at all: every sampler is arithmetic.
+
+**Not explicitly requested** — the following calls inside it, all flagged for
+review:
+
+- **Folder `random-numbers/`, not `random/` or `rng/`.** The public URL is the
+  thing that has to survive, and it reads as what it is.
+- **Eleven distributions, not the six the card named.** The card said "and other
+  distributions"; gamma and beta cost a dozen lines each on top of the normal
+  sampler already needed, and geometric and triangular are one line each.
+- **A summary table (mean, sd, min, median, max per dimension).** Not promised
+  on the card. A generator you cannot sanity-check is a generator you have to
+  take on faith, and it is computed on the raw doubles rather than the rounded
+  display values.
+- **The seed is always reported, never silently applied.** An empty seed field
+  means a fresh run, and the seed that run used is printed with the results as a
+  button that puts it back in the field. The alternative (pre-filling the field
+  with a seed) makes every second press of Draw return the same numbers, which
+  reads as a broken button.
+- **Caps: draws × dimensions ≤ 100,000, and binomial trials ≤ 1000.** The first
+  keeps the tab responsive; the second is a real numerical bound, since the
+  binomial sampler walks the CDF from `(1-p)^trials` and that underflows to zero
+  not far past 1000.
+- **The table shows the first 200 rows and says so.** The exports carry
+  everything.
+
+**Verified**, not just built: every sampler was checked against its theoretical
+mean and variance over 400,000 draws (21 parameter cases, all within 4 standard
+errors on the mean and 3% on the variance), the uniform stream passes a
+chi-square over ten bins, seeding is reproducible and seed strings that differ
+by a trailing space diverge, and the page itself was driven in Chrome (both
+modes, 500px and 1280px, every distribution, validation paths, and both export
+formats) with no console errors and no failed requests.
+
+## 2026-07-27 — The card cast is now a declared token, not a law 04 breach
+
+**Decided:** The second live tool takes `.tool-card-live` unchanged, so the
+index now carries two hard casts. The comment above that rule was rewritten to
+say what the cast now is.
+
+**Why:** With one tool live, the cast was the page's single licensed law 04
+breach. `laws.md` is explicit about what happens next: "the second time a
+violation appears, it stops being one — name it, give it a slot, write its
+states, or stop using it." `.tool-card-live` is that slot: it is a named class
+with hover and press states already written, and the cast now means "built and
+open" rather than "this one card is special". The alternative, giving only one
+of the two live cards a cast, makes the distinction arbitrary and does not
+survive the third tool.
+
+**Not explicitly requested** — flagged for review. If the cast should instead be
+retired from the cards and spent somewhere else now that "live" is a category
+rather than an exception, that is a one-line change.
+
+## 2026-07-27 — Tool-page chrome moved from draw-svg into base.css
+
+**Decided:** `.tool-title`, `.toolbar`, `.group` and `.group label` moved from
+`draw-svg/style.css` into `assets/base.css`, unchanged.
+
+**Why:** They were written when draw-svg was the only tool, but they are the
+shape of every tool page: back link and title under the spine, controls in a
+band above the work. base.css says on its own first line that it holds "the
+classes every tool reuses", and the second tool needing byte-identical copies is
+exactly the drift that layer exists to prevent. Verified that draw-svg renders
+identically afterwards (computed font, size, toolbar rule and label metrics all
+unchanged).
+
+**Not explicitly requested** — flagged for review. It touches a file that
+predates the request, but it moves rules rather than changing any.
+
+## 2026-07-27 — Tables, the select shell, and the JSON shape in the RNG
+
+**Decided:** Three smaller calls inside `random-numbers/` that set precedent for
+the next tool:
+
+- **A real `<table>`, not the system's grid-of-divs.** PREPRINT ships
+  `components/data/DataTable.jsx`, which lays out rows as CSS grid with an
+  explicit track per column. That construction exists because it is React
+  rendering into divs. In hand-written HTML the honest equivalent is a `<table>`
+  with `table-layout: fixed`, which gives the same fixed tracks plus real
+  headers, real scope, and a shape a screen reader can navigate. Everything else
+  the spec asks for is kept exactly: hairline per row, a 2px rule under the
+  caption, no rounded shell, and sideways scroll below its min width instead of
+  reflowing into stacks.
+- **`.select-shell` (the drawn chevron over a native `<select>`) lives in the
+  tool's own `style.css`, not in `base.css`.** It is the second half of a
+  pattern the system does define (`Field.prompt.md`, `as="select"`), so it will
+  almost certainly be wanted again, but one use is not yet a shared class.
+  Promote it to `base.css` when a second tool needs a select, the way the
+  toolbar was promoted today.
+- **JSON export flattens to a plain array when dimensions is 1.** A
+  single-dimension run exports `[0.41, 0.87, ...]` rather than
+  `[[0.41], [0.87], ...]`. The nested shape only exists to be unwrapped again.
+  Multi-dimension runs stay nested, and `"dimensions"` in the payload says which
+  shape to expect. CSV is unaffected: it is always `n` plus one column per
+  dimension.
+
+Also, minor: pressing Enter anywhere in the toolbar draws, the way it would in a
+real form.
+
+**Why:** Each is a place where the reference design does not answer the question
+directly, either because it assumes React or because it never covers exports.
+Recording them so the next tool copies a decision rather than re-litigating one.
+
+**Not explicitly requested** — flagged for review.
+
+## 2026-07-27 — Every native widget in both tools is now drawn
+
+**Decided:** Added `assets/controls.js`, a shared layer that replaces the five
+things the browser was still styling itself: the number field's spinner arrows,
+the checkbox, the colour swatch and the OS colour dialog behind it, the menu a
+`<select>` opens, and the grey box a `title` attribute produces.
+
+**Why:** Asked to check both live tools for features without a custom-made
+equivalent. These five were the whole list. Everything else (buttons, fields,
+tags, badges, the mode square, the 26 cursors, the focus ring, `::selection`,
+scrollbars, and the range slider) was already the system's.
+
+**The architecture, which was the real call: enhancement, not replacement.** The
+native `<input>` and `<select>` stay in the DOM as the value, hidden, and the
+drawn control writes to them and fires the events they would have fired. So
+`draw-svg/script.js` still reads `colorInput.value` and still listens for
+`change` on its checkbox, and neither tool script needed a single line changed
+for any of this. A `MutationObserver` on the body picks up controls built after
+load, which is how the generator's parameter fields get steppers when the
+distribution changes, again without the tool knowing this file exists. The cost
+is a load-order requirement: `controls.js` goes after the tool's own script, and
+that is now written into the README's checklist.
+
+**Not explicitly requested** — the following, all flagged for review:
+
+- **Popovers cast, tooltips do not.** Law 04 licenses one hard offset per view
+  for something temporarily on top of the work rather than part of it, which is
+  exactly a colour picker or an open list. Only one popover is ever open, so the
+  budget holds at one. Tooltips take an ordinary soft shadow instead, so they
+  are the second elevation level rather than a second breach.
+- **The picker's crosshair and hue thumb are squares on the cut scale, not
+  rings.** A circle would be law 01's one borrowed radius, and the popover's cast
+  already holds that view's single breach. Law 00 says the second one does not
+  add, it divides.
+- **The colour palette is the classic sixteen paint colours, not the PREPRINT
+  plates.** Plates carry no fixed meaning (law 05), and a palette of them in a
+  drawing tool would teach that they do. These are art colours, chosen to be
+  useful for pixel art rather than to match the site.
+- **No stepper arrows on touch.** A drawn spinner is a pointer affordance, and
+  two 21px targets are worse than the numeric keyboard. The field takes its
+  ordinary padding back there.
+- **`title` became `data-tip` everywhere, including the homepage.** That meant
+  the three social links on `index.html` and, in `assets/theme.js`, the mode
+  button's own label, which appears on every page in the family. Leaving the
+  homepage on OS tooltips while both tools had drawn ones would have been the
+  exact inconsistency this was meant to remove. `index.html` now loads
+  `controls.js` for the tooltips alone.
+- **The select keeps type-ahead.** Typing jumps to a distribution whether the
+  list is open or shut. It is most of what a native select is actually for and
+  the usual thing a hand-built listbox loses.
+
+**Verified in Chrome across all three pages, both modes:** no native colour
+input, no native select and no `title` attribute left anywhere; steppers step,
+clamp at min/max, mark their limit and handle a 0.01 step; the checkbox drives
+the grid overlay; the picker's palette, hex field and drag all reach the native
+input and then the painted pixel; Escape closes a popover and returns focus to
+its trigger; keyboard selection and type-ahead both drive a real run; tooltips
+appear on elements built at runtime; only one popover is ever open; reduced
+motion resolves the open animation to 0s rather than leaving a panel invisible;
+and neither page overflows at 500px. No console errors, no failed requests.
+
+**One fix found by driving it rather than reading it:** the steppers' limit
+state went stale when a tool set a field's value without firing an event, which
+draw-svg's size presets do. The limit is now recomputed on pointer arrival
+instead of trusted from the last event seen.
+
+## 2026-07-27 — Three smaller calls inside the drawn controls
+
+**Decided:**
+
+- **`assets/controls.js` is a new shared layer, not per-tool code.** It sits
+  beside `theme.js` as the second script every page loads. The alternative,
+  drawing these controls inside whichever tool first needed them, guarantees two
+  divergent colour pickers by the third tool.
+- **Stepper arrows hold to repeat** (one step, then 420ms, then every 55ms),
+  matching what the native spinner does. Without it, setting a canvas from 32 to
+  256 is 224 clicks.
+- **Popovers reposition on scroll rather than closing.** Closing on scroll is the
+  more common pattern and is less code, but a colour picker that vanishes
+  because the wheel moved a notch is a control that punishes the hand. They are
+  positioned in viewport coordinates so no scroll container can clip them.
+
+**Why:** Each is a place where the cheap implementation and the right behaviour
+differ, and the cheap one would have been invisible in a screenshot.
+
+**Not explicitly requested** — flagged for review.
+
+## 2026-07-27 — Masthead stripped to two matched keys
+
+**Decided:** Removed the "This page is open source!" note and its arrow, removed
+the three social icons, gave the repo link the GitHub logo, and made the two
+keys one shape at two ranks.
+
+**Why:** Asked for exactly this. The socials belong on the personal site, and a
+sentence pointing at a button is a sentence explaining a button.
+
+**Not explicitly requested** — three readings inside it, flagged for review:
+
+- **"Same size" was read as same height and same shape, not same width.** Both
+  keys are now 44px tall with identical padding and identical mono at 0.74rem,
+  and every size property is set once on a shared selector so they cannot drift
+  apart again. Their widths still differ, because `fubl.org` and
+  `felixubl/workshop` are different lengths and padding a short address out to
+  match a long one would make the pair look like a segmented control rather than
+  two keys. What still separates them is border weight alone (2px primary, 1px
+  secondary), which is the system's own hierarchy.
+- **The mode button was left alone on the rule row.** With the socials gone that
+  row carries one control against a lot of air. The alternative is to fold the
+  button up beside the keys and drop the row, which would also drop the hairline
+  the page opens on. Kept the row for the rule. Say the word if the tighter
+  masthead is better.
+- **Deleted the 700px `.rule-end` override.** It existed to reflow a row that had
+  a social group in it; with one item and `margin-left: auto` there is nothing to
+  reflow, and the override would have thrown the mode button to the left edge on
+  a phone. Verified it stays hard right at 500px.
+
+**Verified** in Chrome, both modes, 1280px and 500px: both keys measure 44px
+tall and share a top edge, the note and socials are gone from the DOM, the repo
+link carries the icon, nothing overflows, no console errors, no failed requests.
+
+**Addendum, same change:** the primary key's height came from a bare `46px`,
+which is not a step on any declared scale. Both keys now take `--pp-target`
+(44px), the system's own target token, which is where the shared height had to
+come from if the pair was going to be defined once rather than twice. It makes
+`fubl.org` two pixels shorter than it was. **Not explicitly requested** —
+flagged for review.

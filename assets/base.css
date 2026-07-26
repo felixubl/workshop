@@ -111,6 +111,47 @@ header {
   color: var(--pp-ink);
 }
 
+/* Tool-page chrome. Every tool opens the same way: a back link and a title
+   under the spine, then a band of controls above the work. These lived in
+   draw-svg's own stylesheet while it was the only tool; with a second one they
+   are shared, and a tool's style.css should now hold only the controls that
+   tool actually invents.
+
+   The toolbar is chrome, not a panel: a rule separates it from the work rather
+   than a box enclosing it. */
+.tool-title {
+  margin: 0.6rem 0 0;
+  font-family: var(--pp-font-display);
+  font-weight: var(--pp-weight-head);
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+  letter-spacing: var(--pp-track-head);
+  line-height: 1.1;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 20px;
+  align-items: center;
+  padding: 1.15rem 0 1.35rem;
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+  margin-bottom: 1.5rem;
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.group label {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: 0.06em;
+  color: var(--pp-muted);
+}
+
 /* Mono eyebrows and labels: lowercase, letterspaced, never below 11.2px. */
 .section-label {
   font-family: var(--pp-font-mono);
@@ -299,12 +340,337 @@ button[disabled] {
   border-color: var(--pp-plate-3);
 }
 
+/* ── Drawn controls ───────────────────────────────────────────────────────
+   Everything below replaces a widget the browser would otherwise draw itself.
+   The behaviour lives in assets/controls.js, which keeps the native input as
+   the value and hides it; these are the faces. Nothing here invents a shape:
+   borders carry the hierarchy, hover moves a border colour or a tint, press
+   moves 1px down-right, radii stay on the cut scale. */
+
+/* The number field's spinner. The native arrows are the platform's chrome in
+   the corner of a PREPRINT field, so they go, and controls.js hangs drawn ones
+   in the same place. */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  appearance: textfield;
+}
+
+.stepper {
+  position: relative;
+  display: inline-flex;
+}
+.stepper .field {
+  padding-right: 28px;
+}
+.stepper-arrows {
+  position: absolute;
+  top: var(--pp-rule-line);
+  right: var(--pp-rule-line);
+  bottom: var(--pp-rule-line);
+  width: 22px;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  /* A split inside a container, which is what a hairline is for. */
+  border-left: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+.stepper-arrow {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--pp-muted);
+}
+.stepper-arrow:first-child {
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+.stepper-arrow:hover {
+  background: var(--pp-tint);
+  color: var(--pp-ink);
+}
+.stepper-arrow:active {
+  transform: translate(1px, 1px);
+}
+.stepper-arrow.is-limit {
+  color: var(--pp-faint);
+  cursor: var(--pp-cursor-blocked);
+}
+.stepper-arrow.is-limit:hover {
+  background: transparent;
+}
+/* A drawn spinner is a pointer affordance. On touch the numeric keyboard is
+   the better control and two 21px targets are the worse one, so there are no
+   arrows at all and the field takes its ordinary padding back. */
+@media (hover: none) {
+  .stepper-arrows {
+    display: none;
+  }
+  .stepper .field {
+    padding-right: 0.7rem;
+  }
+}
+
 .checkbox {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 0.86rem;
   color: var(--pp-muted);
+}
+/* The box states itself by filling with ink, the way the system's Segmented
+   states its selected option. The native input stays in place and stays
+   focusable — this is its face, not a replacement for it. */
+.checkbox input[type='checkbox'] {
+  appearance: none;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  background: var(--pp-paper);
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-sm);
+}
+.checkbox:hover input[type='checkbox'] {
+  border-color: var(--pp-edge);
+}
+.checkbox input[type='checkbox']::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  background: var(--pp-paper);
+  opacity: 0;
+  transition: opacity var(--pp-dur-fast) var(--pp-ease-out);
+  /* The system's own check.svg, inlined so the mask carries an explicit ink
+     rather than depending on how an engine resolves currentColor in a mask. */
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='square'%3E%3Cpath d='M3 8.5l3.5 3.5L13 5.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='square'%3E%3Cpath d='M3 8.5l3.5 3.5L13 5.5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.checkbox input[type='checkbox']:checked {
+  background: var(--pp-edge);
+  border-color: var(--pp-edge);
+}
+.checkbox input[type='checkbox']:checked::after {
+  opacity: 1;
+}
+
+/* Popovers: the shell shared by the colour picker and the select. Law 04
+   licenses one hard cast per view for something temporarily on top of the work
+   rather than part of it, which is exactly this. Only one popover is ever open,
+   so the budget holds at one. Tooltips take the ordinary soft level instead. */
+.picker {
+  position: relative;
+  display: inline-flex;
+}
+.pop {
+  position: fixed;
+  z-index: 40;
+  padding: 0.55rem;
+  background: var(--pp-surface);
+  border: var(--pp-rule-structure) solid var(--pp-edge);
+  border-radius: var(--pp-radius-lg);
+  box-shadow: 4px 4px 0 var(--pp-edge);
+  animation: pop-in var(--pp-dur-state) var(--pp-ease-out);
+}
+/* Motion licence 2, continuity of state: opacity plus a 3px offset so the
+   panel does not teleport. Never more, and 0ms under reduced motion because
+   the duration token itself goes to zero. */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+
+/* The colour control. The trigger is the same 44px square the native swatch
+   occupied, so no toolbar moves. */
+.swatch-trigger {
+  width: var(--pp-target);
+  height: var(--pp-target);
+  padding: 3px;
+  background: var(--pp-paper);
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-md);
+}
+.swatch-trigger:hover {
+  border-color: var(--pp-edge);
+}
+.swatch-trigger:active {
+  transform: translate(1px, 1px);
+}
+.swatch-chip {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--pp-radius-sm);
+}
+
+.pop-color {
+  width: 212px;
+}
+.sv {
+  position: relative;
+  height: 132px;
+  border-radius: var(--pp-radius-sm);
+  background-color: var(--hue, #f00);
+  background-image: linear-gradient(to bottom, transparent, #000), linear-gradient(to right, #fff, transparent);
+  cursor: var(--pp-cursor-cross);
+  touch-action: none;
+}
+.hue {
+  position: relative;
+  height: 14px;
+  margin-top: 8px;
+  border-radius: var(--pp-radius-sm);
+  background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+  cursor: var(--pp-cursor-resize-col);
+  touch-action: none;
+}
+/* Both marks are squares on the cut scale, not rings. A circle here would be
+   law 01's one borrowed radius spent on a crosshair, and the popover's cast
+   already holds this view's single breach. */
+.sv-mark,
+.hue-mark {
+  position: absolute;
+  border-radius: var(--pp-radius-sm);
+  pointer-events: none;
+}
+.sv-mark {
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%);
+  border: 2px solid #fff;
+  outline: 1px solid rgba(0, 0, 0, 0.5);
+}
+/* Over the pale corner of the field, a white mark disappears. */
+.sv-mark.on-light {
+  border-color: #171716;
+  outline-color: rgba(255, 255, 255, 0.6);
+}
+.hue-mark {
+  top: 50%;
+  width: 9px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  border: 2px solid #fff;
+  outline: 1px solid rgba(0, 0, 0, 0.5);
+}
+.pop-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.pop-row .hex {
+  flex: 1;
+  min-width: 0;
+  height: var(--pp-target-compact);
+  font-family: var(--pp-font-mono);
+  font-size: 0.82rem;
+}
+.pop-row .eyedrop {
+  flex: none;
+  width: var(--pp-target-compact);
+  height: var(--pp-target-compact);
+  padding: 0;
+}
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+.swatch-dot {
+  height: 20px;
+  padding: 0;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-sm);
+}
+.swatch-dot:hover {
+  border-color: var(--pp-edge);
+}
+.swatch-dot:active {
+  transform: translate(1px, 1px);
+}
+
+/* The select. The trigger is a field, because that is what it is. */
+.select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  min-width: 12rem;
+  text-align: left;
+}
+.select-trigger:hover {
+  border-color: var(--pp-edge);
+}
+.select-trigger[aria-expanded='true'] {
+  border-color: var(--pp-edge);
+}
+.select-trigger svg {
+  flex: none;
+  color: var(--pp-muted);
+}
+.select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pop-list {
+  padding: 4px;
+  min-width: 13rem;
+  max-height: 302px;
+  overflow-y: auto;
+}
+.pop-item {
+  display: block;
+  width: 100%;
+  height: var(--pp-target-compact);
+  padding: 0 0.6rem;
+  background: transparent;
+  border: 0;
+  border-radius: var(--pp-radius-sm);
+  font-family: var(--pp-font-body);
+  font-size: 0.92rem;
+  color: var(--pp-ink);
+  text-align: left;
+  white-space: nowrap;
+}
+.pop-item.is-active {
+  background: var(--pp-tint);
+}
+/* The chosen option fills with ink, the same statement the Segmented control
+   makes and the same one draw-svg's active size preset makes. */
+.pop-item[aria-selected='true'] {
+  background: var(--pp-edge);
+  color: var(--pp-paper);
+}
+
+/* Tooltips. A `title` is the operating system's box on the operating system's
+   delay; this is the same information in the page's own voice. It takes the
+   ordinary soft elevation rather than a cast, which keeps law 04's single hard
+   cast with the popovers. */
+.tip {
+  position: fixed;
+  z-index: 60;
+  max-width: 16rem;
+  padding: 0.26rem 0.5rem;
+  background: var(--pp-surface);
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-sm);
+  box-shadow: 0 2px 8px var(--pp-shadow);
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: 0.06em;
+  line-height: 1.45;
+  color: var(--pp-ink);
+  pointer-events: none;
+  animation: pop-in var(--pp-dur-fast) var(--pp-ease-out);
 }
 
 /* Drag-and-drop target, shared by every tool that accepts an upload. Dashed

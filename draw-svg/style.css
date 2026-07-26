@@ -1,41 +1,6 @@
-/* Tool-specific layout only — faces, buttons, tags, fields and the mode
-   control come from ../assets/base.css over the vendored system. This file
-   arranges this tool's own controls and nothing else. */
-
-.tool-title {
-  margin: 0.6rem 0 0;
-  font-family: var(--pp-font-display);
-  font-weight: var(--pp-weight-head);
-  font-size: clamp(1.6rem, 4vw, 2.1rem);
-  letter-spacing: var(--pp-track-head);
-  line-height: 1.1;
-}
-
-/* The toolbar is chrome, not a panel: rules separate it from the work rather
-   than a box enclosing it. */
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px 20px;
-  align-items: center;
-  padding: 1.15rem 0 1.35rem;
-  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
-  margin-bottom: 1.5rem;
-}
-
-.group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.group label {
-  font-family: var(--pp-font-mono);
-  font-size: var(--pp-size-label);
-  letter-spacing: 0.06em;
-  color: var(--pp-muted);
-}
+/* Tool-specific layout only — faces, buttons, tags, fields, the tool title and
+   the toolbar band all come from ../assets/base.css over the vendored system.
+   This file arranges this tool's own controls and nothing else. */
 
 .dim-sep {
   color: var(--pp-faint);
@@ -46,12 +11,6 @@
 input[type='number'].field {
   width: 84px;
   font-family: var(--pp-font-mono);
-}
-
-input[type='color'].swatch {
-  width: 44px;
-  padding: 3px;
-  border-radius: var(--pp-radius-sm);
 }
 
 .toolbar input[type='range'] {

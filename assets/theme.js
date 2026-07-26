@@ -19,11 +19,15 @@
    takes you to is its tooltip — and that string is mode-dependent, so it is
    written from here rather than hard-coded in each page's markup. The
    aria-label stays fixed in the markup and describes the control itself, which
-   is what a screen reader needs first. */
+   is what a screen reader needs first.
+
+   It sets data-tip, not title: assets/controls.js draws the tooltip, and a
+   title attribute would put the operating system's grey box on the one control
+   that appears on every page in the family. */
 function syncModeLabels() {
   var next = document.documentElement.dataset.mode === 'dark' ? 'Light' : 'Dark';
   document.querySelectorAll('[data-mode-title]').forEach(function (el) {
-    el.title = next;
+    el.dataset.tip = next;
   });
 }
 

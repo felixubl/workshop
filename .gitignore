@@ -1,0 +1,4 @@
+# A local working copy of the design system, synced from ~/code/design-system.
+# The workshop consumes it through assets/preprint/, which is vendored and
+# tracked. This folder is the source it came from and is not part of the site.
+design/

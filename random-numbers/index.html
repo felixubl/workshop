@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Random Number Generator — Felix' Workshop</title>
+<meta name="description" content="Draw random numbers from uniform, normal, exponential, binomial, Poisson and other distributions, in up to ten dimensions at once, with an optional seed for reproducible runs.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
+<script src="../assets/theme.js"></script>
+<link rel="stylesheet" href="../assets/preprint/styles.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <h1 class="tool-title">Random Number Generator</h1>
+    </div>
+    <button class="mode-btn" type="button" data-mode-toggle data-mode-title aria-label="Toggle colour mode"></button>
+  </header>
+
+  <div class="spine"></div>
+
+  <div class="toolbar">
+    <div class="group">
+      <label for="dist">Distribution</label>
+      <select class="field" id="dist"></select>
+    </div>
+
+    <div class="group" id="params"></div>
+
+    <div class="group">
+      <label for="count">Draws</label>
+      <input class="field num" type="number" id="count" min="1" max="100000" step="1" value="20">
+      <label for="dims">Dimensions</label>
+      <input class="field num narrow" type="number" id="dims" min="1" max="10" step="1" value="1">
+    </div>
+
+    <div class="group">
+      <label for="seed">Seed</label>
+      <input class="field seed" type="text" id="seed" placeholder="auto" spellcheck="false" autocomplete="off">
+      <button class="btn-ghost" type="button" id="newSeed">New</button>
+    </div>
+
+    <div class="group">
+      <label for="decimals">Decimals</label>
+      <input class="field num narrow" type="number" id="decimals" min="0" max="15" step="1" value="4">
+    </div>
+
+    <div class="group">
+      <button class="btn-ghost" type="button" id="clear">Clear</button>
+      <button class="btn-primary" type="button" id="draw">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M2.5 2.5h11v11h-11z"></path><path d="M5.5 5.5h.01M10.5 10.5h.01M8 8h.01" stroke-width="2"></path></svg>
+        Draw
+      </button>
+    </div>
+  </div>
+
+  <p class="hint" id="hint" hidden></p>
+
+  <div class="card prompt" id="empty">
+    Pick a distribution, say how many numbers you want, and press Draw. Leave the seed on
+    <strong>auto</strong> for a fresh run every time. The seed each run used is printed with the
+    results, so any run can be repeated afterwards. Everything is generated in your browser.
+  </div>
+
+  <section id="results" hidden>
+    <div class="result-bar">
+      <p class="section-label">Draws</p>
+      <div class="group">
+        <button class="btn-ghost" type="button" id="copy">Copy table</button>
+        <button class="btn-ghost" type="button" id="csv">CSV</button>
+        <button class="btn-ghost" type="button" id="json">JSON</button>
+      </div>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-cap">
+        <code id="capLabel"></code>
+        <code class="meta" id="capMeta"></code>
+      </div>
+      <div class="sheet-scroll">
+        <table id="drawTable"></table>
+      </div>
+    </div>
+    <p class="sheet-note" id="drawNote" hidden></p>
+
+    <p class="section-label summary-label">Summary</p>
+    <div class="sheet">
+      <div class="sheet-scroll">
+        <table id="statsTable"></table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="script.js"></script>
+<script src="../assets/controls.js"></script>
+</body>
+</html>

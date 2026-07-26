@@ -10,13 +10,15 @@ source so that claim is checkable rather than just asserted.
 - [Pixel Art SVG Drawer](draw-svg/) — draw pixel art on a grid-snapped canvas,
   start from a classic sprite size or type your own, export exactly what you
   drew as a real SVG file.
+- [Random Number Generator](random-numbers/) — draw from eleven distributions in
+  up to ten dimensions, seeded and reproducible, with summary statistics and
+  CSV/JSON export.
 
 The homepage ([index.html](index.html)) also lists a long line-up of
-"coming soon" tool categories: PDF, image, SVG, QR/barcode, a random number
-generator, audio, video, text/document, CSV/spreadsheet, developer, font,
-color, archive, geospatial, calendar, email, and more. Each new tool lands in
-its own top-level folder and swaps its card's badge from "Coming soon" to
-"Live" once it's built.
+"coming soon" tool categories: PDF, image, SVG, QR/barcode, audio, video,
+text/document, CSV/spreadsheet, developer, font, color, archive, geospatial,
+calendar, email, and more. Each new tool lands in its own top-level folder and
+swaps its card's badge from "Coming soon" to "Live" once it's built.
 
 ## Stack
 
@@ -34,6 +36,17 @@ Three CSS layers, in this order:
 | shared chrome | [`assets/base.css`](assets/base.css) | the classes every tool reuses, built only from `--pp-*` tokens |
 | the workshop's own deviations | [`assets/site.css`](assets/site.css) | the whole list: halftone screen, category washes, sticker chips, the tilt |
 
+Two shared scripts sit alongside them.
+[`assets/theme.js`](assets/theme.js) sets `data-mode` before the first paint.
+[`assets/controls.js`](assets/controls.js) draws the five widgets the browser
+would otherwise style itself: the number field's spinner, the checkbox, the
+colour swatch and its OS dialog, the menu a `<select>` opens, and the grey box a
+`title` attribute produces. It works by enhancement, so the native `<input>` and
+`<select>` stay in the DOM as the value and keep firing `input` and `change`. A
+tool reads its controls exactly as if none of this existed, and a
+`MutationObserver` picks up controls built after load. Use `data-tip` rather
+than `title` for any tooltip.
+
 The one vendored file the workshop rewrites is
 [`assets/preprint/tokens/fonts.css`](assets/preprint/tokens/fonts.css), which
 self-hosts the faces instead of requesting them from Google Fonts. The family
@@ -46,7 +59,10 @@ names it declares must not change.
    `../assets/preprint/styles.css`, `../assets/base.css`, and
    `../assets/site.css`. Write only the tool-specific layout in the tool's own
    `style.css`.
-3. Add a card for it to the root [index.html](index.html), and move its badge
+3. At the end of `<body>`, load the tool's `script.js` and then
+   `../assets/controls.js`, in that order, so anything the tool builds at
+   startup is already in the DOM when the controls are drawn.
+4. Add a card for it to the root [index.html](index.html), and move its badge
    from "Coming soon" to "Live".
 
 ## License
