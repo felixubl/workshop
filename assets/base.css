@@ -162,34 +162,54 @@ header {
   margin: 0 0 1rem;
 }
 
-/* The mode control: one 34px square in the corner, holding a solid ink plate
-   and nothing else. No label, no icon of a moon, no third state.
+/* The mode control. It is not an icon, and the system is explicit about that:
+   the ink bullet, then a lowercase mono word naming the mode it would take you
+   to. That makes it the same object as every other key in a header here, at the
+   secondary rank — bullet, mono, 1px, cut corner.
 
-   It used to spell out both the mode it was in and the mode it would take you
-   to, which is three words explaining a control that has two positions and is
-   right there to try. The square is the plate; pressing it prints the other
-   way up. Every surface in the family uses this one, so the corner of a tool
-   page and the corner of the index are the same corner. */
+   It spent a while as the bullet alone, on the argument that spelling out both
+   the mode you are in and the mode you would get is three words explaining a
+   control with two positions. The count was the problem, not the word. One word
+   names the destination and nothing else, and it is the half that was doing the
+   work: the square is not a glyph for anything, it is the bullet those keys all
+   wear, so on its own it reads as a key whose label failed to load. There is
+   also no honest icon to reach for instead. The system's angle law rules out
+   the crescent, and a sun without arcs is a diamond with ticks.
+
+   Size is set here rather than by the page, because this is the one control on
+   every surface in the family and the corner of a tool page has to be the same
+   corner as the index. Its neighbours on the index match these numbers. */
 .mode-btn {
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--pp-target);
+  padding: 0 0.9rem;
   flex: none;
   background: transparent;
+  color: var(--pp-ink);
   border: var(--pp-rule-line) solid var(--pp-line);
   /* On the cut scale like every other control. Zero is not a step on it. */
   border-radius: var(--pp-radius-md);
-}
-.mode-btn:hover {
-  border-color: var(--pp-edge);
+  font-family: var(--pp-font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
 }
 .mode-btn::before {
   content: '';
-  width: 0.8rem;
-  height: 0.8rem;
-  background: var(--pp-ink);
+  width: 0.4rem;
+  height: 0.4rem;
+  background: currentColor;
+  flex: none;
+}
+.mode-btn:hover {
+  background: var(--pp-tint);
+  border-color: var(--pp-edge);
+}
+.mode-btn:active {
+  transform: translate(1px, 1px);
 }
 
 /* Icon buttons. Square-ish, on the cut scale — the round ones were a pill

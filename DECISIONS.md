@@ -1136,3 +1136,22 @@ which is not a step on any declared scale. Both keys now take `--pp-target`
 come from if the pair was going to be defined once rather than twice. It makes
 `fubl.org` two pixels shorter than it was. **Not explicitly requested** —
 flagged for review.
+
+## 2026-07-27 — The mode control gets its word back, and loses its rule
+**Decided:** The mode toggle is a labelled key again: the ink bullet followed by
+one lowercase mono word naming the mode it would take you to, at the same 44px
+height, padding and cut corner as the site keys beside it. On the index it moved
+up into the keys row, and the hairline that had been carrying it was deleted.
+**Why:** `design/handoff/workshop-migration.md:186` is explicit that the mode
+toggle is not an icon, and that brief is authoritative for this migration. The
+control had been cut back to the bullet alone on the argument that naming both
+the current and target mode is three words for a two-position control. That was
+right about the count and wrong about the word: the square is not a glyph for
+anything, it is the bullet the other keys wear, so alone it reads as a key whose
+label failed to load. One word names the destination without the redundancy. The
+alternative was drawing a mode glyph, which the system does not grant (its angle
+law rules out a crescent, and a sun without arcs is a diamond with ticks) and
+which `mode.svg` in the closed set does not depict state anyway. With the keys on
+the shelf the second row held nothing, and a rule with nothing on one side of it
+is a line, so the 6px spine is now the single break under the masthead.
+**Not explicitly requested** — flagged for review.

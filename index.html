@@ -17,11 +17,18 @@
     grid-template-rows: auto auto 1fr auto;
   }
 
-  /* The masthead is built the way fubl.org's is: two compact lines. A shelf
-     holding the name and the key to the other site, then a thin rule carrying
-     everything the reader might want to do next. No standfirst — the page is a
+  /* The masthead is built the way fubl.org's is, but on one line rather than
+     two: a shelf holding the name and the keys. No standfirst — the page is a
      grid of cards that say what they are, and a sentence explaining them above
      the fold was explaining the obvious.
+
+     There was a hairline under the shelf, carrying a second row. That row lost
+     the social icons and the note, and what remained was a rule running the
+     width of the page to hold one small square hard right. A rule is a
+     separator, and a separator with nothing on one side of it is a line. The
+     keys came up onto the shelf and the rule went, which leaves the 6px spine
+     as the single break under the masthead instead of a hairline and a spine
+     60px apart.
 
      The air is the personal site's too — a shorter top than this page used to
      take, measured in vh rather than vw so a laptop and a phone both get a
@@ -49,12 +56,18 @@
     justify-content: space-between;
     gap: 0.75rem clamp(1rem, 4vw, 2.5rem);
   }
-  /* The two keys, built the way the personal site builds its header buttons:
-     one shape at two ranks. Everything that decides SIZE is set once, here, so
-     the pair cannot drift apart again — the same 44px target, the same padding,
-     the same mono at the same size. Only the ground and the border weight
-     differ, and that difference IS the rank. Box-sizing is border-box, so 2px
-     on one and 1px on the other still measure the same height. */
+  /* The keys, built the way the personal site builds its header buttons: one
+     shape at two ranks. Everything that decides SIZE is set once, here, so they
+     cannot drift apart again — the same 44px target, the same padding, the same
+     mono at the same size. Only the ground and the border weight differ, and
+     that difference IS the rank. Box-sizing is border-box, so 2px on one and 1px
+     on the other still measure the same height.
+
+     The mode key is the third of them and sets its own size, in base.css, for
+     the one reason that outranks setting it here: it is the only key that
+     appears on every page in the family, so a tool page's corner and this one
+     have to agree even though a tool page has no .keys row. Those numbers are
+     these numbers. */
   .home-link,
   .repo-link {
     display: inline-flex;
@@ -170,18 +183,6 @@
     text-shadow: 0.05em 0.05em 0 var(--pp-plate-3);
   }
 
-  /* The rule. A hairline, then everything the reader might want next, in the
-     personal site's order: where else I am, on the left; what state this page
-     is in and how to change it, hard right. Nothing here is a nav — the page
-     is one screen of cards and the scroll is the navigation. */
-  .rule-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.15rem 1.4rem;
-    padding-top: 0.35rem;
-    border-top: var(--pp-rule-line) solid var(--pp-line);
-  }
   /* The repo takes the secondary weight, because border weight IS the
      hierarchy here: 2px is primary, 1px is secondary. The two keys are one
      object at two ranks, which is how the personal site's keys differ from each
@@ -208,19 +209,18 @@
   .repo-link:active {
     transform: translate(1px, 1px);
   }
-  .rule-end {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-left: auto;
-  }
-
-  /* The two site keys. */
+  /* Two addresses and a switch. The switch takes a wider gap than the two keys
+     take between themselves, because it is the one that acts on this page
+     rather than leaving it, and that is the only thing separating them now that
+     the rule is gone. */
   .keys {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.6rem;
+  }
+  .keys .mode-btn {
+    margin-left: 0.5rem;
   }
 
   main {
@@ -395,12 +395,7 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.42c.58.1.79-.25.79-.55v-2.1c-3.2.7-3.88-1.4-3.88-1.4-.53-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.18-1.49 3.14-1.18 3.14-1.18.63 1.59.24 2.76.12 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.26 5.69.42.36.79 1.06.79 2.14v3.17c0 .3.2.66.8.55A11.5 11.5 0 0 0 12 .5z"></path></svg>
           felixubl/workshop
         </a>
-      </div>
-    </div>
-
-    <div class="rule-row">
-      <div class="rule-end">
-        <button class="mode-btn" type="button" data-mode-toggle data-mode-title aria-label="Toggle colour mode"></button>
+        <button class="mode-btn" type="button" data-mode-toggle aria-label="Switch colour mode"><span data-mode-label>dark</span></button>
       </div>
     </div>
   </header>

@@ -15,19 +15,24 @@
   document.documentElement.dataset.mode = mode;
 })();
 
-/* The control carries no visible text, so the only thing that names the mode it
-   takes you to is its tooltip — and that string is mode-dependent, so it is
-   written from here rather than hard-coded in each page's markup. The
-   aria-label stays fixed in the markup and describes the control itself, which
-   is what a screen reader needs first.
+/* The control names the mode it would take you to, in the button itself, and
+   that string is mode-dependent so it is written from here rather than
+   hard-coded in each page's markup.
 
-   It sets data-tip, not title: assets/controls.js draws the tooltip, and a
-   title attribute would put the operating system's grey box on the one control
-   that appears on every page in the family. */
+   It writes a word rather than a tooltip. A tooltip is for a control that has
+   more to say than it can show, and this one has exactly one word to say. It
+   also only appears on hover, which is no help at all on the device where the
+   mode control matters most.
+
+   The accessible name is written alongside it and contains the visible word, so
+   the two agree rather than the aria-label overriding what a sighted reader can
+   already see. */
 function syncModeLabels() {
-  var next = document.documentElement.dataset.mode === 'dark' ? 'Light' : 'Dark';
-  document.querySelectorAll('[data-mode-title]').forEach(function (el) {
-    el.dataset.tip = next;
+  var next = document.documentElement.dataset.mode === 'dark' ? 'light' : 'dark';
+  document.querySelectorAll('[data-mode-label]').forEach(function (el) {
+    el.textContent = next;
+    var btn = el.closest('[data-mode-toggle]') || el;
+    btn.setAttribute('aria-label', 'Switch to ' + next + ' mode');
   });
 }
 
