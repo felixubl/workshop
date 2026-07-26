@@ -340,3 +340,20 @@ places where I did not match `Workshop.dc.html`.
 
 **Not explicitly requested** — every bullet above is my call except the first,
 which you chose; flagged for review.
+
+## 2026-07-26 — README kept as-is, style pass instead of a rewrite
+
+**Decided:** You asked to rewrite the README because the repo is no longer one
+SVG tool. It had already been rewritten for the multi-tool workshop in
+`700a0b2`, and every claim in it checks out against the repo, so I did not
+rewrite it. I made four style-only edits instead: three em dashes used as
+sentence punctuation and one semicolon, all against your standing prose
+preferences. The term/definition dash in the tools list stayed, on the reading
+that a list separator is not sentence punctuation.
+
+**Why:** Rewriting an accurate README would churn text without changing what it
+tells a reader. Verifying it and fixing what actually deviated seemed the
+better use of the turn. The list-item dash is the one judgement call and is
+easy to reverse.
+
+**Not explicitly requested** — flagged for review.

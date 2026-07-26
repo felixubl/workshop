@@ -12,7 +12,7 @@ source so that claim is checkable rather than just asserted.
   drew as a real SVG file.
 
 The homepage ([index.html](index.html)) also lists a long line-up of
-"coming soon" tool categories — PDF, image, SVG, QR/barcode, a random number
+"coming soon" tool categories: PDF, image, SVG, QR/barcode, a random number
 generator, audio, video, text/document, CSV/spreadsheet, developer, font,
 color, archive, geospatial, calendar, email, and more. Each new tool lands in
 its own top-level folder and swaps its card's badge from "Coming soon" to
@@ -30,7 +30,7 @@ Three CSS layers, in this order:
 
 | layer | file | rule |
 |---|---|---|
-| the system | [`assets/preprint/`](assets/preprint/) | **vendored verbatim — do not edit.** Re-copy from the design-system project when it changes. |
+| the system | [`assets/preprint/`](assets/preprint/) | **vendored verbatim, do not edit.** Re-copy from the design-system project when it changes. |
 | shared chrome | [`assets/base.css`](assets/base.css) | the classes every tool reuses, built only from `--pp-*` tokens |
 | the workshop's own deviations | [`assets/site.css`](assets/site.css) | the whole list: halftone screen, category washes, sticker chips, the tilt |
 
@@ -44,7 +44,7 @@ names it declares must not change.
 1. Create `<tool-name>/index.html`, `style.css`, `script.js`.
 2. Link `../assets/theme.js` (in `<head>`, before the stylesheets), then
    `../assets/preprint/styles.css`, `../assets/base.css`, and
-   `../assets/site.css`; write only the tool-specific layout in the tool's own
+   `../assets/site.css`. Write only the tool-specific layout in the tool's own
    `style.css`.
 3. Add a card for it to the root [index.html](index.html), and move its badge
    from "Coming soon" to "Live".
@@ -53,5 +53,5 @@ names it declares must not change.
 
 Code in this repo is unlicensed (all rights reserved) unless stated
 otherwise. The fonts in `assets/fonts/` are Hepta Slab and Zilla Slab (SIL
-Open Font License 1.1) and Cousine (Apache License 2.0) — see the `LICENSE-*`
+Open Font License 1.1) and Cousine (Apache License 2.0). See the `LICENSE-*`
 files alongside them.
