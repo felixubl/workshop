@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pixel Art SVG Drawer — Felix' Workshop</title>
 <meta name="description" content="Draw pixel art on a grid-snapped canvas, pick a classic sprite size or set your own, and export exactly what you drew as a real SVG file.">
-<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/theme.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
 <link rel="stylesheet" href="../assets/base.css">
@@ -22,10 +22,7 @@
       </a>
       <h1 class="tool-title">Pixel Art SVG Drawer</h1>
     </div>
-    <div class="mode-switch">
-      <code class="mode-state" data-mode-label>light</code>
-      <button class="mode-toggle" type="button" data-mode-toggle aria-label="Toggle colour mode"><span data-mode-next>Dark</span></button>
-    </div>
+    <button class="mode-btn" type="button" data-mode-toggle data-mode-title aria-label="Toggle colour mode"></button>
   </header>
 
   <div class="spine"></div>

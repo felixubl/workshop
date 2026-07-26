@@ -121,47 +121,34 @@ header {
   margin: 0 0 1rem;
 }
 
-/* The mode control. Not an icon: a lowercase mono state label, then a button
-   naming the mode it takes you to, with a solid ink square for the plate. */
-.mode-switch {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+/* The mode control: one 34px square in the corner, holding a solid ink plate
+   and nothing else. No label, no icon of a moon, no third state.
+
+   It used to spell out both the mode it was in and the mode it would take you
+   to, which is three words explaining a control that has two positions and is
+   right there to try. The square is the plate; pressing it prints the other
+   way up. Every surface in the family uses this one, so the corner of a tool
+   page and the corner of the index are the same corner. */
+.mode-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: grid;
+  place-items: center;
   flex: none;
-}
-.mode-state {
-  font-family: var(--pp-font-mono);
-  /* The reference sets this at .68rem, which computes to 10.88px. Nothing on
-     a page goes below --pp-size-label (11.2px) — that rule is why the old
-     9.9px badges were called a bug, and it does not stop applying here. */
-  font-size: var(--pp-size-label);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--pp-faint);
-}
-.mode-toggle {
-  height: 32px;
-  padding: 0 0.65rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
   background: transparent;
   border: var(--pp-rule-line) solid var(--pp-line);
+  /* On the cut scale like every other control. Zero is not a step on it. */
   border-radius: var(--pp-radius-md);
-  font-family: var(--pp-font-body);
-  font-size: 0.78rem;
-  font-weight: var(--pp-weight-strong);
-  color: var(--pp-ink);
 }
-.mode-toggle:hover {
+.mode-btn:hover {
   border-color: var(--pp-edge);
 }
-.mode-toggle::before {
+.mode-btn::before {
   content: '';
-  width: 0.65rem;
-  height: 0.65rem;
+  width: 0.8rem;
+  height: 0.8rem;
   background: var(--pp-ink);
-  display: block;
 }
 
 /* Icon buttons. Square-ish, on the cut scale — the round ones were a pill

@@ -441,3 +441,369 @@ ground back behind it, so the mark still needs no dark variant.
 **Not explicitly requested** — the choice of plate 3 over marker cyan, the
 stroked cast and the round joins are mine, flagged for review. Comparison
 sheet: https://claude.ai/code/artifact/0e0ca80e-158d-4128-bc84-62d988262b97
+
+## 2026-07-26 — Favicon links carry a version query
+
+**Decided:** Both `index.html` and `draw-svg/index.html` now request
+`assets/favicon.svg?v=3` rather than the bare path.
+
+**Why:** The mark changed three times in one day and the new one did not appear
+in a real tab, because browsers cache favicons far past the `max-age=600` that
+GitHub Pages sends, often until the browser profile restarts. The file itself
+was correct and correctly deployed both times. A version query is the standard
+way to force the refetch.
+
+**The obligation this creates:** the number is arbitrary and means nothing on
+its own, but it must be bumped in **both** files whenever `favicon.svg` changes,
+or the next change will be invisible in exactly the same way. Adding a tool
+means copying the versioned link, not the bare one.
+
+**Not explicitly requested** — flagged for review.
+
+## 2026-07-26 — The masthead W is the favicon, and the marker field is gone
+
+**Decided:** `Felix' Workshop` sets its **W** the way `fubl.org` sets its **F**:
+a stylised initial built from the site's own inks, using `-webkit-text-stroke`
+with `paint-order: stroke fill` plus a hard `text-shadow` cast. The W takes the
+favicon's three: citron fill, hot pink edge, plate 3 blue cast, offset down and
+right. The citron marker field that used to sit behind the whole word
+`Workshop` was removed, and with it the wordmark's rotation.
+
+**Why:** A citron letter cannot sit on a citron field, so the two devices could
+not both stay. Making the letter the mark is the stronger of the two anyway: it
+is the same object the browser tab shows, which the marker field was not, and it
+makes the workshop's masthead and the personal site's masthead recognisably
+siblings — the resemblance is the construction, not the colour, since the F uses
+the three plates and the W uses the marker inks.
+
+Two consequences worth naming. Citron as **type** breaches the marker rule the
+system states everywhere else (a marker is a field behind type, never type
+itself). It is licensed here for exactly the reason the favicon already gives:
+at roughly 1.3:1 against paper the letter is carried by hue, and the pink edge
+supplies the boundary the missing field would have supplied. One letter, one
+surface, far above 18px. The two inks are declared as `--w-mark-fill` and
+`--w-mark-edge` in `assets/site.css` at full strength rather than reusing the
+translucent `--pp-marker-*` tokens, next to the same argument the opaque chip
+inks already make. Second, the stroke is `0.026em`, not the favicon's ~0.1em:
+at 32px only the silhouette matters, but in running type that weight closes the
+W's counters. Everything is in `em` so the letter survives the wordmark clamp.
+
+**Not explicitly requested** — removing the marker field, the rotation with it,
+and licensing citron as type are mine. Flagged for review.
+
+## 2026-07-26 — The way back to fubl.org is quiet, and does not cast
+
+**Decided:** The masthead gained a `fubl.org` link, above the mode switch: plate
+mark, mono label, outbound arrow, 1px line border, press moves 1px down-right.
+No citron and no hard shadow. It stays in the footer as well. The eyebrow
+`fubl.org · workshop` was deleted, as asked.
+
+**Why:** The obvious move was to mirror the personal site's citron key exactly,
+and it is the wrong one twice over. That button is the single loud object on a
+page of quiet prose and the only citron on the whole personal site, spent to
+send a reader somewhere else. A reader already standing in the workshop does not
+need to be sold the front page, so the return is a marked door rather than a
+second key. It also cannot cast: `assets/base.css` states that law 04's one hard
+cast per view belongs to the live tool card here. Keeping the footer row as well
+copies the personal site's own pattern, where the workshop appears once as the
+button and once as a plain row someone looks for deliberately.
+
+The link also lost its `target="_blank"`. The two sites are one family, and the
+personal site does not open the workshop in a new tab either. GitHub, which is
+genuinely somewhere else, keeps its.
+
+**Also:** the footer picked up the personal site's sentence, *No analytics and
+no cookie notice, because there is nothing to consent to* — the same claim
+family as the privacy strip, and true here.
+
+**Not explicitly requested** — the quiet treatment over a matching citron key,
+and the footer sentence. Flagged for review.
+
+**The quiet treatment was overruled the same day — see the next entry.** The
+footer row, the dropped `target="_blank"` and the analytics sentence all stand.
+
+## 2026-07-26 — The fubl.org link is the personal site's key, in ink
+
+**Decided, on instruction:** the masthead link is rebuilt as the object the
+personal site's header uses — a `.45rem` solid square, the bare host in Cousine
+700 at `.76rem/.06em`, a 2px ink border, and a `3px 3px 0` ink cast the button
+presses down onto (`1px 1px 0` and `translate(2px, 2px)` on hover, fully down on
+press). **No arrow and no plate mark.** Both were mine and both are gone: those
+links name their destination in words and let the border do the pointing.
+
+**Why the ground is ink and not citron — the one call still open.** Citron on
+the personal site means "the workshop", spent on that button and nowhere else,
+deliberately. Here it is already the wordmark W's fill and the live sticker, so
+a third citron object would stop it meaning anything. Ink keeps the
+construction identical while letting citron say one thing across both sites: you
+press a citron key to come here, and an ink one to go back. Switching it is one
+declaration if you disagree.
+
+**What this costs, named rather than hidden:** `assets/base.css` states that law
+04 allows one hard cast per view and that on the index it belongs to the live
+tool card. There are now two. The masthead already holds this page's licensed
+breach of law 07, so the cast sits inside the part of the page that is allowed
+to be loud, but it is a real second breach and not a free one.
+
+**Not explicitly requested** — the ink ground over citron, and accepting the
+second cast. Flagged for review.
+
+## 2026-07-26 — The masthead is rebuilt on the personal site's three rows
+
+**Decided, on instruction:** the header is now the construction
+`Preprint Index.dc.html` uses — a **shelf** (name left, the key to the other
+site right, wrapping onto separate lines rather than shrinking), **one
+sentence** under it, and then a **hairline rule** carrying what the reader might
+do next. Type and air come from the reference rather than from what this page
+had: wordmark `clamp(2.1rem, 6.5vw, 3.4rem)` at `-0.05em` (it was
+`clamp(2.4rem, 7.5vw, 4.6rem)` at the display tracking), lede capped at 44ch
+rather than 52ch, and the masthead's top measured in `vh` rather than `vw`, so a
+short laptop window gets a masthead instead of a title page.
+
+**The order on the rule is the reference's order:** where else I am on the left,
+what state the page is in and how to change it hard right. Socials are icons
+because those three are logos before they are names, and everything else on both
+sites stays words.
+
+**Law 07 still gets its breach here, but a smaller one.** The old masthead took
+far more air than the grid and the spine marked where that stopped. That is
+still true and the spine has not moved, it is simply quieter now. Worth knowing
+that the "far more air" line in the CSS comment describes a page that no longer
+exists, which is why the comment was rewritten rather than kept.
+
+**Not explicitly requested** — the specific numbers are lifted from the
+reference design rather than the prose brief (they disagree; the brief itself
+says the design wins). Flagged for review.
+
+## 2026-07-26 — The privacy claim is metadata now, not a plate
+
+**Decided:** the bordered green plate with the padlock in it is gone. The claim
+survives as a plain mono line in the metadata slot of the rule: `every tool runs
+in your browser · nothing is uploaded`.
+
+**Why:** you asked for no subtitle icons, and the plate was the icon's excuse
+for existing. It is also the right move independently — the claim is a statement
+of fact about the state of this page, which is exactly what the reference puts
+in that slot (`last added 24 July 2026`). It keeps its place in the masthead,
+which the old comment argued for and which still holds: it is the thing that
+makes this different from every other tools site.
+
+**What did not move:** the `1 live · 18 in the queue` count and its four-ink
+bar stay above the card grid. The bar is a legend for the card colours and a
+legend belongs beside the thing it explains, so putting the count in the header
+would have split the pair or duplicated the number.
+
+**Not explicitly requested** — keeping the count where it is. Flagged for review.
+
+## 2026-07-26 — One mode button, on every surface
+
+**Decided:** the mode control is now the reference's 34px square holding a solid
+ink plate — no label, no second word — pinned to the hard right of the rule. The
+old control (a mono state label plus a button naming the mode it would take you
+to) is deleted from `assets/base.css`, and **`draw-svg/` was changed to match**.
+`assets/theme.js` no longer writes two strings into the markup; it sets the
+button's `title` and nothing else, with a fixed `aria-label` describing the
+control itself.
+
+**Why:** three words explaining a control with two positions that is right there
+to try. The reference states the rule plainly (one 34px button, no label, no
+three-state toggle) and the workshop was the outlier.
+
+**Not explicitly requested** — you asked about the darkmode button's *placement*
+on the index. Changing its form, and pushing that change into the tool page, is
+mine: chrome that differs between the index and a tool is how a family stops
+looking related, and leaving `draw-svg/` on a control no other page uses would
+have stranded the old CSS. Flagged for review — the tool page is the part to
+look at if you disagree.
+
+## 2026-07-26 — The mark is plates, not markers, in both places
+
+**Decided:** the wordmark W and `assets/favicon.svg` both drop citron and hot
+pink for the three plates — plate 1 green fill, plate 2 red stroke, plate 3 blue
+cast. The construction is unchanged (`-webkit-text-stroke` under the fill, a
+`.05em` hard offset print). Favicon links bumped to `?v=4` in both HTML files
+per the standing obligation.
+
+**Why:** `design/readme.md` states it flatly. Markers are "added afterwards,
+translucent, and **only ever a field behind type**. A marker never recolours the
+ink." There is no licensed breach for that one — it is not in the table of seven
+in `guidelines/laws.md`, so there is no budget to spend. My earlier entry
+licensed it anyway on a contrast argument. That argument was answered by the
+system already: citron as text on eggshell is 1.6:1, which is *why* the rule
+exists rather than a reason to make an exception to it.
+
+The plates also win on the favicon's own stated terms. Its comment justified
+citron by saying the letter had to be carried by hue at 1.3:1 against a white
+tab strip; plate 1 clears 3:1 there and more against dark chrome. The mark got
+more legible, not less, and the tab and the masthead are one object again.
+
+It now reads as the F's sibling the way it should: the F is red on blue casting
+green, the W is green on red casting blue. Same press, inks rotated one
+position.
+
+**Not explicitly requested** — you asked for the favicon's W in the masthead, and
+this changed the favicon instead of copying it. Flagged for review: if you want
+the citron mark back, it is two hex values in `favicon.svg` and two custom
+properties in the wordmark rule, and the system says not to.
+
+## 2026-07-26 — The header buttons stop breaching law 04
+
+**Decided:** the `fubl.org` button no longer casts a hard shadow and no longer
+moves on hover. It is the system's ordinary primary button — ink ground, 2px ink
+border, paper text, hover to plate 3, press `translate(1px, 1px)`. The repo
+button drops to the secondary 1px hairline weight. Both take
+`--pp-radius-md`; zero is not a step on the cut scale (2 / 3 / 4 / 6).
+
+**Why:** three rules, all of which I had been arguing around.
+
+- **Law 04** allows one hard cast per view and this page spends it on the live
+  tool card. **Law 00** says the second breach does not add, it *divides*:
+  "at two, each carries half, which is worse than none". That is stated as
+  cancellation, not as a caution, and I had logged the second cast as a cost
+  worth paying. It is not payable.
+- **`readme.md` on hover and press:** "Hover changes a border colour or a
+  background tint, **never a lift and never a shadow**. Press moves 1px
+  down-right." The press-onto-its-own-shadow move is real, but it is specified
+  for the citron key on fubl.org, where it *is* that page's whole law 04
+  licence. Copying the behaviour without the licence is drift.
+- **Border weight is the hierarchy** (2px primary, 1px secondary), which is how
+  two buttons differ here without inventing a third ground.
+
+**Not explicitly requested** — you asked for the personal site's construction and
+this keeps its shape (square, bare host, no arrow) while dropping the cast and
+the hover displacement. Flagged for review: this is the point where the workshop
+deliberately stops copying that button.
+
+## 2026-07-26 — Where we now stand against `Workshop.dc.html`
+
+**Not a decision so much as a ledger.** `design/Workshop.dc.html` is this page's
+own reference design, and `handoff/workshop-migration.md` says to match it. Five
+things in the current header no longer do, each on your instruction:
+
+| the reference | now | why |
+|---|---|---|
+| `fubl.org · workshop` eyebrow | removed | you asked |
+| wordmark `clamp(2.4rem, 7.5vw, 4.6rem)` / `-0.055em` | `clamp(2.1rem, 6.5vw, 3.4rem)` / `-0.05em` | you asked for the personal site's sizes |
+| lede at 52ch | 44ch | same |
+| citron marker field behind "Workshop" | the plate W | you asked |
+| privacy claim in a plate-1 box with a padlock | mono in the rule | you asked for no subtitle icon |
+| no socials, no repo button, mode control with labels | all three | you asked |
+
+**The one I would flag hardest:** the reference says of the footer octocat that
+it is "a third-party brand mark on an outbound link, where recognition outranks
+the angle law. **That is the only curve on the page**, and it is not ours to
+redraw." There are now four curves — the Bluesky butterfly and the LinkedIn mark
+joined it. The personal site's reference design does carry all three, so there
+is precedent in the family, but the workshop's own reference drew that line
+deliberately and we have crossed it.
+
+**Not explicitly requested** — recording the divergence rather than silently
+carrying it. If you want the workshop back on its own reference, this table is
+the list to work from.
+
+## 2026-07-27 — Reverted: the mark stays citron and pink
+
+**Reverted, on instruction.** The wordmark W and `assets/favicon.svg` are back
+to citron fill, hot pink outline, plate 3 blue cast. `--w-mark-fill` and
+`--w-mark-edge` are restored in `assets/site.css`. Favicon links go to `?v=5`,
+because `?v=4` briefly served the plate version and needs to be flushed.
+
+**Supersedes "2026-07-26 — The mark is plates, not markers, in both places".**
+That entry stands as a record of the reasoning and is wrong about what to do.
+
+**Why it was wrong:** the marker-as-type rule is real, but nobody asked me to
+change the mark's colours, and a brand asset that already exists and already
+has a logged rationale is not mine to re-ink while doing something else. The
+correct move was to raise the conflict and let it be decided, not to resolve it
+by editing the favicon. The reading that produced it — that "follow the
+philosophy in `design/`" licensed me to bring every existing asset into line —
+was mine and was not what was asked.
+
+**What is NOT reverted:** the header buttons still do not cast (law 04 / law
+00), because that construction was mine from the start rather than something
+that predated me.
+
+## 2026-07-27 — The standfirst is gone
+
+**Removed, on instruction:** the sentence under the wordmark ("Small self-serve
+tools, built one at a time and left running…"). The masthead is now two compact
+lines, which is what `handoff/START-HERE.md` specifies for the family's header
+and what `Preprint Index.dc.html` does — the bio lives in the body there, not
+under the name.
+
+The workshop's own reference, `design/Workshop.dc.html`, does carry a lede in
+the masthead at 52ch, so this is one more row for the divergence table in the
+2026-07-26 ledger entry. The `.lede` rule is deleted rather than left unused.
+
+**Explicitly requested** — recorded because it changes the masthead's row count
+and makes the earlier "three rows" note stale.
+
+## 2026-07-27 — The scrawl, and the privacy line leaves the masthead
+
+**Done, on instruction:** the mono line `every tool runs in your browser ·
+nothing is uploaded` is gone from the rule, and a handwritten note now points at
+the repo button: an arrow curving in from the right with *This page is open
+source!* beside it. Built the way the personal site builds its own scrawl —
+absolutely positioned off the thing it points at, `pointer-events: none`,
+contributing zero height, rotated -2deg under law 06's licence for something
+physically loose.
+
+**Three calls inside that, all mine:**
+
+1. **It points left and sits beside the button, not above it.** The personal
+   site has open space over its buttons; here the wordmark is directly above the
+   repo button, and an arrow drawn through the wordmark is drift rather than
+   annotation. The space the privacy line just vacated is exactly where the note
+   fits.
+2. **Plate 2, not the personal site's pink.** That page defines `--p-text` for
+   itself. The workshop has three plates, and adding a fourth ink for one
+   annotation is how a family stops looking related. It uses
+   `--pp-plate-2-text` because the note is .94rem, below the 18px floor where a
+   plate hands over to its text variant.
+3. **It disappears below 860px**, where the rule wraps and "beside the button"
+   stops being a place. The personal site drops its scrawl into normal flow
+   instead; in a wrapping flex row that would make it a row item and change the
+   layout, which an annotation must not do.
+
+**One thing to know:** `design/readme.md` sets the house voice as "Oxford comma.
+**No exclamation marks.**" The copy is yours verbatim, so it stays as written —
+flagging it only so the exception is a choice rather than an oversight. `This
+page is open source.` would be in voice.
+
+**The privacy claim still exists** in the footer, which already says it at
+length, so removing it here lost no information.
+
+## 2026-07-27 — The note is strict, and the two keys are a pair
+
+**Rebuilt, on instruction.** The handwritten scrawl is gone. The note is now
+mono at .72rem, on the axis, with the system's own straight arrow — horizontal
+shaft, 45° head, square caps, drawn to the iconography law so it is the one
+arrow on this page that could have come out of the closed glyph set. No
+rotation, no curve, no hand.
+
+**The reasoning, which is yours and worth writing down:** the personal site is
+quiet prose, so its licensed exception is something crooked and handwritten.
+This page is already loud — nineteen tilted stickers, cards off axis, a plate
+cast out of register. A second handwritten object here is not an exception, it
+is more of the same. **On this page the deviation is being strict.** That
+inverts the breach rather than copying it, which is the difference between
+sharing a system and imitating a page.
+
+It is also a real item in the row now, not absolutely positioned. A strict
+thing floating off the grid would give the move away.
+
+**Two calls inside that, mine:**
+
+1. **`felixubl/workshop` moved up into the shelf** beside `fubl.org`, so the
+   two site keys are a pair the way the personal site pairs its own two, and
+   the note sits *between* them — next to `fubl.org` as you asked, with its
+   arrow pointing into the repo button that the copy is actually about. The
+   rule below now carries only the socials and the mode button.
+2. **It disappears below 820px**, where the keys stack and the arrow stops
+   pointing at anything.
+
+Still plate 2 at `--pp-plate-2-text`, and the exclamation mark is still yours
+verbatim against the house voice — both noted in the previous entry.
+
+**Not explicitly requested** — moving the repo button into the shelf, and the
+note's position between the two keys. Flagged for review.

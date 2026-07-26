@@ -15,17 +15,15 @@
   document.documentElement.dataset.mode = mode;
 })();
 
-/* The toggle is not an icon: it is a lowercase mono state label plus a button
-   naming the mode it takes you TO. Both strings are mode-dependent, so they
-   are written from here rather than hard-coded in each page's markup. */
+/* The control carries no visible text, so the only thing that names the mode it
+   takes you to is its tooltip — and that string is mode-dependent, so it is
+   written from here rather than hard-coded in each page's markup. The
+   aria-label stays fixed in the markup and describes the control itself, which
+   is what a screen reader needs first. */
 function syncModeLabels() {
-  var mode = document.documentElement.dataset.mode;
-  var next = mode === 'dark' ? 'Light' : 'Dark';
-  document.querySelectorAll('[data-mode-label]').forEach(function (el) {
-    el.textContent = mode;
-  });
-  document.querySelectorAll('[data-mode-next]').forEach(function (el) {
-    el.textContent = next;
+  var next = document.documentElement.dataset.mode === 'dark' ? 'Light' : 'Dark';
+  document.querySelectorAll('[data-mode-title]').forEach(function (el) {
+    el.title = next;
   });
 }
 

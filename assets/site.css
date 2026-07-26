@@ -25,6 +25,12 @@
   --w-chip-soon: #40ccff;
   --w-chip-ink: #171716;
 
+  /* The wordmark W, and the favicon, are the same object printed at two sizes,
+     so they use the same two inks at the same full strength. Nothing else on
+     any surface may take these. */
+  --w-mark-fill: #deee2e;
+  --w-mark-edge: #ff4fa3;
+
   /* Law 06 rotation, declared once. A breach used twice is an undeclared
      token, and this one is used on every badge and every card. */
   --w-tilt: -1.5deg;

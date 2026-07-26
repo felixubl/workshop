@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Felix' Workshop</title>
 <meta name="description" content="Small self-serve tools, built one at a time. Everything runs in your browser — nothing you upload ever leaves it.">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=5">
 <script src="assets/theme.js"></script>
 <link rel="stylesheet" href="assets/preprint/styles.css">
 <link rel="stylesheet" href="assets/base.css">
@@ -17,75 +17,222 @@
     grid-template-rows: auto auto 1fr auto;
   }
 
-  /* The masthead takes this page's one licensed breach of law 07: it gets far
-     more air than the grid, and the 6px spine marks exactly where that stops.
-     Only one breach per view — everything below the spine is uniform. */
+  /* The masthead is built the way fubl.org's is: two compact lines. A shelf
+     holding the name and the key to the other site, then a thin rule carrying
+     everything the reader might want to do next. No standfirst — the page is a
+     grid of cards that say what they are, and a sentence explaining them above
+     the fold was explaining the obvious.
+
+     The air is the personal site's too — a shorter top than this page used to
+     take, measured in vh rather than vw so a laptop and a phone both get a
+     masthead rather than a title page. Law 07's breach is still spent here,
+     just not as loudly. The 6px spine still marks where it stops. */
   .masthead {
     max-width: var(--pp-page-max);
     width: 100%;
     margin: 0 auto;
-    padding: clamp(2rem, 6vw, 4.25rem) var(--pp-gutter) clamp(1.75rem, 4vw, 2.75rem);
+    padding: clamp(1.75rem, 6vh, 3rem) var(--pp-gutter) clamp(1rem, 2.5vw, 1.4rem);
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: clamp(1.25rem, 4vw, 2.5rem);
-    align-items: start;
+    /* Explicit: an implicit auto column sizes itself to its widest item rather
+       than stretching, which silently held the whole masthead to the width of
+       the rule's contents instead of the page's measure. */
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(0.7rem, 2vw, 1.1rem);
   }
-  .masthead-main {
-    display: grid;
-    gap: 1.1rem;
-    justify-items: start;
+  /* Name left, key right, and they swap onto their own lines rather than
+     shrinking — a wordmark that reflows to fit a button is a wordmark that
+     lost an argument with it. */
+  .shelf {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem clamp(1rem, 4vw, 2.5rem);
   }
-  .eyebrow {
+  /* The way back to fubl.org: a solid square, the bare host in mono, no arrow
+     and no mark, exactly as that site labels its own header buttons. It takes
+     the primary 2px weight and the ink ground.
+
+     It does NOT cast, and hovering it does not move it. The citron key on the
+     personal site does both, because there it is that page's whole licensed
+     breach of law 04 — the one loud object on a page of quiet prose. Here the
+     cast is already spent, on the live tool card, and law 00 is not a
+     preference: at two breaches each carries half the weight, which is worse
+     than none. So this takes the system's ordinary button behaviour instead —
+     hover changes the ground to plate 3, press moves 1px down-right. */
+  .home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 46px;
+    padding: 0.5rem 0.9rem;
+    background: var(--pp-edge);
+    border: var(--pp-rule-structure) solid var(--pp-edge);
+    border-radius: var(--pp-radius-md);
+    color: var(--pp-paper);
+    text-decoration: none;
     font-family: var(--pp-font-mono);
-    font-size: var(--pp-size-label);
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--pp-faint);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .home-link::before {
+    content: '';
+    width: 0.45rem;
+    height: 0.45rem;
+    background: currentColor;
+    flex: none;
+  }
+  .home-link:hover {
+    background: var(--pp-plate-3);
+    border-color: var(--pp-plate-3);
+    color: #fff;
+  }
+  .home-link:active {
+    transform: translate(1px, 1px);
   }
   .wordmark {
     margin: 0;
     font-family: var(--pp-font-display);
     font-weight: var(--pp-weight-display);
-    font-size: clamp(2.4rem, 7.5vw, 4.6rem);
+    font-size: clamp(2.1rem, 6.5vw, 3.4rem);
     line-height: 1;
-    letter-spacing: var(--pp-track-display);
+    letter-spacing: -0.05em;
     text-wrap: balance;
   }
-  /* Law 06, the page's one rotation licence, spent on the thing that is
-     physically loose: a marker field pressed onto the wordmark. */
-  .wordmark .marked {
-    display: inline-block;
-    background: var(--pp-marker-citron);
-    box-shadow: 3px 3px 0 var(--pp-edge);
-    padding: 0.02em 0.18em;
-    transform: rotate(var(--w-tilt));
+  /* The W is the favicon, set in running type: the same Hepta Slab glyph, the
+     same citron fill, the same pink edge, the same blue offset print two units
+     down and right. It is the sibling of the F on fubl.org, which is built the
+     same way — the resemblance is the construction, not the inks.
+
+     Everything is in em so the letter survives the wordmark's clamp. The
+     stroke is 0.026em, not the favicon's ~0.1em: at 32px only the silhouette
+     matters, but in running type that weight closes the W's counters. */
+  .wordmark .mark-w {
+    color: var(--w-mark-fill);
+    -webkit-text-stroke: 0.026em var(--w-mark-edge);
+    paint-order: stroke fill;
+    text-shadow: 0.05em 0.05em 0 var(--pp-plate-3);
   }
-  .lede {
-    margin: 0;
-    max-width: 52ch;
-    font-family: var(--pp-font-display);
-    font-weight: var(--pp-weight-lede);
-    font-size: var(--pp-size-lede);
-    line-height: var(--pp-leading-lede);
-    letter-spacing: var(--pp-track-lede);
-    color: var(--pp-muted);
+
+  /* The rule. A hairline, then everything the reader might want next, in the
+     personal site's order: where else I am, on the left; what state this page
+     is in and how to change it, hard right. Nothing here is a nav — the page
+     is one screen of cards and the scroll is the navigation. */
+  .rule-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.15rem 1.4rem;
+    padding-top: 0.35rem;
+    border-top: var(--pp-rule-line) solid var(--pp-line);
   }
-  /* The privacy claim is the thing that makes this site different from every
-     other tools site, so it sits in the masthead rather than in a footnote. */
-  .privacy {
-    margin: 0;
+  /* Icons here and words everywhere else, because these three are logos before
+     they are names. The negative margin pulls the first 44px hit box back so
+     the icon, not its target, lines up with the page's left edge. */
+  .socials {
     display: flex;
     align-items: center;
-    gap: 0.55rem;
-    padding: 0.4rem 0.7rem 0.4rem 0.55rem;
-    border: var(--pp-rule-line) solid var(--pp-plate-1);
-    background: var(--pp-surface);
-    color: var(--pp-plate-1-text);
+    gap: 0.1rem;
+    margin-left: -0.6rem;
   }
-  .privacy code {
+  .socials a {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    color: var(--pp-muted);
+    /* PREPRINT underlines every link with a border, which is right for a link
+       in prose and wrong under a logo — it drew a rule under the icon row. */
+    border-bottom: 0;
+  }
+  .socials a:hover {
+    color: var(--pp-plate-3-text);
+  }
+  /* The repo takes the secondary weight, because border weight IS the
+     hierarchy here: 2px is primary, 1px is secondary. The two buttons are the
+     same object at two ranks, which is how the personal site's three differ
+     from each other rather than by inventing a third ground. Lowercase because
+     both labels are addresses and not words. */
+  .repo-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 38px;
+    padding: 0 0.75rem;
+    background: transparent;
+    color: var(--pp-ink);
+    border: var(--pp-rule-line) solid var(--pp-line);
+    border-radius: var(--pp-radius-md);
+    text-decoration: none;
     font-family: var(--pp-font-mono);
     font-size: 0.72rem;
-    letter-spacing: 0.04em;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .repo-link::before {
+    content: '';
+    width: 0.4rem;
+    height: 0.4rem;
+    background: currentColor;
+    flex: none;
+  }
+  .repo-link:hover {
+    background: var(--pp-tint);
+    border-color: var(--pp-edge);
+  }
+  .repo-link:active {
+    transform: translate(1px, 1px);
+  }
+  .rule-end {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+  }
+
+  /* The two site keys, and the note pointing at one of them. */
+  .keys {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  /* The note is the inversion of the personal site's scrawl, and deliberately
+     so. Over there the page is quiet prose and the exception is something
+     handwritten and crooked. Here the page is already loud — nineteen tilted
+     stickers, cards off axis, a plate cast out of register — so a second
+     handwritten thing is not an exception, it is more of the same. On this
+     page the licensed deviation is being STRICT: no rotation, no curve, no
+     hand.
+
+     Everything about it obeys a rule the rest of the page is breaking. It sits
+     on the axis. It is mono, which is the voice for anything stated as fact.
+     The arrow is drawn to the iconography law — 16-unit grid, horizontal and
+     45° only, square caps — so it is the one arrow here that could have come
+     out of the closed glyph set. Plate 2 at its text variant, because the note
+     is .72rem and a plate hands over below 18px.
+
+     It is a real item in the row rather than absolutely positioned: a straight
+     thing that floats off the grid would give the whole move away. */
+  .note {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    white-space: nowrap;
+    font-family: var(--pp-font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--pp-plate-2-text);
+  }
+  .note svg {
+    flex: none;
+  }
+  /* Below the fold the keys stack, the arrow stops pointing at anything, and a
+     note that points at nothing is worse than no note. */
+  @media (max-width: 820px) {
+    .note { display: none; }
   }
 
   main {
@@ -246,8 +393,15 @@
     margin-top: 0.15rem;
   }
 
+  /* Below the fold point the rule stops being a rule and becomes a stack, so
+     the hard-right group gives up its corner and joins the left margin like
+     everything else. */
   @media (max-width: 700px) {
-    .masthead { grid-template-columns: minmax(0, 1fr); }
+    .rule-end {
+      margin-left: 0;
+      width: 100%;
+      justify-content: space-between;
+    }
   }
 </style>
 </head>
@@ -255,19 +409,28 @@
 <div class="page">
 
   <header class="masthead">
-    <div class="masthead-main">
-      <code class="eyebrow">fubl.org · workshop</code>
-
-      <h1 class="wordmark">Felix' <span class="marked">Workshop</span></h1>
-
-      <p class="lede">Small self-serve tools, built one at a time and left running. No accounts, no uploads that don't come back to you.</p>
-
-      <p class="privacy"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M3.5 7.5h9v6h-9z M5.5 7.5V6l1.5-1.5h2L10.5 6v1.5"></path><path d="M7.4 9.6h1.2v2.2H7.4z" fill="currentColor" stroke="none"></path></svg><code>every tool runs in your browser · nothing is uploaded</code></p>
+    <div class="shelf">
+      <h1 class="wordmark">Felix' <span class="mark-w">W</span>orkshop</h1>
+      <div class="keys">
+        <a class="home-link" href="https://fubl.org">fubl.org</a>
+        <span class="note">
+          This page is open source!
+          <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M2 8h10M8.5 4.5 12 8l-3.5 3.5"></path></svg>
+        </span>
+        <a class="repo-link" href="https://github.com/felixubl/workshop" target="_blank" rel="noopener">felixubl/workshop</a>
+      </div>
     </div>
 
-    <div class="mode-switch">
-      <code class="mode-state" data-mode-label>light</code>
-      <button class="mode-toggle" type="button" data-mode-toggle aria-label="Toggle colour mode"><span data-mode-next>Dark</span></button>
+    <div class="rule-row">
+      <div class="socials">
+        <a href="https://github.com/felixubl" title="GitHub" aria-label="GitHub"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.42c.58.1.79-.25.79-.55v-2.1c-3.2.7-3.88-1.4-3.88-1.4-.53-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.18-1.49 3.14-1.18 3.14-1.18.63 1.59.24 2.76.12 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.26 5.69.42.36.79 1.06.79 2.14v3.17c0 .3.2.66.8.55A11.5 11.5 0 0 0 12 .5z"></path></svg></a>
+        <a href="https://bsky.app/profile/fubl.org" title="Bluesky" aria-label="Bluesky"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.77 3.61C8.32 5.53 11.07 9.4 12 11.48c.93-2.08 3.68-5.95 6.23-7.87 1.84-1.38 4.77-2.44 4.77.9 0 .67-.38 5.6-.6 6.4-.79 2.78-3.62 3.49-6.14 3.06 4.4.75 5.52 3.23 3.1 5.71-4.6 4.71-6.61-1.18-7.13-2.69-.1-.28-.14-.4-.14-.29 0-.11-.05.01-.14.29-.52 1.51-2.53 7.4-7.13 2.69-2.42-2.48-1.3-4.96 3.1-5.71-2.52.43-5.35-.28-6.14-3.06-.22-.8-.6-5.73-.6-6.4 0-3.34 2.93-2.28 4.77-.9z"></path></svg></a>
+        <a href="https://linkedin.com/in/felixubl" title="LinkedIn" aria-label="LinkedIn"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3V9zm6.5 0h3.83v1.64h.05c.53-1 1.83-2.06 3.77-2.06 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.35c0-1.28-.02-2.92-1.78-2.92-1.78 0-2.05 1.39-2.05 2.83V21h-4V9z"></path></svg></a>
+      </div>
+
+      <div class="rule-end">
+        <button class="mode-btn" type="button" data-mode-toggle data-mode-title aria-label="Toggle colour mode"></button>
+      </div>
     </div>
   </header>
 
@@ -441,10 +604,10 @@
   <footer>
     <div class="foot-rule"></div>
     <div class="foot-row">
-      <p>Every tool in this workshop runs entirely in your browser. Nothing you upload, draw, or edit is ever sent to a server, and this workshop is <a href="https://github.com/felixubl/workshop" target="_blank" rel="noopener">open source</a>, so you don't have to take my word for it.</p>
+      <p>Every tool in this workshop runs entirely in your browser. Nothing you upload, draw, or edit is ever sent to a server, and this workshop is <a href="https://github.com/felixubl/workshop" target="_blank" rel="noopener">open source</a>, so you don't have to take my word for it. No analytics and no cookie notice, because there is nothing to consent to.</p>
 
       <div class="foot-links">
-        <a class="foot-link" href="https://fubl.org" target="_blank" rel="noopener">
+        <a class="foot-link" href="https://fubl.org">
           <span class="plate-mark" aria-hidden="true"><i></i><i></i><i></i></span>
           <code>fubl.org</code>
           <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true"><path d="M8.5 3.5h4v4M12.5 3.5 8 8"></path></svg>
