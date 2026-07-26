@@ -807,3 +807,88 @@ verbatim against the house voice — both noted in the previous entry.
 
 **Not explicitly requested** — moving the repo button into the shelf, and the
 note's position between the two keys. Flagged for review.
+
+## 2026-07-27 — The wordmark is a signboard, nailed on
+
+**Decided:** The wordmark now sits on a plate of stock, rotated by the declared
+`--w-tilt` and pinned at its four corners by nail heads.
+
+**Why:** You asked for a slight tilt and "possibly a board so it looks nailed to
+the page". Three calls inside that:
+
+1. **The tilt is `--w-tilt`, not a new angle.** `Workshop.dc.html` names this
+   exact use: the sticker tilt is "kept on badges and the wordmark only, and
+   declared as a token". So the wordmark was always meant to hold it, and a
+   bespoke angle here would have been a fifth rotation value on a page that
+   already has four.
+2. **The board does not cast, and that is not a compromise.** Law 04 allows one
+   hard offset per view and the live tool card holds it, so a second would have
+   cancelled it under law 00. But a board nailed flat to a wall does not float
+   anyway. What separates it from the page is the halftone screen, which is
+   pinned to the viewport and stops dead at the board's edge. Solid stock on
+   screened paper is the relationship the cards already use, printed larger.
+3. **The nails are filled ink squares turned 45°.** A diamond is a shape the
+   iconography law already draws, for the reason it gives about the warning
+   glyph, so this is not a second rotation. Law 06 governs things sitting off
+   the page's axis, and a diamond is on it.
+
+There is no wood in PREPRINT. "Board" translated to the only object the system
+has for this: a plate of stock, laid on the paper and fixed there.
+
+**One thing to know, not acted on:** the same reference line that licenses the
+wordmark tilt also says "twenty tilted cards is noise". This page tilts the live
+card and all eighteen coming-soon cards. That predates this request so I left it
+alone, but the board now competes with them, and the tilt would read as an
+exception again if the grid went back on axis. Your call.
+
+**The ground is `--pp-surface`, not `--pp-sunk`.** Sunk is the deeper contrast
+against paper and would have made the board pop harder, but it is the token for
+a well — something recessed *into* the page, which is the opposite of a sign
+fixed *onto* it. Surface plus the halftone stopping at the edge says "on top"
+without borrowing a colour that means "underneath". Radius is
+`--pp-radius-lg` (4px), the cut-scale step that matches the board's size, since
+radius rises with the object.
+
+**Not explicitly requested** — the 2px border weight, the `--pp-surface` ground
+over `--pp-sunk`, the 4px radius, and the four-nail count over a single nail the
+board could swing from. Flagged for review.
+
+## 2026-07-27 — The footer is one line
+
+**Decided:** The footer is now `© 2026 felixubl` over a hairline, and nothing
+else. The privacy paragraph, both outbound links, and the `Preprint rev 15`
+label are gone.
+
+**Why:** You asked to remove the footer or reduce it to a copyright, and chose
+copyright only when asked what should happen to the privacy line. The two links
+were already redundant — both site keys moved into the masthead yesterday.
+
+**The privacy claim is now nowhere on the page.** It survives only in the
+`<meta name="description">`, which nobody reads. Yesterday's entry moved it out
+of the masthead and into the footer, and today the footer went, so it has been
+removed in two steps neither of which was a decision to drop it. Flagging that
+plainly because the claim is the thing that separates this site from every
+other tools site, and its removal now reads as an accident of sequencing rather
+than a choice. Easy to reinstate as a mono line in the header rule.
+
+**The closing rule changed weight.** It was a 3px dashed plate-2 band, which is
+a frame around a stamp once the only thing under it is one line of mono. 3px is
+also not one of the four declared weights (hairline, line, 2px structure, 6px
+spine), and dashed means "a boundary the reader may cross", which the end of a
+page is not. It is now the same hairline the masthead opens with, so the page
+opens and closes on one rule.
+
+**Left alone:** `.foot-link` and `.plate-mark` in `assets/base.css` are now
+unused by every page. They stay, because base.css is the shared layer and the
+plate mark is the only mark the system has — deleting a component because one
+page stopped calling it is how the next tool page ends up reinventing it.
+
+**Corrected in the same turn: `Felix Ubl`, not `felixubl`.** I set it lowercase
+by analogy with the masthead keys, which are lowercase because they are
+addresses. Felix pointed out that a copyright line names the person holding the
+right, which is a name and gets cased like one. The tracking came down to 0.06em
+with it, matching the page's other mono micro-labels.
+
+**Not explicitly requested** — the rule weight change, keeping the year static
+(it will read 2026 next January), and leaving the dead base.css rules in place.
+Flagged for review.

@@ -91,8 +91,36 @@
   .home-link:active {
     transform: translate(1px, 1px);
   }
+  /* The wordmark is a signboard: a plate of stock, nailed to the paper and
+     hung very slightly crooked. This is the page's law 06 rotation, and it is
+     the use the reference design names for it — "kept on badges and the
+     wordmark only, and declared as a token. Twenty tilted cards is noise; a
+     tilted sticker is a sticker." So it takes `--w-tilt` as declared rather
+     than a bespoke angle of its own.
+
+     It does NOT cast, and that is not a compromise. Law 04 allows one hard
+     offset per view and the live tool card holds it, but a board nailed flat
+     to a wall does not float anyway — the nails are what say it is attached,
+     and a shadow would be saying it twice. What separates the board from the
+     page is the halftone: the screen is pinned to the viewport, so the dots
+     run under everything and stop dead at this edge. Solid stock laid on
+     screened paper is the same object relationship the cards use, printed
+     larger. */
   .wordmark {
-    margin: 0;
+    position: relative;
+    /* Room for the corners the rotation throws out: a 1.5° turn on a board
+       this wide lifts each end about 6px past the flat bounding box. */
+    margin: 0.45rem 0;
+    /* The padding is the nails' lane, so it has to clear them rather than just
+       look like air: a 7px square turned 45° is 9.9px across, set 7px in. Any
+       tighter and the heads crowd the type as the wordmark clamps down. */
+    padding: 0.6rem 1.6rem 0.7rem;
+    background: var(--pp-surface);
+    /* 2px is the weight that marks the one panel that matters, and on a page
+       of 1px cards this is it. */
+    border: var(--pp-rule-structure) solid var(--pp-edge);
+    border-radius: var(--pp-radius-lg);
+    transform: rotate(var(--w-tilt));
     font-family: var(--pp-font-display);
     font-weight: var(--pp-weight-display);
     font-size: clamp(2.1rem, 6.5vw, 3.4rem);
@@ -100,6 +128,24 @@
     letter-spacing: -0.05em;
     text-wrap: balance;
   }
+  /* Four nail heads, one to a corner. Each is a filled ink square turned 45°,
+     which is a shape the iconography law already draws — the warning glyph is
+     a diamond for the same reason — and not a second rotation: law 06 is about
+     things sitting off the page's axis, and a diamond is on it.
+
+     They sit inside the edge rather than on it. A nail through the border
+     would read as a bullet hole. */
+  .nails i {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    background: var(--pp-edge);
+    transform: rotate(45deg);
+  }
+  .nails i:nth-child(1) { top: 6px; left: 7px; }
+  .nails i:nth-child(2) { top: 6px; right: 7px; }
+  .nails i:nth-child(3) { bottom: 6px; left: 7px; }
+  .nails i:nth-child(4) { bottom: 6px; right: 7px; }
   /* The W is the favicon, set in running type: the same Hepta Slab glyph, the
      same citron fill, the same pink edge, the same blue offset print two units
      down and right. It is the sibling of the F on fubl.org, which is built the
@@ -355,42 +401,35 @@
   .reg-3 { --card-ink: var(--pp-plate-3); --card-wash: var(--w-wash-3); }
   .reg-0 { --card-ink: var(--pp-line); --card-wash: var(--w-wash-0); }
 
+  /* The footer is one line. What it used to carry is either already in the
+     masthead — both site keys sit up there now — or gone by request.
+
+     The rule that closes the page drops from a 3px dashed plate-2 band to the
+     same hairline the masthead opens with, for two reasons. A rule that loud
+     over a single line of mono is a frame around a stamp. And 3px was never
+     one of the four declared weights (hairline, line, 2px structure, 6px
+     spine), while dashed means "a boundary the reader may cross" — the end of
+     the page is not one. Solid is structure, which is what this is. The page
+     now opens and closes on the same rule. */
   footer {
     max-width: var(--pp-page-max);
     width: 100%;
     margin: 0 auto;
-    padding: 1.5rem var(--pp-gutter) 3rem;
+    padding: 1.5rem var(--pp-gutter) 2.5rem;
   }
-  .foot-rule {
-    height: 0;
-    border-top: 3px dashed var(--pp-plate-2);
-    margin-bottom: 1.25rem;
-  }
-  .foot-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem 2rem;
-    align-items: flex-end;
-    justify-content: space-between;
-  }
-  .foot-row p {
-    margin: 0;
-    max-width: 64ch;
-  }
-  .foot-links {
-    display: grid;
-    gap: 0.5rem;
-    justify-items: start;
-  }
-  /* The reference sets this at .66rem (10.56px). Nothing goes below
-     --pp-size-label, 11.2px — the same rule that made the old badges a bug. */
-  .rev {
+  /* A name, not a handle. `fubl.org` and `felixubl/workshop` are set lowercase
+     up in the masthead because they are addresses, but a copyright line names
+     the person holding the right, so it is cased like a person. Mono keeps it
+     in the same register as the page's other micro-labels, at 0.06em to match
+     them, and at --pp-size-label (11.2px), the floor nothing here goes below. */
+  .copyright {
+    display: block;
+    padding-top: 0.9rem;
+    border-top: var(--pp-rule-line) solid var(--pp-line);
     font-family: var(--pp-font-mono);
     font-size: var(--pp-size-label);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    letter-spacing: 0.06em;
     color: var(--pp-faint);
-    margin-top: 0.15rem;
   }
 
   /* Below the fold point the rule stops being a rule and becomes a stack, so
@@ -410,7 +449,7 @@
 
   <header class="masthead">
     <div class="shelf">
-      <h1 class="wordmark">Felix' <span class="mark-w">W</span>orkshop</h1>
+      <h1 class="wordmark">Felix' <span class="mark-w">W</span>orkshop<span class="nails" aria-hidden="true"><i></i><i></i><i></i><i></i></span></h1>
       <div class="keys">
         <a class="home-link" href="https://fubl.org">fubl.org</a>
         <span class="note">
@@ -602,24 +641,7 @@
   </main>
 
   <footer>
-    <div class="foot-rule"></div>
-    <div class="foot-row">
-      <p>Every tool in this workshop runs entirely in your browser. Nothing you upload, draw, or edit is ever sent to a server, and this workshop is <a href="https://github.com/felixubl/workshop" target="_blank" rel="noopener">open source</a>, so you don't have to take my word for it. No analytics and no cookie notice, because there is nothing to consent to.</p>
-
-      <div class="foot-links">
-        <a class="foot-link" href="https://fubl.org">
-          <span class="plate-mark" aria-hidden="true"><i></i><i></i><i></i></span>
-          <code>fubl.org</code>
-          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true"><path d="M8.5 3.5h4v4M12.5 3.5 8 8"></path></svg>
-        </a>
-        <a class="foot-link" href="https://github.com/felixubl/workshop" target="_blank" rel="noopener">
-          <span style="display:inline-flex;width:19px;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path></svg></span>
-          <code>felixubl/workshop</code>
-          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true"><path d="M8.5 3.5h4v4M12.5 3.5 8 8"></path></svg>
-        </a>
-        <code class="rev">Preprint rev 15</code>
-      </div>
-    </div>
+    <code class="copyright">© 2026 Felix Ubl</code>
   </footer>
 
 </div>
