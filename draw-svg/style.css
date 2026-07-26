@@ -44,6 +44,25 @@ input[type="color"].swatch {
   padding: 0.625rem 0.9rem;
 }
 
+.dim-sep {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* Size presets are quick picks, so they read smaller and tighter than the
+   real action buttons next to them. */
+.btn-ghost.preset {
+  padding: 0.35rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+.btn-ghost.preset.is-active {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-style: solid;
+  border-color: var(--ink);
+}
+
 .checkbox {
   display: flex;
   align-items: center;

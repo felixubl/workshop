@@ -13,6 +13,13 @@ const zoomFitBtn = document.getElementById("zoomFit");
 const zoomValue = document.getElementById("zoomValue");
 const gridToggle = document.getElementById("gridToggle");
 const gridOverlay = document.getElementById("gridOverlay");
+const presetButtons = Array.from(document.querySelectorAll("#presets .preset"));
+
+// Pixel art is normally drawn on a small square sprite canvas, so the tool
+// starts at 32x32 rather than a page-sized surface. Anything the presets don't
+// cover can still be typed into the width/height fields.
+const DEFAULT_WIDTH = 32;
+const DEFAULT_HEIGHT = 32;
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const MIN_ZOOM = 0.05;
@@ -25,8 +32,8 @@ const ZOOM_STEP = 1.25;
 let drawing = false;
 let lastCell = null;
 let paintedThisStroke = null;
-let logicalWidth = Math.max(1, parseInt(widthInput.value, 10) || 800);
-let logicalHeight = Math.max(1, parseInt(heightInput.value, 10) || 600);
+let logicalWidth = Math.max(1, parseInt(widthInput.value, 10) || DEFAULT_WIDTH);
+let logicalHeight = Math.max(1, parseInt(heightInput.value, 10) || DEFAULT_HEIGHT);
 let zoom = 1;
 let manualZoom = false;
 
@@ -62,11 +69,24 @@ function updateStrokeRange() {
   strokeValue.textContent = `${strokeInput.value}px`;
 }
 
+// The highlight tracks the canvas that's actually applied, not what's typed in
+// the fields, so a custom size simply leaves every preset unlit.
+function syncPresetSelection() {
+  presetButtons.forEach((btn) => {
+    const active =
+      Number(btn.dataset.w) === logicalWidth &&
+      Number(btn.dataset.h) === logicalHeight;
+    btn.classList.toggle("is-active", active);
+    btn.setAttribute("aria-pressed", active ? "true" : "false");
+  });
+}
+
 function applySize() {
-  logicalWidth = Math.max(1, parseInt(widthInput.value, 10) || 800);
-  logicalHeight = Math.max(1, parseInt(heightInput.value, 10) || 600);
+  logicalWidth = Math.max(1, parseInt(widthInput.value, 10) || DEFAULT_WIDTH);
+  logicalHeight = Math.max(1, parseInt(heightInput.value, 10) || DEFAULT_HEIGHT);
   svg.setAttribute("viewBox", `0 0 ${logicalWidth} ${logicalHeight}`);
   updateStrokeRange();
+  syncPresetSelection();
   zoom = computeFitZoom(logicalWidth, logicalHeight);
   manualZoom = false;
   applyZoom();
@@ -197,6 +217,25 @@ function exportSvg() {
 }
 
 resizeBtn.addEventListener("click", applySize);
+
+// Presets are a shortcut for the width/height fields, not a separate mode:
+// they fill the fields in and apply, so the custom inputs always show the
+// canvas you're actually on.
+presetButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    widthInput.value = btn.dataset.w;
+    heightInput.value = btn.dataset.h;
+    applySize();
+  });
+});
+
+// Enter in either size field applies, so a custom size doesn't need a trip to
+// the "Set canvas" button.
+[widthInput, heightInput].forEach((input) => {
+  input.addEventListener("keydown", (evt) => {
+    if (evt.key === "Enter") applySize();
+  });
+});
 strokeInput.addEventListener("input", () => {
   strokeValue.textContent = `${strokeInput.value}px`;
 });

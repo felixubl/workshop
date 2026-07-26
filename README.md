@@ -7,8 +7,9 @@ source so that claim is checkable rather than just asserted.
 
 ## Tools
 
-- [Draw SVG](draw-svg/) — set a pixel-sized canvas, draw freehand in any
-  color, export exactly what you drew as a real SVG file.
+- [Pixel Art SVG Drawer](draw-svg/) — draw pixel art on a grid-snapped canvas,
+  start from a classic sprite size or type your own, export exactly what you
+  drew as a real SVG file.
 
 The homepage ([index.html](index.html)) also lists a long line-up of
 "coming soon" tool categories — PDF, image, SVG, QR/barcode, a random number

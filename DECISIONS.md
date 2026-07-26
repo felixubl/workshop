@@ -249,3 +249,28 @@ tied back to the live Draw SVG tool) were my calls, aiming to avoid two cards
 covering near-identical ground.
 **Not explicitly requested** — the specific card list, groupings, and copy
 are my calls; flagged for review.
+
+## 2026-07-26 — Pixel Art SVG Drawer: rename, default canvas, size presets
+**Decided:** Renamed the tool from "Draw SVG" to "Pixel Art SVG Drawer"
+everywhere it's shown (page title, `<h1>`, meta description, homepage card,
+README, and the SVG Toolkit card's cross-reference) but kept the folder and
+URL as `draw-svg/`. Changed the default canvas from 800x600 to 32x32. Added a
+"Sizes" row of one-click presets: 8x8, 16x16, 32x32, 64x64, 128x128, 160x144
+(Game Boy), 256x240 (NES), each with a `title` tooltip saying what it's for.
+Presets write into the existing width/height fields and apply, so the custom
+inputs always reflect the live canvas, and the active preset is highlighted.
+Also made Enter in either size field apply the size.
+**Why:** The rename says what the tool actually is after the pixel-art rework.
+Kept the `draw-svg/` path because renaming the folder would break the live
+workshop.fubl.org URL and any bookmark for no user-visible gain — the folder
+name isn't shown anywhere. 32x32 is the most common general-purpose
+pixel-art sprite size, small enough that the existing "Fit" zoom makes pixels
+big immediately. Presets are chips rather than a dropdown so the whole set is
+visible and one click away. The two console-size presets were added on the
+theory that "pixel art" often means retro screen art, not just sprites. The
+active-preset highlight tracks the *applied* canvas rather than what's typed
+in the fields, so a custom size just leaves every chip unlit instead of
+showing a stale selection.
+**Not explicitly requested** — the specific name, the 32x32 default, the
+preset list, keeping the old folder path, and Enter-to-apply are my calls;
+flagged for review.
