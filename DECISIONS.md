@@ -381,3 +381,36 @@ own shadow turns muddy. The mark does not follow `data-mode`.
 **Not explicitly requested** — the three candidates and every geometry call
 above are mine, flagged for review. Comparison sheet:
 https://claude.ai/code/artifact/0e0ca80e-158d-4128-bc84-62d988262b97
+
+## 2026-07-26 — The favicon becomes a Hepta Slab W, and that is what gives it a dark mode
+
+**Supersedes the marker-swipe entry above,** which shipped earlier the same day
+and is now only history.
+
+**Decided:** `assets/favicon.svg` is a single W in Hepta Slab at weight 900,
+filled with marker citron, on nothing. No paper ground, no citron field, no
+cast. You called both moves: the real typeface instead of my drawn zigzag, and
+the letter alone instead of the lockup.
+
+**Why the dark mode came for free:** the mark had no dark mode because it had a
+ground. A paper square is a lit box on a dark tab strip, and a favicon is its
+own document, so it cannot read the page's `data-mode` and cannot follow the
+site's toggle. Transparency makes the question moot: one letter serves both
+strips, with no `prefers-color-scheme` block to write and no second file to
+keep in sync.
+
+**Decided, not asked:** the fill is `#deee2e`, the marker citron at full
+strength, not the token's .62 alpha composited over paper. The composited value
+tested far too pale to hold a light tab strip. The glyph outline is extracted
+from `assets/fonts/HeptaSlab.ttf` with fontTools at wght 900 and frozen as path
+data, because a favicon cannot reach the site's `@font-face` and a
+`font-family` reference would fall back to an arbitrary face.
+
+**The known cost:** citron on white is roughly 1.3:1 in luminance, so on a
+light tab strip the letter is carried by hue rather than lightness. On dark
+chrome it is about 9:1. An ink keyline or a mode-dependent fill would fix it
+and would also put a ground-shaped decision back on the table.
+
+**Not explicitly requested** — the fill strength, the extraction approach and
+the decision not to add a keyline are mine, flagged for review. Comparison
+sheet: https://claude.ai/code/artifact/0e0ca80e-158d-4128-bc84-62d988262b97

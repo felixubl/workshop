@@ -1,26 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Felix' Workshop">
-  <!-- The marker swipe: the masthead compressed to a tab. The homepage sets
-       "Felix' [Workshop]" with a citron marker field pressed onto the second
-       word, tilted off square, casting a hard ink offset. That gesture belongs
-       to the workshop. The three off-register plates that used to sit here are
-       PREPRINT's mark for itself, and the workshop uses the system rather than
-       being it.
+  <!-- A W and nothing else. Hepta Slab at wght 900, which is the display weight
+       the masthead sets, so the tab and the wordmark are cut from one face. The
+       outline is the real glyph pulled out of assets/fonts/HeptaSlab.ttf with
+       fontTools and frozen as a path: a favicon is its own document and cannot
+       reach the site's @font-face, so a font-family reference here would fall
+       back to whatever the browser felt like.
 
-       Everything is flattened on purpose. The citron is the marker-citron
-       token already composited over paper, because at 16px a translucent fill
-       over its own cast turns to mud. The cast is a plain offset rect for the
-       same reason: no filter survives this size. Both values track the
-       light-mode tokens and do not follow data-mode, since a favicon has no
-       page to inherit from, and the paper ground is what keeps it a printed
-       thing. No token name is spelled out above: a CSS custom property starts
-       with two hyphens, which is not legal inside an XML comment. -->
-  <rect width="32" height="32" fill="#fbfbf9"/>
-  <!-- Cast, field and letter tilt together as one lockup. Rotating only the
-       field leaves the W standing upright on a leaning sheet, and the letter's
-       right arm walks into the cast. -->
-  <g transform="rotate(-3 16 16)">
-    <rect x="5.5" y="9.5" width="24" height="15" fill="#171716"/>
-    <rect x="3" y="7" width="24" height="15" fill="#e9f37b"/>
-    <path d="M6.6 10.2 L9.8 18.4 L15 13 L20.2 18.4 L23.4 10.2" fill="none" stroke="#171716" stroke-width="3.1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="1.9"/>
-  </g>
+       No ground, no field, no cast. Transparent means one mark serves both
+       modes instead of a paper square glowing on a dark tab strip, which is
+       why there is no prefers-color-scheme block below and no dark variant to
+       keep in sync.
+
+       The fill is the marker citron at full strength rather than the token's
+       .62 alpha composited over paper. The composited value is far too pale to
+       hold a light tab strip. Even at full strength this is roughly 1.3:1
+       against white, so on a light strip the letter is carried by hue rather
+       than by lightness. On dark chrome it is about 9:1.
+
+       Geometry: the glyph ink box is 2516x1544 units at upem 2000, scaled to
+       30 wide and centred. The scale is negative on Y because font space
+       counts upward and SVG counts down. -->
+  <path transform="translate(0.6900 25.2051) scale(0.011924 -0.011924)" fill="#deee2e" d="M1870 1544H2542V1130H2428L2122 0H1472L1152 1130L1412 614H1224L1446 1130L1100 0H446L140 1130H26V1544H832V1130H696L964 0L666 514H982L684 0L1054 1130H920V1544H1782V1130H1644L2018 0L1700 514H2036L1738 0L2006 1130H1870Z"/>
 </svg>
