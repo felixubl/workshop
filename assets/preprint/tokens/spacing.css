@@ -1,0 +1,13 @@
+/* PREPRINT — space on a 4px base. Six steps, no in-betweens. */
+:root {
+  --pp-space-1: 4px;
+  --pp-space-2: 8px;
+  --pp-space-3: 12px;
+  --pp-space-4: 20px;
+  --pp-space-5: 32px;
+  --pp-space-6: 52px;
+
+  --pp-gutter: clamp(1.15rem, 5vw, 3.5rem);
+  --pp-page-max: 1280px;
+  --pp-section-pad: clamp(2.25rem, 5vw, 3.5rem);
+}

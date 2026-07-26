@@ -1,0 +1,40 @@
+/* PREPRINT — rules, corners, measure.
+
+   FOUR WEIGHTS, four jobs. One border weight everywhere is the single largest
+   cause of flatness in a design system, and the cheapest thing to fix.
+
+   THREE STYLES, fixed meanings: solid = structure. dotted = provisional or
+   optional. dashed = a boundary the reader may cross. The ink says which
+   thread a rule belongs to, never how loud it is.
+
+   THE CUT SCALE, 2/3/4/6: trimmed, not moulded. Radius belongs to the surface
+   rather than the contract — a dashboard may run harder than a reading page —
+   but the four steps keep their ratio, and radius rises with control size so a
+   large button never looks softer than a small one. Pill is NOT a step: it
+   belongs to tags and nothing else. */
+
+:root {
+  --pp-rule-hairline: 1px;   /* splits inside a container; never encloses */
+  --pp-rule-line: 1px;       /* the ordinary container edge */
+  --pp-rule-structure: 2px;  /* the thing you are meant to notice */
+  --pp-rule-spine: 6px;      /* once per page — a break that resets the reader */
+
+  --pp-radius-sm: 2px;
+  --pp-radius-md: 3px;
+  --pp-radius-lg: 4px;
+  --pp-radius-xl: 6px;
+  --pp-radius-pill: 9999px;  /* tags only */
+
+  --pp-measure: 66ch;        /* the reading column, at every screen size */
+  --pp-margin-column: 20ch;  /* sidenotes; folds inline below 820px */
+  --pp-target: 44px;
+  --pp-target-compact: 36px;
+  --pp-target-prominent: 52px;
+
+  /* Pointer lift, and the constraint it implies: a marker is a painted box and
+     inline backgrounds stack in source order, so a line set with display
+     leading must carry position:relative;z-index:1 or the field of the line
+     below will paint over its ink. */
+  --pp-lift: 1.1px;
+  --pp-lift-pressed: 0.5px;
+}

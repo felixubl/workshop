@@ -1,0 +1,43 @@
+/* PREPRINT — the minimum a consuming page needs. Element selectors only. */
+
+body {
+  background: var(--pp-surface-page);
+  color: var(--pp-text-body);
+  font-family: var(--pp-font-body);
+  font-size: var(--pp-size-body);
+  line-height: var(--pp-leading-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--pp-font-display);
+  font-weight: var(--pp-weight-head);
+  letter-spacing: var(--pp-track-head);
+  line-height: var(--pp-leading-head);
+}
+
+code, kbd, pre, samp { font-family: var(--pp-font-mono); }
+
+a { color: var(--pp-text-link); text-decoration: none; border-bottom: 1px solid currentColor; }
+a:hover { color: var(--pp-ink); }
+
+::selection { background: var(--pp-selection); }
+
+/* Markers are fields. Never set a colour here. */
+mark { color: inherit; background: var(--pp-marker-citron); padding: .04em 0; }
+
+/* The system slider: a 2px track and a square thumb. */
+input[type='range'] { -webkit-appearance: none; appearance: none; background: transparent; height: 22px; cursor: var(--pp-cursor-resize-col); }
+input[type='range']::-webkit-slider-runnable-track { height: 2px; background: var(--pp-line); }
+input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 11px; height: 20px; background: var(--pp-edge); border: 0; margin-top: -9px; transition: box-shadow var(--pp-dur-fast) var(--pp-ease-out); }
+input[type='range']:active::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--pp-selection); }
+input[type='range']::-moz-range-track { height: 2px; background: var(--pp-line); }
+input[type='range']::-moz-range-thumb { width: 11px; height: 20px; background: var(--pp-edge); border: 0; border-radius: 0; }
+
+/* The reader below 820px: the margin stops being a margin and folds inline. */
+@media (max-width: 820px) {
+  [data-pp-article] { grid-template-columns: minmax(0, 1fr) !important; }
+  [data-pp-article] > * { grid-column: 1 !important; }
+  [data-pp-article] > aside { padding-top: 0 !important; }
+}

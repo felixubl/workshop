@@ -41,11 +41,16 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-// Fit fills the drawing area: sized to the #canvasWrap content box (kept in
-// sync with its CSS max-width/max-height) so a small canvas scales all the way
-// up to fill it, and a large one scales down to stay fully visible.
+// Fit fills the drawing area: a small canvas scales all the way up to fill it,
+// a large one scales down to stay fully visible. The width is measured off the
+// page shell rather than hard-coded — #canvasWrap is width:fit-content, so it
+// reports the canvas, not the room available to it, and a hard-coded page max
+// silently goes stale the next time the layout changes (it did: the shell went
+// from 1040px to --pp-page-max, 1280px).
 function computeFitZoom(w, h) {
-  const maxW = Math.min(window.innerWidth * 0.92, 1100) - 8;
+  const shell = document.querySelector('.wrap');
+  const avail = shell ? shell.clientWidth - 2 * parseFloat(getComputedStyle(shell).paddingLeft) : window.innerWidth;
+  const maxW = avail - 8;
   const maxH = window.innerHeight * 0.78 - 8;
   return clamp(Math.min(maxW / w, maxH / h), MIN_ZOOM, MAX_ZOOM);
 }

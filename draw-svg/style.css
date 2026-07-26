@@ -1,12 +1,26 @@
-/* Tool-specific layout only — fonts, buttons, badges, and cards come from
-   ../assets/base.css. This file just arranges this tool's own controls. */
+/* Tool-specific layout only — faces, buttons, tags, fields and the mode
+   control come from ../assets/base.css over the vendored system. This file
+   arranges this tool's own controls and nothing else. */
 
+.tool-title {
+  margin: 0.6rem 0 0;
+  font-family: var(--pp-font-display);
+  font-weight: var(--pp-weight-head);
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+  letter-spacing: var(--pp-track-head);
+  line-height: 1.1;
+}
+
+/* The toolbar is chrome, not a panel: rules separate it from the work rather
+   than a box enclosing it. */
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 14px 20px;
   align-items: center;
-  margin-bottom: 20px;
+  padding: 1.15rem 0 1.35rem;
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+  margin-bottom: 1.5rem;
 }
 
 .group {
@@ -17,67 +31,73 @@
 }
 
 .group label {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: 0.06em;
+  color: var(--pp-muted);
+}
+
+.dim-sep {
+  color: var(--pp-faint);
+  font-family: var(--pp-font-mono);
   font-size: 0.8rem;
-  color: var(--muted);
 }
 
-input[type="number"].field {
-  width: 80px;
+input[type='number'].field {
+  width: 84px;
+  font-family: var(--pp-font-mono);
 }
 
-input[type="color"].swatch {
-  width: 40px;
-  height: 34px;
-  padding: 2px;
+input[type='color'].swatch {
+  width: 44px;
+  padding: 3px;
+  border-radius: var(--pp-radius-sm);
 }
 
-.toolbar input[type="range"] {
+.toolbar input[type='range'] {
   width: 130px;
 }
 
 .readout {
-  min-width: 44px;
-  text-align: center;
+  min-width: 52px;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--pp-muted);
 }
 
+/* Compact controls take the small end of the cut scale: radius rises with
+   control size, so these sit below the 44px buttons beside them. */
 .btn-ghost.icon-only {
-  padding: 0.625rem 0.9rem;
+  width: var(--pp-target);
+  padding: 0;
 }
 
-.dim-sep {
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-/* Size presets are quick picks, so they read smaller and tighter than the
-   real action buttons next to them. */
 .btn-ghost.preset {
-  padding: 0.35rem 0.55rem;
-  font-size: 0.75rem;
+  height: var(--pp-target-compact);
+  padding: 0 0.7rem;
+  border-radius: var(--pp-radius-sm);
+  font-family: var(--pp-font-mono);
+  font-size: 0.76rem;
+  color: var(--pp-muted);
 }
 
+/* The selected size is stated by fill, the way the system's Segmented control
+   states its active option. No plate: which canvas you are on is a position,
+   not a status, and a plate here would teach a meaning it does not have. */
 .btn-ghost.preset.is-active {
-  background: var(--accent);
-  color: var(--on-accent);
-  border-style: solid;
-  border-color: var(--ink);
+  background: var(--pp-edge);
+  border-color: var(--pp-edge);
+  color: var(--pp-paper);
 }
 
-.checkbox {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-/* The drawing surface stays paper-light regardless of site theme: strokes
-   default to a dark pen color, which would vanish against a dark surface. */
+/* The drawing surface stays paper-light in both modes. This is the artwork's
+   ground rather than the page's: the default pen is near-black ink, and it
+   would vanish on a graphite sheet. 2px is the structure weight — on this
+   page the canvas is the one panel that matters. */
 #canvasWrap {
-  border: 1px solid var(--line);
-  background: #fdfcfb;
-  box-shadow: var(--shadow-1);
-  border-radius: 16px;
+  border: var(--pp-rule-structure) solid var(--pp-edge);
+  background: #fbfbf9;
+  border-radius: var(--pp-radius-lg);
   width: fit-content;
   display: flex;
 }
@@ -85,7 +105,7 @@ input[type="color"].swatch {
 #canvas {
   display: block;
   touch-action: none;
-  cursor: crosshair;
+  cursor: var(--pp-cursor-cross);
   /* Adjacent 1x1 px rects otherwise show faint anti-aliased seams between
      them at fractional zoom levels, making solid brush strokes look broken
      up. Crisp (non-antialiased) edges keep pixel-art fills perfectly solid. */

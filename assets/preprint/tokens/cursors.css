@@ -1,0 +1,37 @@
+/* PREPRINT — pointers.
+   Twelve drawn pointers plus the pressed variant. Hotspots are contract: a
+   surface may repaint a pointer, it may never move its point. The lift is the
+   only state change with no shape change — point casts 1.1px in plate 3,
+   pressed casts 0.5px, so a press reads as the surface giving way.
+   Drop all of them on touch: a drawn cursor there is a lie about the input. */
+:root {
+  --pp-cursor-arrow: url('../assets/cursors/light/arrow.svg') 2 2, default;
+  --pp-cursor-point: url('../assets/cursors/light/point.svg') 2 2, pointer;
+  --pp-cursor-pressed: url('../assets/cursors/light/pressed.svg') 2 2, pointer;
+  --pp-cursor-text: url('../assets/cursors/light/text.svg') 8 8, text;
+  --pp-cursor-cross: url('../assets/cursors/light/cross.svg') 11 11, crosshair;
+  --pp-cursor-grab: url('../assets/cursors/light/grab.svg') 11 11, grab;
+  --pp-cursor-move: url('../assets/cursors/light/move.svg') 11 11, move;
+  --pp-cursor-zoom: url('../assets/cursors/light/zoom.svg') 9 9, zoom-in;
+  --pp-cursor-help: url('../assets/cursors/light/help.svg') 11 11, help;
+  --pp-cursor-working: url('../assets/cursors/light/working.svg') 11 11, progress;
+  --pp-cursor-blocked: url('../assets/cursors/light/blocked.svg') 11 11, not-allowed;
+  --pp-cursor-resize-col: url('../assets/cursors/light/resize-col.svg') 11 11, col-resize;
+  --pp-cursor-resize-row: url('../assets/cursors/light/resize-row.svg') 11 11, row-resize;
+}
+
+[data-mode='dark'] {
+  --pp-cursor-arrow: url('../assets/cursors/dark/arrow.svg') 2 2, default;
+  --pp-cursor-point: url('../assets/cursors/dark/point.svg') 2 2, pointer;
+  --pp-cursor-pressed: url('../assets/cursors/dark/pressed.svg') 2 2, pointer;
+  --pp-cursor-text: url('../assets/cursors/dark/text.svg') 8 8, text;
+  --pp-cursor-cross: url('../assets/cursors/dark/cross.svg') 11 11, crosshair;
+  --pp-cursor-grab: url('../assets/cursors/dark/grab.svg') 11 11, grab;
+  --pp-cursor-move: url('../assets/cursors/dark/move.svg') 11 11, move;
+  --pp-cursor-zoom: url('../assets/cursors/dark/zoom.svg') 9 9, zoom-in;
+  --pp-cursor-help: url('../assets/cursors/dark/help.svg') 11 11, help;
+  --pp-cursor-working: url('../assets/cursors/dark/working.svg') 11 11, progress;
+  --pp-cursor-blocked: url('../assets/cursors/dark/blocked.svg') 11 11, not-allowed;
+  --pp-cursor-resize-col: url('../assets/cursors/dark/resize-col.svg') 11 11, col-resize;
+  --pp-cursor-resize-row: url('../assets/cursors/dark/resize-row.svg') 11 11, row-resize;
+}

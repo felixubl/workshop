@@ -1,0 +1,113 @@
+/* PREPRINT — two ink families.
+
+   PLATES are pressed with the page: full strength, structural, never
+   translucent. They carry no fixed meaning — a plate is chosen by position and
+   weight, the way a printer assigns a colour to a layer. Green is not
+   "success" and red is not "error" unless the component also says so in words.
+   Plates are for fills, rules, large type and figure marks. Below 18px they
+   hand over to their *-text companions. A plate never measured as 13px text is
+   not a text colour.
+
+   MARKERS are added afterwards, by hand: translucent, and ALWAYS a field
+   behind type — never type itself. Citron as text on eggshell measures 1.6:1;
+   as a field behind ink it measures 14:1. Same colour, opposite outcome.
+   A marker is also a painted box and stacks in source order, so any line above
+   one needs its own stacking context (see rules.css --pp-marker-lift-note). */
+
+:root {
+  /* ground */
+  --pp-paper: #fbfbf9;
+  --pp-surface: #ffffff;
+  --pp-sunk: #f2f2ee;
+  --pp-code: #f4f4f0;
+
+  /* ink */
+  --pp-ink: #171716;
+  --pp-muted: #52524b;
+  --pp-faint: #6a6a62;
+
+  /* rules */
+  --pp-hair: rgba(23, 23, 22, .11);
+  --pp-line: rgba(23, 23, 22, .27);
+  --pp-edge: #171716;
+
+  /* plates */
+  --pp-plate-1: #01a368;
+  --pp-plate-2: #ed0a3f;
+  --pp-plate-3: #0066ff;
+
+  /* plate text companions — required below 18px */
+  --pp-plate-1-text: #017a4e;
+  --pp-plate-2-text: #c8082f;
+  --pp-plate-3-text: #0052cc;
+
+  /* markers — fields only */
+  --pp-marker-citron: rgba(222, 238, 46, .62);
+  --pp-marker-pink: rgba(255, 79, 163, .34);
+  --pp-marker-cyan: rgba(64, 204, 255, .38);
+
+  /* incidental */
+  --pp-tint: rgba(23, 23, 22, .055);
+  --pp-selection: rgba(0, 102, 255, .15);
+  --pp-shadow: rgba(23, 23, 22, .12);
+
+  /* ── semantic aliases ── */
+  --pp-text-body: var(--pp-ink);
+  --pp-text-quiet: var(--pp-muted);
+  --pp-text-machine: var(--pp-faint);
+  --pp-text-link: var(--pp-plate-3-text);
+  --pp-surface-page: var(--pp-paper);
+  --pp-surface-card: var(--pp-surface);
+  --pp-surface-well: var(--pp-sunk);
+  --pp-border-hairline: var(--pp-hair);
+  --pp-border-default: var(--pp-line);
+  --pp-border-structure: var(--pp-edge);
+  --pp-register-research: var(--pp-plate-1);
+  --pp-register-notes: var(--pp-plate-3);
+  --pp-register-argument: var(--pp-plate-2);
+  --pp-state-ok: var(--pp-plate-1-text);
+  --pp-state-danger: var(--pp-plate-2-text);
+  --pp-state-info: var(--pp-plate-3-text);
+}
+
+/* A designed dark mode, not an inversion.
+
+   The ground is warm-NEUTRAL graphite. Not blue: a blue dark reads as a code
+   editor rather than as paper, and this system's whole premise is paper. Not
+   brown either — brown goes muddy the moment a plate lands on it. #141413 is
+   the ink itself, thinned, which is what an unlit sheet actually looks like.
+
+   Plates gain saturation as well as lightness, because a plate that is merely
+   brighter goes chalky against a dark ground. Markers gain opacity rather than
+   losing it: a highlight has to read as a highlight at 3am, and the ink above
+   one never changes, so there is headroom to spend. */
+[data-mode='dark'] {
+  --pp-paper: #141413;
+  --pp-surface: #1c1c1a;
+  --pp-sunk: #0e0e0d;
+  --pp-code: #111110;
+
+  --pp-ink: #efeee8;
+  --pp-muted: #a8a7a0;
+  --pp-faint: #8e8d86;
+
+  --pp-hair: rgba(239, 238, 232, .13);
+  --pp-line: rgba(239, 238, 232, .30);
+  --pp-edge: #efeee8;
+
+  --pp-plate-1: #26d494;
+  --pp-plate-2: #ff4d68;
+  --pp-plate-3: #6a9dff;
+
+  --pp-plate-1-text: #45e2a6;
+  --pp-plate-2-text: #ff8b9d;
+  --pp-plate-3-text: #9dbfff;
+
+  --pp-marker-citron: rgba(222, 238, 46, .32);
+  --pp-marker-pink: rgba(255, 79, 163, .30);
+  --pp-marker-cyan: rgba(64, 204, 255, .30);
+
+  --pp-tint: rgba(239, 238, 232, .075);
+  --pp-selection: rgba(106, 157, 255, .28);
+  --pp-shadow: rgba(0, 0, 0, .60);
+}

@@ -7,255 +7,458 @@
 <meta name="description" content="Small self-serve tools, built one at a time. Everything runs in your browser — nothing you upload ever leaves it.">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <script src="assets/theme.js"></script>
-<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/preprint/styles.css">
 <link rel="stylesheet" href="assets/base.css">
-<link rel="stylesheet" href="assets/workshop-theme.css">
+<link rel="stylesheet" href="assets/site.css">
 <style>
+  .page {
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+  }
+
+  /* The masthead takes this page's one licensed breach of law 07: it gets far
+     more air than the grid, and the 6px spine marks exactly where that stops.
+     Only one breach per view — everything below the spine is uniform. */
+  .masthead {
+    max-width: var(--pp-page-max);
+    width: 100%;
+    margin: 0 auto;
+    padding: clamp(2rem, 6vw, 4.25rem) var(--pp-gutter) clamp(1.75rem, 4vw, 2.75rem);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: clamp(1.25rem, 4vw, 2.5rem);
+    align-items: start;
+  }
+  .masthead-main {
+    display: grid;
+    gap: 1.1rem;
+    justify-items: start;
+  }
+  .eyebrow {
+    font-family: var(--pp-font-mono);
+    font-size: var(--pp-size-label);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--pp-faint);
+  }
+  .wordmark {
+    margin: 0;
+    font-family: var(--pp-font-display);
+    font-weight: var(--pp-weight-display);
+    font-size: clamp(2.4rem, 7.5vw, 4.6rem);
+    line-height: 1;
+    letter-spacing: var(--pp-track-display);
+    text-wrap: balance;
+  }
+  /* Law 06, the page's one rotation licence, spent on the thing that is
+     physically loose: a marker field pressed onto the wordmark. */
+  .wordmark .marked {
+    display: inline-block;
+    background: var(--pp-marker-citron);
+    box-shadow: 3px 3px 0 var(--pp-edge);
+    padding: 0.02em 0.18em;
+    transform: rotate(var(--w-tilt));
+  }
+  .lede {
+    margin: 0;
+    max-width: 52ch;
+    font-family: var(--pp-font-display);
+    font-weight: var(--pp-weight-lede);
+    font-size: var(--pp-size-lede);
+    line-height: var(--pp-leading-lede);
+    letter-spacing: var(--pp-track-lede);
+    color: var(--pp-muted);
+  }
+  /* The privacy claim is the thing that makes this site different from every
+     other tools site, so it sits in the masthead rather than in a footnote. */
+  .privacy {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.4rem 0.7rem 0.4rem 0.55rem;
+    border: var(--pp-rule-line) solid var(--pp-plate-1);
+    background: var(--pp-surface);
+    color: var(--pp-plate-1-text);
+  }
+  .privacy code {
+    font-family: var(--pp-font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+  }
+
+  main {
+    max-width: var(--pp-page-max);
+    width: 100%;
+    margin: 0 auto;
+    padding: clamp(1.75rem, 4vw, 2.75rem) var(--pp-gutter) clamp(2.5rem, 6vw, 4rem);
+    display: grid;
+    gap: 1.25rem;
+    align-content: start;
+  }
+
+  /* The four-ink bar is the only hint that the card colours mean anything, and
+     it explains nothing. The register stays unnamed on purpose: a category
+     label on every card is nineteen words doing the work one colour does. */
+  .tally {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.7rem;
+  }
+  .ink-bar {
+    display: flex;
+    gap: 2px;
+  }
+  .ink-bar i {
+    width: 22px;
+    height: 7px;
+  }
+  .ink-bar i:nth-child(1) { background: var(--pp-plate-1); }
+  .ink-bar i:nth-child(2) { background: var(--pp-plate-2); }
+  .ink-bar i:nth-child(3) { background: var(--pp-plate-3); }
+  .ink-bar i:nth-child(4) { background: var(--pp-line); }
+  .tally code {
+    font-family: var(--pp-font-mono);
+    font-size: var(--pp-size-label);
+    letter-spacing: 0.1em;
+    color: var(--pp-faint);
+  }
+
   .tools {
     display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+    gap: 20px;
   }
   .tool-card {
+    display: grid;
+    gap: 0.55rem;
+    align-content: start;
+    padding: 1.15rem;
+    border-radius: var(--pp-radius-lg);
     text-decoration: none;
     color: inherit;
-    display: block;
-    transition: box-shadow 0.2s var(--ease), transform 0.2s var(--ease);
   }
-  a.tool-card:hover {
-    box-shadow: 6px 6px 0 var(--accent);
-    transform: translate(-2px, -4px) rotate(0deg);
-  }
-  .tool-card .tool-head {
+  .tool-head {
     display: flex;
-    justify-content: space-between;
     align-items: flex-start;
+    justify-content: space-between;
     gap: 0.75rem;
-    margin-bottom: 0.5rem;
   }
   .tool-card h3 {
     margin: 0;
-    font-size: 1.2rem;
+    font-family: var(--pp-font-display);
+    font-weight: var(--pp-weight-head);
+    font-size: 1.22rem;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
   }
   .tool-card p {
     margin: 0;
-    font-size: 0.88rem;
-    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.58;
+    color: var(--pp-muted);
   }
-  .tool-card .open {
-    display: block;
-    margin-top: 1rem;
-    font-size: 0.82rem;
-    color: var(--accent);
+
+  /* The live card is the one element on the page that casts (law 04). The
+     cast is the same silhouette printed again in a plate ink, off register —
+     which is the plate mark itself. Hover slips it FURTHER out of register
+     instead of lifting the card. Press pulls it back in. Nothing moves here
+     that a printer could not do. */
+  .tool-card-live {
+    background: var(--pp-surface);
+    border: var(--pp-rule-structure) solid var(--pp-edge);
+    box-shadow: 5px 5px 0 var(--pp-plate-2);
+    transform: rotate(-0.48deg);
+    transition: box-shadow var(--pp-dur-state) var(--pp-ease-out);
+  }
+  .tool-card-live:hover {
+    box-shadow: 8px 8px 0 var(--pp-plate-2);
+  }
+  .tool-card-live:active {
+    box-shadow: 2px 2px 0 var(--pp-plate-2);
+    transform: translate(1px, 1px) rotate(-0.48deg);
+  }
+  .open {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.35rem;
+    font-family: var(--pp-font-mono);
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--pp-plate-2-text);
+  }
+
+  /* Cards rotate at a third of the sticker tilt, cycling by grid position —
+     the cut-and-pasted rhythm of the original, quiet enough that eighteen of
+     them still read as a grid rather than a spill. Counted with nth-of-type so
+     the cycle is over the <div> cards only and the live <a> stays out of it. */
+  .tool-card-soon {
+    border: var(--pp-rule-structure) dashed var(--card-ink);
+    background: var(--card-wash);
+  }
+  .tool-card-soon:nth-of-type(3n + 1) { transform: rotate(-0.6deg); }
+  .tool-card-soon:nth-of-type(3n + 2) { transform: rotate(0.51deg); }
+  .tool-card-soon:nth-of-type(3n + 3) { transform: rotate(-0.39deg); }
+
+  .reg-1 { --card-ink: var(--pp-plate-1); --card-wash: var(--w-wash-1); }
+  .reg-2 { --card-ink: var(--pp-plate-2); --card-wash: var(--w-wash-2); }
+  .reg-3 { --card-ink: var(--pp-plate-3); --card-wash: var(--w-wash-3); }
+  .reg-0 { --card-ink: var(--pp-line); --card-wash: var(--w-wash-0); }
+
+  footer {
+    max-width: var(--pp-page-max);
+    width: 100%;
+    margin: 0 auto;
+    padding: 1.5rem var(--pp-gutter) 3rem;
+  }
+  .foot-rule {
+    height: 0;
+    border-top: 3px dashed var(--pp-plate-2);
+    margin-bottom: 1.25rem;
+  }
+  .foot-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem 2rem;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .foot-row p {
+    margin: 0;
+    max-width: 64ch;
+  }
+  .foot-links {
+    display: grid;
+    gap: 0.5rem;
+    justify-items: start;
+  }
+  /* The reference sets this at .66rem (10.56px). Nothing goes below
+     --pp-size-label, 11.2px — the same rule that made the old badges a bug. */
+  .rev {
+    font-family: var(--pp-font-mono);
+    font-size: var(--pp-size-label);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--pp-faint);
+    margin-top: 0.15rem;
+  }
+
+  @media (max-width: 700px) {
+    .masthead { grid-template-columns: minmax(0, 1fr); }
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div>
-      <a class="wordmark" href="./">Felix' <span class="accent">Workshop</span></a>
-      <p class="tagline">Small self-serve tools, built one at a time and left running. No accounts, no uploads that don't come back to you.</p>
+<div class="page">
+
+  <header class="masthead">
+    <div class="masthead-main">
+      <code class="eyebrow">fubl.org · workshop</code>
+
+      <h1 class="wordmark">Felix' <span class="marked">Workshop</span></h1>
+
+      <p class="lede">Small self-serve tools, built one at a time and left running. No accounts, no uploads that don't come back to you.</p>
+
+      <p class="privacy"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M3.5 7.5h9v6h-9z M5.5 7.5V6l1.5-1.5h2L10.5 6v1.5"></path><path d="M7.4 9.6h1.2v2.2H7.4z" fill="currentColor" stroke="none"></path></svg><code>every tool runs in your browser · nothing is uploaded</code></p>
     </div>
-    <div class="row" style="flex-shrink: 0">
-      <a
-        class="icon-btn"
-        href="https://fubl.org"
-        target="_blank"
-        rel="noopener"
-        aria-label="Felix' personal site"
-        title="fubl.org"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="12" cy="12" r="9"/>
-          <path d="M3 12h18M12 3a14.5 14.5 0 0 1 0 18M12 3a14.5 14.5 0 0 0 0 18"/>
-        </svg>
-      </a>
-      <a
-        class="icon-btn"
-        href="https://github.com/felixubl/workshop"
-        target="_blank"
-        rel="noopener"
-        aria-label="GitHub"
-        title="View source on GitHub"
-      >
-        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-          <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
-        </svg>
-      </a>
-      <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle theme" title="Toggle theme">
-        <svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>
-        </svg>
-        <svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="12" cy="12" r="4"/>
-          <path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/>
-        </svg>
-      </button>
+
+    <div class="mode-switch">
+      <code class="mode-state" data-mode-label>light</code>
+      <button class="mode-toggle" type="button" data-mode-toggle aria-label="Toggle colour mode"><span data-mode-next>Dark</span></button>
     </div>
   </header>
 
-  <section>
-    <p class="section-label">Tools</p>
+  <div class="spine"></div>
+
+  <main>
+
+    <div class="tally">
+      <span class="ink-bar" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <code>1 live · 18 in the queue</code>
+    </div>
+
     <div class="tools">
-      <a class="card tool-card" href="draw-svg/">
+
+      <a class="tool-card tool-card-live" href="draw-svg/">
         <div class="tool-head">
-          <h3 class="font-slab">Pixel Art SVG Drawer</h3>
+          <h3>Pixel Art SVG Drawer</h3>
           <span class="badge badge-live">Live</span>
         </div>
         <p>Draw pixel art on a grid-snapped canvas. Start from a classic sprite size (16&times;16 up to a full Game Boy screen) or type your own, then export exactly what you drew as a real SVG file.</p>
-        <span class="open">Open tool &rarr;</span>
+        <span class="open">Open tool <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M2.5 8h10M8.5 4l4 4-4 4"></path></svg></span>
       </a>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-1">
         <div class="tool-head">
-          <h3 class="font-slab">PDF Toolkit</h3>
+          <h3>PDF Toolkit</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>Merge, split, reorder, and compress PDFs, remove or extract pages, add page numbers, convert scanned pages to searchable text, and export pages as images &mdash; everything the average PDF site does, plus a "make this acceptable for upload" mode that fits a file to a target size and format. Runs fully client-side: your documents never leave your browser.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-1">
         <div class="tool-head">
-          <h3 class="font-slab">Metadata Cleaner</h3>
+          <h3>Metadata Cleaner</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>See exactly what's hiding in a file &mdash; camera EXIF and GPS in photos, author and edit history in PDFs, tracked changes in office documents &mdash; then strip it in one click. Works on images, PDFs, and most common document formats.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-2">
         <div class="tool-head">
-          <h3 class="font-slab">Image Toolkit</h3>
+          <h3>Image Toolkit</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>Convert between PNG/JPEG/WebP/AVIF/HEIC, remove backgrounds, resize or pad without distorting, batch-rename, and generate favicons, app-icon sets, and social-media sizes from one source image. Also home to the pixel randomizer: every color gets swapped for a new, unrelated random one, consistently, so identical pixels always match but neighbors can end up worlds apart.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-2">
         <div class="tool-head">
-          <h3 class="font-slab">SVG Toolkit</h3>
+          <h3>SVG Toolkit</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>Upload an existing SVG to keep editing it in the Pixel Art SVG Drawer, or reach for the deeper tools here: optimize and simplify paths, replace colors, convert strokes and text to paths, normalize the viewBox, and build sprites from a folder of icons. The flagship: "Fix my SVG," which auto-resolves clipping, missing viewBoxes, and oversized canvases in one pass.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-2">
         <div class="tool-head">
-          <h3 class="font-slab">QR Code &amp; Barcodes</h3>
+          <h3>QR Code &amp; Barcodes</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>Generate QR codes styled to match this site instead of plain black squares, still verified to scan cleanly, plus Wi-Fi, contact-card, and calendar-event QR codes, barcode generation and reading, and batch generation from a CSV for print-ready label sheets.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-3">
         <div class="tool-head">
-          <h3 class="font-slab">Random Number Generator</h3>
+          <h3>Random Number Generator</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>Draw random numbers from uniform, normal, exponential, binomial, Poisson, and other distributions, in up to ten dimensions at once, with an optional seed for reproducible runs. Export the results as a table, CSV, or JSON.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-2">
         <div class="tool-head">
-          <h3 class="font-slab">Audio Toolkit</h3>
+          <h3>Audio Toolkit</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>Convert between MP3/WAV/M4A/OGG, trim, join, and normalize volume, remove silence, extract audio from video, and compress to a target file size. Also generates waveform images and strips audio metadata.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-2">
         <div class="tool-head">
-          <h3 class="font-slab">Video Toolkit</h3>
+          <h3>Video Toolkit</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>Trim without re-encoding, strip audio, extract a frame, convert to and from GIF, compress to a target size, and fix aspect ratio or orientation. Plus subtitle conversion and timing shifts, and loop/boomerang clip generation.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-1">
         <div class="tool-head">
-          <h3 class="font-slab">Text &amp; Document Utilities</h3>
+          <h3>Text &amp; Document Utilities</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>Clean up pasted text: dedupe and sort lines, fix smart quotes and invisible Unicode characters, diff two files, and convert between Markdown, HTML, and plain text. Also formats and minifies JSON, YAML, CSS, and SQL, and counts tokens for common AI models.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-1">
         <div class="tool-head">
-          <h3 class="font-slab">CSV &amp; Spreadsheet Toolkit</h3>
+          <h3>CSV &amp; Spreadsheet Toolkit</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>"Fix this CSV" detects encoding, delimiter, and broken rows automatically, plus merge, split, dedupe, and diff CSV files, convert to and from XLSX and JSON, reshape wide/long data, and pull a random sample of rows.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-3">
         <div class="tool-head">
-          <h3 class="font-slab">Developer Tools</h3>
+          <h3>Developer Tools</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>JSON/JWT/Base64/URL formatting and decoding, UUID and hash generation, a regex tester, cron explainer, and converters for cURL, TypeScript types, and Zod schemas &mdash; the everyday grab-bag of things a browser tab full of separate sites usually handles.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-2">
         <div class="tool-head">
-          <h3 class="font-slab">Font Tools</h3>
+          <h3>Font Tools</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>Convert TTF/OTF to WOFF2, preview every glyph, detect missing characters, subset a font down to the characters you actually use, and generate a ready-to-paste @font-face block.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-2">
         <div class="tool-head">
-          <h3 class="font-slab">Color &amp; Design Tools</h3>
+          <h3>Color &amp; Design Tools</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>Convert between HEX/RGB/HSL/OKLCH, check and auto-repair contrast, extract a palette from an image, build tint/shade scales, and preview a palette under different types of color-vision deficiency.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-3">
         <div class="tool-head">
-          <h3 class="font-slab">Archive &amp; File Tools</h3>
+          <h3>Archive &amp; File Tools</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>Zip and unzip files entirely in-browser, strip macOS junk files from an archive, find duplicates by hash, generate and verify checksums, and sanitize or bulk-rename a folder of filenames.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-3">
         <div class="tool-head">
-          <h3 class="font-slab">Geospatial Tools</h3>
+          <h3>Geospatial Tools</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>Convert between GPX, KML, and GeoJSON, extract or remove GPS data from photos, calculate distances, and simplify or merge GPX tracks.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-1">
         <div class="tool-head">
-          <h3 class="font-slab">Calendar &amp; Date Tools</h3>
+          <h3>Calendar &amp; Date Tools</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>View and convert ICS files, merge calendars, shift event times, fix timezone mistakes, and generate a recurring-event ICS from a plain-language rule.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-1">
         <div class="tool-head">
-          <h3 class="font-slab">Email Tools</h3>
+          <h3>Email Tools</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>View EML files and their attachments, inspect headers with a plain-language SPF/DKIM/DMARC explanation, preview HTML emails at different widths, and strip tracking pixels from saved HTML.</p>
       </div>
 
-      <div class="card prompt tool-card">
+      <div class="tool-card tool-card-soon reg-0">
         <div class="tool-head">
-          <h3 class="font-slab">Odds &amp; Ends</h3>
+          <h3>Odds &amp; Ends</h3>
           <span class="badge badge-soon">Coming soon</span>
         </div>
         <p>The stuff that doesn't fit a category: webpage-to-PDF, an invoice photo to structured CSV, a slider to compare two image versions, a signature photo to a transparent PNG/SVG, and a passport-photo sheet at exact print dimensions.</p>
       </div>
+
     </div>
-  </section>
+  </main>
 
   <footer>
-    <p>Every tool in this workshop runs entirely in your browser. Nothing you upload, draw, or edit is ever sent to a server, and this workshop is <a href="https://github.com/felixubl/workshop" target="_blank" rel="noopener">open source</a>, so you don't have to take my word for it.</p>
+    <div class="foot-rule"></div>
+    <div class="foot-row">
+      <p>Every tool in this workshop runs entirely in your browser. Nothing you upload, draw, or edit is ever sent to a server, and this workshop is <a href="https://github.com/felixubl/workshop" target="_blank" rel="noopener">open source</a>, so you don't have to take my word for it.</p>
+
+      <div class="foot-links">
+        <a class="foot-link" href="https://fubl.org" target="_blank" rel="noopener">
+          <span class="plate-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <code>fubl.org</code>
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true"><path d="M8.5 3.5h4v4M12.5 3.5 8 8"></path></svg>
+        </a>
+        <a class="foot-link" href="https://github.com/felixubl/workshop" target="_blank" rel="noopener">
+          <span style="display:inline-flex;width:19px;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path></svg></span>
+          <code>felixubl/workshop</code>
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true"><path d="M8.5 3.5h4v4M12.5 3.5 8 8"></path></svg>
+        </a>
+        <code class="rev">Preprint rev 15</code>
+      </div>
+    </div>
   </footer>
+
 </div>
 </body>
 </html>

@@ -274,3 +274,69 @@ showing a stale selection.
 **Not explicitly requested** — the specific name, the 32x32 default, the
 preset list, keeping the old folder path, and Enter-to-apply are my calls;
 flagged for review.
+
+## 2026-07-26 — Migration to the PREPRINT design system
+**Decided:** Re-skinned the whole site from neo-retro to PREPRINT, following
+`handoff/workshop-migration.md` in the design-system project. The system is
+vendored unedited into `assets/preprint/`; `assets/base.css` was rewritten to
+build only on `--pp-*` tokens; `assets/workshop-theme.css` became the much
+smaller `assets/site.css`; `assets/tokens.css` and JetBrains Mono were
+deleted. The decisions below are the places where I had to choose, and the
+places where I did not match `Workshop.dc.html`.
+**Why:** Each is listed with its own reason.
+
+- **The tool keeps its new name.** `Workshop.dc.html` says "Draw SVG" with the
+  pre-rename description, because the brief predates today's rename. Asked,
+  and you chose to keep "Pixel Art SVG Drawer" — so §8's "byte-identical to
+  before" is read as *before the migration*, not before the rename. The SVG
+  Toolkit card keeps its matching wording. The other 18 descriptions are
+  byte-identical, verified mechanically rather than by eye: `index.html` was
+  generated once by a throwaway script that copied every `<h3>` and `<p>` out
+  of the old file, so no description was ever retyped. That script is not kept
+  in the repo; `index.html` is now edited directly.
+
+- **Cursor tokens are overridden in `site.css` with root-absolute URLs.**
+  `tokens/cursors.css` declares its pointers as `url('../assets/cursors/…')`.
+  A relative `url()` inside a *custom property* resolves against the document,
+  not against the stylesheet that declared it, so that token resolved to
+  `/assets/cursors/…` on the index and 404'd — and would resolve somewhere
+  else again on every tool page. Found by driving the pages, not by reading.
+  Root-absolute paths are the only form that survives `var()` substitution at
+  any depth. This is 26 lines that §4 says should not be in `site.css`, but
+  the alternative was editing a vendored file, which the handoff forbids.
+  Hotspot numbers are copied unchanged.
+
+- **Two type sizes are larger than the reference.** The mode state label
+  (`.68rem` → 10.88px) and the `Preprint rev 15` line (`.66rem` → 10.56px)
+  both fall under §8's floor of 11.2px, so both now use `--pp-size-label`.
+  The reference is high fidelity, but §8 is a checklist and the brief calls
+  the old 9.9px badges a bug in the same breath. The rule won.
+
+- **The fubl.org and GitHub links live in the footer**, as in
+  `Workshop.dc.html`, not in the header as §6's wording implies. The reference
+  is the target and it puts them in the footer.
+
+- **JetBrains Mono was deleted outright**, not kept for `<pre>`. §1 says it
+  may stay but prefers replacing; nothing in the repo sets a `<pre>`, so
+  keeping three unused 90KB font files to serve no element was the worse call.
+
+- **Two apostrophes stay ASCII.** "what's hiding" and "doesn't fit" are curly
+  in `Workshop.dc.html` and straight in the repo. §8's byte-identical rule
+  outranks the typographic one, so they were left alone.
+
+- **Buttons cast no shadow.** Law 04 budgets one hard cast per view and on the
+  index it belongs to the live tool card. The badge sticker cast is a declared
+  token (`2px 2px 0`), not a second breach. Button hierarchy is carried by
+  border weight instead, which is what the system's own Button does.
+
+- **The drawing canvas stays paper-light in dark mode.** It is the artwork's
+  ground, not the page's, and the default pen is near-black ink that would
+  vanish on graphite. The rest of the tool takes the vendored dark unforked.
+
+- **`computeFitZoom` now measures the page shell** instead of the hard-coded
+  1100px it used to assume. The shell moved from 1040px to `--pp-page-max`
+  (1280px) in this migration, which silently made "Fit" wrong; measuring means
+  the next layout change cannot repeat that.
+
+**Not explicitly requested** — every bullet above is my call except the first,
+which you chose; flagged for review.

@@ -1,0 +1,32 @@
+/* PREPRINT — four licences for motion. Everything else is still, including on
+   load and on scroll. A page that moves while being read is arguing with its
+   reader.
+
+   1 · The process IS time — a parameter converging, a simulation running.
+       Motion is the content; a static frame would be a worse figure.
+   2 · Continuity of state — a mark appearing, a menu opening. Just enough that
+       the thing does not teleport.
+   3 · Confirming the irreversible — one beat, so the hand knows it landed.
+   4 · Restoring position — smooth, because a jump loses the context that makes
+       the return useful.
+
+   REVOKED: entrance animations, scroll reveals, parallax, hover lifts, looping
+   accents. The pointer press is deliberately NOT animated — a reader clicks
+   hundreds of times and a transition there is felt as lag. */
+
+:root {
+  --pp-dur-instant: 0ms;
+  --pp-dur-fast: 90ms;
+  --pp-dur-state: 140ms;
+  --pp-dur-confirm: 200ms;
+  --pp-ease: cubic-bezier(.2, .7, .3, 1);
+  --pp-ease-out: ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --pp-dur-fast: 0ms;
+    --pp-dur-state: 0ms;
+    --pp-dur-confirm: 0ms;
+  }
+}

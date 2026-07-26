@@ -1,6 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="FW">
-  <rect width="64" height="64" rx="14" fill="#ff2e6e"/>
-  <text x="32" y="45" text-anchor="middle"
-        font-family="Georgia, 'Iowan Old Style', 'Times New Roman', serif"
-        font-weight="700" font-size="28" letter-spacing="-1" fill="#1a0d10">FW</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19 19" width="19" height="19" role="img" aria-label="Felix' Workshop">
+  <!-- The plate mark: three 13px squares, off register, multiplied together.
+       No logo exists for this system and none should be drawn — this is the
+       mark. The paper square underneath is what the plates print onto, so
+       multiply has a ground to act on at favicon size. -->
+  <rect width="19" height="19" fill="#fbfbf9"/>
+  <g style="isolation:isolate">
+    <rect x="0" y="0" width="13" height="13" fill="#01a368" style="mix-blend-mode:multiply"/>
+    <rect x="6" y="2" width="13" height="13" fill="#ed0a3f" style="mix-blend-mode:multiply"/>
+    <rect x="3" y="6" width="13" height="13" fill="#0066ff" style="mix-blend-mode:multiply"/>
+  </g>
 </svg>

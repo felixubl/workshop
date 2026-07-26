@@ -1,0 +1,48 @@
+/* PREPRINT — type.
+   On serif versus sans: the screen reading-speed studies wash out. What holds
+   up is measure, leading, size and contrast — so the face is a voice decision.
+   Body is 17px because a system that documents itself at 13px is telling you
+   it does not expect to be read. Micro never goes below 13px. */
+
+:root {
+  --pp-font-display: 'Hepta Slab', Georgia, serif;
+  --pp-font-body: 'Zilla Slab', Georgia, serif;
+  --pp-font-mono: 'Cousine', ui-monospace, monospace;
+  --pp-font-math: 'Source Serif 4', Georgia, serif;
+
+  /* size */
+  --pp-size-display: clamp(2.9rem, 11.5vw, 8.5rem);
+  --pp-size-title: clamp(1.7rem, 4vw, 2.5rem);
+  --pp-size-head: clamp(1.6rem, 4vw, 2.7rem);
+  --pp-size-subhead: 1.2rem;
+  --pp-size-lede: clamp(1.1rem, 2.4vw, 1.6rem);
+  --pp-size-body: 1.0625rem;
+  --pp-size-micro: 0.8125rem;
+  --pp-size-mono: 0.8125rem;
+  --pp-size-label: 0.7rem;
+
+  /* weight */
+  --pp-weight-display: 900;
+  --pp-weight-head: 700;
+  --pp-weight-lede: 200;
+  --pp-weight-strong: 600;
+  --pp-weight-body: 400;
+
+  /* leading */
+  --pp-leading-display: 1.04;
+  --pp-leading-head: 1.06;
+  --pp-leading-lede: 1.34;
+  --pp-leading-body: 1.68;
+  --pp-leading-micro: 1.5;
+
+  /* tracking */
+  --pp-track-display: -0.055em;
+  --pp-track-head: -0.03em;
+  --pp-track-lede: -0.02em;
+  --pp-track-body: 0;
+  --pp-track-label: 0.16em;
+
+  /* the drop cap: 3.6em, floated, coloured by register */
+  --pp-dropcap-size: 3.6em;
+  --pp-dropcap-leading: 0.76;
+}

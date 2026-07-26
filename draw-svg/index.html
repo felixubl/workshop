@@ -7,30 +7,30 @@
 <meta name="description" content="Draw pixel art on a grid-snapped canvas, pick a classic sprite size or set your own, and export exactly what you drew as a real SVG file.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
 <script src="../assets/theme.js"></script>
-<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/preprint/styles.css">
 <link rel="stylesheet" href="../assets/base.css">
-<link rel="stylesheet" href="../assets/workshop-theme.css">
+<link rel="stylesheet" href="../assets/site.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="wrap">
   <header>
     <div>
-      <a class="back-link" href="../">&larr; Felix' Workshop</a>
-      <h1 class="font-slab" style="margin: 0.5rem 0 0; font-size: 1.5rem;">Pixel Art SVG Drawer</h1>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <h1 class="tool-title">Pixel Art SVG Drawer</h1>
     </div>
-    <button class="icon-btn" type="button" data-theme-toggle aria-label="Toggle theme" title="Toggle theme">
-      <svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>
-      </svg>
-      <svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <circle cx="12" cy="12" r="4"/>
-        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/>
-      </svg>
-    </button>
+    <div class="mode-switch">
+      <code class="mode-state" data-mode-label>light</code>
+      <button class="mode-toggle" type="button" data-mode-toggle aria-label="Toggle colour mode"><span data-mode-next>Dark</span></button>
+    </div>
   </header>
 
-  <div class="toolbar card">
+  <div class="spine"></div>
+
+  <div class="toolbar">
     <div class="group">
       <label for="width">Canvas (px)</label>
       <input class="field" type="number" id="width" min="1" max="4000" value="32" aria-label="Canvas width in pixels">
@@ -56,15 +56,22 @@
       <span class="tag readout" id="strokeValue">1px</span>
     </div>
     <div class="group">
-      <button class="btn-ghost icon-only" id="zoomOut" aria-label="Zoom out">&minus;</button>
+      <button class="btn-ghost icon-only" id="zoomOut" aria-label="Zoom out">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M2.5 8h11"></path></svg>
+      </button>
       <span class="tag readout" id="zoomValue">100%</span>
-      <button class="btn-ghost icon-only" id="zoomIn" aria-label="Zoom in">+</button>
+      <button class="btn-ghost icon-only" id="zoomIn" aria-label="Zoom in">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M8 2.5v11M2.5 8h11"></path></svg>
+      </button>
       <button class="btn-ghost" id="zoomFit">Fit</button>
       <label class="checkbox"><input type="checkbox" id="gridToggle"> Show pixel grid</label>
     </div>
     <div class="group">
       <button class="btn-ghost" id="clear">Clear</button>
-      <button class="btn-primary" id="export">Export SVG</button>
+      <button class="btn-primary" id="export">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M8 2.5v8M4.5 7l3.5 3.5L11.5 7M2.5 13.5h11"></path></svg>
+        Export SVG
+      </button>
     </div>
   </div>
 

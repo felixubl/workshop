@@ -20,24 +20,38 @@ its own top-level folder and swaps its card's badge from "Coming soon" to
 
 ## Stack
 
-Plain HTML/CSS/JS per tool, no bundler, no framework. Shared chrome (fonts,
-colors, buttons, cards) lives in [`assets/`](assets/) and is pulled in in the
-[neo-retro](https://github.com/felixubl/neo-retro) design language:
-JetBrains Mono body, Hepta Slab display, warm paper/ink palette, light/dark
-via `data-theme`. See [`assets/tokens.css`](assets/tokens.css) for the
-current values, and the neo-retro repo if the palette ever gets re-themed.
+Plain HTML/CSS/JS per tool, no bundler, no framework. The design language is
+**PREPRINT**: a printed sheet, then annotated by hand. Hepta Slab for display,
+Zilla Slab for anything read at length, Cousine for anything the machine said,
+three press plates instead of an accent colour, hard offset casts instead of
+soft shadows, and one dark mode for every surface via `data-mode`.
+
+Three CSS layers, in this order:
+
+| layer | file | rule |
+|---|---|---|
+| the system | [`assets/preprint/`](assets/preprint/) | **vendored verbatim — do not edit.** Re-copy from the design-system project when it changes. |
+| shared chrome | [`assets/base.css`](assets/base.css) | the classes every tool reuses, built only from `--pp-*` tokens |
+| the workshop's own deviations | [`assets/site.css`](assets/site.css) | the whole list: halftone screen, category washes, sticker chips, the tilt |
+
+The one vendored file the workshop rewrites is
+[`assets/preprint/tokens/fonts.css`](assets/preprint/tokens/fonts.css), which
+self-hosts the faces instead of requesting them from Google Fonts. The family
+names it declares must not change.
 
 ## Adding a new tool
 
 1. Create `<tool-name>/index.html`, `style.css`, `script.js`.
-2. Link `../assets/theme.js` (in `<head>`, before other stylesheets),
-   `../assets/tokens.css`, and `../assets/base.css`; write only the
-   tool-specific layout in the tool's own `style.css`.
-3. Add a card for it to the root [index.html](index.html).
+2. Link `../assets/theme.js` (in `<head>`, before the stylesheets), then
+   `../assets/preprint/styles.css`, `../assets/base.css`, and
+   `../assets/site.css`; write only the tool-specific layout in the tool's own
+   `style.css`.
+3. Add a card for it to the root [index.html](index.html), and move its badge
+   from "Coming soon" to "Live".
 
 ## License
 
 Code in this repo is unlicensed (all rights reserved) unless stated
-otherwise. The fonts in `assets/fonts/` are JetBrains Mono and Hepta Slab,
-both SIL Open Font License 1.1 — see the `LICENSE-*.txt` files alongside
-them.
+otherwise. The fonts in `assets/fonts/` are Hepta Slab and Zilla Slab (SIL
+Open Font License 1.1) and Cousine (Apache License 2.0) — see the `LICENSE-*`
+files alongside them.
