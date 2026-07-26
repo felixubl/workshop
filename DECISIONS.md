@@ -414,3 +414,30 @@ and would also put a ground-shaped decision back on the table.
 **Not explicitly requested** — the fill strength, the extraction approach and
 the decision not to add a keyline are mine, flagged for review. Comparison
 sheet: https://claude.ai/code/artifact/0e0ca80e-158d-4128-bc84-62d988262b97
+
+## 2026-07-26 — The W picks up pink and blue
+
+**Decided:** The favicon W keeps its citron fill and gains a hot pink outline
+and an electric blue offset cast, as you asked. Every colour is a PREPRINT
+token: marker citron `#deee2e`, marker pink `#ff4fa3`, plate 3 `#0066ff`. All
+at full strength rather than at their token alpha, since a favicon has no paper
+under it to dilute against.
+
+**Why this blue:** tested against marker cyan `#40ccff`, which went weak on a
+light tab strip at 16px. Plate 3 holds on both grounds.
+
+**Decided, not asked:** the cast is the glyph both filled and stroked in blue,
+so it tracks the pink silhouette rather than the narrower fill. Stroked only on
+the fill, it read as a drop shadow peeking out; matched to the outline it reads
+as an offset print, which is the system's language. Joins are round because the
+W's vertices are acute enough that a miter spikes, the same failure the earlier
+drawn W hit.
+
+**A problem this fixed by accident:** the previous entry flagged citron alone at
+about 1.3:1 against a white tab strip, carried by hue rather than lightness. The
+pink outline gives the letter a real boundary on light chrome without putting a
+ground back behind it, so the mark still needs no dark variant.
+
+**Not explicitly requested** — the choice of plate 3 over marker cyan, the
+stroked cast and the round joins are mine, flagged for review. Comparison
+sheet: https://claude.ai/code/artifact/0e0ca80e-158d-4128-bc84-62d988262b97

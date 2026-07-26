@@ -1,24 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Felix' Workshop">
-  <!-- A W and nothing else. Hepta Slab at wght 900, which is the display weight
-       the masthead sets, so the tab and the wordmark are cut from one face. The
-       outline is the real glyph pulled out of assets/fonts/HeptaSlab.ttf with
-       fontTools and frozen as a path: a favicon is its own document and cannot
-       reach the site's @font-face, so a font-family reference here would fall
-       back to whatever the browser felt like.
+  <!-- Hepta Slab W at wght 900, the display weight the masthead sets, in three
+       press colours: citron marker fill, hot pink marker outline, plate 3 blue
+       cast. All three are PREPRINT tokens at full strength rather than at their
+       token alpha, since a favicon has no paper under it to dilute them
+       against.
 
-       No ground, no field, no cast. Transparent means one mark serves both
-       modes instead of a paper square glowing on a dark tab strip, which is
-       why there is no prefers-color-scheme block below and no dark variant to
-       keep in sync.
+       The outline earns its keep twice. Citron alone was about 1.3:1 against a
+       white tab strip, so the letter had to be carried by hue; the pink edge
+       gives it a real boundary on light chrome without putting a ground back
+       behind the mark. Still no ground, so one file serves both modes.
 
-       The fill is the marker citron at full strength rather than the token's
-       .62 alpha composited over paper. The composited value is far too pale to
-       hold a light tab strip. Even at full strength this is roughly 1.3:1
-       against white, so on a light strip the letter is carried by hue rather
-       than by lightness. On dark chrome it is about 9:1.
+       The cast is the same glyph offset by 2, filled AND stroked blue so it
+       matches the pink silhouette rather than the narrower fill, which is what
+       makes it read as a hard offset print rather than a drop shadow. Joins are
+       round because the W's vertices are acute enough that a miter spikes.
 
-       Geometry: the glyph ink box is 2516x1544 units at upem 2000, scaled to
-       30 wide and centred. The scale is negative on Y because font space
-       counts upward and SVG counts down. -->
-  <path transform="translate(0.6900 25.2051) scale(0.011924 -0.011924)" fill="#deee2e" d="M1870 1544H2542V1130H2428L2122 0H1472L1152 1130L1412 614H1224L1446 1130L1100 0H446L140 1130H26V1544H832V1130H696L964 0L666 514H982L684 0L1054 1130H920V1544H1782V1130H1644L2018 0L1700 514H2036L1738 0L2006 1130H1870Z"/>
+       The outline is the real glyph from assets/fonts/HeptaSlab.ttf, extracted
+       with fontTools and frozen as path data: a favicon is its own document and
+       cannot reach the site's @font-face. Stroke width is expressed in glyph
+       units (210) because the transform scales it down with everything else.
+
+       Geometry: ink box 2516x1544 at upem 2000, drawn 24 wide, plus a 2 stroke
+       and a 2 cast, which is what fills the 32 box with a 2 unit margin. -->
+  <path transform="translate(4.7520 24.3641) scale(0.009539 -0.009539)" fill="#0066ff" stroke="#0066ff" stroke-width="209.7" stroke-linejoin="round" d="M1870 1544H2542V1130H2428L2122 0H1472L1152 1130L1412 614H1224L1446 1130L1100 0H446L140 1130H26V1544H832V1130H696L964 0L666 514H982L684 0L1054 1130H920V1544H1782V1130H1644L2018 0L1700 514H2036L1738 0L2006 1130H1870Z"/>
+  <path transform="translate(2.7520 22.3641) scale(0.009539 -0.009539)" fill="#deee2e" stroke="#ff4fa3" stroke-width="209.7" stroke-linejoin="round" paint-order="stroke fill" d="M1870 1544H2542V1130H2428L2122 0H1472L1152 1130L1412 614H1224L1446 1130L1100 0H446L140 1130H26V1544H832V1130H696L964 0L666 514H982L684 0L1054 1130H920V1544H1782V1130H1644L2018 0L1700 514H2036L1738 0L2006 1130H1870Z"/>
 </svg>
