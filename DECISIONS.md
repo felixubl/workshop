@@ -357,3 +357,27 @@ better use of the turn. The list-item dash is the one judgement call and is
 easy to reverse.
 
 **Not explicitly requested** — flagged for review.
+
+## 2026-07-26 — The favicon stops being PREPRINT's mark
+
+**Decided:** `assets/favicon.svg` was the three off-register plates, which is
+PREPRINT's identity mark for itself. Replaced it with the workshop's own
+gesture: the citron marker field with its hard ink cast, tilted, carrying a W
+where the masthead carries the word. You picked this over a proofreader's
+caret and a movable-type sort.
+
+**Why:** The plate mark is the design system's badge, and the workshop uses the
+system rather than being it. The marker swipe is already the workshop's one
+licensed rotation on the homepage, so the tab and the masthead now say the same
+thing. Paper ground kept, so the mark stays a printed object.
+
+**Also decided, in the drawing:** the whole lockup rotates as one group rather
+than the field alone, the miter is clamped to 1.9 so the W's feet bevel instead
+of spiking into the cast, and the stroke is 3.1 rather than 2.7 because the
+thinner letter greyed out at 16px. The citron is the marker token pre-composited
+over paper instead of translucent, since at tab size a translucent fill over its
+own shadow turns muddy. The mark does not follow `data-mode`.
+
+**Not explicitly requested** — the three candidates and every geometry call
+above are mine, flagged for review. Comparison sheet:
+https://claude.ai/code/artifact/0e0ca80e-158d-4128-bc84-62d988262b97

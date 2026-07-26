@@ -1,12 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19 19" width="19" height="19" role="img" aria-label="Felix' Workshop">
-  <!-- The plate mark: three 13px squares, off register, multiplied together.
-       No logo exists for this system and none should be drawn — this is the
-       mark. The paper square underneath is what the plates print onto, so
-       multiply has a ground to act on at favicon size. -->
-  <rect width="19" height="19" fill="#fbfbf9"/>
-  <g style="isolation:isolate">
-    <rect x="0" y="0" width="13" height="13" fill="#01a368" style="mix-blend-mode:multiply"/>
-    <rect x="6" y="2" width="13" height="13" fill="#ed0a3f" style="mix-blend-mode:multiply"/>
-    <rect x="3" y="6" width="13" height="13" fill="#0066ff" style="mix-blend-mode:multiply"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Felix' Workshop">
+  <!-- The marker swipe: the masthead compressed to a tab. The homepage sets
+       "Felix' [Workshop]" with a citron marker field pressed onto the second
+       word, tilted off square, casting a hard ink offset. That gesture belongs
+       to the workshop. The three off-register plates that used to sit here are
+       PREPRINT's mark for itself, and the workshop uses the system rather than
+       being it.
+
+       Everything is flattened on purpose. The citron is the marker-citron
+       token already composited over paper, because at 16px a translucent fill
+       over its own cast turns to mud. The cast is a plain offset rect for the
+       same reason: no filter survives this size. Both values track the
+       light-mode tokens and do not follow data-mode, since a favicon has no
+       page to inherit from, and the paper ground is what keeps it a printed
+       thing. No token name is spelled out above: a CSS custom property starts
+       with two hyphens, which is not legal inside an XML comment. -->
+  <rect width="32" height="32" fill="#fbfbf9"/>
+  <!-- Cast, field and letter tilt together as one lockup. Rotating only the
+       field leaves the W standing upright on a leaning sheet, and the letter's
+       right arm walks into the cast. -->
+  <g transform="rotate(-3 16 16)">
+    <rect x="5.5" y="9.5" width="24" height="15" fill="#171716"/>
+    <rect x="3" y="7" width="24" height="15" fill="#e9f37b"/>
+    <path d="M6.6 10.2 L9.8 18.4 L15 13 L20.2 18.4 L23.4 10.2" fill="none" stroke="#171716" stroke-width="3.1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="1.9"/>
   </g>
 </svg>
