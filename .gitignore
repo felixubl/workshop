@@ -1,5 +1,9 @@
-# Nothing is ignored here yet.
-#
+# Claude Code's working notes. Kept on disk, never published: DECISIONS.md is a
+# log of how this repo argues with itself, which is useful to whoever is working
+# on it and is not part of what the repo offers the world.
+DECISIONS.md
+.claude/
+
 # The design system is NOT ignored: assets/preprint/ is a vendored, committed
 # copy, so the site builds and deploys with no dependency on ~/code/preprint
 # being present. `tools/sync-preprint` re-copies it, and `tools/push` in the
