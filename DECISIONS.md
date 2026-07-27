@@ -1469,3 +1469,59 @@ in its own file rather than into `controls.js`, whose charter is redrawing
 widgets the browser would otherwise style, which this is not.
 **Not explicitly requested:** the placement, the URL normalisation, and the
 label-as-feedback instead of a toast.
+
+## 2026-07-27 — No rule between the signboard and the bar
+**Decided:** The 1px `border-top` added to `.bar` earlier today is removed. The
+masthead keeps both bands; only the line between them goes.
+**Why:** Raised directly, and correct. The rule was copied from fubl.org
+without carrying over the reason it works there: on the personal site the
+wordmark is bare display type with no edge of its own, so the rule is the only
+thing giving the name a bottom. Here the wordmark is a signboard — 2px of ink
+all the way round, nailed at four corners. A rule 10px under a closed box is
+not a separator, it is a second boundary saying what the first one already
+said. Worth recording because it is the third revision of this masthead today
+and the reasoning, not the pixels, is what stops a fourth.
+
+## 2026-07-27 — Tools can be pinned, and the pin is a nail
+**Decided:** Every card on the index and every tool page carries a `[data-pin]`
+toggle. Pinned tools sort to the front of the grid by CSS `order` rather than by
+moving the DOM, so the tilt each card was dealt by `nth-of-type` stays with it.
+The list lives in `localStorage` under `workshop-pinned`, keyed by a slug on the
+card rather than by name or position. The control is an 8px square turned 45°,
+hollow at rest and solid ink when set: the same nail the wordmark wears at its
+corners, so pinning a tool reads as nailing it to the board. The tally grows a
+"N pinned ·" prefix only once there is one.
+**Why:** Asked for. The parts that were not specified: pinning from inside a
+tool as well as from the index (one list, both surfaces, so the two agree); the
+nail rather than a star, because a star is a curve in a system whose only mark
+is a square and whose wordmark already uses this exact shape; and sorting to the
+front rather than a separate pinned section, which would put a second heading
+and a second grid on a page whose whole revision today was about height.
+**Not explicitly requested** — flagged for review. Also note the cost: `order`
+moves cards visually without moving them in the tab order, so a keyboard reader
+meets them in source order. A separate section would fix that and cost the
+height back.
+
+## 2026-07-27 — The card markup inverts so a pin can sit on a link
+**Decided:** A card was `<a class="tool-card">`; it is now
+`<div class="tool-card">` holding an `<a class="tool-open">` around the name and
+a sibling `<button class="pin">`. The anchor throws a covering `::after` over
+the whole card so the entire box is still the target, and the pin sits above
+that layer on `z-index: 2`.
+**Why:** HTML does not allow a button inside a link, and a pin that opened the
+tool instead of pinning it would have been the obvious bug. The covering-link
+pattern keeps the full-card target that the old markup had. Verified rather than
+assumed: clicking the pin on a live card does not navigate.
+
+## 2026-07-27 — The card descriptions become source comments
+**Decided:** The nineteen descriptions, moved onto the cards as `data-tip`
+earlier today, are removed from the rendered page entirely and kept as an HTML
+comment inside each card.
+**Why:** Asked for — no hover text on the tools. Deleting them outright was the
+alternative, and it would have thrown away the only written record of what the
+sixteen queued tools are meant to be, which is the backlog. As comments they
+stay in the file, unaltered and byte-identical to the originals the handoff
+asked not to reword, while rendering nothing and speaking never.
+**Not explicitly requested:** keeping them as comments rather than deleting
+them. The pin button does still carry a tip, since an unlabelled 8px control
+needs one — say so if that counts as hover text on a tool and it can go.

@@ -23,8 +23,8 @@ The homepage ([index.html](index.html)) also lists a long line-up of
 text/document, CSV/spreadsheet, developer, font, color, archive, geospatial,
 calendar, email, and more. Each new tool lands in its own top-level folder, and
 its card goes from a dashed outline to solid stock with a cast once it's built.
-A card carries the tool's name and nothing else; what it does is on the card as
-its `data-tip`.
+A card carries the tool's name and nothing else, plus a pin that drives it to
+the front of the grid.
 
 ## Stack
 
@@ -42,12 +42,17 @@ Three CSS layers, in this order:
 | shared chrome | [`assets/base.css`](assets/base.css) | the classes every tool reuses, built only from `--pp-*` tokens |
 | the workshop's own deviations | [`assets/site.css`](assets/site.css) | the whole list: halftone screen, category washes, sticker chips, the tilt |
 
-Three shared scripts sit alongside them.
+Four shared scripts sit alongside them.
 [`assets/theme.js`](assets/theme.js) sets `data-mode` before the first paint.
 The mode control itself is the one fubl.org wears: a 26×34 swatch three
 quarters full of ink, which slides to the other end rather than naming a mode.
 [`assets/share.js`](assets/share.js) backs the one `[data-share]` button each
 tool page carries beside its title, which copies that tool's own address.
+[`assets/favourites.js`](assets/favourites.js) backs the pin: any `[data-pin]`
+button toggles its tool in a list held in `localStorage` under
+`workshop-pinned`, and pinned tools sort to the front of the index. The index
+and the tool pages read the same list, so pinning from inside a tool moves its
+card too.
 [`assets/controls.js`](assets/controls.js) draws the five widgets the browser
 would otherwise style itself: the number field's spinner, the checkbox, the
 colour swatch and its OS dialog, the menu a `<select>` opens, and the grey box a
@@ -70,16 +75,18 @@ names it declares must not change.
    `../assets/site.css`. Write only the tool-specific layout in the tool's own
    `style.css`.
 3. At the end of `<body>`, load the tool's `script.js`, then
-   `../assets/controls.js`, then `../assets/share.js`. The tool's own script
-   goes first so anything it builds at startup is already in the DOM when the
-   controls are drawn.
+   `../assets/controls.js`, `../assets/share.js` and
+   `../assets/favourites.js`. The tool's own script goes first so anything it
+   builds at startup is already in the DOM when the controls are drawn.
 4. Give the page the shared header: a `.back-link`, a `.title-row` holding the
-   `h1.tool-title` and the `[data-share]` button, and the `.modeswitch` in the
-   opposite corner.
-5. Add a card for it to the root [index.html](index.html): the card is the
-   tool's name and nothing else, with the description on it as `data-tip`.
-   Change the wrapper from `div.tool-card-soon` to `a.tool-card-live`, drop the
-   `reg-N` class, and update the tally count.
+   `h1.tool-title` plus the `[data-share]` and `[data-pin]` buttons, and the
+   `.modeswitch` in the opposite corner. Both buttons key off the folder name.
+5. Add a card for it to the root [index.html](index.html). A card is the tool's
+   name and nothing else — no description, no badge, and no `data-tip`, because
+   a grid of nineteen that all speak when hovered is a grid that shouts. What
+   the tool does goes in an HTML comment on the card. Swap `tool-card-soon` for
+   `tool-card-live`, drop the `reg-N` class, wrap the `h3` in
+   `a.tool-open`, and update the tally count.
 
 ## License
 

@@ -200,6 +200,33 @@ header {
   color: var(--pp-plate-1-text);
 }
 
+/* The pin head: a square turned 45°, hollow until the tool is pinned and solid
+   ink after. It is the same nail the index's wordmark wears at its corners,
+   which is the whole idea — pinning a tool is nailing it to the board. Shared
+   because the same mark appears on a tool page beside the title and on every
+   card of the index, and those two have to be the same object. */
+.pin-head {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  background: transparent;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  transform: rotate(45deg);
+  transition: background var(--pp-dur-fast) var(--pp-ease-out);
+}
+
+.pin-btn:hover .pin-head {
+  border-color: var(--pp-edge);
+}
+.pin-btn.is-on {
+  border-color: var(--pp-edge);
+  color: var(--pp-ink);
+}
+.pin-btn.is-on .pin-head {
+  background: var(--pp-edge);
+  border-color: var(--pp-edge);
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
