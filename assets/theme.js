@@ -15,23 +15,20 @@
   document.documentElement.dataset.mode = mode;
 })();
 
-/* The control names the mode it would take you to, in the button itself, and
-   that string is mode-dependent so it is written from here rather than
-   hard-coded in each page's markup.
+/* The control is the same object fubl.org wears: a rectangle three-quarters
+   full of ink that slides to the other end. It says nothing out loud, because
+   the thing it is about is the one thing on the page a reader can already see
+   — the mode is the whole surface. The word it used to carry was a caption for
+   a picture the reader is standing inside.
 
-   It writes a word rather than a tooltip. A tooltip is for a control that has
-   more to say than it can show, and this one has exactly one word to say. It
-   also only appears on hover, which is no help at all on the device where the
-   mode control matters most.
-
-   The accessible name is written alongside it and contains the visible word, so
-   the two agree rather than the aria-label overriding what a sighted reader can
-   already see. */
+   That leaves the name to the accessible layer, where it names the destination
+   rather than the state, since a control is named by what it does. */
 function syncModeLabels() {
   var next = document.documentElement.dataset.mode === 'dark' ? 'light' : 'dark';
   document.querySelectorAll('[data-mode-label]').forEach(function (el) {
     el.textContent = next;
-    var btn = el.closest('[data-mode-toggle]') || el;
+  });
+  document.querySelectorAll('[data-mode-toggle]').forEach(function (btn) {
     btn.setAttribute('aria-label', 'Switch to ' + next + ' mode');
   });
 }

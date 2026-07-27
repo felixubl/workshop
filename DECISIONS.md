@@ -1387,3 +1387,85 @@ one. Flagged for review.
 8770. The harness needs same-origin iframes and `python3 -m http.server` answers
 304 from cache, which makes an edited stylesheet look unchanged while you stare
 at it. Flagged for review.
+
+## 2026-07-27 — The mode control becomes fubl.org's swatch, reversing the word
+**Decided:** `.mode-btn` — the 44px key with an ink bullet and a lowercase word
+naming the mode it would take you to — is replaced by `.modeswitch`, the
+control the personal site runs: a 26×34 rectangle, 1px `--pp-line`, no radius,
+three quarters full of `--pp-ink`, which slides to the other end on the mode
+flip. No word, no bullet, no icon. The name survives only as an `aria-label`
+naming the destination. `theme.js` keeps writing `[data-mode-label]` if one is
+ever present, but also sets the accessible name on every `[data-mode-toggle]`,
+which is what the wordless control needs.
+**Why:** This reverses "Give the mode control its word back" from earlier the
+same day, and the reversal is on a ground the earlier entry did not consider.
+That decision argued the case within the workshop and was coherent there. The
+system is one system across fubl.org and the workshop, the mode control is the
+single object standing in the corner of every page in it, and two different
+corners is how a family stops looking related. fubl.org shipped the swatch and
+deleted its own labels; matching it is worth more than the local argument. The
+word also turns out to caption a picture the reader is standing inside — the
+mode is the entire surface, not a setting that needs naming.
+**Not explicitly requested** in this form — the instruction was "align the dark
+mode switch to the personal website", and this is the whole of that alignment.
+Worth noting the handoff at `preprint/handoff/workshop-migration.md` §6 still
+prescribes the labelled button, so the handoff and the live site now disagree;
+this follows the live site.
+
+## 2026-07-27 — The masthead gets its second band back
+**Decided:** The header returns to the personal site's two bands: a `.shelf`
+carrying the wordmark alone, then a `.bar` under a 1px rule holding the two
+addresses on the left and the mode swatch pushed to the far right by auto
+margin. The address keys drop from a 44px target to 38px, matching the height
+fubl.org gives the same object in the same band.
+**Why:** Also a reversal — "drop the rule it was stranded on" removed this band
+because it held one small square hard right, and a rule with nothing on one
+side of it is a line rather than a separator. That reasoning was right about
+the row as it then stood and does not apply now: the band has the addresses on
+one side and the mode key on the other, which is content on both sides, which
+is what the rule was for. 38px because a bar is a strip of addresses read at a
+glance, not a row of primary actions; at 44px two of them make the masthead
+look like it has grown a toolbar.
+**Not explicitly requested** in detail — "header placement and other stuff" was
+the instruction.
+
+## 2026-07-27 — A tool card is the tool's name, and the description moves to the tip
+**Decided:** Cards on the index lost their description paragraph, their "Open
+tool" affordance and their badge. What is left is one display line at 1rem in a
+44px row: the name. Live and queued are stated by what the card is made of —
+solid stock, ink edge and a plate-2 cast against a dashed outline over a wash
+in quieter ink — plus a blocked pointer on the queued ones. The descriptions
+are not deleted: every card carries its own as `data-tip`, so hovering still
+explains a tool. The grid drops to a 236px minimum and a 12px gap.
+**Why:** Asked for directly ("literally just the tool name and that's it"). The
+old card ran about 190px tall and nineteen of them made the queue four screens
+long, which is nineteen paragraphs a reader scrolls past to reach the three
+things they can use today. The whole index now fits one screen. Keeping the
+descriptions as tips means the handoff's "all nineteen descriptions
+byte-identical, do not reword a single description" still holds — they are
+still in the file, unaltered, just no longer spending height.
+**Not explicitly requested:** dropping the badges, and the tip. The instruction
+covered the shrink; how the live/queued distinction survives without a badge,
+and where the descriptions went, were mine. The badge classes stay in
+`base.css` — they are part of the system's language — but nothing uses them on
+the index now. Note the tip is a hover affordance and so does not reach touch,
+where the name is all there is.
+
+## 2026-07-27 — Sharing is a control on the title, not on the page
+**Decided:** Each tool page carries one `[data-share]` button immediately beside
+its `h1`, inside a new `.title-row`. It copies `origin + pathname` — query
+string and fragment deliberately dropped — and reports back by rewriting its own
+label to "copied" for 1.6s, turning plate-1 while it does. Backed by a new
+`assets/share.js`; on a non-secure context it falls back to a hidden textarea,
+and if even that fails it says so and offers the URL in a prompt rather than
+claiming success. A failed copy that reports "copied" is the one outcome worse
+than not having the button.
+**Why:** Asked for. The placement is the part that was not specified: beside the
+name rather than out in the corner with the mode key, because what it copies is
+a link to this tool specifically, and a control at the page edge reads as acting
+on the page. Dropping the query and fragment is the other call — what a reader
+wants to pass on is the tool, not the state they happen to have it in. It went
+in its own file rather than into `controls.js`, whose charter is redrawing
+widgets the browser would otherwise style, which this is not.
+**Not explicitly requested:** the placement, the URL normalisation, and the
+label-as-feedback instead of a toast.

@@ -17,23 +17,24 @@
     grid-template-rows: auto auto 1fr auto;
   }
 
-  /* The masthead is built the way fubl.org's is, but on one line rather than
-     two: a shelf holding the name and the keys. No standfirst — the page is a
-     grid of cards that say what they are, and a sentence explaining them above
-     the fold was explaining the obvious.
+  /* The masthead is fubl.org's, in both bands: a shelf carrying the name, then
+     a bar under a hairline carrying the addresses and the mode key, with the
+     mode key pushed to the far edge. No standfirst — the page is a grid of
+     cards that say what they are, and a sentence explaining them above the
+     fold was explaining the obvious.
 
-     There was a hairline under the shelf, carrying a second row. That row lost
-     the social icons and the note, and what remained was a rule running the
-     width of the page to hold one small square hard right. A rule is a
-     separator, and a separator with nothing on one side of it is a line. The
-     keys came up onto the shelf and the rule went, which leaves the 6px spine
-     as the single break under the masthead instead of a hairline and a spine
-     60px apart.
+     The bar spent a version folded up onto the shelf, on the argument that a
+     rule with nothing on one side of it is a line rather than a separator.
+     That was true of the row as it stood then, which held one small square
+     hard right and nothing else. It is not true now: the row has the two
+     addresses on the left and the mode key on the right, which is a band with
+     content on both sides of it, which is what the rule was for. Matching the
+     personal site here is the point — this is the same masthead read at two
+     sizes, and the workshop's own 6px spine still marks where it stops.
 
-     The air is the personal site's too — a shorter top than this page used to
-     take, measured in vh rather than vw so a laptop and a phone both get a
-     masthead rather than a title page. Law 07's breach is still spent here,
-     just not as loudly. The 6px spine still marks where it stops. */
+     The air is the personal site's too, measured in vh rather than vw so a
+     laptop and a phone both get a masthead rather than a title page. Law 07's
+     breach is still spent here, just not as loudly. */
   .masthead {
     max-width: var(--pp-page-max);
     width: 100%;
@@ -46,9 +47,8 @@
     grid-template-columns: minmax(0, 1fr);
     gap: clamp(0.7rem, 2vw, 1.1rem);
   }
-  /* Name left, key right, and they swap onto their own lines rather than
-     shrinking — a wordmark that reflows to fit a button is a wordmark that
-     lost an argument with it. */
+  /* The shelf holds the name and nothing else, so it is a row only so that a
+     future neighbour has somewhere to stand. */
   .shelf {
     display: flex;
     flex-wrap: wrap;
@@ -56,29 +56,55 @@
     justify-content: space-between;
     gap: 0.75rem clamp(1rem, 4vw, 2.5rem);
   }
-  /* The keys, built the way the personal site builds its header buttons: one
-     shape at two ranks. Everything that decides SIZE is set once, here, so they
-     cannot drift apart again — the same 44px target, the same padding, the same
-     mono at the same size. Only the ground and the border weight differ, and
-     that difference IS the rank. Box-sizing is border-box, so 2px on one and 1px
-     on the other still measure the same height.
 
-     The mode key is the third of them and sets its own size, in base.css, for
-     the one reason that outranks setting it here: it is the only key that
-     appears on every page in the family, so a tool page's corner and this one
-     have to agree even though a tool page has no .keys row. Those numbers are
-     these numbers. */
+  /* The second band, exactly as fubl.org builds it: a 1px rule, then the
+     addresses reading left to right and the mode key pushed to the far end by
+     auto margin. Below the fold width the key gives up its corner and joins
+     the row, because a lone control hanging off the right of a wrapped stack
+     is not aligned to anything. */
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.4rem;
+    margin-top: clamp(0.6rem, 2vw, 1rem);
+    padding-top: 0.5rem;
+    border-top: var(--pp-rule-line) solid var(--pp-line);
+  }
+  .bar-end {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+  }
+  @media (max-width: 560px) {
+    .bar-end {
+      margin-left: 0;
+    }
+  }
+  /* The addresses, built the way the personal site builds the buttons in its
+     header bar: one shape at two ranks. Everything that decides SIZE is set
+     once, here, so they cannot drift apart again. Only the ground and the
+     border weight differ, and that difference IS the rank. Box-sizing is
+     border-box, so 2px on one and 1px on the other still measure the same.
+
+     38px rather than the 44px target, which is the height fubl.org gives the
+     same object in the same band. A bar is a strip of addresses read at a
+     glance, not a row of primary actions, and at 44px two of them make the
+     masthead look like it has a toolbar. The mode key beside them is 34px for
+     the same reason and sets its own size in base.css, because it is the one
+     control that appears in the corner of every page in the family. */
   .home-link,
   .repo-link {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    min-height: var(--pp-target);
-    padding: 0 0.9rem;
+    min-height: 38px;
+    padding: 0 0.75rem;
     border-radius: var(--pp-radius-md);
     text-decoration: none;
     font-family: var(--pp-font-mono);
-    font-size: 0.74rem;
+    font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.06em;
   }
@@ -209,20 +235,6 @@
   .repo-link:active {
     transform: translate(1px, 1px);
   }
-  /* Two addresses and a switch. The switch takes a wider gap than the two keys
-     take between themselves, because it is the one that acts on this page
-     rather than leaving it, and that is the only thing separating them now that
-     the rule is gone. */
-  .keys {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.6rem;
-  }
-  .keys .mode-btn {
-    margin-left: 0.5rem;
-  }
-
   main {
     max-width: var(--pp-page-max);
     width: 100%;
@@ -261,39 +273,38 @@
     color: var(--pp-faint);
   }
 
+  /* A card is the tool's name and nothing else.
+
+     It used to carry a description and an "Open tool" affordance, which made
+     each one about 190px tall and the queue four screens long — nineteen
+     paragraphs a reader scrolls past to find the three things they can
+     actually use. The names are the index; the descriptions are what you read
+     once. They are still here, on the card as its tip, so hovering explains a
+     tool without any of them costing height. The card is now a row on the
+     personal site's .entry rhythm: one display line, a 44px target, and the
+     state carried by the border rather than by a word. */
   .tools {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 236px), 1fr));
+    gap: 12px;
   }
   .tool-card {
-    display: grid;
-    gap: 0.55rem;
-    align-content: start;
-    padding: 1.15rem;
+    display: flex;
+    align-items: center;
+    min-height: var(--pp-target);
+    padding: 0.5rem 0.85rem;
     border-radius: var(--pp-radius-lg);
     text-decoration: none;
     color: inherit;
-  }
-  .tool-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.75rem;
   }
   .tool-card h3 {
     margin: 0;
     font-family: var(--pp-font-display);
     font-weight: var(--pp-weight-head);
-    font-size: 1.22rem;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
-  }
-  .tool-card p {
-    margin: 0;
-    font-size: 0.92rem;
-    line-height: 1.58;
-    color: var(--pp-muted);
+    font-size: 1rem;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    text-wrap: balance;
   }
 
   /* The cast: the same silhouette printed again in a plate ink, off register,
@@ -322,24 +333,25 @@
     box-shadow: 2px 2px 0 var(--pp-plate-2);
     transform: translate(1px, 1px) rotate(-0.48deg);
   }
-  .open {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin-top: 0.35rem;
-    font-family: var(--pp-font-mono);
-    font-size: 0.74rem;
-    font-weight: 700;
-    color: var(--pp-plate-2-text);
-  }
-
   /* Cards rotate at a third of the sticker tilt, cycling by grid position —
-     the cut-and-pasted rhythm of the original, quiet enough that eighteen of
+     the cut-and-pasted rhythm of the original, quiet enough that sixteen of
      them still read as a grid rather than a spill. Counted with nth-of-type so
      the cycle is over the <div> cards only and the live <a> stays out of it. */
   .tool-card-soon {
     border: var(--pp-rule-structure) dashed var(--card-ink);
     background: var(--card-wash);
+  }
+  /* With the badges gone, a card states what it is by what it is made of: the
+     built ones are solid stock with an ink edge and a cast, the queued ones are
+     a dashed outline over a wash, in quieter ink. The pointer finishes the
+     sentence — these do not open, and saying so on the way in beats letting a
+     reader find out by pressing. */
+  .tool-card-soon h3 {
+    color: var(--pp-muted);
+    font-weight: var(--pp-weight-strong);
+  }
+  .tool-card-soon:hover {
+    cursor: var(--pp-cursor-blocked);
   }
   .tool-card-soon:nth-of-type(3n + 1) { transform: rotate(-0.6deg); }
   .tool-card-soon:nth-of-type(3n + 2) { transform: rotate(0.51deg); }
@@ -389,15 +401,18 @@
   <header class="masthead">
     <div class="shelf">
       <h1 class="wordmark">Felix' <span class="mark-w">W</span>orkshop<span class="nails" aria-hidden="true"><i></i><i></i><i></i><i></i></span></h1>
-      <div class="keys">
-        <a class="home-link" href="https://fubl.org">fubl.org</a>
-        <a class="repo-link" href="https://github.com/felixubl/workshop" target="_blank" rel="noopener">
+    </div>
+
+    <nav class="bar">
+      <a class="home-link" href="https://fubl.org">fubl.org</a>
+      <a class="repo-link" href="https://github.com/felixubl/workshop" target="_blank" rel="noopener">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.42c.58.1.79-.25.79-.55v-2.1c-3.2.7-3.88-1.4-3.88-1.4-.53-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.18-1.49 3.14-1.18 3.14-1.18.63 1.59.24 2.76.12 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.26 5.69.42.36.79 1.06.79 2.14v3.17c0 .3.2.66.8.55A11.5 11.5 0 0 0 12 .5z"></path></svg>
           felixubl/workshop
         </a>
-        <button class="mode-btn" type="button" data-mode-toggle aria-label="Switch colour mode"><span data-mode-label>dark</span></button>
+      <div class="bar-end">
+        <button class="modeswitch" type="button" data-mode-toggle aria-label="Switch colour mode"><span class="modeswitch__fill" aria-hidden="true"></span><span class="sr-only">Switch between light and dark mode</span></button>
       </div>
-    </div>
+    </nav>
   </header>
 
   <div class="spine"></div>
@@ -411,159 +426,80 @@
 
     <div class="tools">
 
-      <a class="tool-card tool-card-live" href="draw-svg/">
-        <div class="tool-head">
-          <h3>Pixel Art SVG Drawer</h3>
-          <span class="badge badge-live">Live</span>
-        </div>
-        <p>Draw pixel art on a grid-snapped canvas. Start from a classic sprite size (16&times;16 up to a full Game Boy screen) or type your own, then export exactly what you drew as a real SVG file.</p>
-        <span class="open">Open tool <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M2.5 8h10M8.5 4l4 4-4 4"></path></svg></span>
+      <a class="tool-card tool-card-live" href="draw-svg/" data-tip="Draw pixel art on a grid-snapped canvas. Start from a classic sprite size (16&times;16 up to a full Game Boy screen) or type your own, then export exactly what you drew as a real SVG file.">
+        <h3>Pixel Art SVG Drawer</h3>
       </a>
 
-      <a class="tool-card tool-card-live" href="random-numbers/">
-        <div class="tool-head">
-          <h3>Random Number Generator</h3>
-          <span class="badge badge-live">Live</span>
-        </div>
-        <p>Draw numbers from eleven distributions, from a plain uniform range through normal, exponential, binomial and Poisson to gamma and beta, in up to ten dimensions at once. Every run prints the seed it used, so any set of numbers can be drawn again, and the whole sample exports as CSV or JSON.</p>
-        <span class="open">Open tool <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M2.5 8h10M8.5 4l4 4-4 4"></path></svg></span>
+      <a class="tool-card tool-card-live" href="random-numbers/" data-tip="Draw numbers from eleven distributions, from a plain uniform range through normal, exponential, binomial and Poisson to gamma and beta, in up to ten dimensions at once. Every run prints the seed it used, so any set of numbers can be drawn again, and the whole sample exports as CSV or JSON.">
+        <h3>Random Number Generator</h3>
       </a>
 
-      <a class="tool-card tool-card-live" href="metadata-cleaner/">
-        <div class="tool-head">
-          <h3>Image Metadata Cleaner</h3>
-          <span class="badge badge-live">Live</span>
-        </div>
-        <p>See exactly what a photo is carrying besides the photo: GPS coordinates, camera and lens serial numbers, the timestamp, the software that touched it last, the caption someone left in it, even a thumbnail from before you cropped. Every field is listed with its value and flagged for how much it gives away, and you choose one by one what to keep. JPEG, PNG and WebP, one file or a hundred at a time. The pixels are never re-encoded, so cleaning costs no quality.</p>
-        <span class="open">Open tool <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M2.5 8h10M8.5 4l4 4-4 4"></path></svg></span>
+      <a class="tool-card tool-card-live" href="metadata-cleaner/" data-tip="See exactly what a photo is carrying besides the photo: GPS coordinates, camera and lens serial numbers, the timestamp, the software that touched it last, the caption someone left in it, even a thumbnail from before you cropped. Every field is listed with its value and flagged for how much it gives away, and you choose one by one what to keep. JPEG, PNG and WebP, one file or a hundred at a time. The pixels are never re-encoded, so cleaning costs no quality.">
+        <h3>Image Metadata Cleaner</h3>
       </a>
 
-      <div class="tool-card tool-card-soon reg-1">
-        <div class="tool-head">
-          <h3>PDF Toolkit</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>Merge, split, reorder, and compress PDFs, remove or extract pages, add page numbers, convert scanned pages to searchable text, and export pages as images &mdash; everything the average PDF site does, plus a "make this acceptable for upload" mode that fits a file to a target size and format. Also where document metadata lands: the author, the producing application, and the edit history a PDF or an office file carries around. Runs fully client-side: your documents never leave your browser.</p>
+      <div class="tool-card tool-card-soon reg-1" data-tip="Merge, split, reorder, and compress PDFs, remove or extract pages, add page numbers, convert scanned pages to searchable text, and export pages as images &mdash; everything the average PDF site does, plus a &quot;make this acceptable for upload&quot; mode that fits a file to a target size and format. Also where document metadata lands: the author, the producing application, and the edit history a PDF or an office file carries around. Runs fully client-side: your documents never leave your browser.">
+        <h3>PDF Toolkit</h3>
       </div>
 
-      <div class="tool-card tool-card-soon reg-2">
-        <div class="tool-head">
-          <h3>Image Toolkit</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>Convert between PNG/JPEG/WebP/AVIF/HEIC, remove backgrounds, resize or pad without distorting, batch-rename, and generate favicons, app-icon sets, and social-media sizes from one source image. Also home to the pixel randomizer: every color gets swapped for a new, unrelated random one, consistently, so identical pixels always match but neighbors can end up worlds apart.</p>
+      <div class="tool-card tool-card-soon reg-2" data-tip="Convert between PNG/JPEG/WebP/AVIF/HEIC, remove backgrounds, resize or pad without distorting, batch-rename, and generate favicons, app-icon sets, and social-media sizes from one source image. Also home to the pixel randomizer: every color gets swapped for a new, unrelated random one, consistently, so identical pixels always match but neighbors can end up worlds apart.">
+        <h3>Image Toolkit</h3>
       </div>
 
-      <div class="tool-card tool-card-soon reg-2">
-        <div class="tool-head">
-          <h3>SVG Toolkit</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>Upload an existing SVG to keep editing it in the Pixel Art SVG Drawer, or reach for the deeper tools here: optimize and simplify paths, replace colors, convert strokes and text to paths, normalize the viewBox, and build sprites from a folder of icons. The flagship: "Fix my SVG," which auto-resolves clipping, missing viewBoxes, and oversized canvases in one pass.</p>
+      <div class="tool-card tool-card-soon reg-2" data-tip="Upload an existing SVG to keep editing it in the Pixel Art SVG Drawer, or reach for the deeper tools here: optimize and simplify paths, replace colors, convert strokes and text to paths, normalize the viewBox, and build sprites from a folder of icons. The flagship: &quot;Fix my SVG,&quot; which auto-resolves clipping, missing viewBoxes, and oversized canvases in one pass.">
+        <h3>SVG Toolkit</h3>
       </div>
 
-      <div class="tool-card tool-card-soon reg-2">
-        <div class="tool-head">
-          <h3>QR Code &amp; Barcodes</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>Generate QR codes styled to match this site instead of plain black squares, still verified to scan cleanly, plus Wi-Fi, contact-card, and calendar-event QR codes, barcode generation and reading, and batch generation from a CSV for print-ready label sheets.</p>
+      <div class="tool-card tool-card-soon reg-2" data-tip="Generate QR codes styled to match this site instead of plain black squares, still verified to scan cleanly, plus Wi-Fi, contact-card, and calendar-event QR codes, barcode generation and reading, and batch generation from a CSV for print-ready label sheets.">
+        <h3>QR Code &amp; Barcodes</h3>
       </div>
 
-      <div class="tool-card tool-card-soon reg-2">
-        <div class="tool-head">
-          <h3>Audio Toolkit</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>Convert between MP3/WAV/M4A/OGG, trim, join, and normalize volume, remove silence, extract audio from video, and compress to a target file size. Also generates waveform images and strips audio metadata.</p>
+      <div class="tool-card tool-card-soon reg-2" data-tip="Convert between MP3/WAV/M4A/OGG, trim, join, and normalize volume, remove silence, extract audio from video, and compress to a target file size. Also generates waveform images and strips audio metadata.">
+        <h3>Audio Toolkit</h3>
       </div>
 
-      <div class="tool-card tool-card-soon reg-2">
-        <div class="tool-head">
-          <h3>Video Toolkit</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>Trim without re-encoding, strip audio, extract a frame, convert to and from GIF, compress to a target size, and fix aspect ratio or orientation. Plus subtitle conversion and timing shifts, and loop/boomerang clip generation.</p>
+      <div class="tool-card tool-card-soon reg-2" data-tip="Trim without re-encoding, strip audio, extract a frame, convert to and from GIF, compress to a target size, and fix aspect ratio or orientation. Plus subtitle conversion and timing shifts, and loop/boomerang clip generation.">
+        <h3>Video Toolkit</h3>
       </div>
 
-      <div class="tool-card tool-card-soon reg-1">
-        <div class="tool-head">
-          <h3>Text &amp; Document Utilities</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>Clean up pasted text: dedupe and sort lines, fix smart quotes and invisible Unicode characters, diff two files, and convert between Markdown, HTML, and plain text. Also formats and minifies JSON, YAML, CSS, and SQL, and counts tokens for common AI models.</p>
+      <div class="tool-card tool-card-soon reg-1" data-tip="Clean up pasted text: dedupe and sort lines, fix smart quotes and invisible Unicode characters, diff two files, and convert between Markdown, HTML, and plain text. Also formats and minifies JSON, YAML, CSS, and SQL, and counts tokens for common AI models.">
+        <h3>Text &amp; Document Utilities</h3>
       </div>
 
-      <div class="tool-card tool-card-soon reg-1">
-        <div class="tool-head">
-          <h3>CSV &amp; Spreadsheet Toolkit</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>"Fix this CSV" detects encoding, delimiter, and broken rows automatically, plus merge, split, dedupe, and diff CSV files, convert to and from XLSX and JSON, reshape wide/long data, and pull a random sample of rows.</p>
+      <div class="tool-card tool-card-soon reg-1" data-tip="&quot;Fix this CSV&quot; detects encoding, delimiter, and broken rows automatically, plus merge, split, dedupe, and diff CSV files, convert to and from XLSX and JSON, reshape wide/long data, and pull a random sample of rows.">
+        <h3>CSV &amp; Spreadsheet Toolkit</h3>
       </div>
 
-      <div class="tool-card tool-card-soon reg-3">
-        <div class="tool-head">
-          <h3>Developer Tools</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>JSON/JWT/Base64/URL formatting and decoding, UUID and hash generation, a regex tester, cron explainer, and converters for cURL, TypeScript types, and Zod schemas &mdash; the everyday grab-bag of things a browser tab full of separate sites usually handles.</p>
+      <div class="tool-card tool-card-soon reg-3" data-tip="JSON/JWT/Base64/URL formatting and decoding, UUID and hash generation, a regex tester, cron explainer, and converters for cURL, TypeScript types, and Zod schemas &mdash; the everyday grab-bag of things a browser tab full of separate sites usually handles.">
+        <h3>Developer Tools</h3>
       </div>
 
-      <div class="tool-card tool-card-soon reg-2">
-        <div class="tool-head">
-          <h3>Font Tools</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>Convert TTF/OTF to WOFF2, preview every glyph, detect missing characters, subset a font down to the characters you actually use, and generate a ready-to-paste @font-face block.</p>
+      <div class="tool-card tool-card-soon reg-2" data-tip="Convert TTF/OTF to WOFF2, preview every glyph, detect missing characters, subset a font down to the characters you actually use, and generate a ready-to-paste @font-face block.">
+        <h3>Font Tools</h3>
       </div>
 
-      <div class="tool-card tool-card-soon reg-2">
-        <div class="tool-head">
-          <h3>Color &amp; Design Tools</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>Convert between HEX/RGB/HSL/OKLCH, check and auto-repair contrast, extract a palette from an image, build tint/shade scales, and preview a palette under different types of color-vision deficiency.</p>
+      <div class="tool-card tool-card-soon reg-2" data-tip="Convert between HEX/RGB/HSL/OKLCH, check and auto-repair contrast, extract a palette from an image, build tint/shade scales, and preview a palette under different types of color-vision deficiency.">
+        <h3>Color &amp; Design Tools</h3>
       </div>
 
-      <div class="tool-card tool-card-soon reg-3">
-        <div class="tool-head">
-          <h3>Archive &amp; File Tools</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>Zip and unzip files entirely in-browser, strip macOS junk files from an archive, find duplicates by hash, generate and verify checksums, and sanitize or bulk-rename a folder of filenames.</p>
+      <div class="tool-card tool-card-soon reg-3" data-tip="Zip and unzip files entirely in-browser, strip macOS junk files from an archive, find duplicates by hash, generate and verify checksums, and sanitize or bulk-rename a folder of filenames.">
+        <h3>Archive &amp; File Tools</h3>
       </div>
 
-      <div class="tool-card tool-card-soon reg-3">
-        <div class="tool-head">
-          <h3>Geospatial Tools</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>Convert between GPX, KML, and GeoJSON, extract or remove GPS data from photos, calculate distances, and simplify or merge GPX tracks.</p>
+      <div class="tool-card tool-card-soon reg-3" data-tip="Convert between GPX, KML, and GeoJSON, extract or remove GPS data from photos, calculate distances, and simplify or merge GPX tracks.">
+        <h3>Geospatial Tools</h3>
       </div>
 
-      <div class="tool-card tool-card-soon reg-1">
-        <div class="tool-head">
-          <h3>Calendar &amp; Date Tools</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>View and convert ICS files, merge calendars, shift event times, fix timezone mistakes, and generate a recurring-event ICS from a plain-language rule.</p>
+      <div class="tool-card tool-card-soon reg-1" data-tip="View and convert ICS files, merge calendars, shift event times, fix timezone mistakes, and generate a recurring-event ICS from a plain-language rule.">
+        <h3>Calendar &amp; Date Tools</h3>
       </div>
 
-      <div class="tool-card tool-card-soon reg-1">
-        <div class="tool-head">
-          <h3>Email Tools</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>View EML files and their attachments, inspect headers with a plain-language SPF/DKIM/DMARC explanation, preview HTML emails at different widths, and strip tracking pixels from saved HTML.</p>
+      <div class="tool-card tool-card-soon reg-1" data-tip="View EML files and their attachments, inspect headers with a plain-language SPF/DKIM/DMARC explanation, preview HTML emails at different widths, and strip tracking pixels from saved HTML.">
+        <h3>Email Tools</h3>
       </div>
 
-      <div class="tool-card tool-card-soon reg-0">
-        <div class="tool-head">
-          <h3>Odds &amp; Ends</h3>
-          <span class="badge badge-soon">Coming soon</span>
-        </div>
-        <p>The stuff that doesn't fit a category: webpage-to-PDF, an invoice photo to structured CSV, a slider to compare two image versions, a signature photo to a transparent PNG/SVG, and a passport-photo sheet at exact print dimensions.</p>
+      <div class="tool-card tool-card-soon reg-0" data-tip="The stuff that doesn't fit a category: webpage-to-PDF, an invoice photo to structured CSV, a slider to compare two image versions, a signature photo to a transparent PNG/SVG, and a passport-photo sheet at exact print dimensions.">
+        <h3>Odds &amp; Ends</h3>
       </div>
 
     </div>

@@ -20,9 +20,15 @@
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
         Felix' Workshop
       </a>
-      <h1 class="tool-title">Image Metadata Cleaner</h1>
+      <div class="title-row">
+        <h1 class="tool-title">Image Metadata Cleaner</h1>
+        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M6.5 9.5a2.5 2.5 0 0 0 3.6.1l2.4-2.4a2.5 2.5 0 0 0-3.5-3.5l-1 1"></path><path d="M9.5 6.5a2.5 2.5 0 0 0-3.6-.1L3.5 8.8a2.5 2.5 0 0 0 3.5 3.5l1-1"></path></svg>
+          <span data-share-label>copy link</span>
+        </button>
+      </div>
     </div>
-    <button class="mode-btn" type="button" data-mode-toggle aria-label="Switch colour mode"><span data-mode-label>dark</span></button>
+    <button class="modeswitch" type="button" data-mode-toggle aria-label="Switch colour mode"><span class="modeswitch__fill" aria-hidden="true"></span><span class="sr-only">Switch between light and dark mode</span></button>
   </header>
 
   <div class="spine"></div>
@@ -116,5 +122,6 @@
 
 <script src="script.js"></script>
 <script src="../assets/controls.js"></script>
+<script src="../assets/share.js"></script>
 </body>
 </html>

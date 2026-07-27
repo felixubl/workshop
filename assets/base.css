@@ -152,6 +152,54 @@ header {
   line-height: 1.1;
 }
 
+/* The tool's name and the key that hands it to somebody else. The share
+   control sits with the title rather than out at the page edge, because what
+   it copies is a link to this tool specifically — put it in the corner with
+   the mode key and it starts to look like a page-level action. */
+.title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.6rem 0 0;
+}
+.title-row .tool-title {
+  margin: 0;
+}
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: var(--pp-target-compact);
+  padding: 0 0.6rem;
+  flex: none;
+  background: transparent;
+  color: var(--pp-muted);
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-sm);
+  font-family: var(--pp-font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+}
+.share-btn svg {
+  flex: none;
+}
+.share-btn:hover {
+  background: var(--pp-tint);
+  border-color: var(--pp-edge);
+  color: var(--pp-ink);
+}
+.share-btn:active {
+  transform: translate(1px, 1px);
+}
+/* Done is stated in plate 1, the only plate this system lets mean "that
+   worked", and it says so in words rather than swapping in a tick. */
+.share-btn.is-done {
+  border-color: var(--pp-plate-1);
+  color: var(--pp-plate-1-text);
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -186,54 +234,55 @@ header {
   margin: 0 0 1rem;
 }
 
-/* The mode control. It is not an icon, and the system is explicit about that:
-   the ink bullet, then a lowercase mono word naming the mode it would take you
-   to. That makes it the same object as every other key in a header here, at the
-   secondary rank — bullet, mono, 1px, cut corner.
+/* The mode control, and it is fubl.org's exactly: a 26×34 rectangle three
+   quarters full of ink, which slides to the other end when the mode flips. Not
+   an icon, not a word — a swatch of the two grounds, showing the one it would
+   give you.
 
-   It spent a while as the bullet alone, on the argument that spelling out both
-   the mode you are in and the mode you would get is three words explaining a
-   control with two positions. The count was the problem, not the word. One word
-   names the destination and nothing else, and it is the half that was doing the
-   work: the square is not a glyph for anything, it is the bullet those keys all
-   wear, so on its own it reads as a key whose label failed to load. There is
-   also no honest icon to reach for instead. The system's angle law rules out
-   the crescent, and a sun without arcs is a diamond with ticks.
+   This replaces a bullet-and-word key that argued its case at some length in
+   this file. The argument was sound on its own terms and wrong about the
+   surface: PREPRINT is one system across fubl.org and the workshop, the mode
+   control is the single object that appears in the corner of every page in it,
+   and two different corners is how a family stops looking related. The word
+   also had a job that turned out not to exist — it captioned a picture the
+   reader is standing inside, since the mode IS the page.
 
-   Size is set here rather than by the page, because this is the one control on
-   every surface in the family and the corner of a tool page has to be the same
-   corner as the index. Its neighbours on the index match these numbers. */
-.mode-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: var(--pp-target);
-  padding: 0 0.9rem;
+   Sized here rather than by the page for the same reason: the corner of a tool
+   page has to be the corner of the index has to be the corner of fubl.org. */
+.modeswitch {
+  display: flex;
+  flex-direction: column;
+  width: 26px;
+  height: 34px;
   flex: none;
-  background: transparent;
-  color: var(--pp-ink);
+  padding: 0;
+  background: var(--pp-paper);
   border: var(--pp-rule-line) solid var(--pp-line);
-  /* On the cut scale like every other control. Zero is not a step on it. */
-  border-radius: var(--pp-radius-md);
-  font-family: var(--pp-font-mono);
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: lowercase;
+  /* No radius, and that is deliberate: this is not a control on the cut scale,
+     it is a swatch of the two grounds. A corner would make it a button drawn
+     around an idea instead of the idea itself. */
+  overflow: hidden;
 }
-.mode-btn::before {
-  content: '';
-  width: 0.4rem;
-  height: 0.4rem;
-  background: currentColor;
-  flex: none;
-}
-.mode-btn:hover {
-  background: var(--pp-tint);
+.modeswitch:hover {
   border-color: var(--pp-edge);
 }
-.mode-btn:active {
-  transform: translate(1px, 1px);
+/* An ordinary flex child moved by translate, not an absolutely positioned one.
+   Inside a button the anonymous child box is not a containing block, so an
+   absolute child silently lands on its static position. Moving a block that is
+   75% tall by a third of its OWN height slides it exactly the leftover 25%. */
+.modeswitch__fill {
+  height: 75%;
+  flex: none;
+  background: var(--pp-ink);
+  transition: translate var(--pp-dur-state) var(--pp-ease-out);
+}
+[data-mode='dark'] .modeswitch__fill {
+  translate: 0 33.3333%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .modeswitch__fill {
+    transition: none;
+  }
 }
 
 /* Icon buttons. Square-ish, on the cut scale — the round ones were a pill

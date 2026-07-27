@@ -21,8 +21,10 @@ source so that claim is checkable rather than just asserted.
 The homepage ([index.html](index.html)) also lists a long line-up of
 "coming soon" tool categories: PDF, image, SVG, QR/barcode, audio, video,
 text/document, CSV/spreadsheet, developer, font, color, archive, geospatial,
-calendar, email, and more. Each new tool lands in its own top-level folder and
-swaps its card's badge from "Coming soon" to "Live" once it's built.
+calendar, email, and more. Each new tool lands in its own top-level folder, and
+its card goes from a dashed outline to solid stock with a cast once it's built.
+A card carries the tool's name and nothing else; what it does is on the card as
+its `data-tip`.
 
 ## Stack
 
@@ -40,8 +42,12 @@ Three CSS layers, in this order:
 | shared chrome | [`assets/base.css`](assets/base.css) | the classes every tool reuses, built only from `--pp-*` tokens |
 | the workshop's own deviations | [`assets/site.css`](assets/site.css) | the whole list: halftone screen, category washes, sticker chips, the tilt |
 
-Two shared scripts sit alongside them.
+Three shared scripts sit alongside them.
 [`assets/theme.js`](assets/theme.js) sets `data-mode` before the first paint.
+The mode control itself is the one fubl.org wears: a 26×34 swatch three
+quarters full of ink, which slides to the other end rather than naming a mode.
+[`assets/share.js`](assets/share.js) backs the one `[data-share]` button each
+tool page carries beside its title, which copies that tool's own address.
 [`assets/controls.js`](assets/controls.js) draws the five widgets the browser
 would otherwise style itself: the number field's spinner, the checkbox, the
 colour swatch and its OS dialog, the menu a `<select>` opens, and the grey box a
@@ -63,11 +69,17 @@ names it declares must not change.
    `../assets/preprint/styles.css`, `../assets/base.css`, and
    `../assets/site.css`. Write only the tool-specific layout in the tool's own
    `style.css`.
-3. At the end of `<body>`, load the tool's `script.js` and then
-   `../assets/controls.js`, in that order, so anything the tool builds at
-   startup is already in the DOM when the controls are drawn.
-4. Add a card for it to the root [index.html](index.html), and move its badge
-   from "Coming soon" to "Live".
+3. At the end of `<body>`, load the tool's `script.js`, then
+   `../assets/controls.js`, then `../assets/share.js`. The tool's own script
+   goes first so anything it builds at startup is already in the DOM when the
+   controls are drawn.
+4. Give the page the shared header: a `.back-link`, a `.title-row` holding the
+   `h1.tool-title` and the `[data-share]` button, and the `.modeswitch` in the
+   opposite corner.
+5. Add a card for it to the root [index.html](index.html): the card is the
+   tool's name and nothing else, with the description on it as `data-tip`.
+   Change the wrapper from `div.tool-card-soon` to `a.tool-card-live`, drop the
+   `reg-N` class, and update the tally count.
 
 ## License
 
