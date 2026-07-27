@@ -145,10 +145,14 @@
       return value;                   // number, string, Name, boolean, null
     }
 
+    // `skip` applies to the dictionary handed in and to nothing below it. A
+    // page's /Parent has to go, but an annotation's /Parent is the link to its
+    // form field: cutting that leaves a widget with no field, and the field
+    // object then never gets copied, so /AcroForm is dropped as well.
     copyDict(doc, dict, skip, depth) {
       const out = new Dict();
       for (const [k, v] of dict.entries()) {
-        if (skip && skip.has(k)) continue;
+        if (depth === 0 && skip && skip.has(k)) continue;
         out.set(k, this.copy(doc, v, skip, depth + 1));
       }
       return out;
