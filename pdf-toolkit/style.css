@@ -31,13 +31,15 @@
   gap: 6px;
   padding: 8px 8px 6px;
   background: var(--pp-paper);
-  border: var(--pp-border-hairline, 1px solid) var(--pp-line);
+  border: var(--pp-rule-line) solid var(--pp-line);
   cursor: var(--pp-cursor-point, pointer);
 }
 
+/* Selection is the one state the whole tool turns on, so it takes the system's
+   emphatic edge rather than a colour nudge. No lift and no shadow: the laws
+   grant a border colour or a tint and nothing else. */
 .page-card.is-selected {
-  border: var(--pp-border-default, 2px solid) var(--pp-ink);
-  box-shadow: var(--pp-lift);
+  border: var(--pp-rule-structure) solid var(--pp-edge);
 }
 
 /* The page being dragged and the gap it would drop into read differently:
@@ -63,7 +65,7 @@
   width: 100%;
   height: 148px;
   background: var(--pp-paper);
-  border: var(--pp-border-hairline, 1px solid) var(--pp-line);
+  border: var(--pp-rule-line) solid var(--pp-hair);
   overflow: hidden;
 }
 
