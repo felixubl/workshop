@@ -133,7 +133,7 @@
     return rgba;
   }
 
-  async function decodeImageStream(doc, ref, stream, renderer) {
+  async function decodeImageStream(doc, ref, stream, renderer, res) {
     const dict = stream.dict;
     const width = doc.get(dict, 'Width', 'W') | 0;
     const height = doc.get(dict, 'Height', 'H') | 0;
@@ -159,7 +159,7 @@
         const canvas = makeCanvas(bitmap.width, bitmap.height);
         const c = canvas.getContext('2d');
         c.drawImage(bitmap, 0, 0);
-        await applySoftMask(doc, dict, canvas, c, renderer);
+        await applySoftMask(doc, dict, canvas, c, renderer, res);
         if (typeof bitmap.close === 'function') bitmap.close();
         return { canvas, width: canvas.width, height: canvas.height, isMask: false };
       } catch {
@@ -196,17 +196,21 @@
       return { canvas, width, height, isMask: true };
     }
 
-    const cs = renderer.parseColorSpace(dict.get('ColorSpace', 'CS'), null, 0);
+    // Through colorSpace, not parseColorSpace: an image's /ColorSpace is very
+    // often a name like /Cs6 that only the page's resource dictionary can
+    // resolve, and the low-level parser answers DeviceGray for anything it does
+    // not recognise, which silently reads a third of each RGB row.
+    const cs = renderer.colorSpace(dict.get('ColorSpace', 'CS'), res);
     const rgba = samplesToRGBA(doc, bytes, width, height, bpc, cs, decode, renderer);
     if (!rgba) return null;
     img.data.set(rgba);
     c.putImageData(img, 0, 0);
-    await applySoftMask(doc, dict, canvas, c, renderer);
+    await applySoftMask(doc, dict, canvas, c, renderer, res);
     return { canvas, width, height, isMask: false };
   }
 
   // An /SMask is a greyscale image whose samples are the alpha channel.
-  async function applySoftMask(doc, dict, canvas, ctx, renderer) {
+  async function applySoftMask(doc, dict, canvas, ctx, renderer, res) {
     const smaskRef = dict.get('SMask');
     const smask = doc.resolve(smaskRef);
     if (!(smask instanceof PDFStream)) return;
@@ -215,7 +219,7 @@
     const mh = doc.get(smask.dict, 'Height') | 0;
     if (mw <= 0 || mh <= 0) return;
 
-    const mask = await decodeImageStream(doc, smaskRef, smask, renderer);
+    const mask = await decodeImageStream(doc, smaskRef, smask, renderer, res);
     if (!mask) return;
 
     try {
@@ -251,7 +255,7 @@
         const kind = subtype instanceof Name ? subtype.name : '';
 
         if (kind === 'Image') {
-          const drawable = await decodeImageStream(doc, ref, xo, renderer);
+          const drawable = await decodeImageStream(doc, ref, xo, renderer, resources);
           if (drawable) images.set(id, drawable);
         } else if (kind === 'Form') {
           const sub = doc.get(xo.dict, 'Resources');

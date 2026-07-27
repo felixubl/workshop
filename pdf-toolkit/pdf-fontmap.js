@@ -15,8 +15,8 @@
 
   const { Name, Dict, PDFStream, TrueTypeFont, CFFFont } = PDF;
 
-  // Codes 32..126 are the same in every Latin encoding, so only the parts that
-  // differ are spelled out. Everything else falls back to the character itself.
+  // Plain ASCII, which is what WinAnsi and MacRoman use across 32..126.
+  // StandardEncoding is the odd one out, see BASE_LOW_NAMES below.
   const STD_LOW = ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
 
   // WinAnsi is Windows code page 1252: Latin-1 with printable characters in
@@ -28,6 +28,15 @@
     0x93: 0x201c, 0x94: 0x201d, 0x95: 0x2022, 0x96: 0x2013, 0x97: 0x2014,
     0x98: 0x02dc, 0x99: 0x2122, 0x9a: 0x0161, 0x9b: 0x203a, 0x9c: 0x0153,
     0x9e: 0x017e, 0x9f: 0x0178,
+  };
+
+  // Across 32..126 the named base encodings agree except at these two codes,
+  // where StandardEncoding carries the typographic quotes and the others carry
+  // the typewriter apostrophe and the grave accent. Falling back to Standard
+  // for a WinAnsi font is what turns don't into don’t.
+  const BASE_LOW_NAMES = {
+    WinAnsiEncoding: { 39: 'quotesingle', 96: 'grave' },
+    MacRomanEncoding: { 39: 'quotesingle', 96: 'grave' },
   };
 
   // Glyph names that appear constantly in /Differences arrays. A full Adobe
@@ -430,7 +439,11 @@
       if (prog && prog.builtinEncoding && prog.builtinEncoding.has(code)) {
         return prog.builtinEncoding.get(code);
       }
-      if (!this.symbolic || this.encodingName) return PDF.standardEncodingName(code);
+      if (!this.symbolic || this.encodingName) {
+        const named = BASE_LOW_NAMES[this.encodingName];
+        if (named && named[code]) return named[code];
+        return PDF.standardEncodingName(code);
+      }
       return null;
     }
 

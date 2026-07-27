@@ -725,11 +725,16 @@
       return this.fontFor(ref, fd);
     }
 
+    // The cache outlives one document (the UI holds a single Map for the whole
+    // pile), so it is keyed per document first. Object numbers repeat across
+    // files, and a cached PDFFont is bound to the doc that built it.
     fontFor(ref, dict) {
+      let perDoc = this.fontCache.get(this.doc);
+      if (!perDoc) { perDoc = new Map(); this.fontCache.set(this.doc, perDoc); }
       const key = ref instanceof Ref ? 'r' + ref.num : dict;
-      if (this.fontCache.has(key)) return this.fontCache.get(key);
+      if (perDoc.has(key)) return perDoc.get(key);
       const font = new PDFFont(this.doc, dict);
-      this.fontCache.set(key, font);
+      perDoc.set(key, font);
       return font;
     }
 
