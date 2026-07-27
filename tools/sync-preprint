@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+"""Re-vendor PREPRINT into assets/preprint/.
+
+The system's source of truth is its own repo. This site keeps a COPY, committed,
+so the site builds and deploys with no network and no dependency, and so a
+system change is adopted deliberately rather than the moment someone saves a
+file somewhere else.
+
+    tools/sync-preprint [path-to-preprint]      default ../preprint
+
+One file is never overwritten: tokens/fonts.css. The system ships the Google
+Fonts @import, and this site replaces it with self-hosted @font-face rules,
+because a personal site does not hand a third party a request per reader. The
+family names are identical, so tokens/typography.css is untouched and nothing
+else has to know. If the system ever changes which FAMILIES it uses, that
+override has to be rewritten by hand and this script will say so.
+
+Afterwards the vendored copy carries a VERSION stamp naming the commit it came
+from, so a stale copy is visible instead of merely suspected.
+"""
+import filecmp
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent.parent
+DEST = HERE / "assets" / "preprint"
+KEEP = {"tokens/fonts.css"}
+# What a site actually links. The system carries more (cards, guidelines, the
+# living documents) and none of it belongs in a deploy.
+#
+# The destination is assets/preprint/ and that is not a preference: tokens/
+# cursors.css declares its pointer urls absolutely, from /assets/preprint/,
+# because a relative url() inside a custom property is resolved against the
+# document by Chrome and Safari and silently 404s. Vendor elsewhere and the
+# pointers go stock without telling you.
+VENDOR = ["styles.css", "core.css", "surfaces", "tokens", "assets"]
+
+
+def families(css: str) -> set:
+    """The font families a token file names, so a changed set can be caught."""
+    return set(re.findall(r"font-family:\s*'([^']+)'", css)) | set(
+        re.findall(r"family=([A-Za-z+4]+)", css)
+    )
+
+
+def main() -> int:
+    src = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else (HERE.parent / "preprint")
+    if not (src / "core.css").exists():
+        print(f"not a PREPRINT checkout: {src}", file=sys.stderr)
+        return 1
+
+    # The override is only safe while the system asks for the same families. A
+    # site may deliberately ship a SUBSET — the workshop has no mathematics and
+    # so no Source Serif 4 — but it has to say so, in the file, by name. The
+    # point of the guard is that a family going missing by accident and a family
+    # left out on purpose look identical in a diff.
+    ours = DEST / "tokens" / "fonts.css"
+    theirs = src / "tokens" / "fonts.css"
+    if ours.exists() and theirs.exists():
+        text = ours.read_text()
+        norm = lambda s: {x.replace("+", " ") for x in s}
+        a, b = norm(families(text)), norm(families(theirs.read_text()))
+        # `omits: Family, Other Family — the reason`. The reason is prose and is
+        # for a human, so everything from the first dash on is discarded.
+        omitted = set()
+        for line in re.findall(r"omits:\s*([^\n]+)", text):
+            names = re.split(r"\s[—–-]\s", line, maxsplit=1)[0]
+            omitted |= {f.strip() for f in names.split(",") if f.strip()}
+        missing = b - a - omitted
+        extra = a - b
+        if missing or extra:
+            print("STOP: this site's fonts no longer match the system's.", file=sys.stderr)
+            if missing:
+                print(f"  system asks for, not self-hosted here: {sorted(missing)}", file=sys.stderr)
+                print("  Either add the @font-face rules, or declare it on purpose with a", file=sys.stderr)
+                print("  comment line in tokens/fonts.css:  omits: Family Name — why", file=sys.stderr)
+            if extra:
+                print(f"  self-hosted here, system no longer asks for: {sorted(extra)}", file=sys.stderr)
+            return 2
+        if omitted:
+            print(f"  fonts: deliberately omitting {sorted(omitted)}")
+
+    DEST.mkdir(parents=True, exist_ok=True)
+    changed, kept = [], []
+    for item in VENDOR:
+        s, d = src / item, DEST / item
+        if not s.exists():
+            print(f"  missing in system, skipped: {item}")
+            continue
+        if s.is_dir():
+            for f in sorted(s.rglob("*")):
+                if f.is_dir():
+                    continue
+                rel = f.relative_to(src)
+                if str(rel) in KEEP:
+                    kept.append(str(rel))
+                    continue
+                out = DEST / rel
+                out.parent.mkdir(parents=True, exist_ok=True)
+                if not out.exists() or not filecmp.cmp(f, out, shallow=False):
+                    shutil.copy2(f, out)
+                    changed.append(str(rel))
+        else:
+            if not d.exists() or not filecmp.cmp(s, d, shallow=False):
+                shutil.copy2(s, d)
+                changed.append(item)
+
+    # Prune. A copy-only sync leaves a file the system has DELETED sitting in
+    # the vendored tree, still linkable and now unowned, which is a slower and
+    # nastier version of the drift this script exists to stop.
+    wanted = set()
+    for item in VENDOR:
+        s = src / item
+        if s.is_dir():
+            wanted |= {str(f.relative_to(src)) for f in s.rglob("*") if f.is_file()}
+        elif s.exists():
+            wanted.add(item)
+    removed = []
+    for f in sorted(DEST.rglob("*")):
+        if not f.is_file():
+            continue
+        rel = str(f.relative_to(DEST))
+        if rel == "VERSION" or rel in KEEP:
+            continue
+        if rel not in wanted:
+            f.unlink()
+            removed.append(rel)
+    for d in sorted(DEST.rglob("*"), reverse=True):
+        if d.is_dir() and not any(d.iterdir()):
+            d.rmdir()
+
+    rev = subprocess.run(
+        ["git", "-C", str(src), "describe", "--always", "--dirty"],
+        capture_output=True, text=True,
+    ).stdout.strip() or "unknown"
+    (DEST / "VERSION").write_text(
+        f"{rev}\n"
+        f"# PREPRINT, vendored from {src}. Do not edit anything in this\n"
+        f"# directory: run tools/sync-preprint instead. tokens/fonts.css is\n"
+        f"# this site's self-hosted override and is deliberately not synced.\n"
+    )
+
+    print(f"PREPRINT {rev} → assets/preprint/")
+    print(f"  {len(changed)} file(s) updated" + (f": {', '.join(changed[:6])}" if changed else ""))
+    if removed:
+        print(f"  {len(removed)} file(s) pruned: {', '.join(removed[:6])}")
+    for k in kept:
+        print(f"  kept this site's own: {k}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

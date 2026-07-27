@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>fingerprint</title></head>
+<body style="margin:0;font:12px ui-monospace,monospace">
+<pre id="out">running…</pre>
+
+<!-- Every page the workshop actually serves, at one width. The fingerprint is
+     a rename's proof: class ATTRIBUTES change, computed STYLE must not. -->
+<iframe id="p0" src="/"                    style="width:1280px;height:900px;border:0"></iframe>
+<iframe id="p1" src="/draw-svg/"           style="width:1280px;height:900px;border:0"></iframe>
+<iframe id="p2" src="/metadata-cleaner/"   style="width:1280px;height:900px;border:0"></iframe>
+<iframe id="p3" src="/random-numbers/"     style="width:1280px;height:900px;border:0"></iframe>
+
+<script>
+/* The properties a rename could plausibly disturb. Deliberately not the whole
+   computed set: that carries dozens of values no stylesheet here ever sets, and
+   the noise would bury a real change. */
+var PROPS = [
+  'display','position','font-family','font-size','font-weight','line-height',
+  'letter-spacing','text-transform','color','background-color','background-image',
+  'border-top-width','border-right-width','border-bottom-width','border-left-width',
+  'border-top-style','border-top-color','border-radius','box-shadow','opacity',
+  'padding-top','padding-right','padding-bottom','padding-left',
+  'margin-top','margin-right','margin-bottom','margin-left',
+  'width','height','flex-direction','justify-content','align-items','gap',
+  'grid-template-columns','transform','cursor','visibility'
+];
+
+function walk(doc, win, label, out) {
+  var els = doc.querySelectorAll('*'), i, el, cs, row, p;
+  for (i = 0; i < els.length; i++) {
+    el = els[i];
+    if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue;
+    cs = win.getComputedStyle(el);
+    row = [];
+    for (p = 0; p < PROPS.length; p++) row.push(cs.getPropertyValue(PROPS[p]));
+    /* Keyed by position and tag, NEVER by class — the class is the thing that
+       is allowed to change. A structural edit shows up as a shifted index and
+       is caught just as loudly. */
+    out.push(label + '|' + i + '|' + el.tagName + '|' + row.join('~'));
+  }
+}
+
+setTimeout(function () {
+  var out = [], ids = ['p0', 'p1', 'p2', 'p3'];
+  var names = ['index', 'draw-svg', 'metadata-cleaner', 'random-numbers'];
+  for (var k = 0; k < ids.length; k++) {
+    var f = document.getElementById(ids[k]);
+    try {
+      walk(f.contentDocument, f.contentWindow, names[k], out);
+    } catch (e) {
+      out.push(names[k] + '|ERROR|' + e.message);
+    }
+  }
+  document.getElementById('out').textContent = out.join('\n');
+}, 7000);
+</script>
+</body>
+</html>

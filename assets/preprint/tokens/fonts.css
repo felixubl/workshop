@@ -13,7 +13,9 @@
    latin-ext subsets pulled from Google Fonts, both under the OFL.
 
    Source Serif 4 is not shipped: it is used only inside mathematics, which no
-   tool in this workshop sets. --pp-font-math falls back to Georgia. */
+   tool in this workshop sets. --pp-font-math falls back to Georgia. 
+   omits: Source Serif 4 — it exists in this system for mathematics only, and
+   the workshop has none. Add it the day a tool renders an equation. */
 
 @font-face {
   font-family: 'Hepta Slab';

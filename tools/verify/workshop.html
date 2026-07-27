@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>verify — the workshop</title></head>
+<body style="margin:0;font:13px ui-monospace,monospace">
+<pre id="out">running…</pre>
+
+<!-- The frames are the real pages. Every assertion below is one of the laws in
+     PREPRINT's guidelines/laws.md or one line of the migration brief's own
+     "Done when" checklist, which is the closest thing this site has to a spec. -->
+<iframe id="home"  src="/"                  style="width:1280px;height:900px;border:0"></iframe>
+<iframe id="tool"  src="/draw-svg/"         style="width:1280px;height:900px;border:0"></iframe>
+<iframe id="meta"  src="/metadata-cleaner/" style="width:1280px;height:900px;border:0"></iframe>
+<iframe id="rand"  src="/random-numbers/"   style="width:1280px;height:900px;border:0"></iframe>
+<iframe id="narrow" src="/"                 style="width:390px;height:800px;border:0"></iframe>
+
+<script>
+var results = [];
+function ok(name, cond, detail) {
+  results.push((cond ? 'PASS  ' : 'FAIL  ') + name + (detail ? '  ::  ' + detail : ''));
+  document.getElementById('out').textContent = results.join('\n');
+}
+window.onerror = function (m, s, l) { ok('uncaught ' + m + ' @' + l, false); };
+
+function everyEl(d) { return Array.prototype.slice.call(d.querySelectorAll('*')); }
+
+function run() {
+  var H = document.getElementById('home'), hd = H.contentDocument, hw = H.contentWindow;
+  var T = document.getElementById('tool'), td = T.contentDocument, tw = T.contentWindow;
+  var M = document.getElementById('meta'), md = M.contentDocument, mw = M.contentWindow;
+  var R = document.getElementById('rand'), rd = R.contentDocument, rw = R.contentWindow;
+  var N = document.getElementById('narrow'), nd = N.contentDocument, nw = N.contentWindow;
+
+  var pages = [
+    { n: 'index', d: hd, w: hw }, { n: 'draw-svg', d: td, w: tw },
+    { n: 'metadata-cleaner', d: md, w: mw }, { n: 'random-numbers', d: rd, w: rw }
+  ];
+
+  /* ── the faces ─────────────────────────────────────────────────────────── */
+  // A face that failed to load falls back and the family string still reads
+  // right, so measure the rendered advance rather than trusting the name.
+  function loaded(d, w, family) {
+    var a = d.createElement('span'), b = d.createElement('span');
+    a.textContent = b.textContent = 'HHHHHHHHHHHH';
+    a.style.cssText = 'position:absolute;visibility:hidden;font-size:40px;font-family:' + family;
+    b.style.cssText = 'position:absolute;visibility:hidden;font-size:40px;font-family:monospace';
+    d.body.appendChild(a); d.body.appendChild(b);
+    var differs = Math.abs(a.offsetWidth - b.offsetWidth) > 1;
+    d.body.removeChild(a); d.body.removeChild(b);
+    return differs;
+  }
+  ok('display face Hepta Slab really loaded', loaded(hd, hw, "'Hepta Slab'"));
+  ok('body face Zilla Slab really loaded', loaded(hd, hw, "'Zilla Slab'"));
+  /* Cousine is metrically compatible with Courier New, so measuring it against
+     the generic monospace proves nothing. Ask the font loader instead. */
+  ok('mono face Cousine really loaded', hd.fonts.check("12px 'Cousine'"));
+
+  /* Body copy is Zilla Slab and NOT mono. The brief calls the old
+     mono-as-body-text the one real change to the reading experience. */
+  var desc = hd.querySelector('.tool-card p');
+  if (desc) {
+    var f = hw.getComputedStyle(desc).fontFamily;
+    ok('card prose is set in Zilla Slab, not mono', /Zilla Slab/.test(f), f);
+  } else { ok('a card description exists to measure', false); }
+
+  /* ── the cut scale, and what may be round ──────────────────────────────── */
+  // Pill belongs to tags and badges and nothing else.
+  pages.forEach(function (p) {
+    var round = everyEl(p.d).filter(function (el) {
+      var r = p.w.getComputedStyle(el).borderRadius;
+      if (!/9999px|50%/.test(r)) return false;
+      // a tag or badge may be a pill, whatever it is called
+      return !/\b(tag|badge|pill|badge-live|badge-soon)\b/.test(el.className || '');
+    });
+    ok('[' + p.n + '] no pill radius outside tags and badges', round.length === 0,
+       round.length ? round.length + ' offenders, first: ' + round[0].tagName + '.' + round[0].className : '');
+  });
+
+  /* ── shadows are plates printed off register, never soft ───────────────── */
+  pages.forEach(function (p) {
+    var soft = everyEl(p.d).filter(function (el) {
+      var s = p.w.getComputedStyle(el).boxShadow;
+      if (!s || s === 'none') return false;
+      // rgb(...) Xpx Ypx BLURpx  — the third length is the blur and must be 0
+      var m = s.match(/(-?[\d.]+)px\s+(-?[\d.]+)px\s+([\d.]+)px/);
+      return m && parseFloat(m[3]) !== 0;
+    });
+    ok('[' + p.n + '] every shadow is a hard offset, no blur', soft.length === 0,
+       soft.length ? soft.length + ' soft, first: ' + soft[0].tagName + '.' + soft[0].className : '');
+  });
+
+  /* ── nothing below 11.2px ──────────────────────────────────────────────── */
+  pages.forEach(function (p) {
+    var tiny = everyEl(p.d).filter(function (el) {
+      if (!el.textContent || !el.textContent.trim()) return false;
+      if (!el.offsetWidth && !el.offsetHeight) return false;
+      return parseFloat(p.w.getComputedStyle(el).fontSize) < 11.2;
+    });
+    ok('[' + p.n + '] nothing is set below 11.2px', tiny.length === 0,
+       tiny.length ? tiny.length + ' too small, first: ' + tiny[0].tagName + '.' + tiny[0].className +
+                     ' at ' + p.w.getComputedStyle(tiny[0]).fontSize : '');
+  });
+
+  /* ── exactly one 6px rule per page: the spine ──────────────────────────── */
+  pages.forEach(function (p) {
+    var six = everyEl(p.d).filter(function (el) {
+      var cs = p.w.getComputedStyle(el);
+      return ['borderTopWidth', 'borderBottomWidth', 'borderLeftWidth', 'borderRightWidth']
+        .some(function (s) { return parseFloat(cs[s]) === 6; });
+    });
+    ok('[' + p.n + '] the 6px spine is spent exactly once', six.length <= 1,
+       six.length + ' element(s) carry a 6px rule');
+  });
+
+  /* ── the dark mode is the vendored one, unforked ───────────────────────── */
+  // site.css is the variant layer. It may name its own --w-* values and it may
+  // NOT restate the system's ground, ink or plates: forking those is how a
+  // family stops looking related.
+  fetch('/assets/site.css').then(function (r) { return r.text(); }).then(function (css) {
+    var forked = (css.match(/--pp-(paper|ink|surface|sunk|edge|line|hair|plate-[123])\s*:/g) || []);
+    ok('the variant layer does not fork ground, ink or plates',
+       forked.length === 0, forked.length ? forked.join(' ') : 'none');
+    var dead = (css.match(/--(accent|shadow-1|shadow-2|glass)\s*:/g) || []);
+    ok('no --accent, --shadow-N or --glass survive', dead.length === 0, dead.join(' '));
+    finish();
+  }).catch(function (e) { ok('site.css is readable', false, e.message); finish(); });
+
+  /* ── the mark, and the pointers ────────────────────────────────────────── */
+  /* The workshop does not draw the system's three-plate mark. Its wordmark is
+     the mark: a stroked W in plate ink, with four nails pinning the signboard.
+     Asserted as it is, not as the system's default, because this is a licensed
+     variant and the harness should defend the variant it actually has. */
+  var wm = hd.querySelector('.wordmark');
+  ok('the wordmark is the workshop\'s mark', !!wm);
+  if (wm) {
+    ok('the W carries the plate stroke',
+       !!wm.querySelector('.mark-w'),
+       hw.getComputedStyle(wm.querySelector('.mark-w') || wm).webkitTextStrokeColor || '');
+    ok('the signboard keeps its four nails',
+       (wm.querySelectorAll('.nails i') || []).length === 4,
+       wm.querySelectorAll('.nails i').length + ' nails');
+  }
+
+  /* Drawn pointers: the brief wires arrow on the body and point on anything
+     clickable. A class-level `cursor: pointer` silently outranks that wiring,
+     which is the trap fubl.org documents at length, so assert the token won. */
+  var clickable = hd.querySelector('a[href], button');
+  if (clickable) {
+    var c = hw.getComputedStyle(clickable).cursor;
+    ok('a clickable object takes the DRAWN pointer, not the stock hand',
+       /url\(/.test(c), c);
+  }
+
+  /* ── the narrow width still holds ──────────────────────────────────────── */
+  var nb = nd.body;
+  ok('no horizontal overflow at 390px',
+     nb.scrollWidth <= nb.clientWidth + 1,
+     nb.scrollWidth + ' vs ' + nb.clientWidth);
+
+  /* ── the cards ─────────────────────────────────────────────────────────── */
+  var cards = hd.querySelectorAll('.tool-card');
+  ok('the index lists its tools as cards', cards.length > 0, cards.length + ' cards');
+  var live = hd.querySelectorAll('.tool-card-live').length;
+  var soon = hd.querySelectorAll('.tool-card-soon').length;
+  ok('every card is either live or coming', live + soon === cards.length,
+     live + ' live, ' + soon + ' soon, ' + cards.length + ' total');
+}
+
+var done = false;
+function finish() {
+  if (done) return; done = true;
+  var pass = results.filter(function (r) { return r.indexOf('PASS') === 0; }).length;
+  var fail = results.length - pass;
+  results.push('', pass + ' pass, ' + fail + ' fail');
+  document.getElementById('out').textContent = results.join('\n');
+}
+
+window.addEventListener('load', function () { setTimeout(run, 2500); });
+</script>
+</body>
+</html>

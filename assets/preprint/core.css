@@ -1,0 +1,78 @@
+/* PREPRINT — core.
+ *
+ * What every surface gets, read or used. Loaded after `styles.css` (the
+ * tokens) and before exactly one surface sheet:
+ *
+ *   <link rel="stylesheet" href="…/preprint/styles.css">    tokens
+ *   <link rel="stylesheet" href="…/preprint/core.css">      this file
+ *   <link rel="stylesheet" href="…/preprint/reading.css">   OR app.css
+ *   <link rel="stylesheet" href="…/your-site.css">          the surface's own
+ *
+ * Nothing here reads a colour, a face or a control height that is not a token.
+ *
+ * Core is deliberately small. A rule earns a place here only when both a
+ * reading page and an app want it in the same form. Where the two surfaces
+ * want the same NAME in different forms — `.btn`, `.note`, `.rail`,
+ * `.head__row` — the name is left to the surface sheets on purpose, because
+ * this system is for pages that are read and apps that are used, and those are
+ * not the same object wearing two hats.
+ */
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body { background: var(--pp-paper); }
+
+/* The system underlines every link. Most links on a surface are structural — a
+   row, a button, an icon — so the underline is opted into, not out of. The
+   colour is the surface's call: a reading page inherits it, an app draws links
+   in plate 3. */
+a { border-bottom: 0; }
+
+button { background: transparent; border: 0; font: inherit; color: inherit; }
+
+:focus-visible { outline: 3px solid var(--pp-selection); outline-offset: 1px; }
+
+/* An ink square: the system's punctuation for a button label. Surfaces resize
+   it in context (a compact button takes .4rem, a ghost .35rem) but never
+   restyle it. */
+.sq { width: .45rem; height: .45rem; background: currentColor; flex: none; display: block; }
+.sq--r { background: var(--pp-plate-2); }
+
+/* ── type utilities ─────────────────────────────────────────────────────── */
+.quiet { font-size: .7rem; color: var(--pp-faint); }
+.lede { font-size: .95rem; line-height: 1.6; color: var(--pp-muted); max-width: 72ch; }
+/* The label above a thing. Surfaces add their own layout and colour: a reading
+   page sets it inline-flex beside a square, an app paints it faint. */
+.eyebrow { font-size: .68rem; letter-spacing: .2em; text-transform: uppercase; }
+
+/* ── the mark ───────────────────────────────────────────────────────────────
+   Three offset plate squares, multiplied. This is the whole mark. The system
+   does not have a logo and does not draw one. */
+.mark { position: relative; display: block; width: 22px; height: 22px; flex: none; }
+.mark i { position: absolute; width: 14px; height: 14px; mix-blend-mode: multiply; }
+.mark i:nth-child(1) { left: 0; top: 0; background: var(--pp-plate-1); }
+.mark i:nth-child(2) { left: 8px; top: 2px; background: var(--pp-plate-2); }
+.mark i:nth-child(3) { left: 4px; top: 8px; background: var(--pp-plate-3); }
+/* Multiply darkens toward the ground, which on a dark ground erases the mark.
+   Screen is the same gesture the other way up. */
+[data-mode='dark'] .mark i { mix-blend-mode: screen; }
+
+/* ── the ink treatment ──────────────────────────────────────────────────────
+   The one button state both surfaces agree on: a filled block of edge with
+   paper on top. Size, tracking and case belong to the surface, because a door
+   on a reading page and a Save in a console are not the same size object. */
+.btn--ink {
+  background: var(--pp-edge); color: var(--pp-paper);
+  border: var(--pp-rule-structure) solid var(--pp-edge);
+}
+
+/* ── the toast ──────────────────────────────────────────────────────────────
+   Says what just happened and leaves. Identical on both surfaces, so it lives
+   here whole. */
+.toast {
+  position: fixed; left: 50%; bottom: 1.5rem; transform: translateX(-50%);
+  z-index: 60; padding: .5rem .9rem; background: var(--pp-ink);
+  color: var(--pp-paper); font-family: var(--pp-font-mono); font-size: .72rem;
+  letter-spacing: .06em;
+}
+.toast.is-bad { background: var(--pp-plate-2); color: #fff; }

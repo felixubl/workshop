@@ -1313,3 +1313,77 @@ fixed zip timestamp follows the same logic: an archive stamped with the reader's
 clock would leak the thing the tool was hired to remove.
 **Not explicitly requested** — flagged for review. The rename switch is an added
 feature rather than a requested one, and defaults to off.
+
+## 2026-07-27 — The workshop joins the vendoring model, and gets a harness
+
+**Decided:** PREPRINT now lives in its own repo (`~/code/preprint`) and arrives
+here through `tools/sync-preprint`, which stamps `assets/preprint/VERSION` with
+the commit it copied. The vendored tree moved to `assets/preprint/assets/
+{cursors,icons}`, matching fubl.org, and `design/` is gone.
+
+**Why `design/` went:** it was a gitignored, byte-for-byte duplicate of the same
+directory in the personal site's repo, dead React components included. Two full
+copies of a design system's source is the exact problem the vendoring model
+exists to remove. All 111 non-JSX files were compared against the new repo
+before deletion: 109 identical, and the two that differed (`readme.md`,
+`tokens/cursors.css`) differed because the new repo has the NEWER version.
+
+**The pointers are no longer restated here.** `assets/site.css` used to redeclare
+all thirteen cursor tokens at absolute paths, to work around Chrome resolving a
+relative `url()` inside a custom property against the document. fubl.org's
+stylesheet carried the same workaround at a different path. The system took it
+back, so this file declares nothing about pointers and is 65 lines rather than
+99.
+
+**A harness exists now, and it did not before.** `tools/verify/workshop.html`
+runs 29 checks against the real pages in headless Chrome, and every one of them
+is a line from the migration brief's own "Done when" list or a law from
+`guidelines/laws.md`: no pill radius outside tags and badges, every shadow a hard
+offset, nothing below 11.2px, exactly one 6px spine per page, body copy in Zilla
+Slab rather than mono, and the variant layer not forking ground, ink or plates.
+It was written before anything was moved and it has been green throughout.
+
+**Not explicitly requested** — `tools/verify/fingerprint.html`. It walks every
+element on all four pages and records 38 computed properties, so a refactor can
+be proved to have changed nothing rather than argued to have. It earned its place
+immediately: after the vendored tree moved, it showed that of 469 elements the
+only property that changed anywhere was `cursor`, on 395 of them, and only in the
+path segment. Flagged for review, and worth keeping before the class rename.
+
+**Still to do:** the class vocabulary. `base.css` and the system's `core.css` +
+`app.css` share exactly one class name, `.field`, while implementing the same
+components under different names (`.btn-primary` against `.btn--ink`, `.hint`
+against `.note`, `.tag` against `.pill`). Five classes are dead outright
+(`.font-slab`, `.foot-link`, `.icon-btn`, `.muted`, `.plate-mark`) and get
+deleted rather than renamed. The drawn controls this site has and the system
+lacks (`.stepper`, `.picker`, `.hue`, `.sv`, `.swatch*`, `.pop*`, `.select-*`,
+`.dropzone`, the checkbox) are a straight gain for the system and should be
+promoted into `app.css`. That work is scoped and not started.
+
+## 2026-07-27 — The system's component sheets are vendored here but not linked yet
+
+**Decided:** `assets/preprint/core.css` and `assets/preprint/surfaces/app.css`
+now sit in this repo and nothing loads them. The page still links
+`styles.css`, `assets/base.css`, `assets/site.css`, exactly as before.
+
+**Why:** the sync script vendors what the system ships, and the system ships
+those sheets. Linking them is a different job. `core.css` carries its own reset
+and its own `a`, `button` and `:focus-visible` rules, and `base.css` already has
+all four. Loading both before the class vocabularies are reconciled would put two
+resets on the page and change computed values on almost every element, which is
+precisely the thing the fingerprint exists to prevent. They land the day the
+rename lands, and `base.css` shrinks to what is genuinely this site's.
+
+**So, for anyone reading the tree before then:** two vendored files are dead
+weight on purpose. That is a known state, not an oversight, and the harness does
+not assert on them.
+
+**Not explicitly requested** — leaving them vendored rather than trimming the
+sync list to what is linked today. Trimming would have meant special-casing this
+site inside a script whose whole value is that both consumers run the identical
+one. Flagged for review.
+
+**Also added, unasked:** `serve.py`, copied from fubl.org and pointed at port
+8770. The harness needs same-origin iframes and `python3 -m http.server` answers
+304 from cache, which makes an edited stylesheet look unchanged while you stare
+at it. Flagged for review.
