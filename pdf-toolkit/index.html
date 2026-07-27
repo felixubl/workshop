@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF Toolkit — Felix' Workshop</title>
+<meta name="description" content="Merge, split, extract, reorder and rotate PDF pages, with every page shown as a real preview. Runs entirely in your browser: nothing is uploaded.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
+<script src="../assets/preprint/js/mode.js"></script>
+<link rel="stylesheet" href="../assets/preprint/styles.css">
+<link rel="stylesheet" href="../assets/preprint/controls.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <div class="title-row">
+        <h1 class="tool-title">PDF Toolkit</h1>
+        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
+          <span data-share-label>copy link</span>
+        </button>
+        <button class="share-btn pin-btn" type="button" data-pin="pdf-toolkit" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+      </div>
+    </div>
+    <button class="modeswitch" type="button" data-mode-toggle aria-label="Switch colour mode"><span class="modeswitch__fill" aria-hidden="true"></span><span class="sr-only">Switch between light and dark mode</span></button>
+  </header>
+
+  <div class="spine"></div>
+
+  <div class="dropzone" id="drop">
+    <p><strong>Drop PDFs here</strong>, or <button class="btn-ghost" type="button" id="pick">choose files</button></p>
+    <p class="sheet-note">Nothing is uploaded. Every file is read, rearranged and saved by this tab alone.</p>
+    <input type="file" id="file" accept="application/pdf,.pdf" multiple hidden>
+  </div>
+
+  <p class="hint" id="loadNote" hidden></p>
+
+  <div id="workspace" hidden>
+    <div class="toolbar">
+      <div class="group">
+        <label for="range">Select pages</label>
+        <input class="field" type="text" id="range" placeholder="1-3, 8, 12-" size="14">
+      </div>
+      <div class="group">
+        <label>&nbsp;</label>
+        <div class="btn-row">
+          <button class="btn-ghost" type="button" id="selApply">Apply</button>
+          <button class="btn-ghost" type="button" id="selAll">All</button>
+          <button class="btn-ghost" type="button" id="selNone">None</button>
+          <button class="btn-ghost" type="button" id="selInvert">Invert</button>
+        </div>
+      </div>
+      <div class="group">
+        <label>Turn selected</label>
+        <div class="btn-row">
+          <button class="btn-ghost" type="button" id="rotL" data-tip="Turn the selected pages a quarter turn anticlockwise">&#8630; Left</button>
+          <button class="btn-ghost" type="button" id="rotR" data-tip="Turn the selected pages a quarter turn clockwise">&#8631; Right</button>
+        </div>
+      </div>
+      <div class="group">
+        <label>Order</label>
+        <div class="btn-row">
+          <button class="btn-ghost" type="button" id="moveUp" data-tip="Move the selected pages one place earlier">Earlier</button>
+          <button class="btn-ghost" type="button" id="moveDown" data-tip="Move the selected pages one place later">Later</button>
+          <button class="btn-ghost" type="button" id="reverse">Reverse</button>
+        </div>
+      </div>
+      <div class="group">
+        <label>Remove</label>
+        <div class="btn-row">
+          <button class="btn-ghost" type="button" id="del" data-tip="Take the selected pages out of the document being built">Delete</button>
+          <button class="btn-ghost" type="button" id="keepOnly" data-tip="Throw away everything except the selected pages">Keep only</button>
+          <button class="btn-ghost" type="button" id="reset">Start over</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-bar">
+      <span class="section-label">Pages</span>
+      <span class="tag" id="tally">nothing loaded</span>
+    </div>
+
+    <div id="grid" class="page-grid"></div>
+
+    <div class="toolbar save-bar">
+      <div class="group">
+        <label for="outName">Save as</label>
+        <input class="field" type="text" id="outName" value="combined.pdf" size="20">
+      </div>
+      <div class="group">
+        <label>&nbsp;</label>
+        <div class="btn-row">
+          <button class="btn-primary" type="button" id="save">Save PDF</button>
+          <button class="btn-ghost" type="button" id="saveSel" data-tip="Save only the selected pages as their own file">Save selection</button>
+        </div>
+      </div>
+      <div class="group">
+        <label for="splitEvery">Split every</label>
+        <input class="field" type="number" id="splitEvery" value="1" min="1" max="9999" size="4">
+      </div>
+      <div class="group">
+        <label>&nbsp;</label>
+        <div class="btn-row">
+          <button class="btn-ghost" type="button" id="split" data-tip="Save one file per chunk of that many pages">Split into files</button>
+        </div>
+      </div>
+    </div>
+    <p class="sheet-note" id="saveNote"></p>
+  </div>
+
+  <p class="sr-only" id="say" role="status" aria-live="polite"></p>
+</div>
+
+<script src="pdf-lex.js"></script>
+<script src="pdf-filters.js"></script>
+<script src="pdf-doc.js"></script>
+<script src="pdf-write.js"></script>
+<script src="pdf-ops.js"></script>
+<script src="pdf-font.js"></script>
+<script src="pdf-fontmap.js"></script>
+<script src="pdf-render.js"></script>
+<script src="pdf-image.js"></script>
+<script src="script.js"></script>
+<script src="../assets/preprint/js/controls.js"></script>
+<script src="../assets/share.js"></script>
+<script src="../assets/favourites.js"></script>
+</body>
+</html>

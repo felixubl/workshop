@@ -10,6 +10,7 @@
 <iframe id="p1" src="/draw-svg/"           style="width:1280px;height:900px;border:0"></iframe>
 <iframe id="p2" src="/metadata-cleaner/"   style="width:1280px;height:900px;border:0"></iframe>
 <iframe id="p3" src="/random-numbers/"     style="width:1280px;height:900px;border:0"></iframe>
+<iframe id="p4" src="/pdf-toolkit/"        style="width:1280px;height:900px;border:0"></iframe>
 
 <script>
 /* The properties a rename could plausibly disturb. Deliberately not the whole
@@ -43,7 +44,7 @@ function walk(doc, win, label, out) {
 
 setTimeout(function () {
   var out = [], ids = ['p0', 'p1', 'p2', 'p3'];
-  var names = ['index', 'draw-svg', 'metadata-cleaner', 'random-numbers'];
+  var names = ['index', 'draw-svg', 'metadata-cleaner', 'random-numbers', 'pdf-toolkit'];
   for (var k = 0; k < ids.length; k++) {
     var f = document.getElementById(ids[k]);
     try {

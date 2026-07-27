@@ -16,6 +16,7 @@
 <iframe id="tool"  src="/draw-svg/"         style="width:1280px;height:900px;border:0"></iframe>
 <iframe id="meta"  src="/metadata-cleaner/" style="width:1280px;height:900px;border:0"></iframe>
 <iframe id="rand"  src="/random-numbers/"   style="width:1280px;height:900px;border:0"></iframe>
+<iframe id="pdft"  src="/pdf-toolkit/"      style="width:1280px;height:900px;border:0"></iframe>
 <iframe id="narrow" src="/"                 style="width:390px;height:800px;border:0"></iframe>
 
 <script>
@@ -67,11 +68,13 @@ function run() {
   var T = document.getElementById('tool'), td = T.contentDocument, tw = T.contentWindow;
   var M = document.getElementById('meta'), md = M.contentDocument, mw = M.contentWindow;
   var R = document.getElementById('rand'), rd = R.contentDocument, rw = R.contentWindow;
+  var P = document.getElementById('pdft'), pd = P.contentDocument, pw = P.contentWindow;
   var N = document.getElementById('narrow'), nd = N.contentDocument, nw = N.contentWindow;
 
   var pages = [
     { n: 'index', d: hd, w: hw }, { n: 'draw-svg', d: td, w: tw },
-    { n: 'metadata-cleaner', d: md, w: mw }, { n: 'random-numbers', d: rd, w: rw }
+    { n: 'metadata-cleaner', d: md, w: mw }, { n: 'random-numbers', d: rd, w: rw },
+    { n: 'pdf-toolkit', d: pd, w: pw }
   ];
 
   /* ── the faces ─────────────────────────────────────────────────────────── */
