@@ -26,16 +26,6 @@
   margin-left: 4px;
 }
 
-/* Invalid takes the 2px structural weight and plate 2, exactly as the system's
-   Field does, and never without the sentence underneath saying what is wrong.
-   A coloured edge on its own is not a message. */
-.hint {
-  margin: -0.75rem 0 1.35rem;
-  font-size: 0.86rem;
-  line-height: 1.5;
-  color: var(--pp-plate-2-text);
-}
-
 .card.prompt {
   font-size: 0.94rem;
   line-height: 1.62;
@@ -48,99 +38,25 @@
   color: var(--pp-ink);
 }
 
-.result-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.75rem 1rem;
-  margin-bottom: 0.85rem;
-}
-.result-bar .section-label {
-  margin: 0;
-}
-
 .summary-label {
   margin: 1.75rem 0 0.85rem;
 }
 
-/* A table is a table. Fixed tracks, one hairline per row, a 2px rule under the
-   caption, and no rounded shell pretending the data is soft — a sheet of
-   figures is not a card. Below its min width it scrolls sideways rather than
-   reflowing into stacks that stop being a table. */
-.sheet {
-  border: var(--pp-rule-line) solid var(--pp-line);
-  background: var(--pp-surface);
-}
-.sheet-cap {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.35rem 1rem;
-  padding: 0.55rem 0.8rem;
-  border-bottom: var(--pp-rule-structure) solid var(--pp-edge);
-}
-.sheet-cap code {
-  font-family: var(--pp-font-mono);
-  font-size: var(--pp-size-label);
-  letter-spacing: var(--pp-track-label);
-  text-transform: uppercase;
-  color: var(--pp-ink);
-}
-.sheet-cap .meta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  letter-spacing: 0.06em;
-  text-transform: none;
-  color: var(--pp-faint);
-}
-
-.sheet-scroll {
-  overflow-x: auto;
-}
-.sheet table {
-  width: 100%;
-  min-width: 460px;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-.sheet th {
-  padding: 0.45rem 0.8rem;
-  border-bottom: var(--pp-rule-line) solid var(--pp-line);
-  font-family: var(--pp-font-mono);
-  font-size: var(--pp-size-label);
-  font-weight: 400;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--pp-faint);
-  text-align: right;
-}
+/* The sheet itself is in ../assets/base.css. What stays here is what is true
+   of figures rather than of tables: they align right so the decimal points
+   stack, and they take tabular numerals so the columns hold still between
+   runs. The row's own name is not a figure, so it stays left and stays quiet. */
 .sheet td {
-  padding: 0.3rem 0.8rem;
-  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
-  font-family: var(--pp-font-mono);
-  font-size: 0.82rem;
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
-/* Figures align right so the decimal points stack. The row's own name is not a
-   figure, so it stays left and stays quiet. */
+.sheet th {
+  text-align: right;
+}
 .sheet th:first-child,
 .sheet td:first-child {
   width: 88px;
   text-align: left;
-  color: var(--pp-faint);
-}
-.sheet tbody tr:last-child td {
-  border-bottom: 0;
-}
-
-.sheet-note {
-  margin: 0.65rem 0 0;
-  font-size: 0.82rem;
-  line-height: 1.5;
   color: var(--pp-faint);
 }
 

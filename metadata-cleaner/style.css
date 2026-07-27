@@ -1,0 +1,410 @@
+/* Tool-specific layout only — the shell, the toolbar band, buttons, fields,
+   the sheet and the drop target all come from ../assets/base.css over the
+   vendored system. This file styles the two things this tool invents: the rail
+   of loaded files, and a sheet whose rows are switches rather than figures. */
+
+/* ── The drop target ──────────────────────────────────────────────────────
+   It has two sizes. Open, it is the whole page and the only thing to do with
+   it. Once files are loaded the work is the subject and the target drops to a
+   line, still a drop target, no longer an invitation. */
+.dz-open {
+  padding: clamp(2.5rem, 8vw, 4.5rem) 1.25rem;
+}
+.dz-head {
+  display: block;
+  font-family: var(--pp-font-display);
+  font-weight: var(--pp-weight-head);
+  font-size: var(--pp-size-subhead);
+  letter-spacing: var(--pp-track-head);
+  color: var(--pp-ink);
+}
+.dz-pick {
+  display: block;
+  margin-top: 0.35rem;
+}
+.dz-formats {
+  display: block;
+  margin-top: 1.1rem;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: 0.06em;
+  color: var(--pp-faint);
+}
+.dz-note {
+  display: block;
+  max-width: 34rem;
+  margin: 0.5rem auto 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--pp-faint);
+}
+
+.dropzone.is-compact {
+  padding: 0.7rem 1rem;
+  margin-bottom: 1.6rem;
+  font-size: 0.86rem;
+}
+.dropzone.is-compact .dz-head {
+  display: inline;
+  font-family: var(--pp-font-body);
+  font-weight: var(--pp-weight-strong);
+  font-size: 0.9rem;
+  letter-spacing: 0;
+}
+.dropzone.is-compact .dz-pick {
+  display: inline;
+  margin: 0;
+}
+.dropzone.is-compact .dz-pick::before {
+  content: ' ';
+}
+.dropzone.is-compact .dz-formats,
+.dropzone.is-compact .dz-note {
+  display: none;
+}
+
+/* ── The work ─────────────────────────────────────────────────────────────
+   Rail of files beside the sheet for the one being read. minmax(0, 1fr) on the
+   second track is what keeps a wide table inside the column instead of pushing
+   the page sideways. Below the fold width the rail becomes a band above the
+   sheet, which is the same list read in the other direction. */
+.work {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  gap: 1.75rem;
+  align-items: start;
+}
+@media (max-width: 820px) {
+  .work {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+.rail .section-label {
+  margin-bottom: 0.6rem;
+}
+.rail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 32rem;
+  overflow-y: auto;
+}
+@media (max-width: 820px) {
+  .rail-list {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    max-height: none;
+    padding-bottom: 4px;
+  }
+  .slip {
+    flex: none;
+    width: 15rem;
+  }
+}
+
+/* One file, as a slip: press the body to read it, press the arrow to save it.
+   Two targets in one row, so the row is not a button — the pick is. */
+.slip {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-md);
+  background: var(--pp-surface);
+  overflow: hidden;
+}
+.slip:hover {
+  border-color: var(--pp-edge);
+}
+/* The open file fills with ink at its edge only: a 2px spine on the left, the
+   same statement the toolbar's active preset makes with a fill. A full fill
+   here would out-shout the sheet the slip is pointing at. */
+.slip.is-open {
+  border-color: var(--pp-edge);
+  border-left-width: var(--pp-rule-spine);
+  border-left-color: var(--pp-plate-3);
+}
+.slip-pick {
+  flex: 1;
+  min-width: 0;
+  display: block;
+  padding: 0.5rem 0.6rem;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  color: var(--pp-ink);
+  font-family: var(--pp-font-body);
+}
+.slip-pick:hover {
+  background: var(--pp-tint);
+}
+.slip-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.86rem;
+}
+.slip-meta {
+  display: block;
+  margin-top: 0.15rem;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: 0.04em;
+  color: var(--pp-faint);
+}
+.slip-meta .marked {
+  color: var(--pp-plate-2-text);
+}
+.slip-get {
+  flex: none;
+  width: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-left: var(--pp-rule-hairline) solid var(--pp-hair);
+  color: var(--pp-muted);
+}
+.slip-get:hover {
+  background: var(--pp-tint);
+  color: var(--pp-ink);
+}
+.slip-get:active {
+  transform: translate(1px, 1px);
+}
+.slip.is-bad .slip-name {
+  color: var(--pp-plate-2-text);
+}
+
+/* ── The sheet of fields ──────────────────────────────────────────────────
+   Same sheet as the random number generator prints, holding switches instead
+   of figures: so the cells align left, the keep column is a fixed narrow
+   track, and the value column takes whatever is left. */
+.sheet-meta {
+  --sheet-min: 620px;
+}
+.sheet-meta .col-keep {
+  width: 52px;
+  text-align: center;
+}
+.sheet-meta .col-name {
+  width: 34%;
+}
+/* Wide enough for the longest mark plus the cell's own padding. Sized to the
+   word rather than guessed: "identifying" sets the floor, and a track that
+   merely fits the pill leaves the padding to overflow. */
+.sheet-meta .col-note {
+  width: 128px;
+}
+.sheet-meta td.col-keep {
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+.sheet-meta .th-keep {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+/* A group is a rule with a name on it, not a box: the sheet already has
+   borders, and a second container inside it would be two frames around one
+   thing. It sits on the sunk ground so the eye can find the breaks. */
+.sheet-meta td,
+.sheet-meta th {
+  vertical-align: top;
+}
+.sheet-meta .grp-row td {
+  padding: 0;
+  background: var(--pp-sunk);
+  border-bottom: var(--pp-rule-line) solid var(--pp-line);
+  border-top: var(--pp-rule-line) solid var(--pp-line);
+}
+.sheet-meta tbody:first-of-type .grp-row td {
+  border-top: 0;
+}
+.grp-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.8rem 0.4rem 0;
+}
+.grp-box {
+  flex: none;
+  width: 52px;
+  display: grid;
+  place-items: center;
+}
+.grp-title {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--pp-track-label);
+  text-transform: uppercase;
+  color: var(--pp-ink);
+}
+.grp-count {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: 0.04em;
+  color: var(--pp-faint);
+}
+.grp-blurb {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  font-size: 0.8rem;
+  color: var(--pp-faint);
+}
+
+.sheet-meta .fld-name {
+  font-family: var(--pp-font-body);
+  font-size: 0.86rem;
+  font-weight: var(--pp-weight-body);
+  color: var(--pp-ink);
+  text-align: left;
+  padding: 0.3rem 0.8rem;
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.fld-key {
+  display: block;
+  font-family: var(--pp-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--pp-faint);
+}
+.val {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.val.is-open {
+  display: block;
+  overflow: visible;
+}
+.val-more {
+  display: block;
+  margin-top: 0.15rem;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  font-family: var(--pp-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--pp-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.val-more:hover {
+  color: var(--pp-ink);
+}
+.val-blank {
+  color: var(--pp-faint);
+}
+
+/* A row on its way out is struck through, which is what a proof reader does to
+   a line that goes. The strike is on the name, not the value: the value is
+   evidence and stays legible. */
+.fld.is-cut .fld-name {
+  color: var(--pp-faint);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+.fld.is-cut .val {
+  color: var(--pp-faint);
+}
+/* Structural rows: kept because removing them would change a pixel. The box is
+   gone rather than disabled, because there is no decision to offer. */
+.fld.is-fixed .col-keep::after {
+  content: '\2014';
+  color: var(--pp-faint);
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--pp-radius-pill);
+  border: var(--pp-rule-line) solid var(--pp-line);
+  font-family: var(--pp-font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  padding: 0.06rem 0.42rem;
+  color: var(--pp-muted);
+  white-space: nowrap;
+}
+/* The one highlight on the page. A marker, not a plate: this is the reader's
+   own pen going over the lines that matter, which is exactly what law 05 keeps
+   the plates away from. */
+.mark.is-high {
+  background: var(--pp-marker-citron);
+  border-color: transparent;
+  color: var(--pp-ink);
+}
+
+.legend {
+  margin: 0.9rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: var(--pp-faint);
+}
+.legend .tag {
+  font-size: 0.68rem;
+  padding: 0.06rem 0.42rem;
+  color: var(--pp-muted);
+}
+.legend .tag.is-marked {
+  background: var(--pp-marker-citron);
+  border-color: transparent;
+  color: var(--pp-ink);
+}
+
+/* ── Warnings ─────────────────────────────────────────────────────────────
+   Consequences of a removal that the picture itself will show. Dashed, because
+   it is a boundary the reader may cross deliberately, and it carries the
+   button that crosses it back. */
+.warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-bottom: 0.7rem;
+  padding: 0.6rem 0.8rem;
+  border: var(--pp-rule-line) dashed var(--pp-line);
+  border-radius: var(--pp-radius-md);
+  background: var(--w-wash-0);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--pp-muted);
+}
+.warn-text {
+  flex: 1;
+  min-width: 0;
+}
+.warn-text strong {
+  color: var(--pp-ink);
+  font-weight: var(--pp-weight-strong);
+}
+.warn-fix {
+  flex: none;
+  height: var(--pp-target-compact);
+  padding: 0 0.7rem;
+  border-radius: var(--pp-radius-sm);
+  font-family: var(--pp-font-mono);
+  font-size: 0.74rem;
+}
+
+.pane-note {
+  margin-top: 0.9rem;
+}

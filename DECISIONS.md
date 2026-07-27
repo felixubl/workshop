@@ -1173,3 +1173,143 @@ these keys leave the site and one acts on it.
 **Not explicitly requested** — flagged for review. Either is a one-line change:
 add `.mode-btn` to the shared selector in `index.html:58` to centralise the
 size, or drop the `.keys .mode-btn` rule for a uniform row.
+
+## 2026-07-27 — The metadata cleaner ships for images only, and says so
+**Decided:** The "Metadata Cleaner" backlog card promised "images, PDFs, and
+most common document formats" and "author and edit history in PDFs, tracked
+changes in office documents." The tool that shipped does JPEG, PNG and WebP and
+nothing else, and the card was rewritten to promise exactly that, renamed to
+"Image Metadata Cleaner." The document half was not dropped from the backlog: a
+clause was added to the PDF Toolkit card, which is where a PDF's author and
+producer fields belong anyway.
+**Why:** The three image containers are all byte-level formats that can be
+parsed and rewritten with no dependency and, more importantly, losslessly — the
+pixels are never decoded, so cleaning a photo cannot cost a generation of
+quality. PDF metadata lives behind cross-reference tables, object streams and
+compression, and office files are ZIP archives of XML. Doing either properly
+means vendoring a library, which the repo has done exactly once and for a
+design system rather than a parser. Shipping three formats that work beats four
+that mostly do, and a card that overpromises is worse than a narrow one.
+**Not explicitly requested** — flagged for review. The scope was confirmed up
+front, the card rewrite and the PDF-card clause were not.
+
+## 2026-07-27 — Rules are keyed by field, not by file
+**Decided:** A keep-or-drop decision is stored against a field identity that
+names where the value lives (`exif:gps:0x0002`, `iptc:2:080`, `png:text:Author`),
+never against the file it was read from. A preset is a function of a field and
+manual switches are overrides layered on top, rather than a preset being
+flattened into a list of ids at the moment it is picked.
+**Why:** Both the single file and the batch were to be first-class. Keyed this
+way they are the same operation: the sheet reads one file, and every decision it
+records applies to every other loaded file that has the same field. Keeping the
+preset as a function rather than a flattened list is what lets a file dropped
+later inherit the rules already set, without anything having to walk back over
+the files already loaded.
+
+## 2026-07-27 — Every rewrite is parsed again before it is offered
+**Decided:** After serialising a cleaned file the output is read back with the
+same parser, and the fields that survived are compared against the fields that
+were meant to survive. A mismatch shows an error and refuses the download rather
+than saving the file.
+**Why:** The entire value of this tool is a claim about absence, and absence is
+the one thing a reader cannot check by looking at the result. The README already
+makes a point of the privacy claim being checkable rather than asserted, and
+this is the same argument one level down. It also happens to be the cheapest
+possible regression test for the EXIF serialiser, which is the one genuinely
+intricate piece of the tool: it runs on every file a reader ever cleans.
+
+## 2026-07-27 — The EXIF block is rebuilt, and only ever shrinks
+**Decided:** Removing a single EXIF tag rebuilds the whole TIFF structure —
+directories, sub-directory pointers, the data area, the thumbnail — with
+recomputed offsets, rather than blanking the tag in place. Two invariants hold
+throughout: values are copied verbatim in their original byte order and are
+never re-encoded, and nothing is written that was not already present, so the
+rebuilt block is always smaller than the one that arrived.
+**Why:** Blanking a tag leaves it in the file, which fails the only promise the
+tool makes. Rebuilding is the honest implementation, and the two invariants are
+what make it safe without a specification-complete writer: no rational is ever
+re-encoded and no endianness is ever guessed, only the same bytes laid down at
+new positions. The shrink-only property also buys the maker note, whose internal
+pointers are frequently absolute into the TIFF and would break on being moved:
+because the rebuilt directories can only be smaller, the note can be pinned at
+its original offset, and every pointer inside it is then provably still correct.
+Maker notes are dropped by default regardless, since they are undocumented and
+routinely carry serial numbers and owner names.
+
+## 2026-07-27 — XMP is listed property by property and removed as a whole
+**Decided:** The XMP packet's properties are parsed and shown individually so a
+reader can see what is in there, but the keep-or-drop switch is on the packet,
+not on each property.
+**Why:** Per-property removal means round-tripping somebody else's XML with its
+namespaces intact, and a packet that comes back subtly wrong is a worse outcome
+than a packet that is cleanly gone. Listing the properties keeps the disclosure
+visible — they still feed the risk flagging and the sensitive-value scan — while
+the removal stays at the granularity that can be done correctly.
+**Not explicitly requested** — flagged for review. Per-tag control was asked for
+across the board, and this is the one place it is coarser than that.
+
+## 2026-07-27 — Shared chrome moved into base.css for the third tool
+**Decided:** `.sheet` and its parts, `.result-bar`, `.hint` and
+`.btn-ghost.preset` moved out of the random number generator and draw-svg into
+`assets/base.css`. What stayed behind in `random-numbers/style.css` is what is
+true of figures rather than of tables: right alignment, tabular numerals, and
+that tool's column widths. Three fixes went in alongside them: `[hidden]` is now
+`display: none !important` because `.toolbar`, `.group` and `.dropzone` all set
+display from a class and silently beat it; `.dropzone`'s file input is clipped
+rather than `display: none` so it keeps a keyboard path, with a `:focus-within`
+ring on the label; and `.checkbox` gained an `:indeterminate` face, a bar rather
+than a check.
+**Why:** The same rule the toolbar chrome followed when the second tool arrived
+(2026-07-27, "Tool-page chrome moved from draw-svg into base.css"): a class
+belongs to the shared layer once a second tool needs it, and a tool's own
+stylesheet should hold only what that tool invents. The three fixes are all
+latent bugs in shared code that no tool had exercised yet — `.dropzone` in
+particular shipped unused, so nothing that exists today changes behaviour.
+**Not explicitly requested** — flagged for review.
+
+## 2026-07-27 — Fields are grouped by disclosure, not by where they are stored
+**Decided:** The sheet groups rows into Location, People, Device, Dates,
+Capture, Text, Preview, Rendering and Other. A GPS tag from a TIFF directory
+and an IPTC city from a Photoshop resource block land in the same group. The
+storage location survives only as the small mono key under each field name
+(`exif gps 0x0002`, `iptc 2:090`) and as the rule id underneath.
+**Why:** The question a reader brings to this tool is "what does this file say
+about me", not "which container holds it". Grouping by format would scatter the
+single most important answer — where the picture was taken — across three
+sections, and would make the GPS block sit next to shutter speed because both
+happen to be TIFF. The mono key keeps the technical truth available for anyone
+who wants it without making it the organising idea.
+**Not explicitly requested** — flagged for review.
+
+## 2026-07-27 — A value can outrank its own tag
+**Decided:** Every decoded string is run past a small pattern check, and a field
+whose value contains a user-account file path, an email address, a phone-shaped
+number or a serial-shaped token is reclassified as identifying regardless of
+what its tag table said. Conversely a field whose value is empty drops to the
+lowest rank. Two marks are shown, "identifying" and "telling", and everything
+else is left unmarked.
+**Why:** The leak that actually costs people is rarely tag-specific. A
+`C:\Users\Firstname Lastname\...` sitting in a Software string is a disclosure
+that no per-tag classification would ever catch, because the tag is boring and
+the value is not. The cost is false positives: the serial-shaped rule in
+particular (ten or more upper-case alphanumerics) will flag some innocuous model
+codes and hashes, which errs toward over-warning.
+**Not explicitly requested** — flagged for review. The regexes are five lines in
+`sniffSensitive` and the serial rule is the one to loosen first if it proves
+noisy.
+
+## 2026-07-27 — Cleaned files are renamed, and the filename itself is offered up
+**Decided:** A cleaned download is saved as `<original>-cleaned.<ext>` rather
+than overwriting the original name, and a "Neutral filenames" switch in the
+toolbar renames the outputs to `image-1`, `image-2` instead. The batch zip is
+`cleaned-images.zip`, and its entries carry a fixed 1980 timestamp rather than
+the reader's clock.
+**Why:** The suffix stops a cleaned copy from silently displacing the original
+in a downloads folder, which matters when the whole point was that the two files
+differ. The rename switch exists because `IMG_20190602_143312.jpg` still
+announces when the photo was taken after every byte of metadata is gone, and
+that is the one disclosure this tool cannot reach from inside the file. The
+fixed zip timestamp follows the same logic: an archive stamped with the reader's
+clock would leak the thing the tool was hired to remove.
+**Not explicitly requested** — flagged for review. The rename switch is an added
+feature rather than a requested one, and defaults to off.

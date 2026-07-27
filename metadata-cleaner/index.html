@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Metadata Cleaner — Felix' Workshop</title>
+<meta name="description" content="See every piece of metadata hiding in a JPEG, PNG or WebP — GPS coordinates, camera serial numbers, timestamps, editing history — then choose field by field what to keep and what to strip. Runs entirely in your browser.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
+<script src="../assets/theme.js"></script>
+<link rel="stylesheet" href="../assets/preprint/styles.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <h1 class="tool-title">Image Metadata Cleaner</h1>
+    </div>
+    <button class="mode-btn" type="button" data-mode-toggle aria-label="Switch colour mode"><span data-mode-label>dark</span></button>
+  </header>
+
+  <div class="spine"></div>
+
+  <div class="toolbar" id="toolbar" hidden>
+    <div class="group">
+      <label id="presetLabel">Preset</label>
+      <div class="group" id="presets" role="group" aria-labelledby="presetLabel">
+        <button class="btn-ghost preset" type="button" data-preset="all" data-tip="Remove every field that can be removed without changing a pixel.">strip all</button>
+        <button class="btn-ghost preset" type="button" data-preset="safe" data-tip="Remove everything except the fields a viewer needs to draw the image correctly: orientation, colour space, resolution, and the colour profile.">safe for web</button>
+        <button class="btn-ghost preset" type="button" data-preset="location" data-tip="Remove GPS coordinates and nothing else.">location only</button>
+        <button class="btn-ghost preset" type="button" data-preset="none" data-tip="Change nothing. Useful for looking without touching.">keep all</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <label class="checkbox" data-tip="A filename like IMG_20190602_143312.jpg still announces when the photo was taken. This renames the downloads to image-1, image-2, and so on."><input type="checkbox" id="rename"> Neutral filenames</label>
+    </div>
+
+    <div class="group">
+      <button class="btn-ghost" type="button" id="reset">Clear all</button>
+    </div>
+  </div>
+
+  <p class="hint" id="hint" hidden></p>
+
+  <label class="dropzone dz-open" id="drop">
+    <input type="file" id="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple>
+    <span class="dz-head">Drop images here</span>
+    <span class="dz-pick">or press to choose files</span>
+    <span class="dz-formats">JPEG &middot; PNG &middot; WebP &mdash; one file or a hundred</span>
+    <span class="dz-note">Nothing is uploaded. The file is read, rewritten and saved by this tab alone.</span>
+  </label>
+
+  <section id="work" hidden>
+    <div class="work">
+
+      <aside class="rail" id="rail" aria-label="Loaded files">
+        <p class="section-label" id="railLabel">Files</p>
+        <ul class="rail-list" id="railList"></ul>
+      </aside>
+
+      <div class="pane">
+        <div class="result-bar">
+          <p class="section-label" id="paneLabel">What's inside</p>
+          <div class="group">
+            <button class="btn-ghost" type="button" id="dlOne">Download this one</button>
+            <button class="btn-primary" type="button" id="dlAll">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M8 2v8M4.5 7l3.5 3.5L11.5 7M2.5 13.5h11"></path></svg>
+              Download all
+            </button>
+          </div>
+        </div>
+
+        <div id="warnings"></div>
+
+        <div class="sheet sheet-meta">
+          <div class="sheet-cap">
+            <code id="capName"></code>
+            <code class="meta" id="capMeta"></code>
+          </div>
+          <div class="sheet-scroll">
+            <table id="fieldTable">
+              <thead>
+                <tr>
+                  <th class="col-keep" scope="col"><span class="th-keep">Keep</span></th>
+                  <th class="col-name" scope="col">Field</th>
+                  <th class="col-value" scope="col">Value</th>
+                  <th class="col-note" scope="col">Risk</th>
+                </tr>
+              </thead>
+            </table>
+          </div>
+        </div>
+
+        <p class="legend">
+          <span class="tag is-marked">identifying</span> names a person, a place, or one specific
+          camera. <span class="tag">telling</span> narrows it down: model, software, timestamps,
+          exposure. Everything else describes the pixels rather than the photographer, and removing
+          it buys you nothing.
+        </p>
+
+        <p class="sheet-note" id="paneNote"></p>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<p class="sr-only" id="say" role="status" aria-live="polite"></p>
+
+<script src="script.js"></script>
+<script src="../assets/controls.js"></script>
+</body>
+</html>

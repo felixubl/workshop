@@ -31,24 +31,6 @@ input[type='number'].field {
   padding: 0;
 }
 
-.btn-ghost.preset {
-  height: var(--pp-target-compact);
-  padding: 0 0.7rem;
-  border-radius: var(--pp-radius-sm);
-  font-family: var(--pp-font-mono);
-  font-size: 0.76rem;
-  color: var(--pp-muted);
-}
-
-/* The selected size is stated by fill, the way the system's Segmented control
-   states its active option. No plate: which canvas you are on is a position,
-   not a status, and a plate here would teach a meaning it does not have. */
-.btn-ghost.preset.is-active {
-  background: var(--pp-edge);
-  border-color: var(--pp-edge);
-  color: var(--pp-paper);
-}
-
 /* The drawing surface stays paper-light in both modes. This is the artwork's
    ground rather than the page's: the default pen is near-black ink, and it
    would vanish on a graphite sheet. 2px is the structure weight — on this

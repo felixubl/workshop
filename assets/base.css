@@ -16,6 +16,15 @@
   box-sizing: border-box;
 }
 
+/* `hidden` has to outrank a class that sets display, and here several do:
+   .toolbar, .group and .dropzone are all display:block-or-flex from a class,
+   which ties [hidden] on specificity and beats it on source order. Without
+   this line the attribute silently does nothing on exactly the elements a
+   tool most wants to hide. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   scrollbar-width: thin;
   scrollbar-color: var(--pp-line) transparent;
@@ -72,6 +81,21 @@ input[type='number'] {
 
 .muted {
   color: var(--pp-muted);
+}
+
+/* Present to a screen reader, absent to the eye. For live regions and for
+   labels the layout already states in another way. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Layout shell shared by every page */
@@ -283,6 +307,24 @@ button[disabled] {
   cursor: var(--pp-cursor-blocked);
 }
 
+/* Presets: a row of small ghost buttons acting as one control, the shape the
+   system's Segmented takes. The chosen one states itself by filling with ink.
+   No plate — which preset you are on is a position, not a status. Lived in
+   draw-svg while it was the only tool with a row of them. */
+.btn-ghost.preset {
+  height: var(--pp-target-compact);
+  padding: 0 0.7rem;
+  border-radius: var(--pp-radius-sm);
+  font-family: var(--pp-font-mono);
+  font-size: 0.76rem;
+  color: var(--pp-muted);
+}
+.btn-ghost.preset.is-active {
+  background: var(--pp-edge);
+  border-color: var(--pp-edge);
+  color: var(--pp-paper);
+}
+
 /* Tags and badges are the only pills in the system. A tag is a label, not a
    control — anything clickable takes the cut scale instead. */
 .tag {
@@ -340,6 +382,107 @@ button[disabled] {
 .card.prompt {
   border: var(--pp-rule-structure) dashed var(--pp-line);
   background: var(--w-wash-0);
+}
+
+/* Invalid takes the 2px structural weight and plate 2, exactly as the system's
+   Field does, and never without the sentence underneath saying what is wrong.
+   A coloured edge on its own is not a message. */
+.hint {
+  margin: -0.75rem 0 1.35rem;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--pp-plate-2-text);
+}
+
+/* The band above a result: what it is on the left, what you can do with it on
+   the right. */
+.result-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.85rem;
+}
+.result-bar .section-label {
+  margin: 0;
+}
+
+/* ── The sheet ────────────────────────────────────────────────────────────
+   A table is a table. Fixed tracks, one hairline per row, a 2px rule under the
+   caption, and no rounded shell pretending the data is soft — a sheet of
+   figures is not a card. Below --sheet-min it scrolls sideways rather than
+   reflowing into stacks that stop being a table.
+
+   This lived in random-numbers while it was the only tool that printed one.
+   What stayed behind there is everything true of figures rather than of
+   tables: right alignment, tabular numerals, and that tool's column widths. */
+.sheet {
+  --sheet-min: 460px;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  background: var(--pp-surface);
+}
+.sheet-cap {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  padding: 0.55rem 0.8rem;
+  border-bottom: var(--pp-rule-structure) solid var(--pp-edge);
+}
+.sheet-cap code {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--pp-track-label);
+  text-transform: uppercase;
+  color: var(--pp-ink);
+}
+.sheet-cap .meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  color: var(--pp-faint);
+}
+
+.sheet-scroll {
+  overflow-x: auto;
+}
+.sheet table {
+  width: 100%;
+  min-width: var(--sheet-min);
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.sheet th {
+  padding: 0.45rem 0.8rem;
+  border-bottom: var(--pp-rule-line) solid var(--pp-line);
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pp-faint);
+  text-align: left;
+}
+.sheet td {
+  padding: 0.3rem 0.8rem;
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+  font-family: var(--pp-font-mono);
+  font-size: 0.82rem;
+  text-align: left;
+}
+.sheet tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.sheet-note {
+  margin: 0.65rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--pp-faint);
 }
 
 /* Fields */
@@ -477,6 +620,20 @@ input[type='number'] {
 }
 .checkbox input[type='checkbox']:checked::after {
   opacity: 1;
+}
+/* Mixed: some of what this box speaks for is checked and some is not. The box
+   still fills with ink — it is making a statement — but the mark is a bar
+   rather than a check, because a check would be a claim about all of them.
+   Written after :checked so it wins on a box that is both, which is the state
+   a group master is usually in. */
+.checkbox input[type='checkbox']:indeterminate {
+  background: var(--pp-edge);
+  border-color: var(--pp-edge);
+}
+.checkbox input[type='checkbox']:indeterminate::after {
+  opacity: 1;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='square'%3E%3Cpath d='M3.5 8h9'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='square'%3E%3Cpath d='M3.5 8h9'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 /* Popovers: the shell shared by the colour picker and the select. Law 04
@@ -713,8 +870,26 @@ input[type='number'] {
 .dropzone strong {
   color: inherit;
 }
+/* Clipped, not display:none. A file input that is display:none leaves the tab
+   order, and dragging is a pointer convenience — it must never be the only way
+   in. Clipped, the input still takes focus and still opens the picker on
+   Space, and the label below paints its focus ring. */
 .dropzone input[type='file'] {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.dropzone:focus-within {
+  outline: 3px solid var(--pp-selection);
+  outline-offset: 1px;
+  border-color: var(--pp-edge);
+  color: var(--pp-ink);
 }
 .dropzone .dz-filename {
   display: block;
