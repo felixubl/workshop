@@ -493,7 +493,7 @@
 
     <div class="tally">
       <span class="ink-bar" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-      <code><span data-pin-count></span>3 live · 16 in the queue</code>
+      <code><span data-pin-count></span>4 live · 15 in the queue</code>
     </div>
 
     <div class="tools">
@@ -526,15 +526,14 @@
         <button class="pin" type="button" data-pin="metadata-cleaner" aria-label="Pin Image Metadata Cleaner to the top"><span class="pin-head" aria-hidden="true"></span></button>
       </div>
 
-      <div class="tool-card tool-card-soon reg-1" data-tool="pdf-toolkit">
-        <!-- Merge, split, reorder, and compress PDFs, remove or extract pages, add page
-           numbers, convert scanned pages to searchable text, and export pages as images
-           &mdash; everything the average PDF site does, plus a &quot;make this acceptable
-           for upload&quot; mode that fits a file to a target size and format. Also where
-           document metadata lands: the author, the producing application, and the edit
-           history a PDF or an office file carries around. Runs fully client-side: your
+      <div class="tool-card tool-card-live" data-tool="pdf-toolkit">
+        <!-- Merge, split, extract, reorder, delete and turn PDF pages, with every page
+           shown as a real preview you can pick up and drag. The PDF engine underneath is
+           written from scratch: it parses the file, reads its fonts, draws the pages, and
+           writes the result back out, with no library involved. Still to come: redaction,
+           signatures, compression, and page numbering. Runs fully client-side: your
            documents never leave your browser. -->
-        <h3>PDF Toolkit</h3>
+        <a class="tool-open" href="pdf-toolkit/"><h3>PDF Toolkit</h3></a>
         <button class="pin" type="button" data-pin="pdf-toolkit" aria-label="Pin PDF Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
       </div>
 

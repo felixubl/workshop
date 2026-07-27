@@ -13,6 +13,10 @@ source so that claim is checkable rather than just asserted.
 - [Random Number Generator](random-numbers/) — draw from eleven distributions in
   up to ten dimensions, seeded and reproducible, with summary statistics and
   CSV/JSON export.
+- [PDF Toolkit](pdf-toolkit/) — merge, split, extract, reorder, delete and
+  turn PDF pages, with every page shown as a real preview you can drag. The
+  PDF engine underneath is written from scratch: no library parses, renders
+  or writes anything here.
 - [Image Metadata Cleaner](metadata-cleaner/) — read every field a JPEG, PNG or
   WebP is carrying (EXIF, GPS, XMP, IPTC, colour profile, embedded thumbnail),
   see what each one gives away, and choose field by field what to strip. Batch

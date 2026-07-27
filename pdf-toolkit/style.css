@@ -1,0 +1,120 @@
+/* Tool-specific layout only — faces, buttons, fields, the tool title and the
+   toolbar band come from ../assets/base.css over the vendored system. This
+   file styles the page grid this tool invents. */
+
+/* Several actions belong to one label, so they sit on a row of their own
+   rather than each claiming a labelled group and tripling the toolbar. */
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* The grid is sized by the thumbnails, not the other way round: a column is
+   one page wide, and the count follows the viewport. */
+.page-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: var(--pp-gutter, 16px);
+  margin: 18px 0 24px;
+}
+
+.page-grid:empty {
+  display: none;
+}
+
+.page-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 8px 6px;
+  background: var(--pp-paper);
+  border: var(--pp-border-hairline, 1px solid) var(--pp-line);
+  cursor: var(--pp-cursor-point, pointer);
+}
+
+.page-card.is-selected {
+  border: var(--pp-border-default, 2px solid) var(--pp-ink);
+  box-shadow: var(--pp-lift);
+}
+
+/* The page being dragged and the gap it would drop into read differently:
+   one is lifted, the other is a hole in the row. */
+.page-card.is-dragging {
+  opacity: 0.35;
+}
+
+.page-card.is-drop-before {
+  box-shadow: -3px 0 0 0 var(--pp-ink);
+}
+
+.page-card.is-drop-after {
+  box-shadow: 3px 0 0 0 var(--pp-ink);
+}
+
+/* A fixed box so the grid does not reflow as each thumbnail arrives, and so
+   portrait and landscape pages sit on the same baseline. */
+.page-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 148px;
+  background: var(--pp-paper);
+  border: var(--pp-border-hairline, 1px solid) var(--pp-line);
+  overflow: hidden;
+}
+
+.page-thumb canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  /* A page is a sheet of paper; it keeps its own white in dark mode. */
+  background: #fff;
+}
+
+.page-thumb.is-pending {
+  color: var(--pp-faint);
+  font-family: var(--pp-font-mono);
+  font-size: 0.72rem;
+}
+
+.page-cap {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  width: 100%;
+  font-family: var(--pp-font-mono);
+  font-size: 0.72rem;
+  color: var(--pp-muted);
+}
+
+.page-cap .n {
+  color: var(--pp-ink);
+}
+
+.page-cap .src {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--pp-faint);
+}
+
+/* Rotation is state the thumbnail already shows, but only if you know which
+   way up the page started, so it is also stated in words. */
+.page-cap .turn {
+  margin-left: auto;
+  color: var(--pp-ink);
+}
+
+.save-bar {
+  margin-top: 4px;
+}
+
+/* Files loaded from more than one document get a colour per source, so a
+   merged pile can still be read at a glance. */
+.page-card[data-src='0'] .page-cap .src { color: var(--pp-plate-1); }
+.page-card[data-src='1'] .page-cap .src { color: var(--pp-plate-2); }
+.page-card[data-src='2'] .page-cap .src { color: var(--pp-plate-3); }
