@@ -12,10 +12,17 @@
  *
  * Core is deliberately small. A rule earns a place here only when both a
  * reading page and an app want it in the same form. Where the two surfaces
- * want the same NAME in different forms — `.btn`, `.note`, `.rail`,
- * `.head__row` — the name is left to the surface sheets on purpose, because
- * this system is for pages that are read and apps that are used, and those are
- * not the same object wearing two hats.
+ * want the same NAME in different forms — `.note`, `.rail`, `.head__row` —
+ * the name is left to the surface sheets on purpose, because this system is
+ * for pages that are read and apps that are used, and those are not the same
+ * object wearing two hats.
+ *
+ * `.btn` was on that list and has come off it, in one direction only. A
+ * button's SIZE, face, tracking and case are still the surface's and always
+ * will be. What is shared is its ANATOMY — a mark, a label, and the gap
+ * between them — and what it does when it runs out of room, because a control
+ * that drops its label under pressure is a mechanism rather than a look, and
+ * both surfaces had written it separately.
  */
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -57,13 +64,111 @@ button { background: transparent; border: 0; font: inherit; color: inherit; }
    Screen is the same gesture the other way up. */
 [data-mode='dark'] .mark i { mix-blend-mode: screen; }
 
+/* ── the button ─────────────────────────────────────────────────────────────
+   Anatomy, and nothing else. A button is a row of at most three things: a
+   mark, a label, and a collapsed mark that is not shown yet. No height, no
+   padding, no face, no type — every one of those is the surface's, because a
+   door on a masthead and a Save in a console are not the same size object.
+
+   Put the height on a rung of the ladder (--pp-target and its neighbours in
+   tokens/rules.css) and the ladder does the rest. */
+.btn { display: inline-flex; align-items: center; justify-content: center; }
+.btn__lbl { display: block; }
+.btn__mark { display: none; }
+
 /* ── the ink treatment ──────────────────────────────────────────────────────
-   The one button state both surfaces agree on: a filled block of edge with
-   paper on top. Size, tracking and case belong to the surface, because a door
-   on a reading page and a Save in a console are not the same size object. */
+   The one button FACE both surfaces agree on: a filled block of edge with
+   paper on top. */
 .btn--ink {
   background: var(--pp-edge); color: var(--pp-paper);
   border: var(--pp-rule-structure) solid var(--pp-edge);
+}
+
+/* ── the collapse ───────────────────────────────────────────────────────────
+   A button that opts in keeps its mark and drops its label when the screen is
+   a phone, and becomes a square on the floor rung. This is a mechanism and not
+   a look: WHICH buttons opt in, and what the mark is, are the surface's.
+
+   The mark replaces the label rather than joining it, so the accessible name
+   has to come from somewhere that display:none cannot reach. A collapsing
+   button carries an aria-label. That is a requirement, not a suggestion: the
+   `.sq` punctuation goes with the label, and a button whose entire content is
+   one aria-hidden letter announces as nothing at all.
+
+   560px and not the ladder's 820: an iPad in portrait has room for the words,
+   and a control that hides its label while a whole label's worth of space sits
+   beside it reads as a bug rather than as a fit.
+
+   `.btn.btn--collapse` and not `.btn--collapse`, deliberately. A surface sets
+   the padding on `.btn` and a surface sheet loads after this one, so at equal
+   specificity the surface's horizontal padding survives the collapse and the
+   square comes out an oblong — measured at 44x49 before this doubled up. The
+   surface opted in by adding the class, and what it opted into is a square, so
+   the mechanism outranks the base. Everything it wins is geometry the collapse
+   is defined by; the face is not touched and stays the surface's. */
+@media (max-width: 560px) {
+  .btn.btn--collapse {
+    width: var(--pp-target); min-width: var(--pp-target);
+    aspect-ratio: 1; padding: 0;
+  }
+  .btn--collapse .sq,
+  .btn--collapse .btn__lbl { display: none; }
+  .btn--collapse .btn__mark { display: block; line-height: 1; }
+}
+
+/* ── the scrawl ─────────────────────────────────────────────────────────────
+   A hand annotation that points at a control and says what it is. The arrow is
+   the surface's SVG, because what it points at and from where is a drawing
+   decision; what the system owns is the two arrangements, and which one is on.
+
+   STACKED is the default, and that is the whole point of the part. The
+   arrangement that works at any width is the one that should need no media
+   query to reach, so a surface that writes nothing gets the one that cannot
+   break. BESIDE is the enhancement: the text hung out to the side of the arrow
+   on one nowrap line, which is the drawn look and needs real room to the left
+   of the control to hold it.
+
+   60rem is where that room exists: a full measure plus two gutters. Below it
+   the text has nowhere to go but sideways into whatever the control sits next
+   to, and a nowrap line does not reflow, it slides.
+
+   No rotation here. Law 06 is a per-page budget and the system cannot know
+   what else on the surface is spending it, so the tilt is the surface's to
+   add. The face is not: an annotation is display type in every surface that
+   has one, and which of the three faces does which job is not a local call.
+
+   BOTH arrangements sit above the control and neither is in the flow. That is
+   the part that makes this a annotation rather than a heading: it contributes
+   no height, it takes no width from the row the control is in, and it is
+   allowed to overlap whatever is above it. A scrawl that participates in
+   layout is not cheap to add, and it was not: laid out in flow it made its
+   parent as wide as the sentence, which pushed the control onto its own line
+   and moved the very thing the arrow was pointing at.
+
+   What differs is where the words sit relative to the arrow. STACKED, they are
+   in the same line box and the arrow follows the sentence, because an
+   annotation that points is read end-first and an arrow parked under the first
+   word while the sentence runs on past it is a caption and a stray mark, not
+   one gesture. BESIDE, the words leave the line box and hang off the side on
+   one nowrap line, which is the drawn look and needs real room to hold.
+
+   Which DIRECTION the arrow points, and where the block is anchored, are the
+   surface's: they depend on where the control sits. */
+.scrawl {
+  position: absolute; bottom: 100%; pointer-events: none;
+  font-family: var(--pp-font-display); font-weight: 400;
+}
+.scrawl__t { display: inline; }
+.scrawl svg { display: inline-block; }
+
+@media (min-width: 60rem) {
+  .scrawl--beside { line-height: 0; }
+  .scrawl--beside .scrawl__t {
+    display: block;
+    position: absolute; right: 100%; bottom: .55rem; margin-right: .15rem;
+    white-space: nowrap; line-height: 1.2;
+  }
+  .scrawl--beside svg { display: block; }
 }
 
 /* ── the toast ──────────────────────────────────────────────────────────────

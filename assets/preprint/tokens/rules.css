@@ -27,9 +27,29 @@
 
   --pp-measure: 66ch;        /* the reading column, at every screen size */
   --pp-margin-column: 20ch;  /* sidenotes; folds inline below 820px */
+
+  /* THE TARGET LADDER, and it moves. Three fixed numbers is the same as having
+     no ladder: a consumer that wants a control to behave differently on a
+     phone writes its own number, and the second consumer writes a different
+     one. That is how this system ended up with a site running five control
+     heights, one of which matched a rung by coincidence.
+
+     The floor is 44px and it moves in neither direction. Above it, prominent
+     steps DOWN on a narrow screen, because a loud control is loud by taking
+     room and on a phone that room is the whole screen. Below it, compact stops
+     existing on touch, because 36px is precise under a mouse and a miss under
+     a thumb.
+
+     The narrow value is its own token and the step is a var() reference rather
+     than a literal, so a surface that overrides the endpoints keeps the step.
+     Were the step a literal it would be lost the moment anyone overrode the
+     rung: a media block carries no extra specificity and a consumer's sheet
+     loads last, so its unconditional value would simply win. */
+  --pp-target-prominent-wide: 52px;
+  --pp-target-prominent-narrow: 46px;
+  --pp-target-prominent: var(--pp-target-prominent-wide);
   --pp-target: 44px;
   --pp-target-compact: 36px;
-  --pp-target-prominent: 52px;
 
   /* Pointer lift, and the constraint it implies: a marker is a painted box and
      inline backgrounds stack in source order, so a line set with display
@@ -37,4 +57,20 @@
      below will paint over its ink. */
   --pp-lift: 1.1px;
   --pp-lift-pressed: 0.5px;
+}
+
+/* 820px is already the system's narrow line: it is where the reader's margin
+   column stops being a margin and folds inline (tokens/base.css). The ladder
+   steps at the same place rather than at a second number, because a page does
+   not have two ideas of when it is narrow. */
+@media (max-width: 820px) {
+  :root { --pp-target-prominent: var(--pp-target-prominent-narrow); }
+}
+
+/* A finger is not a pointer, and this is a property of the input rather than
+   of the width — a 13in touchscreen has the same thumb as a phone. On touch
+   there is no compact rung: it meets the floor and the ladder has two steps
+   instead of three. */
+@media (hover: none) {
+  :root { --pp-target-compact: var(--pp-target); }
 }
