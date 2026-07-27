@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><title>verify — the workshop</title></head>
+<head><meta charset="utf-8"><title>verify — the workshop</title>
+<!-- The system's own conformance check, vendored. Loaded without data-layers so
+     it defines preprintConformance() and waits to be called from the run below,
+     rather than printing its own box. -->
+<script src="/assets/preprint/tools/conformance.js"></script>
+</head>
 <body style="margin:0;font:13px ui-monospace,monospace">
 <pre id="out">running…</pre>
 
@@ -55,12 +60,22 @@ function run() {
   ok('mono face Cousine really loaded', hd.fonts.check("12px 'Cousine'"));
 
   /* Body copy is Zilla Slab and NOT mono. The brief calls the old
-     mono-as-body-text the one real change to the reading experience. */
-  var desc = hd.querySelector('.tool-card p');
-  if (desc) {
-    var f = hw.getComputedStyle(desc).fontFamily;
-    ok('card prose is set in Zilla Slab, not mono', /Zilla Slab/.test(f), f);
-  } else { ok('a card description exists to measure', false); }
+     mono-as-body-text the one real change to the reading experience.
+
+     Built rather than found. This used to read the font off a card's
+     description, and cards were cut down to their names, so there is no prose
+     anywhere on these pages to measure and the check had been asserting only
+     that its own fallback branch ran. The rule is about what body copy is set
+     in, not about whether any body copy happens to exist today, so a paragraph
+     is made inside a card, measured, and removed. */
+  var host = hd.querySelector('.tool-card') || hd.body;
+  var probe = hd.createElement('p');
+  probe.textContent = 'The quick brown fox';
+  probe.style.cssText = 'position:absolute;visibility:hidden';
+  host.appendChild(probe);
+  var f = hw.getComputedStyle(probe).fontFamily;
+  probe.remove();
+  ok('prose is set in Zilla Slab, not mono', /Zilla Slab/.test(f), f);
 
   /* ── the cut scale, and what may be round ──────────────────────────────── */
   // Pill belongs to tags and badges and nothing else.
@@ -111,18 +126,22 @@ function run() {
        six.length + ' element(s) carry a 6px rule');
   });
 
-  /* ── the dark mode is the vendored one, unforked ───────────────────────── */
-  // site.css is the variant layer. It may name its own --w-* values and it may
-  // NOT restate the system's ground, ink or plates: forking those is how a
-  // family stops looking related.
-  fetch('/assets/site.css').then(function (r) { return r.text(); }).then(function (css) {
-    var forked = (css.match(/--pp-(paper|ink|surface|sunk|edge|line|hair|plate-[123])\s*:/g) || []);
-    ok('the variant layer does not fork ground, ink or plates',
-       forked.length === 0, forked.length ? forked.join(' ') : 'none');
-    var dead = (css.match(/--(accent|shadow-1|shadow-2|glass)\s*:/g) || []);
-    ok('no --accent, --shadow-N or --glass survive', dead.length === 0, dead.join(' '));
-    finish();
-  }).catch(function (e) { ok('site.css is readable', false, e.message); finish(); });
+  /* ── the variant layer stays a variant ─────────────────────────────────── */
+  // site.css and base.css are the workshop's own. They may name their own --w-*
+  // values and they may NOT restate the system's ground, ink or plates: forking
+  // those is how a family stops looking related.
+  //
+  // This check used to be written out here. It is the system's now, in
+  // assets/preprint/tools/conformance.js, vendored with everything else, because
+  // a conformance check each site keeps its own copy of is a check that drifts
+  // away from the rules it is meant to be enforcing. It also catches a third
+  // thing this version never did: a --pp-* name the system does not define,
+  // which is how --pp-screen-dot sat here for months looking official.
+  preprintConformance({ layers: ['/assets/site.css', '/assets/base.css'] })
+    .then(function (results) {
+      results.forEach(function (r) { ok(r.name, r.pass, r.detail); });
+      finish();
+    });
 
   /* ── the mark, and the pointers ────────────────────────────────────────── */
   /* The workshop does not draw the system's three-plate mark. Its wordmark is

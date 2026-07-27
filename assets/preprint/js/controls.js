@@ -1,25 +1,30 @@
-/* The workshop's drawn controls.
+/* PREPRINT — the drawn controls.
 
-   Four of the browser's own widgets are the only things on these pages the
-   design system never drew: the spinner arrows on a number field, the checkbox,
-   the colour swatch and its OS dialog, and the menu a <select> opens. Plus the
-   grey box a `title` attribute produces. Each one arrives styled by the
-   operating system rather than by PREPRINT, which is why a tool page could look
-   right in a screenshot and wrong in use.
+   Four of the browser's own widgets are the only things this system never drew:
+   the spinner arrows on a number field, the checkbox, the colour swatch and its
+   OS dialog, and the menu a <select> opens. Plus the grey box a `title`
+   attribute produces. Each one arrives styled by the operating system rather
+   than by PREPRINT, which is why a page could look right in a screenshot and
+   wrong in use.
 
    This file replaces all of them, and it does it by ENHANCEMENT rather than by
    replacement: the native <input> and <select> stay in the DOM as the source of
    truth, hidden, and the drawn control writes to them and fires the events they
-   would have fired. So a tool's own script keeps reading `colorInput.value` and
-   listening for `change`, and knows nothing about any of this. Neither tool
-   script needed a single line changed.
+   would have fired. So a page's own script keeps reading `colorInput.value` and
+   listening for `change`, and knows nothing about any of this. When this was
+   first built, neither script that consumed it needed a single line changed.
 
-   A MutationObserver picks up controls added after load, which is how the
-   random number generator's parameter fields get their steppers when the
-   distribution changes.
+   A MutationObserver picks up controls added after load, which is how a form
+   that rewrites its own fields gets steppers on the new ones.
 
-   Load it AFTER the tool's own script, so anything the tool builds at startup
-   is already in the DOM. */
+   Pairs with controls.css, which draws the faces for everything below. Load
+   both, or neither.
+
+     <link rel="stylesheet" href="…/preprint/controls.css">
+     <script src="…/preprint/js/controls.js"></script>
+
+   The script goes AFTER the page's own, so anything built at startup is already
+   in the DOM when the controls are drawn. */
 
 (function () {
   "use strict";
@@ -293,7 +298,7 @@
     if (window.EyeDropper) {
       const drop = document.createElement("button");
       drop.type = "button";
-      drop.className = "btn-ghost eyedrop";
+      drop.className = "pop-btn eyedrop";
       drop.innerHTML = svg("M10.5 2.5 13.5 5.5M12 4 5.5 10.5 4 12.5l2-1.5L12.5 4.5M3 13h2", 15);
       drop.setAttribute("data-tip", "Pick a colour from the screen");
       drop.addEventListener("click", async () => {
@@ -573,7 +578,7 @@
     if (!tip) {
       tip = document.createElement("div");
       tip.className = "tip";
-      tip.id = "workshop-tip";
+      tip.id = "preprint-tip";
       tip.setAttribute("role", "tooltip");
       tip.hidden = true;
       document.body.appendChild(tip);

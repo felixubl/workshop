@@ -1525,3 +1525,78 @@ asked not to reword, while rendering nothing and speaking never.
 **Not explicitly requested:** keeping them as comments rather than deleting
 them. The pin button does still carry a tip, since an unlabelled 8px control
 needs one — say so if that counts as hover text on a tool and it can go.
+
+## 2026-07-27 — theme.js and controls.js went upstream, and took 365 lines with them
+
+**Decided:** `assets/theme.js` and `assets/controls.js` were deleted from this
+repo. They are `assets/preprint/js/mode.js` and `assets/preprint/js/controls.js`
+now, vendored like the CSS. The 365 lines of `base.css` that drew the controls
+(the field, the stepper, the checkbox, the popovers, the colour picker, the
+select, the tooltip) went with them, into the system's `controls.css`, which
+every page here now links. `base.css` is down from 1021 lines to 661.
+
+**Why:** the mode switch was written twice across two repos and both copies said
+so in their own comments. The drawn controls were only here, but they work by
+enhancement over native inputs, which is exactly what makes them safe to hand to
+any consumer, and the writing console is the obvious second customer.
+
+Nothing about the rules changed on the way out. Verified by comparing rule sets:
+52 rules left `base.css` and all 52 are in the system's `controls.css`.
+
+**Not explicitly requested** — moving the CSS as well as the script. It was not
+optional: `controls.js` generates those class names, so a script here and its
+faces there would have been half a move.
+
+## 2026-07-27 — `--pp-screen-dot` was squatting on the system's namespace
+
+**Decided:** renamed to `--w-screen-dot`.
+
+**Why:** it looked like a system token and was not one. The system defines no
+`--pp-screen-dot`, and a variant layer inventing names under the system's prefix
+is how a reader of this file stops being able to tell what is inherited and what
+is local. Caught by the system's conformance check, which gained exactly this
+assertion when it was extracted.
+
+## 2026-07-27 — The harness runs the system's conformance check, not its own copy
+
+**Decided:** the inline "does the variant layer fork the plates" check was
+replaced by a call to `preprintConformance()` from the vendored
+`assets/preprint/tools/conformance.js`, now checking `base.css` as well as
+`site.css`.
+
+**Why:** a conformance check each site keeps a copy of drifts away from the rules
+it is enforcing. The shared one also catches the namespace squat above, which
+this repo's version never did.
+
+## 2026-07-27 — A stale check that had been asserting only its own else branch
+
+**Decided:** "card prose is set in Zilla Slab, not mono" now builds a paragraph
+inside a card, measures it, and removes it, instead of reading the font off a
+card description.
+
+**Why:** commit `3791ce1` cut the cards down to their names, so there is no prose
+anywhere on these pages any more. The check's fallback branch, `ok('a card
+description exists to measure', false)`, had been the only thing running since.
+The rule is about what body copy is set in, not about whether any body copy
+happens to exist today.
+
+## 2026-07-27 — Two drop targets, and neither one moved
+
+**Decided:** the system kept `.drop` (3 rules, the console's figure dropzone)
+when `app.css` was cut back to parts, and this repo kept `.dropzone` (7 rules,
+with a file input, a focus-within state and a filename readout, used by the
+metadata cleaner). They were not unified.
+
+**Why:** `.drop` passed the test for a raw part, since any app that accepts a
+file wants one. `.dropzone` is the same idea done more thoroughly, and it styles
+`--w-wash-0`, so moving it up would have dragged a workshop variable into the
+system or forced a rewrite of a working control during a refactor whose whole
+job was to prove it changed nothing.
+
+By this system's own law that is a breach used twice, and it should be resolved
+rather than left: the honest fix is for `.dropzone`'s extra states to go up into
+`app.css` under the name `.drop`, with the wash left behind here as a variant
+override. Deliberately not done in the same pass as the cut.
+
+**Not explicitly requested** — flagged for review.
+

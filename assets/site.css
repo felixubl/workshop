@@ -7,7 +7,7 @@
    how a family stops looking related. */
 
 :root {
-  --pp-screen-dot: var(--pp-hair);
+  --w-screen-dot: var(--pp-hair);
 
   /* Category washes. Translucent on purpose — the halftone screen has to stay
      visible through a card, or the card stops being paper. color-mix means
@@ -40,7 +40,7 @@
    the halftone screen needs more presence on a dark ground to survive at all,
    and the category washes need roughly double the strength to register. */
 [data-mode='dark'] {
-  --pp-screen-dot: rgba(239, 238, 232, .16);
+  --w-screen-dot: rgba(239, 238, 232, .16);
   --w-wash-1: color-mix(in srgb, var(--pp-plate-1) 14%, transparent);
   --w-wash-2: color-mix(in srgb, var(--pp-plate-2) 14%, transparent);
   --w-wash-3: color-mix(in srgb, var(--pp-plate-3) 14%, transparent);
@@ -59,7 +59,7 @@
    is ON the paper and the work slides over it. The press does not move when
    you turn the page. */
 body {
-  background-image: radial-gradient(var(--pp-screen-dot) 1px, transparent 1.5px);
+  background-image: radial-gradient(var(--w-screen-dot) 1px, transparent 1.5px);
   background-size: 15px 15px;
   background-attachment: fixed;
 }

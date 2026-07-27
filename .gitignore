@@ -1,3 +1,7 @@
-# A local working copy of the design system, synced from ~/code/design-system.
-# The workshop consumes it through assets/preprint/, which is vendored and
-# tracked. This folder is the source it came from and is not part of the site.
+# Nothing is ignored here yet.
+#
+# The design system is NOT ignored: assets/preprint/ is a vendored, committed
+# copy, so the site builds and deploys with no dependency on ~/code/preprint
+# being present. `tools/sync-preprint` re-copies it, and `tools/push` in the
+# system does every consumer at once.
+.DS_Store

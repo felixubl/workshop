@@ -1,11 +1,24 @@
 /* PREPRINT — the app surface.
  *
- * Apps that are USED: a console, a dashboard, a tool. Loaded after core.css
- * and never together with reading.css.
+ * Apps that are USED: a console, a dashboard, a tool. Loaded after core.css and
+ * never together with reading.css.
  *
- *   <link rel="stylesheet" href="…/preprint/styles.css">
- *   <link rel="stylesheet" href="…/preprint/core.css">
- *   <link rel="stylesheet" href="…/preprint/app.css">
+ *   <link rel="stylesheet" href="…/preprint/styles.css">     tokens
+ *   <link rel="stylesheet" href="…/preprint/core.css">       every surface
+ *   <link rel="stylesheet" href="…/preprint/controls.css">   optional
+ *   <link rel="stylesheet" href="…/preprint/app.css">        OR reading.css
+ *   <link rel="stylesheet" href="…/your-app.css">            yours
+ *
+ * PARTS, NOT AN APP. Every rule below is a shape more than one app wants: a
+ * rail, a screen, a head, a button, a segmented control, a search field, a stat
+ * tile, a panel, a menu, a command palette. Nothing here is named after a
+ * screen or after a thing a particular app knows about, and nothing new may be.
+ * The test is one question: would a second app, doing something else entirely,
+ * still want this rule? If not, it belongs in that app's own sheet.
+ *
+ * This is not a style choice, it is the point of the system. An app that
+ * inherits a finished console has been given a uniform. An app that inherits
+ * parts has been given a signature, and can still look like itself.
  *
  * This sheet owns `.btn`, `.note`, `.rail` and `.head__row` for an app.
  * reading.css owns the same four names for a reading page. An app runs the cut
@@ -36,6 +49,7 @@ input, textarea, select { font: inherit; color: inherit; }
   padding-left: .6rem; border-left: var(--pp-rule-structure) solid var(--pp-hair);
 }
 
+/* The app shell: a rail down the side, everything else beside it. */
 .adm { min-height: 100vh; display: grid; grid-template-columns: 206px minmax(0, 1fr); }
 
 /* ── the rail ─────────────────────────────────────────────────────────── */
@@ -90,10 +104,11 @@ input, textarea, select { font: inherit; color: inherit; }
   min-height: 100vh; padding: var(--pp-app-pad-y) var(--pp-app-pad-x) 3rem;
   display: grid; gap: 1.5rem; align-content: start;
 }
-/* The Library is its own grid rather than a padded screen, so it has to be
-   given the same inset explicitly — without it the head sat against the top
-   edge and its stats ran flush left while the rows below were indented. */
-.screen[data-screen='library'] > .head { padding: var(--pp-app-pad-y) var(--pp-app-pad-x) 0; }
+/* A screen that builds its own grid rather than taking `.screen--pad` still
+   owes its head and its body the same inset, or the head sits against the top
+   edge while the rows below are indented. */
+.body { padding: 0 var(--pp-app-pad-x) 3rem; }
+
 .head { display: grid; gap: 1.35rem; }
 .head--spine { padding-bottom: 1.1rem; border-bottom: var(--pp-rule-spine) solid var(--pp-edge); }
 .head--row {
@@ -109,6 +124,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .head__a { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; }
 .head__f { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 
+/* ── controls ─────────────────────────────────────────────────────────── */
 .btn {
   height: 40px; padding: 0 .9rem; display: inline-flex; align-items: center;
   gap: .5rem; border: var(--pp-rule-line) solid var(--pp-line);
@@ -117,6 +133,29 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .btn--ink:active { transform: translate(1px, 1px); }
 .btn[disabled] { opacity: .45; cursor: not-allowed; }
+/* A square icon-only button, at the compact height a dense bar wants. */
+.ico {
+  width: 28px; height: 26px; display: grid; place-items: center;
+  border: var(--pp-rule-line) solid var(--pp-line); border-radius: var(--pp-radius-sm);
+  color: var(--pp-muted); cursor: pointer;
+}
+.ico:hover { border-color: var(--pp-edge); color: var(--pp-ink); }
+.ico[disabled] { opacity: .35; cursor: default; }
+/* A button that stays pressed. Two states and no third, so it is a button that
+   remembers rather than a switch that slides. */
+.tgl {
+  height: 26px; padding: 0 .5rem; border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-md); cursor: pointer; font-size: .72rem;
+  font-weight: 600; flex: none;
+}
+.tgl.is-on { border-color: var(--pp-edge); background: var(--pp-tint); }
+/* On and off, where the on state is a claim worth a plate. */
+.onoff {
+  height: 26px; padding: 0 .55rem; border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-sm); font-size: .7rem; font-weight: 600; cursor: pointer;
+  color: var(--pp-faint);
+}
+.onoff.is-on { border-color: var(--pp-plate-1); color: var(--pp-plate-1-text); }
 /* Segmented: a row of buttons in one bordered box, never a pill. */
 .seg { display: flex; border: var(--pp-rule-line) solid var(--pp-line); border-radius: var(--pp-radius-md); overflow: hidden; flex-wrap: wrap; }
 .seg button {
@@ -137,6 +176,26 @@ input, textarea, select { font: inherit; color: inherit; }
 .find:focus-within { border-color: var(--pp-plate-3); }
 .find input { flex: 1; background: transparent; border: 0; outline: none; font-size: .8rem; }
 
+/* The tag. Pill is not a step on the cut scale and it belongs to tags and
+   nothing else. What a given tag MEANS, and which plate says so, is the app's
+   call and belongs in the app's own sheet. */
+.pill {
+  display: inline-flex; align-items: center; gap: .35rem; padding: .16rem .45rem;
+  border-radius: var(--pp-radius-pill); font-size: .68rem; font-weight: 600;
+  justify-self: start; cursor: pointer;
+  border: var(--pp-rule-line) solid var(--pp-line); color: var(--pp-muted);
+}
+.pill .dot { width: .35rem; height: .35rem; background: currentColor; flex: none; }
+
+/* Drag and drop. Dashed, because a boundary the reader may cross is dashed. */
+.drop {
+  display: grid; place-items: center; padding: 1.6rem; cursor: pointer;
+  border: var(--pp-rule-line) dashed var(--pp-line); background: var(--pp-sunk);
+}
+.drop.is-over { border-color: var(--pp-plate-3); background: var(--pp-tint); }
+.drop code { font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--pp-faint); }
+
+/* ── stats ────────────────────────────────────────────────────────────── */
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 1px; }
 .stat {
   padding: .85rem 1rem; background: var(--pp-surface);
@@ -148,200 +207,6 @@ input, textarea, select { font: inherit; color: inherit; }
   letter-spacing: -0.03em;
 }
 .stat code:last-child { font-size: .62rem; color: var(--pp-muted); }
-
-/* ── the library list ─────────────────────────────────────────────────── */
-.body { padding: 0 var(--pp-app-pad-x) 3rem; }
-/* A row has to read as one thing. Past about 1560px the title column keeps
-   growing and state/length/edited end up half a screen from the title they
-   describe, so the content stops widening there and the rest is margin.
-   Capped on the padded boxes themselves, not their children, or the 6px spine
-   keeps running to the window edge after the content has stopped. */
-.screen[data-screen='library'] > .head,
-.screen[data-screen='library'] > .body {
-  max-width: calc(1560px + var(--pp-app-pad-x) * 2);
-}
-
-.lrow {
-  width: 100%; display: grid; grid-template-columns: 34px minmax(0, 1fr) 112px 96px 104px;
-  gap: 1.25rem; padding: .95rem 0; align-items: center; text-align: left;
-  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair); cursor: pointer;
-}
-.lrow:hover { background: var(--pp-tint); }
-.lrow--h {
-  padding: .55rem 0; cursor: default;
-  border-bottom: var(--pp-rule-line) solid var(--pp-line);
-}
-.lrow--h:hover { background: transparent; }
-.lrow--h code { font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: var(--pp-faint); }
-.lrow.is-open { background: var(--pp-tint); }
-/* The register letter, in the register's own plate. Not a text colour: this
-   is a 28px fill with paper on top of it, which is what a plate is for. */
-.reg-sq {
-  width: 28px; height: 28px; display: grid; place-items: center;
-  color: var(--pp-paper); font-family: var(--pp-font-display); font-weight: 900;
-  font-size: .95rem;
-}
-.lrow__t { display: grid; gap: .2rem; min-width: 0; }
-.lrow__t > span { display: flex; align-items: baseline; gap: .5rem; min-width: 0; }
-.lrow__title {
-  font-family: var(--pp-font-display); font-weight: 700; font-size: 1rem;
-  letter-spacing: -0.02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.lrow__slug { font-size: .64rem; color: var(--pp-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.unpushed { font-size: .6rem; color: var(--pp-plate-2-text); white-space: nowrap; flex: none; }
-.lmeta { font-size: .7rem; color: var(--pp-muted); }
-
-/* The state pill. Pill is not a step on the cut scale, and it belongs to tags
-   and nothing else — a state badge is a tag. */
-.pill {
-  display: inline-flex; align-items: center; gap: .35rem; padding: .16rem .45rem;
-  border-radius: var(--pp-radius-pill); font-size: .68rem; font-weight: 600;
-  justify-self: start; cursor: pointer;
-  border: var(--pp-rule-line) solid var(--pp-line); color: var(--pp-muted);
-}
-.pill .dot { width: .35rem; height: .35rem; background: currentColor; flex: none; }
-.pill[data-state='draft'] { border-style: dashed; }
-.pill[data-state='scheduled'] {
-  border-color: var(--pp-edge); background: var(--pp-marker-citron); color: var(--pp-ink);
-}
-.pill[data-state='unlisted'] { border-color: var(--pp-plate-3); color: var(--pp-plate-3-text); }
-.pill[data-state='published'] { border-color: var(--pp-plate-1); color: var(--pp-plate-1-text); }
-
-/* ── the editor ───────────────────────────────────────────────────────── */
-.screen[data-screen='editor'] {
-  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100vh;
-}
-.bar {
-  display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
-  padding: .5rem .8rem; border-bottom: var(--pp-rule-line) solid var(--pp-line);
-}
-.bar__regs { display: flex; gap: .15rem; flex: none; }
-.bar__regs button {
-  width: 28px; height: 28px; display: grid; place-items: center;
-  border: var(--pp-rule-line) solid var(--pp-line); border-radius: var(--pp-radius-sm);
-  cursor: pointer; font-family: var(--pp-font-display); font-weight: 900; font-size: .85rem;
-  color: var(--pp-muted);
-}
-.bar__regs button.is-on { border: var(--pp-rule-structure) solid var(--pp-edge); }
-.bar__title {
-  flex: 1; min-width: min(100%, 180px); height: 28px; padding: 0 .4rem;
-  background: transparent; border: 1px solid transparent;
-  border-radius: var(--pp-radius-sm); font-family: var(--pp-font-display);
-  font-weight: 700; font-size: 1rem; letter-spacing: -0.02em;
-}
-.bar__title:hover { border-color: var(--pp-hair); }
-.bar__title:focus { border-color: var(--pp-plate-3); box-shadow: 0 0 0 3px var(--pp-selection); outline: none; }
-.bar__grp { display: flex; gap: .2rem; flex: none; }
-.ico {
-  width: 28px; height: 26px; display: grid; place-items: center;
-  border: var(--pp-rule-line) solid var(--pp-line); border-radius: var(--pp-radius-sm);
-  color: var(--pp-muted); cursor: pointer;
-}
-.ico:hover { border-color: var(--pp-edge); color: var(--pp-ink); }
-.ico[disabled] { opacity: .35; cursor: default; }
-.cite-btn {
-  height: 26px; padding: 0 .5rem; display: inline-flex; align-items: center;
-  gap: .35rem; border: var(--pp-rule-line) solid var(--pp-line);
-  border-radius: var(--pp-radius-sm); cursor: pointer; font-size: .72rem;
-  font-weight: 600; color: var(--pp-plate-3-text);
-}
-.cite-btn:hover { border-color: var(--pp-plate-3); }
-.bar .seg button { height: 26px; padding: 0 .55rem; font-family: var(--pp-font-mono); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; }
-.tgl {
-  height: 26px; padding: 0 .5rem; border: var(--pp-rule-line) solid var(--pp-line);
-  border-radius: var(--pp-radius-md); cursor: pointer; font-size: .72rem;
-  font-weight: 600; flex: none;
-}
-.tgl.is-on { border-color: var(--pp-edge); background: var(--pp-tint); }
-.bar__saved { font-size: .66rem; color: var(--pp-faint); flex: none; margin-left: auto; }
-.bar__saved.is-dirty { color: var(--pp-plate-2-text); }
-
-/* Positioned, so the inspector docks inside the split rather than against
-   the viewport. */
-.split { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 0; }
-.split[data-pane='src'] { grid-template-columns: minmax(0, 1fr); }
-.split[data-pane='read'] { grid-template-columns: minmax(0, 1fr); }
-.split[data-pane='src'] .pane--read,
-.split[data-pane='read'] .pane--src { display: none; }
-.pane { min-width: 0; min-height: 0; }
-.pane--src { position: relative; border-right: var(--pp-rule-hairline) solid var(--pp-hair); display: grid; }
-.pane--src textarea {
-  width: 100%; height: 100%; resize: none;
-  padding: clamp(1rem, 3vw, 2.2rem) clamp(1rem, 3vw, 2rem) 40vh;
-  background: var(--pp-paper); border: 0; outline: none;
-  font-family: var(--pp-font-mono); font-size: .875rem; line-height: 1.85;
-  /* The caret is plate 2 so it is never lost in a wall of mono. */
-  caret-color: var(--pp-plate-2); tab-size: 2;
-}
-.typeline {
-  position: absolute; left: 0; right: 0; top: 50%; height: 0;
-  border-top: 1px dotted var(--pp-hair); pointer-events: none;
-}
-/* A container, so the preview folds on the PANE's width rather than the
-   window's. At 50% of a laptop the pane is narrower than 86ch even though the
-   viewport is not, and the reader's own breakpoint is the honest one to use. */
-.pane--read { overflow-y: auto; background: var(--pp-surface); container-type: inline-size; }
-.pane__bar {
-  display: flex; align-items: center; justify-content: space-between; gap: .75rem;
-  padding: .4rem .8rem; border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
-  position: sticky; top: 0; background: var(--pp-surface); z-index: 5;
-}
-.pane__bar code { font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--pp-faint); }
-.pane__bar code:last-child { letter-spacing: 0; text-transform: none; }
-/* Centring with `justify-content` sizes the track to max-content, so a row
-   wider than the pane overflows on BOTH sides and the left of every line
-   becomes unreachable. Give the grid one flexible column and centre each row
-   inside it instead. */
-.preview {
-  padding: clamp(1.5rem, 4vw, 2.75rem) clamp(1rem, 3vw, 2.25rem);
-  display: grid; gap: 1.15rem; grid-template-columns: minmax(0, 1fr);
-}
-.preview > * {
-  width: 100%; max-width: calc(66ch + 20ch + 2.25rem); margin-inline: auto;
-}
-
-@container (max-width: 62rem) {
-  .preview .row { grid-template-columns: minmax(0, 1fr); }
-  .preview .row > *, .preview .row__margin { grid-column: 1; }
-  .preview > * { max-width: 66ch; }
-}
-/* The block the caret sits in. The cheapest possible scroll sync, and it
-   never fights the reader. */
-.preview .row.is-caret { background: var(--pp-tint); }
-
-.insp {
-  position: absolute; right: 0; top: 0; bottom: 0; width: 300px; z-index: 20;
-  background: var(--pp-surface);
-  border-left: var(--pp-rule-structure) solid var(--pp-edge);
-  display: grid; grid-template-rows: auto minmax(0, 1fr);
-}
-.insp__head {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: .5rem .7rem; border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
-}
-.insp__head code { font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--pp-faint); }
-.insp__x { font-size: .74rem; font-weight: 600; cursor: pointer; color: var(--pp-muted); }
-.insp__x:hover { color: var(--pp-ink); }
-.insp__body { overflow-y: auto; padding: .7rem; display: grid; gap: .7rem; align-content: start; }
-.insp__grp { display: grid; gap: .3rem; }
-.insp__grp > code { font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; color: var(--pp-faint); }
-.insp__btns { display: flex; flex-wrap: wrap; gap: .3rem; }
-.insp__b {
-  height: 28px; padding: 0 .5rem; border: var(--pp-rule-line) solid var(--pp-line);
-  border-radius: var(--pp-radius-sm); cursor: pointer; font-size: .74rem; font-weight: 600;
-}
-.insp__b:hover { border-color: var(--pp-edge); }
-.insp__b code { color: var(--pp-faint); font-size: .62rem; margin-left: .3rem; }
-.insp__b[data-mk='citron'] { background: var(--pp-marker-citron); }
-.insp__b[data-mk='pink'] { background: var(--pp-marker-pink); }
-.insp__b[data-mk='cyan'] { background: var(--pp-marker-cyan); }
-
-.foot {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 1rem;
-  padding: .4rem .8rem; border-top: var(--pp-rule-line) solid var(--pp-line);
-  background: var(--pp-sunk);
-}
-.foot code { font-size: .66rem; color: var(--pp-faint); }
 
 /* ── panels ───────────────────────────────────────────────────────────── */
 .cols2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 330px); gap: 1.25rem; align-items: start; }
@@ -358,96 +223,21 @@ input, textarea, select { font: inherit; color: inherit; }
 .panel__h code:last-child { letter-spacing: 0; text-transform: none; }
 .panel__a { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 .panel__a p { font-size: .76rem; line-height: 1.5; color: var(--pp-muted); flex: 1; min-width: min(100%, 220px); }
-.panel textarea, .panel input, .field input, .field select {
+.panel textarea, .panel input, .frow input, .frow select {
   padding: .45rem .6rem; background: var(--pp-paper);
   border: var(--pp-rule-line) solid var(--pp-line); border-radius: var(--pp-radius-sm);
   font-size: .78rem; line-height: 1.6; width: 100%; resize: vertical;
 }
 .panel textarea { font-family: var(--pp-font-mono); }
-.panel textarea:focus, .panel input:focus, .field input:focus {
+.panel textarea:focus, .panel input:focus, .frow input:focus {
   border-color: var(--pp-plate-3); box-shadow: 0 0 0 3px var(--pp-selection); outline: none;
 }
-.field { display: grid; gap: .2rem; }
-.field > code { font-size: .64rem; color: var(--pp-muted); }
-.asprint {
-  display: grid; gap: .35rem; padding: .6rem; background: var(--pp-sunk);
-  border-left: var(--pp-rule-structure) solid var(--pp-edge);
-}
-.asprint code { font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; color: var(--pp-faint); }
-.asprint span { font-size: .82rem; line-height: 1.55; }
+/* A field ROW: a label above its control. `.field` is the control itself and
+   belongs to controls.css, which is why this one is not called that. */
+.frow { display: grid; gap: .2rem; }
+.frow > code { font-size: .64rem; color: var(--pp-muted); }
 
-.srclist { display: grid; gap: .4rem; }
-.srcrow {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .75rem;
-  align-items: center; padding: .6rem .7rem;
-  border: var(--pp-rule-line) solid var(--pp-line); cursor: pointer;
-}
-.srcrow:hover { background: var(--pp-tint); }
-.srcrow.is-on { border: var(--pp-rule-structure) solid var(--pp-edge); background: var(--pp-tint); }
-.srcrow__m { display: flex; flex-wrap: wrap; gap: .5rem; align-items: baseline; }
-.srcrow__key { font-size: .72rem; font-weight: 700; color: var(--pp-plate-3-text); }
-.srcrow__type { font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--pp-faint); }
-.srcrow__used { font-size: .62rem; color: var(--pp-faint); }
-.srcrow__used.is-used { color: var(--pp-plate-1-text); }
-.srcrow__cite { font-size: .86rem; line-height: 1.5; color: var(--pp-muted); }
-.srcrow button {
-  height: 30px; padding: 0 .6rem; border: var(--pp-rule-line) solid var(--pp-line);
-  border-radius: var(--pp-radius-sm); font-size: .74rem; font-weight: 600;
-  cursor: pointer; white-space: nowrap;
-}
-.srcrow button:hover { border-color: var(--pp-edge); background: var(--pp-surface); }
-
-/* ── deploy ───────────────────────────────────────────────────────────── */
-.pipeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 1px; }
-.pipe {
-  padding: .8rem; background: var(--pp-surface); box-shadow: 0 0 0 1px var(--pp-hair);
-  display: grid; gap: .35rem; align-content: start;
-}
-.pipe__h { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
-.pipe__h code:first-child { font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; }
-.pipe__h code:last-child { font-size: .62rem; color: var(--pp-faint); }
-.pipe b { font-family: var(--pp-font-display); font-weight: 700; font-size: 1.3rem; letter-spacing: -0.03em; }
-.pipe p { font-size: .76rem; line-height: 1.5; color: var(--pp-muted); }
-.log {
-  font-family: var(--pp-font-mono); font-size: .7rem; line-height: 1.75;
-  color: var(--pp-muted); background: var(--pp-code); padding: .6rem;
-  max-height: 16rem; overflow: auto; white-space: pre-wrap;
-}
-.staged {
-  display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: .6rem;
-  align-items: center; padding: .45rem 0;
-  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
-}
-.staged code:first-child { font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: var(--pp-plate-2-text); }
-.staged__t { display: grid; gap: .1rem; min-width: 0; }
-.staged__t span { font-size: .84rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.staged__t code { font-size: .62rem; color: var(--pp-faint); }
-.staged button { font-size: .72rem; font-weight: 600; cursor: pointer; color: var(--pp-plate-3-text); }
-
-/* ── figures ──────────────────────────────────────────────────────────── */
-.drop {
-  display: grid; place-items: center; padding: 1.6rem; cursor: pointer;
-  border: var(--pp-rule-line) dashed var(--pp-line); background: var(--pp-sunk);
-}
-.drop.is-over { border-color: var(--pp-plate-3); background: var(--pp-tint); }
-.drop code { font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--pp-faint); }
-.figlist { display: grid; gap: .4rem; }
-.figrow {
-  display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: .75rem;
-  align-items: center; padding: .55rem .7rem;
-  border: var(--pp-rule-line) solid var(--pp-line); background: var(--pp-surface);
-}
-.figrow code:first-child { font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: var(--pp-faint); }
-.figrow__t { display: grid; gap: .1rem; min-width: 0; }
-.figrow__t span { font-size: .84rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.figrow__t code { font-size: .62rem; color: var(--pp-faint); }
-.figrow button {
-  height: 30px; padding: 0 .6rem; border: var(--pp-rule-line) solid var(--pp-line);
-  border-radius: var(--pp-radius-sm); font-size: .74rem; font-weight: 600; cursor: pointer;
-}
-.figrow button:hover { border-color: var(--pp-edge); }
-
-/* ── settings rows ────────────────────────────────────────────────────── */
+/* A labelled row inside a panel: name, control, action. */
 .srow {
   display: grid; grid-template-columns: 82px minmax(0, 1fr) auto; gap: .6rem;
   align-items: center; padding: .4rem 0;
@@ -455,40 +245,19 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .srow > code { font-size: .66rem; color: var(--pp-muted); }
 .srow input { font-size: .76rem; }
-.swatch {
-  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .6rem;
-  align-items: center; padding: .5rem 0;
-  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
-}
-.swatch__t { display: grid; gap: .15rem; min-width: 0; }
-.swatch__t code:first-child { font-size: .74rem; font-weight: 700; }
-.swatch__t code:last-child { font-size: .62rem; color: var(--pp-faint); }
+/* A key: a swatch of something, then what it means. */
 .legend { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .5rem .6rem; align-items: baseline; }
 .legend i { width: .7rem; height: .7rem; display: block; align-self: center; }
 .legend span { font-size: .8rem; line-height: 1.4; }
 .legend em { color: var(--pp-faint); font-style: normal; font-size: .72rem; }
 
-/* Order / on-off, per section. */
-.secrow {
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: .6rem;
-  align-items: center; padding: .5rem 0;
-  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+/* A strip along the bottom of a screen, for what the app is currently doing. */
+.foot {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 1rem;
+  padding: .4rem .8rem; border-top: var(--pp-rule-line) solid var(--pp-line);
+  background: var(--pp-sunk);
 }
-.secrow__t { display: grid; gap: .1rem; min-width: 0; }
-.secrow__t span { font-size: .86rem; font-weight: 600; }
-.secrow__t code { font-size: .62rem; color: var(--pp-faint); }
-.secrow .move { display: flex; gap: .15rem; }
-.secrow .move button {
-  width: 24px; height: 24px; border: var(--pp-rule-line) solid var(--pp-line);
-  border-radius: var(--pp-radius-sm); cursor: pointer; font-size: .7rem;
-}
-.secrow .move button:hover { border-color: var(--pp-edge); }
-.onoff {
-  height: 26px; padding: 0 .55rem; border: var(--pp-rule-line) solid var(--pp-line);
-  border-radius: var(--pp-radius-sm); font-size: .7rem; font-weight: 600; cursor: pointer;
-  color: var(--pp-faint);
-}
-.onoff.is-on { border-color: var(--pp-plate-1); color: var(--pp-plate-1-text); }
+.foot code { font-size: .66rem; color: var(--pp-faint); }
 
 /* ── overlays ─────────────────────────────────────────────────────────── */
 .scrim { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .28); }
@@ -530,8 +299,8 @@ input, textarea, select { font: inherit; color: inherit; }
 .menu button:hover { background: var(--pp-sunk); }
 
 /* ── responsive ───────────────────────────────────────────────────────── */
-/* Below 980px there is no split: a toggle that paints an on-state and changes
-   nothing is a bug, so the control offers only what can actually render. */
+/* The rail lies down across the top and drops everything that was only there
+   to be read at leisure. An app's own screens fold in the app's own sheet. */
 @media (max-width: 980px) {
   .adm { grid-template-columns: minmax(0, 1fr); }
   .rail {
@@ -544,17 +313,4 @@ input, textarea, select { font: inherit; color: inherit; }
   .rail__i { border-left: 0; border-bottom: var(--pp-rule-structure) solid transparent; white-space: nowrap; }
   .rail__i.is-on { border-left-color: transparent; border-bottom-color: var(--pp-edge); }
   .cols2 { grid-template-columns: minmax(0, 1fr); }
-  .split { grid-template-columns: minmax(0, 1fr); }
-  .split .pane--src, .split .pane--read { display: none; }
-  .split[data-pane='src'] .pane--src, .split[data-pane='read'] .pane--read { display: grid; }
-  .split[data-pane='split'] .pane--src { display: grid; }
-  /* The inspector becomes a full-screen sheet with its own Close. */
-  .insp { position: fixed; inset: 0; width: auto; z-index: 50; }
-}
-
-@media (max-width: 820px) {
-  .lrow { grid-template-columns: 34px minmax(0, 1fr); }
-  .lmeta, .lrow .pill { display: none; }
-  .staged, .figrow { grid-template-columns: minmax(0, 1fr) auto; }
-  .staged code:first-child, .figrow code:first-child { display: none; }
 }

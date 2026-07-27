@@ -38,14 +38,28 @@ Three CSS layers, in this order:
 
 | layer | file | rule |
 |---|---|---|
-| the system | [`assets/preprint/`](assets/preprint/) | **vendored verbatim, do not edit.** Re-copy from the design-system project when it changes. |
+| the system | [`assets/preprint/`](assets/preprint/) | **vendored verbatim, do not edit.** `tools/sync-preprint` re-copies it from `~/code/preprint`, and `tools/push` in the system does every consumer at once. |
 | shared chrome | [`assets/base.css`](assets/base.css) | the classes every tool reuses, built only from `--pp-*` tokens |
 | the workshop's own deviations | [`assets/site.css`](assets/site.css) | the whole list: halftone screen, category washes, sticker chips, the tilt |
 
-Four shared scripts sit alongside them.
-[`assets/theme.js`](assets/theme.js) sets `data-mode` before the first paint.
-The mode control itself is the one fubl.org wears: a 26×34 swatch three
-quarters full of ink, which slides to the other end rather than naming a mode.
+Two of the three scripts are the system's, vendored with it.
+[`assets/preprint/js/mode.js`](assets/preprint/js/mode.js) sets `data-mode`
+before the first paint and flips it on any `[data-mode-toggle]`. The control
+itself is the one fubl.org wears: a 26×34 swatch three quarters full of ink,
+which slides to the other end rather than naming a mode. It is the system's
+rather than the workshop's because there is one dark mode across everything set
+in PREPRINT, and this file was previously written twice.
+[`assets/preprint/js/controls.js`](assets/preprint/js/controls.js), with
+[`assets/preprint/controls.css`](assets/preprint/controls.css) beside it, draws
+the five widgets the browser would otherwise style itself: the number field's
+spinner, the checkbox, the colour swatch and its OS dialog, the menu a
+`<select>` opens, and the grey box a `title` attribute produces. It works by
+enhancement, so the native `<input>` and `<select>` stay in the DOM as the value
+and keep firing `input` and `change`. A tool reads its controls exactly as if
+none of this existed, and a `MutationObserver` picks up controls built after
+load. Use `data-tip` rather than `title` for any tooltip.
+
+Two scripts are the workshop's own.
 [`assets/share.js`](assets/share.js) backs the one `[data-share]` button each
 tool page carries beside its title, which copies that tool's own address.
 [`assets/favourites.js`](assets/favourites.js) backs the pin: any `[data-pin]`
@@ -53,14 +67,6 @@ button toggles its tool in a list held in `localStorage` under
 `workshop-pinned`, and pinned tools sort to the front of the index. The index
 and the tool pages read the same list, so pinning from inside a tool moves its
 card too.
-[`assets/controls.js`](assets/controls.js) draws the five widgets the browser
-would otherwise style itself: the number field's spinner, the checkbox, the
-colour swatch and its OS dialog, the menu a `<select>` opens, and the grey box a
-`title` attribute produces. It works by enhancement, so the native `<input>` and
-`<select>` stay in the DOM as the value and keep firing `input` and `change`. A
-tool reads its controls exactly as if none of this existed, and a
-`MutationObserver` picks up controls built after load. Use `data-tip` rather
-than `title` for any tooltip.
 
 The one vendored file the workshop rewrites is
 [`assets/preprint/tokens/fonts.css`](assets/preprint/tokens/fonts.css), which
@@ -70,12 +76,12 @@ names it declares must not change.
 ## Adding a new tool
 
 1. Create `<tool-name>/index.html`, `style.css`, `script.js`.
-2. Link `../assets/theme.js` (in `<head>`, before the stylesheets), then
-   `../assets/preprint/styles.css`, `../assets/base.css`, and
-   `../assets/site.css`. Write only the tool-specific layout in the tool's own
-   `style.css`.
+2. Link `../assets/preprint/js/mode.js` (in `<head>`, before the stylesheets),
+   then `../assets/preprint/styles.css`, `../assets/preprint/controls.css`,
+   `../assets/base.css`, and `../assets/site.css`. Write only the tool-specific
+   layout in the tool's own `style.css`.
 3. At the end of `<body>`, load the tool's `script.js`, then
-   `../assets/controls.js`, `../assets/share.js` and
+   `../assets/preprint/js/controls.js`, `../assets/share.js` and
    `../assets/favourites.js`. The tool's own script goes first so anything it
    builds at startup is already in the DOM when the controls are drawn.
 4. Give the page the shared header: a `.back-link`, a `.title-row` holding the
