@@ -53,10 +53,16 @@
       try {
         const bytes = new Uint8Array(await file.arrayBuffer());
         const doc = PDF.PDFDocument.load(bytes);
+        // Refused before the page count is even consulted. Standard security
+        // leaves the xref and the page tree readable, so an encrypted file
+        // looks perfectly loadable while every stream is still ciphertext:
+        // it would preview blank and save as an unreadable file.
+        if (doc.encrypted) {
+          problems.push(file.name + ' is password protected, which this tool cannot open yet');
+          continue;
+        }
         if (!doc.pageCount) {
-          problems.push(file.name + (doc.encrypted
-            ? ' is password protected, which this tool cannot open yet'
-            : ' has no pages this tool could find'));
+          problems.push(file.name + ' has no pages this tool could find');
           continue;
         }
         const entry = { id: docs.length, name: file.name, doc };
