@@ -27,7 +27,7 @@
   margin-top: 1.1rem;
   font-family: var(--pp-font-mono);
   font-size: var(--pp-size-label);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--w-track-label);
   color: var(--pp-faint);
 }
 .dz-note {
@@ -122,12 +122,16 @@
 .slip:hover {
   border-color: var(--pp-edge);
 }
-/* The open file fills with ink at its edge only: a 2px spine on the left, the
+/* The open file fills with ink at its edge only: a 2px rule on the left, the
    same statement the toolbar's active preset makes with a fill. A full fill
-   here would out-shout the sheet the slip is pointing at. */
+   here would out-shout the sheet the slip is pointing at.
+
+   Structure weight, not --pp-rule-spine. The spine is 6px and a page gets one,
+   spent already on the masthead break in base.css. This is a marked edge on a
+   list row, which is what the 2px structure weight is for. */
 .slip.is-open {
   border-color: var(--pp-edge);
-  border-left-width: var(--pp-rule-spine);
+  border-left-width: var(--pp-rule-structure);
   border-left-color: var(--pp-plate-3);
 }
 .slip-pick {
@@ -156,7 +160,7 @@
   margin-top: 0.15rem;
   font-family: var(--pp-font-mono);
   font-size: var(--pp-size-label);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--w-track-mono);
   color: var(--pp-faint);
 }
 .slip-meta .marked {
@@ -178,7 +182,7 @@
   color: var(--pp-ink);
 }
 .slip-get:active {
-  transform: translate(1px, 1px);
+  transform: var(--w-press);
 }
 .slip.is-bad .slip-name {
   color: var(--pp-plate-2-text);
@@ -189,7 +193,7 @@
    of figures: so the cells align left, the keep column is a fixed narrow
    track, and the value column takes whatever is left. */
 .sheet-meta {
-  --sheet-min: 620px;
+  --w-sheet-min: 620px;
 }
 .sheet-meta .col-keep {
   width: 52px;
@@ -210,8 +214,8 @@
   padding-right: 0;
 }
 .sheet-meta .th-keep {
-  font-size: 10px;
-  letter-spacing: 0.06em;
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-label);
 }
 
 /* A group is a rule with a name on it, not a box: the sheet already has
@@ -252,7 +256,7 @@
 .grp-count {
   font-family: var(--pp-font-mono);
   font-size: var(--pp-size-label);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--w-track-mono);
   color: var(--pp-faint);
 }
 .grp-blurb {
@@ -280,8 +284,8 @@
 .fld-key {
   display: block;
   font-family: var(--pp-font-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.04em;
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-mono);
   color: var(--pp-faint);
 }
 .val {
@@ -302,8 +306,8 @@
   background: transparent;
   border: 0;
   font-family: var(--pp-font-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.04em;
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-mono);
   color: var(--pp-muted);
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -339,8 +343,8 @@
   border-radius: var(--pp-radius-pill);
   border: var(--pp-rule-line) solid var(--pp-line);
   font-family: var(--pp-font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-mono);
   padding: 0.06rem 0.42rem;
   color: var(--pp-muted);
   white-space: nowrap;
@@ -361,7 +365,7 @@
   color: var(--pp-faint);
 }
 .legend .tag {
-  font-size: 0.68rem;
+  font-size: var(--pp-size-label);
   padding: 0.06rem 0.42rem;
   color: var(--pp-muted);
 }

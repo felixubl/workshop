@@ -8,9 +8,10 @@
    Three things this file deliberately does NOT do: it does not set a body
    font (tokens/base.css already sets Zilla Slab at 17px/1.68), it does not
    restyle input[type='range'] (the system's square thumb on a 2px track is
-   correct as shipped), and it casts no shadow except the badge sticker. Law
-   04 allows one hard cast per view, and on the index that cast belongs to the
-   live tool card. */
+   correct as shipped), and it casts no shadow at all. Law 04 allows one hard
+   cast per view and every view spends it elsewhere, so shared chrome cannot
+   have one: a cast here would land on every page at once and cancel whatever
+   that page had already spent its licence on. */
 
 * {
   box-sizing: border-box;
@@ -74,15 +75,6 @@ input[type='number'] {
   border-color: var(--pp-plate-3);
 }
 
-.font-slab {
-  font-family: var(--pp-font-display);
-  letter-spacing: var(--pp-track-head);
-}
-
-.muted {
-  color: var(--pp-muted);
-}
-
 /* Present to a screen reader, absent to the eye. For live regions and for
    labels the layout already states in another way. */
 .sr-only {
@@ -127,7 +119,7 @@ header {
   color: var(--pp-muted);
   font-family: var(--pp-font-mono);
   font-size: 0.78rem;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--w-track-label);
   text-decoration: none;
   border-bottom: 0;
 }
@@ -180,7 +172,7 @@ header {
   border-radius: var(--pp-radius-sm);
   font-family: var(--pp-font-mono);
   font-size: 0.72rem;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--w-track-label);
 }
 .share-btn svg {
   flex: none;
@@ -191,13 +183,17 @@ header {
   color: var(--pp-ink);
 }
 .share-btn:active {
-  transform: translate(1px, 1px);
+  transform: var(--w-press);
 }
-/* Done is stated in plate 1, the only plate this system lets mean "that
-   worked", and it says so in words rather than swapping in a tick. */
+/* Done is stated in words — share.js swaps the label to "Copied" and swaps it
+   back. No plate: law 05 licenses a semantic plate only when the action is
+   irreversible and the label says so too, and copying a link to the clipboard
+   is the most reversible thing on the page. Plate 1 here would teach that
+   green means "that worked", which is the false rule law 05 exists to stop.
+   The word already carries it, so the edge only firms up. */
 .share-btn.is-done {
-  border-color: var(--pp-plate-1);
-  color: var(--pp-plate-1-text);
+  border-color: var(--pp-edge);
+  color: var(--pp-ink);
 }
 
 /* The pin head: a square turned 45°, hollow until the tool is pinned and solid
@@ -247,7 +243,7 @@ header {
 .group label {
   font-family: var(--pp-font-mono);
   font-size: var(--pp-size-label);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--w-track-label);
   color: var(--pp-muted);
 }
 
@@ -312,30 +308,6 @@ header {
   }
 }
 
-/* Icon buttons. Square-ish, on the cut scale — the round ones were a pill
-   radius on a control, which pill is not. */
-.icon-btn {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  background: transparent;
-  color: var(--pp-muted);
-  border: var(--pp-rule-line) solid var(--pp-line);
-  border-radius: var(--pp-radius-md);
-  text-decoration: none;
-}
-.icon-btn:hover {
-  border-color: var(--pp-edge);
-  color: var(--pp-ink);
-}
-.icon-btn svg {
-  width: 17px;
-  height: 17px;
-}
-
 /* Buttons. Border weight IS the hierarchy — 2px is primary, 1px is secondary.
    Hover changes a border colour or a tint, never a lift and never a shadow.
    Press moves 1px down-right, which is a thing a printer could do. */
@@ -374,7 +346,7 @@ header {
 }
 .btn-primary:active,
 .btn-ghost:active {
-  transform: translate(1px, 1px);
+  transform: var(--w-press);
 }
 button[disabled] {
   color: var(--pp-faint);
@@ -414,55 +386,23 @@ button[disabled] {
   padding: 0.18rem 0.55rem;
 }
 
-/* Badges are stickers: opaque stock, ink border, ink cast, near-black text in
-   both modes. A translucent chip goes to a dim smudge on a dark ground. The
-   pair disagrees on tilt so it reads as two stickers, not a pattern. */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  flex: none;
-  padding: 0.16rem 0.55rem;
-  border-radius: var(--pp-radius-pill);
-  background: var(--w-chip-live);
-  color: var(--w-chip-ink);
-  border: var(--pp-rule-structure) solid var(--pp-edge);
-  box-shadow: 2px 2px 0 var(--pp-edge);
-  font-family: var(--pp-font-mono);
-  font-size: var(--pp-size-label);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-  transform: rotate(var(--w-tilt));
-}
-.badge-live {
-  background: var(--w-chip-live);
-}
-.badge-soon {
-  background: var(--w-chip-soon);
-  letter-spacing: 0.04em;
-  transform: rotate(1.275deg);
-}
-
-/* Cards are a 1px border and no shadow. The 2px structure weight marks the
-   one panel that matters. */
+/* Cards are a 1px border and no shadow. */
 .card {
   background: var(--pp-surface);
   border: var(--pp-rule-line) solid var(--pp-line);
   border-radius: var(--pp-radius-lg);
   padding: 1.15rem;
 }
-.card.pop {
-  border: var(--pp-rule-structure) solid var(--pp-edge);
-}
 .card.prompt {
   border: var(--pp-rule-structure) dashed var(--pp-line);
   background: var(--w-wash-0);
 }
 
-/* Invalid takes the 2px structural weight and plate 2, exactly as the system's
-   Field does, and never without the sentence underneath saying what is wrong.
-   A coloured edge on its own is not a message. */
+/* This is the page's one law 05 claim, and it is the sentence itself rather
+   than an edge: .hint is always a line of prose saying what is wrong, so the
+   plate reinforces words that are already there instead of standing in for
+   them. A coloured edge on its own is not a message, which is why nothing else
+   on a tool page claims a plate. */
 .hint {
   margin: -0.75rem 0 1.35rem;
   font-size: 0.86rem;
@@ -487,14 +427,14 @@ button[disabled] {
 /* ── The sheet ────────────────────────────────────────────────────────────
    A table is a table. Fixed tracks, one hairline per row, a 2px rule under the
    caption, and no rounded shell pretending the data is soft — a sheet of
-   figures is not a card. Below --sheet-min it scrolls sideways rather than
+   figures is not a card. Below --w-sheet-min it scrolls sideways rather than
    reflowing into stacks that stop being a table.
 
    This lived in random-numbers while it was the only tool that printed one.
    What stayed behind there is everything true of figures rather than of
    tables: right alignment, tabular numerals, and that tool's column widths. */
 .sheet {
-  --sheet-min: 460px;
+  --w-sheet-min: 460px;
   border: var(--pp-rule-line) solid var(--pp-line);
   background: var(--pp-surface);
 }
@@ -518,7 +458,7 @@ button[disabled] {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--w-track-label);
   text-transform: none;
   color: var(--pp-faint);
 }
@@ -528,7 +468,7 @@ button[disabled] {
 }
 .sheet table {
   width: 100%;
-  min-width: var(--sheet-min);
+  min-width: var(--w-sheet-min);
   border-collapse: collapse;
   table-layout: fixed;
 }
@@ -607,55 +547,13 @@ button[disabled] {
   border-color: var(--pp-edge);
   color: var(--pp-ink);
 }
-.dropzone .dz-filename {
-  display: block;
-  margin-top: 0.5rem;
-  font-family: var(--pp-font-mono);
-  font-size: 0.78rem;
-  color: var(--pp-plate-2-text);
-}
-
 footer {
   color: var(--pp-faint);
   font-size: 0.86rem;
   line-height: 1.6;
 }
 
-/* Labelled outbound rows: the label carries the underline, the row does not. */
-.foot-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  text-decoration: none;
-  border-bottom: 0;
-  color: var(--pp-muted);
-}
-.foot-link:hover {
-  color: var(--pp-ink);
-}
-.foot-link code {
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
-}
-
-/* The plate mark: three squares, off register, multiplied together. It is the
-   only mark this system has, and in the dark it screens instead. */
-.plate-mark {
-  position: relative;
-  display: block;
-  width: 19px;
-  height: 19px;
-  flex: none;
-}
-.plate-mark i {
-  position: absolute;
-  width: 13px;
-  height: 13px;
-  mix-blend-mode: multiply;
-}
-.plate-mark i:nth-child(1) { left: 0; top: 0; background: var(--pp-plate-1); }
-.plate-mark i:nth-child(2) { left: 6px; top: 2px; background: var(--pp-plate-2); }
-.plate-mark i:nth-child(3) { left: 3px; top: 6px; background: var(--pp-plate-3); }
-[data-mode='dark'] .plate-mark i {
-  mix-blend-mode: screen;
-}
+/* The plate mark used to be redrawn here, at 19px on 13px squares. It was a
+   second, slightly-wrong copy of core.css's .mark (22px on 14px) and nothing
+   rendered it. The system draws the one mark it has; if a surface here ever
+   needs it again, link core.css rather than retyping the offsets. */

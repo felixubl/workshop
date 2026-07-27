@@ -61,16 +61,19 @@
 }
 
 /* The seed a run actually used, offered back as a control: pressing it puts
-   the seed in the field so the run can be repeated. It is a tag by shape
-   because it is a label first, and it earns its pill that way. */
+   the seed in the field so the run can be repeated.
+
+   It reads as a label but it is a <button> with a click handler, and pill
+   belongs to tags and nothing else. A thing you can press takes the cut scale,
+   at the small end because it is the smallest control on the page. */
 .seed-tag {
   padding: 0.1rem 0.5rem;
   background: transparent;
   border: var(--pp-rule-line) solid var(--pp-line);
-  border-radius: var(--pp-radius-pill);
+  border-radius: var(--pp-radius-sm);
   font-family: var(--pp-font-mono);
   font-size: 0.72rem;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--w-track-label);
   color: var(--pp-muted);
 }
 .seed-tag:hover {
@@ -78,5 +81,5 @@
   color: var(--pp-ink);
 }
 .seed-tag:active {
-  transform: translate(1px, 1px);
+  transform: var(--w-press);
 }

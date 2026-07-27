@@ -33,14 +33,28 @@ input[type='number'].field {
 
 /* The drawing surface stays paper-light in both modes. This is the artwork's
    ground rather than the page's: the default pen is near-black ink, and it
-   would vanish on a graphite sheet. 2px is the structure weight — on this
-   page the canvas is the one panel that matters. */
+   would vanish on a graphite sheet. Declared as --w-artwork-paper in site.css
+   rather than written here as a hex, so the deviation is visible to the
+   conformance check instead of hiding as a stray literal. 2px is the structure
+   weight — on this page the canvas is the one panel that matters. */
 #canvasWrap {
   border: var(--pp-rule-structure) solid var(--pp-edge);
-  background: #fbfbf9;
+  background: var(--w-artwork-paper);
   border-radius: var(--pp-radius-lg);
   width: fit-content;
   display: flex;
+}
+
+/* The pixel grid. It used to be stroke="#3a3a3a" stroke-opacity="0.22" on the
+   path itself, which is ink pretending to be quiet — the system's whole point
+   about --pp-muted and --pp-faint is that a quiet colour is chosen, not ink
+   with the volume turned down. This is the hairline weight, held light with
+   the rest of the artwork ground rather than following the mode. Styled here
+   rather than on the element because a presentation attribute cannot read a
+   custom property, and the export strips both the overlay and the defs, so
+   nothing downstream depends on the attribute being there. */
+#pixelGrid path {
+  stroke: var(--w-artwork-rule);
 }
 
 #canvas {

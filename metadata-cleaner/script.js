@@ -2188,7 +2188,7 @@
         get.setAttribute("data-tip", "Download this file, cleaned");
         get.setAttribute("aria-label", "Download " + doc.name + ", cleaned");
         get.innerHTML =
-          '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M8 2.5v8M4.5 7.5 8 11l3.5-3.5M2.5 13.5h11"></path></svg>';
+          '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M8 2.5v7.5M4.5 6.5 8 10l3.5-3.5M2.5 13.5h11"></path></svg>';
         get.addEventListener("click", () => downloadOne(index, get));
         li.appendChild(get);
       }

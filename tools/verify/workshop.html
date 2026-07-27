@@ -28,6 +28,40 @@ window.onerror = function (m, s, l) { ok('uncaught ' + m + ' @' + l, false); };
 
 function everyEl(d) { return Array.prototype.slice.call(d.querySelectorAll('*')); }
 
+/* Every style rule a page carries, the workshop's own layers only.
+ *
+ * The DOM checks below can only see what is on screen, and a tool's real state
+ * is behind an interaction: the metadata cleaner keeps its whole work section
+ * hidden until a file is dropped, so five type sizes under the floor and a
+ * second 6px rule sat inside a green harness for as long as they existed. A
+ * rule is wrong whether or not anything is currently matching it, so these two
+ * read the stylesheets instead and do not care what is rendered.
+ *
+ * The vendored tree is skipped on purpose: it is the system's, this file has no
+ * standing to fail it, and conformance.js already checks what it is for. */
+function ownRules(d) {
+  var out = [];
+  Array.prototype.slice.call(d.styleSheets).forEach(function (sheet) {
+    var href = sheet.href || '';
+    if (href.indexOf('/assets/preprint/') !== -1) return;
+    var rules;
+    try { rules = sheet.cssRules; } catch (e) { return; }   // cross-origin
+    (function walk(list) {
+      Array.prototype.slice.call(list).forEach(function (r) {
+        /* Collect first, then descend, and never treat the two as exclusive.
+           Chrome gives every CSSStyleRule a .cssRules now, empty unless the
+           rule has nested CSS in it — so an `if (r.cssRules) return walk(…)`
+           written the obvious way recurses into nothing for every rule on the
+           page and collects none of them. That returned an empty list, and an
+           empty list passes every check below without reading a thing. */
+        if (r.style) out.push({ sel: r.selectorText || '', style: r.style, href: href });
+        if (r.cssRules && r.cssRules.length) walk(r.cssRules);   // @media, @supports, nesting
+      });
+    })(rules);
+  });
+  return out;
+}
+
 function run() {
   var H = document.getElementById('home'), hd = H.contentDocument, hw = H.contentWindow;
   var T = document.getElementById('tool'), td = T.contentDocument, tw = T.contentWindow;
@@ -83,7 +117,12 @@ function run() {
     var round = everyEl(p.d).filter(function (el) {
       var r = p.w.getComputedStyle(el).borderRadius;
       if (!/9999px|50%/.test(r)) return false;
-      // a tag or badge may be a pill, whatever it is called
+      /* A tag may be a pill. A CONTROL may not, whatever it is called — pill
+         belongs to labels and nothing else, and a thing you can press is not a
+         label. Testing the class name alone is how .seed-tag, a <button> with
+         a click handler, passed this check by being named after a tag. */
+      if (el.tagName === 'BUTTON' || el.tagName === 'A' || el.tagName === 'INPUT' ||
+          el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') return true;
       return !/\b(tag|badge|pill|badge-live|badge-soon)\b/.test(el.className || '');
     });
     ok('[' + p.n + '] no pill radius outside tags and badges', round.length === 0,
@@ -124,6 +163,50 @@ function run() {
     });
     ok('[' + p.n + '] the 6px spine is spent exactly once', six.length <= 1,
        six.length + ' element(s) carry a 6px rule');
+  });
+
+  /* ── the same two rules, read off the stylesheets ──────────────────────── */
+  /* First, that there is anything to read. The two checks below both pass on
+     an empty rule list, so without this they report a clean sheet when what
+     they actually did was fail to open one. That is not hypothetical: the walk
+     in ownRules() collected nothing on its first outing and every check went
+     green. A check that cannot fail is worse than no check, because it is
+     reported as evidence. */
+  pages.forEach(function (p) {
+    var n = ownRules(p.d).length;
+    ok('[' + p.n + '] the stylesheets are readable at all', n > 20, n + ' rules read');
+  });
+
+  // Nothing below 11.2px, whether or not it is on screen right now.
+  pages.forEach(function (p) {
+    var small = [];
+    ownRules(p.d).forEach(function (r) {
+      var v = r.style.getPropertyValue('font-size').trim();
+      if (!v || v.indexOf('var(') !== -1 || v.indexOf('clamp(') !== -1) return;
+      var px = /^([\d.]+)px$/.test(v) ? parseFloat(v)
+             : /^([\d.]+)rem$/.test(v) ? parseFloat(v) * 16 : null;
+      if (px !== null && px < 11.2) small.push(r.sel + ' { font-size: ' + v + ' }');
+    });
+    ok('[' + p.n + '] no rule sets type below 11.2px', small.length === 0,
+       small.length ? small.length + ' rule(s), first: ' + small[0] : 'none');
+  });
+
+  // The spine is 6px and a page gets one. Any other rule reaching for that
+  // weight is spending a licence the page has already spent.
+  pages.forEach(function (p) {
+    var spines = [];
+    ownRules(p.d).forEach(function (r) {
+      ['border', 'border-top', 'border-bottom', 'border-left', 'border-right',
+       'border-width', 'border-top-width', 'border-bottom-width',
+       'border-left-width', 'border-right-width'].forEach(function (prop) {
+        var v = r.style.getPropertyValue(prop);
+        if (v && (/\b6px\b/.test(v) || v.indexOf('--pp-rule-spine') !== -1)) {
+          spines.push(r.sel + ' { ' + prop + ': ' + v.trim() + ' }');
+        }
+      });
+    });
+    ok('[' + p.n + '] only one rule reaches for the 6px spine', spines.length <= 1,
+       spines.length ? spines.join('  |  ') : 'none');
   });
 
   /* ── the variant layer stays a variant ─────────────────────────────────── */

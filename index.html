@@ -107,7 +107,7 @@
     font-family: var(--pp-font-mono);
     font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: var(--w-track-label);
   }
   /* The way back to fubl.org: a solid square, the bare host in mono, exactly as
      that site labels its own header buttons. It takes the primary 2px weight
@@ -138,7 +138,7 @@
     color: #fff;
   }
   .home-link:active {
-    transform: translate(1px, 1px);
+    transform: var(--w-press);
   }
   /* The wordmark is a signboard: a plate of stock, nailed to the paper and
      hung very slightly crooked. This is the page's law 06 rotation, and it is
@@ -234,7 +234,7 @@
     border-color: var(--pp-edge);
   }
   .repo-link:active {
-    transform: translate(1px, 1px);
+    transform: var(--w-press);
   }
   main {
     max-width: var(--pp-page-max);
@@ -279,9 +279,11 @@
      It used to carry a description and an "Open tool" affordance, which made
      each one about 190px tall and the queue four screens long — nineteen
      paragraphs a reader scrolls past to find the three things they can
-     actually use. The names are the index; the descriptions are what you read
-     once. They are still here, on the card as its tip, so hovering explains a
-     tool without any of them costing height. The card is now a row on the
+     actually use. The names are the index, and the descriptions are what you
+     read once. They are still here, kept verbatim as an HTML comment beside
+     each card, because the copy is worth keeping and a card is not where it
+     belongs. They are not tips: a tooltip is not a place to put the only
+     description a tool has. The card is now a row on the
      personal site's .entry rhythm: one display line, a 44px target, and the
      state carried by the border rather than by a word. */
   .tools {
@@ -306,8 +308,8 @@
      tool instead of pinning it would be the obvious bug. */
   /* The system underlines links with a border rather than a text-decoration, so
      turning it off here means turning off a border — the same thing .back-link
-     and .foot-link do. A card is a target, not a run of prose with a link in
-     it, and the whole box already says it is one. */
+     does. A card is a target, not a run of prose with a link in it, and the
+     whole box already says it is one. */
   .tool-open {
     flex: 1;
     min-width: 0;
@@ -346,7 +348,7 @@
     border-color: var(--pp-edge);
   }
   .pin:active {
-    transform: translate(1px, 1px);
+    transform: var(--w-press);
   }
   .tool-card.is-pinned .pin-head {
     background: var(--pp-edge);
@@ -377,13 +379,17 @@
      violation appears, it stops being one — name it, give it a slot, write its
      states, or stop using it." This is that slot. The cast now means built and
      open, it is declared here with its hover and press states, and it belongs
-     to .tool-card-live rather than to whichever card happened to be first. No
-     other element on the index casts. */
+     to .tool-card-live rather than to whichever card happened to be first.
+
+     One other thing on this page casts: the wordmark's blue text-shadow. That
+     is the brand mark, it predates this slot, and it is deliberately left
+     alone rather than tidied into line — so this comment no longer claims to
+     be the only cast on the index, because it is not. */
   .tool-card-live {
     background: var(--pp-surface);
     border: var(--pp-rule-structure) solid var(--pp-edge);
     box-shadow: 5px 5px 0 var(--pp-plate-2);
-    transform: rotate(-0.48deg);
+    transform: rotate(calc(var(--w-tilt-card) * 0.96));
     transition: box-shadow var(--pp-dur-state) var(--pp-ease-out);
   }
   .tool-card-live:hover {
@@ -391,15 +397,21 @@
   }
   .tool-card-live:active {
     box-shadow: 2px 2px 0 var(--pp-plate-2);
-    transform: translate(1px, 1px) rotate(-0.48deg);
+    transform: var(--w-press) rotate(calc(var(--w-tilt-card) * 0.96));
   }
   /* Cards rotate at a third of the sticker tilt, cycling by grid position —
      the cut-and-pasted rhythm of the original, quiet enough that sixteen of
      them still read as a grid rather than a spill. Counted with nth-of-type so
-     the cycle is over the <div> cards only and the live <a> stays out of it. */
+     the cycle is over the <div> cards only and the live <a> stays out of it.
+
+     Every angle is derived from --w-tilt-card rather than typed, so "a third
+     of the sticker tilt" stays literally true if --w-tilt ever moves. The four
+     multipliers are what stops the cycle reading as a pattern: hand-set angles
+     scattered across four rules were four undeclared tokens claiming to be
+     one. */
   .tool-card-soon {
-    border: var(--pp-rule-structure) dashed var(--card-ink);
-    background: var(--card-wash);
+    border: var(--pp-rule-structure) dashed var(--w-card-ink);
+    background: var(--w-card-wash);
   }
   /* With the badges gone, a card states what it is by what it is made of: the
      built ones are solid stock with an ink edge and a cast, the queued ones are
@@ -413,14 +425,14 @@
   .tool-card-soon:hover {
     cursor: var(--pp-cursor-blocked);
   }
-  .tool-card-soon:nth-of-type(3n + 1) { transform: rotate(-0.6deg); }
-  .tool-card-soon:nth-of-type(3n + 2) { transform: rotate(0.51deg); }
-  .tool-card-soon:nth-of-type(3n + 3) { transform: rotate(-0.39deg); }
+  .tool-card-soon:nth-of-type(3n + 1) { transform: rotate(calc(var(--w-tilt-card) * 1.2)); }
+  .tool-card-soon:nth-of-type(3n + 2) { transform: rotate(calc(var(--w-tilt-card) * -1.02)); }
+  .tool-card-soon:nth-of-type(3n + 3) { transform: rotate(calc(var(--w-tilt-card) * 0.78)); }
 
-  .reg-1 { --card-ink: var(--pp-plate-1); --card-wash: var(--w-wash-1); }
-  .reg-2 { --card-ink: var(--pp-plate-2); --card-wash: var(--w-wash-2); }
-  .reg-3 { --card-ink: var(--pp-plate-3); --card-wash: var(--w-wash-3); }
-  .reg-0 { --card-ink: var(--pp-line); --card-wash: var(--w-wash-0); }
+  .reg-1 { --w-card-ink: var(--pp-plate-1); --w-card-wash: var(--w-wash-1); }
+  .reg-2 { --w-card-ink: var(--pp-plate-2); --w-card-wash: var(--w-wash-2); }
+  .reg-3 { --w-card-ink: var(--pp-plate-3); --w-card-wash: var(--w-wash-3); }
+  .reg-0 { --w-card-ink: var(--pp-line); --w-card-wash: var(--w-wash-0); }
 
   /* The footer is one line. What it used to carry is either already in the
      masthead — both site keys sit up there now — or gone by request.
@@ -449,7 +461,7 @@
     border-top: var(--pp-rule-line) solid var(--pp-line);
     font-family: var(--pp-font-mono);
     font-size: var(--pp-size-label);
-    letter-spacing: 0.06em;
+    letter-spacing: var(--w-track-label);
     color: var(--pp-faint);
   }
 
