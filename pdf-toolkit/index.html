@@ -95,7 +95,7 @@
     <div class="result-bar">
       <span class="section-label">Pages</span>
       <div class="result-right">
-        <button class="btn-ghost" type="button" id="view" data-tip="Read the pages full size, in the order and the turn they will be saved in" disabled>View full size</button>
+        <button class="btn-ghost" type="button" id="view" data-tip="Read the pages full size, and turn, move, delete or mark them as you go" disabled>View full size</button>
         <span class="tag" id="tally">nothing loaded</span>
       </div>
     </div>
@@ -128,23 +128,42 @@
     <p class="sheet-note" id="saveNote"></p>
   </div>
 
-  <p class="sr-only" id="say" role="status" aria-live="polite"></p>
 </div>
 
-<!-- The pile as it will be saved, one page at a time and big enough to read. -->
-<div class="modal" id="viewer" role="dialog" aria-modal="true" aria-label="Page preview" hidden>
+<!-- Outside the wrap on purpose: the wrap goes `inert` while the viewer is up,
+     and an inert live region is out of the accessibility tree, so anything said
+     from the viewer would be said to nobody. -->
+<p class="sr-only" id="say" role="status" aria-live="polite"></p>
+
+<!-- The pile as it will be saved: one page at a time, big enough to read, and
+     editable where you are reading it. The grid acts on many pages at once, the
+     viewer acts on the one in front of you. -->
+<div class="modal" id="viewer" role="dialog" aria-modal="true" aria-label="Page viewer" hidden>
   <div class="scrim" data-viewer-close></div>
-  <div class="modal__panel">
+  <div class="modal__panel" id="viewerPanel">
     <div class="modal__bar viewer-bar">
       <span class="viewer-count" id="viewerCount"></span>
       <span class="viewer-src" id="viewerSrc"></span>
+      <span class="viewer-marked" id="viewerMarked"></span>
       <div class="btn-row">
-        <button class="btn-ghost" type="button" id="viewerPrev" aria-label="Previous page" data-tip="The page before this one">&#8592;</button>
-        <button class="btn-ghost" type="button" id="viewerNext" aria-label="Next page" data-tip="The page after this one">&#8594;</button>
-        <button class="btn-ghost" type="button" id="viewerClose" data-viewer-close>Close</button>
+        <button class="btn-ghost" type="button" id="viewerPrev" aria-label="Previous page" data-tip="The page before this one (←)">&#8592;</button>
+        <button class="btn-ghost" type="button" id="viewerNext" aria-label="Next page" data-tip="The page after this one (→)">&#8594;</button>
+        <button class="btn-ghost" type="button" id="viewerClose" data-viewer-close data-tip="Back to the grid (Esc)">Close</button>
       </div>
     </div>
+
     <div class="modal__body viewer-stage" id="viewerStage"></div>
+
+    <!-- Everything here acts on the page being shown, never on the selection:
+         on a surface showing one page, that is the only reading that holds. -->
+    <div class="modal__bar viewer-tools">
+      <button class="btn-ghost" type="button" id="viewerRotL" data-tip="Turn this page anticlockwise ([)">&#8634; Turn left</button>
+      <button class="btn-ghost" type="button" id="viewerRotR" data-tip="Turn this page clockwise (])">&#8635; Turn right</button>
+      <button class="btn-ghost" type="button" id="viewerEarlier" data-tip="Move this page one place earlier (Shift ←)">Earlier</button>
+      <button class="btn-ghost" type="button" id="viewerLater" data-tip="Move this page one place later (Shift →)">Later</button>
+      <button class="btn-ghost" type="button" id="viewerDel" data-tip="Take this page out of the document being built (Delete)">Delete</button>
+      <button class="btn-ghost viewer-mark" type="button" id="viewerSel" aria-pressed="false" data-tip="Mark this page to act on it back in the grid (Space)">Select</button>
+    </div>
   </div>
 </div>
 
