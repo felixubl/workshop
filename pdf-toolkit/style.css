@@ -35,11 +35,14 @@
   cursor: var(--pp-cursor-point, pointer);
 }
 
-/* Selection is the one state the whole tool turns on, so it takes the system's
-   emphatic edge rather than a colour nudge. No lift and no shadow: the laws
-   grant a border colour or a tint and nothing else. */
+/* Selection is the one state the whole tool turns on, so it takes both signals
+   the laws grant, a tint and a firmer edge, and neither a lift nor a shadow.
+   The border width is deliberately left alone: widening it moves the card's
+   own height, which shifts every row below and rescales the thumbnail inside.
+   The sheet inside keeps its paper white, only the frame around it tints. */
 .page-card.is-selected {
-  border: var(--pp-rule-structure) solid var(--pp-edge);
+  background: var(--pp-tint);
+  border-color: var(--pp-edge);
 }
 
 /* The page being dragged and the gap it would drop into read differently:
