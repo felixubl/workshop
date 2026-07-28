@@ -129,8 +129,19 @@
 /* --- the viewer ------------------------------------------------------------
    The shell is the system's: .modal, .scrim, .modal__panel, .modal__bar and
    .modal__body carry the scrim, the edge and the one hard cast. What is left
-   here is what only this tool wants, a caption naming the page and a sheet of
-   paper to draw it on. */
+   here is what only this tool wants, a caption naming the page, a sheet of
+   paper to draw it on, and a bar of things to do to it. */
+
+/* The panel fills the window rather than shrinking to the page. Two reasons,
+   and the second is the load-bearing one: a page you are working on wants the
+   room, and a panel sized by the sheet cannot be asked how much room the sheet
+   has. Filling the window makes the stage measurable, so the fit is read off
+   the box instead of guessed at from a sum of paddings. */
+#viewer .modal__panel {
+  width: 100%;
+  height: 100%;
+}
+
 .viewer-bar {
   font-family: var(--pp-font-mono);
   font-size: 0.72rem;
@@ -157,16 +168,55 @@
   color: var(--pp-faint);
 }
 
-/* .modal__body already scrolls. Centring the sheet in it is this tool's. */
+/* Only there when something is in hand, so it is a count and not a label. */
+.viewer-marked {
+  white-space: nowrap;
+  color: var(--pp-plate-1);
+}
+
+/* The tools sit under the page, in reach and out of the way of reading it. */
+.viewer-tools {
+  flex-wrap: wrap;
+}
+
+/* Marking is the same claim the grid's selection makes, so it takes the same
+   two signals: a tint and a firmer edge. */
+.viewer-mark.is-on {
+  background: var(--pp-tint);
+  border-color: var(--pp-edge);
+}
+
+/* .modal__body already scrolls. Taking the leftover height and centring the
+   sheet in it is this tool's. */
 .viewer-stage {
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
   justify-content: center;
 }
 
-/* The sheet is sized by the script, because how big a page can be drawn is a
-   question about the window rather than about the stylesheet. */
+/* Card anatomy, at reading size: a frame that carries the state, and paper
+   inside it that stays paper. Marking tints the frame and leaves the page
+   itself alone, exactly as it does in the grid — and the padding never moves,
+   so a mark cannot resize the page under you. */
 .viewer-sheet {
+  display: flex;
+  flex: none;
+  /* Wider than the card's 8px: at reading size a thin band of tint is a signal
+     you have to hunt for, and this is the one that says the page is in hand. */
+  padding: 14px;
+  background: var(--pp-paper);
+  border: var(--pp-rule-line) solid var(--pp-line);
+}
+
+.viewer-sheet.is-selected {
+  background: var(--pp-tint);
+  border-color: var(--pp-edge);
+}
+
+/* Sized by the script, because how big a page can be drawn is a question about
+   the stage rather than about the stylesheet. */
+.viewer-paper {
   position: relative;
   display: flex;
   align-items: center;
@@ -179,9 +229,9 @@
   font-size: 0.72rem;
 }
 
-/* Centred on the sheet so that a quarter turn spins about the middle rather
+/* Centred on the paper so that a quarter turn spins about the middle rather
    than swinging the page out of its own frame. */
-.viewer-sheet canvas {
+.viewer-paper canvas {
   position: absolute;
   top: 50%;
   left: 50%;

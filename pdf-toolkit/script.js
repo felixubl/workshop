@@ -32,6 +32,7 @@
   const HISTORY_MAX = 60;
   let thumbQueue = [];
   let thumbRunning = false;
+  let gridStale = false;      // the pile moved on while the viewer covered the grid
   const fontCache = new Map();
 
   function announce(msg) {
@@ -84,9 +85,7 @@
     if (!(e.metaKey || e.ctrlKey)) return;
     const t = e.target;
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-    // The viewer is for reading, not editing: the pile it is showing should not
-    // change out from under it.
-    if (workspace.hidden || viewAt >= 0) return;
+    if (workspace.hidden) return;
     e.preventDefault();
     undo();
   });
@@ -151,7 +150,21 @@
 
   // --- the grid ---------------------------------------------------------------
 
+  // "The pile changed, show it." Both surfaces come through here, so an edit
+  // made anywhere — including an undo — reaches whichever one is on screen.
   function render() {
+    // The grid is covered while the viewer is up, and rebuilding it there would
+    // requeue every thumbnail in the document on every keystroke. It is built
+    // once on the way out, from whatever the pile has become by then.
+    if (viewAt >= 0) {
+      gridStale = true;
+      if (viewAt > pile.length - 1) viewAt = pile.length - 1;
+      updateTally();
+      drawViewer();
+      return;
+    }
+    gridStale = false;
+
     grid.textContent = '';
     thumbQueue = [];
 
@@ -273,17 +286,30 @@
   // The thumbnails say what order the pages are in. They are too small to say
   // whether the right page is there, which is what you want to know before you
   // save. So the viewer draws one page of the pile, at whatever size the window
-  // allows, in the order and the turn it will be saved with.
+  // allows, in the order and the turn it will be saved with — and lets you fix
+  // what you find there, rather than sending you back to the grid to do it.
+  //
+  // It edits the page it is showing and nothing else. The grid is where you act
+  // on many pages at once, and a surface showing one page has no honest way to
+  // mean "these fourteen". Marking a page is the bridge between the two: tick
+  // pages as you read, close, and the grid has them in hand.
 
   const viewer = el('viewer');
   const stage = el('viewerStage');
   const viewCount = el('viewerCount');
   const viewSrc = el('viewerSrc');
+  const viewMarked = el('viewerMarked');
   const viewPrev = el('viewerPrev');
   const viewNext = el('viewerNext');
+  const viewSel = el('viewerSel');
+  const viewEarlier = el('viewerEarlier');
+  const viewLater = el('viewerLater');
   let viewAt = -1;     // index into `pile`, or -1 when the viewer is shut
   let viewToken = 0;   // a page drawn slowly must not land after you paged on
   let viewReturn = null;
+  let shownItem = null;    // the pile entry the canvas on screen was drawn from
+  let shownCanvas = null;
+  let paper = null;
 
   function openViewer(index) {
     if (!pile.length) return;
@@ -292,6 +318,10 @@
     viewer.hidden = false;
     // The page underneath is covered, so it should not be tabbable either.
     document.querySelector('.wrap').inert = true;
+    // A button takes focus, not the panel. Chrome draws its own ring around a
+    // focused container that `outline: none` does not remove, which puts a blue
+    // rectangle round the whole window. Space is handled below rather than left
+    // to whichever button has focus, so it means the same thing either way.
     el('viewerClose').focus();
     drawViewer();
   }
@@ -299,9 +329,14 @@
   function closeViewer() {
     viewAt = -1;
     viewToken++;
+    shownItem = null;
+    shownCanvas = null;
+    paper = null;
     viewer.hidden = true;
     stage.textContent = '';
     document.querySelector('.wrap').inert = false;
+    // Whatever the viewer did to the pile is drawn now, in one go.
+    if (gridStale) render();
     if (viewReturn && viewReturn.isConnected) viewReturn.focus();
     viewReturn = null;
   }
@@ -313,56 +348,167 @@
     drawViewer();
   }
 
-  async function drawViewer() {
-    const token = ++viewToken;
+  // Everything the bar says about the page, without touching the canvas. A mark
+  // or a move changes all of this and none of the ink.
+  function refreshViewerBar() {
     const item = pile[viewAt];
+    if (!item) return;
     const entry = docs[item.docId];
     const page = entry.doc.pages[item.pageIndex];
-
-    const size = page.size;
     const turned = ((item.rotate - page.rotate) % 360 + 360) % 360;
-    const swap = turned === 90 || turned === 270;
+    const marked = selected.has(viewAt);
 
     viewCount.textContent = 'Page ' + (viewAt + 1) + ' of ' + pile.length;
     viewSrc.textContent = entry.name + ', page ' + (item.pageIndex + 1) +
                           (turned ? ', turned ' + turned + '°' : '');
+    viewMarked.textContent = selected.size ? selected.size + ' marked' : '';
     viewPrev.disabled = viewAt <= 0;
     viewNext.disabled = viewAt >= pile.length - 1;
+    viewEarlier.disabled = viewAt <= 0;
+    viewLater.disabled = viewAt >= pile.length - 1;
+    viewSel.setAttribute('aria-pressed', String(marked));
+    viewSel.classList.toggle('is-on', marked);
+    viewSel.textContent = marked ? 'Marked' : 'Select';
+    if (paper) paper.parentNode.classList.toggle('is-selected', marked);
+  }
 
-    // Sized off the window rather than off the panel, because the panel is
-    // sized by the sheet: asking it how much room there is would be circular.
-    const availW = Math.max(200, window.innerWidth - 96);
-    const availH = Math.max(200, window.innerHeight - 140);
+  // How big the page may be drawn is a question about the stage, which is why
+  // the panel fills the window: a panel sized by the sheet could not be asked
+  // how much room the sheet has.
+  function layoutSheet(canvas, sheetPaper) {
+    const c = canvas || shownCanvas;
+    const p = sheetPaper || paper;
+    const item = pile[viewAt];
+    if (!c || !p || !item) return 1;
+    const page = docs[item.docId].doc.pages[item.pageIndex];
+    const size = page.size;
+    const turned = ((item.rotate - page.rotate) % 360 + 360) % 360;
+    const swap = turned === 90 || turned === 270;
+
+    // What the stage loses to the frame's padding and the two borders in it.
+    const FRAME = 32;
+    const availW = Math.max(120, stage.clientWidth - FRAME);
+    const availH = Math.max(120, stage.clientHeight - FRAME);
     const scale = Math.min(availW / Math.max(swap ? size.height : size.width, 1),
                            availH / Math.max(swap ? size.width : size.height, 1));
     const w = Math.round(size.width * scale);
     const h = Math.round(size.height * scale);
 
+    p.style.width = (swap ? h : w) + 'px';
+    p.style.height = (swap ? w : h) + 'px';
+    c.style.width = w + 'px';
+    c.style.height = h + 'px';
+    c.style.transform = 'translate(-50%, -50%) rotate(' + turned + 'deg)';
+    return scale;
+  }
+
+  async function drawViewer() {
+    if (viewAt < 0) return;
+    const item = pile[viewAt];
+    if (!item) return;
+    refreshViewerBar();
+
+    // Turning a page and moving it both leave the ink alone: one is a transform
+    // on the canvas already drawn, the other is a change of place in the pile.
+    // Only a different page is worth rendering again.
+    if (item === shownItem && shownCanvas) {
+      layoutSheet();
+      return;
+    }
+
+    const token = ++viewToken;
+    const entry = docs[item.docId];
+    const page = entry.doc.pages[item.pageIndex];
+
     const sheet = document.createElement('div');
-    sheet.className = 'viewer-sheet';
-    sheet.textContent = '…';
-    sheet.style.width = (swap ? h : w) + 'px';
-    sheet.style.height = (swap ? w : h) + 'px';
+    sheet.className = 'viewer-sheet' + (selected.has(viewAt) ? ' is-selected' : '');
+    const fresh = document.createElement('div');
+    fresh.className = 'viewer-paper';
+    fresh.textContent = '…';
+    sheet.appendChild(fresh);
     stage.textContent = '';
     stage.appendChild(sheet);
 
+    // Measured before the render, so the page is asked for at the size it will
+    // be shown at and the sheet holds its place while the ink is on its way.
+    paper = fresh;
+    shownCanvas = null;
+    shownItem = null;
     const canvas = document.createElement('canvas');
+    const scale = layoutSheet(canvas, fresh);
+
     try {
       await PDF.renderPageToCanvas(entry.doc, page, canvas, {
         scale: Math.max(scale, 0.05) * (window.devicePixelRatio || 1),
         fontCache,
       });
     } catch {
-      if (token === viewToken) sheet.textContent = 'This page could not be drawn.';
+      if (token === viewToken) fresh.textContent = 'This page could not be drawn.';
       return;
     }
     if (token !== viewToken) return;
 
-    canvas.style.width = w + 'px';
-    canvas.style.height = h + 'px';
-    canvas.style.transform = 'translate(-50%, -50%) rotate(' + turned + 'deg)';
-    sheet.textContent = '';
-    sheet.appendChild(canvas);
+    fresh.textContent = '';
+    fresh.appendChild(canvas);
+    shownItem = item;
+    shownCanvas = canvas;
+    layoutSheet();
+  }
+
+  // --- editing from the viewer -----------------------------------------------
+
+  // Each of these acts on the page being shown, then stays with it: turning
+  // leaves you on the same page, moving follows it to its new place, and
+  // deleting leaves you where you were, now showing whatever came next.
+
+  function viewerTurn(delta) {
+    if (viewAt < 0) return;
+    turnPages([viewAt], delta);
+    const t = pile[viewAt];
+    const base = docs[t.docId].doc.pages[t.pageIndex].rotate;
+    announce('Turned this page to ' + (((t.rotate - base) % 360 + 360) % 360) + '°.');
+  }
+
+  function viewerMove(dir) {
+    if (viewAt < 0) return;
+    const { swapped } = movePages([viewAt], dir);
+    if (!swapped) {
+      announce(dir < 0 ? 'This page is already first.' : 'This page is already last.');
+      return;
+    }
+    // Set before the redraw, so what comes back is the page you were reading in
+    // its new place rather than whichever page took the old one.
+    viewAt += dir;
+    render();
+    announce('Moved to place ' + (viewAt + 1) + ' of ' + pile.length + '.');
+  }
+
+  // Staying at the same index means the next page slides under you, which is
+  // what you want when clearing several in a row. Past the end, render() pulls
+  // the index back to the last page.
+  function viewerDelete() {
+    if (viewAt < 0) return;
+    const was = viewAt + 1;
+    deletePages([viewAt]);
+    if (!pile.length) {
+      announce('Removed page ' + was + '. Nothing left to show.');
+      closeViewer();
+      return;
+    }
+    announce('Removed page ' + was + '. ' + pile.length +
+             (pile.length === 1 ? ' page left.' : ' pages left.'));
+  }
+
+  function viewerMark() {
+    if (viewAt < 0) return;
+    if (selected.has(viewAt)) selected.delete(viewAt);
+    else selected.add(viewAt);
+    // The grid is covered, so it is retinted on the way out with everything else.
+    gridStale = true;
+    refreshSelection();
+    announce(selected.has(viewAt)
+      ? 'Marked. ' + selected.size + ' in hand.'
+      : 'Unmarked. ' + selected.size + ' in hand.');
   }
 
   viewBtn.addEventListener('click', () => {
@@ -372,6 +518,12 @@
   });
   viewPrev.addEventListener('click', () => stepViewer(-1));
   viewNext.addEventListener('click', () => stepViewer(1));
+  el('viewerRotL').addEventListener('click', () => viewerTurn(-90));
+  el('viewerRotR').addEventListener('click', () => viewerTurn(90));
+  viewEarlier.addEventListener('click', () => viewerMove(-1));
+  viewLater.addEventListener('click', () => viewerMove(1));
+  el('viewerDel').addEventListener('click', viewerDelete);
+  viewSel.addEventListener('click', viewerMark);
   viewer.addEventListener('click', (e) => {
     if (e.target.closest('[data-viewer-close]')) closeViewer();
   });
@@ -384,17 +536,39 @@
 
   window.addEventListener('keydown', (e) => {
     if (viewAt < 0) return;
-    if (e.key === 'Escape') closeViewer();
-    else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') stepViewer(1);
-    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') stepViewer(-1);
-    else return;
+    // ⌘Z is the history's, and a modified key otherwise belongs to the browser.
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const shift = e.shiftKey;
+
+    switch (e.key) {
+      case 'Escape': closeViewer(); break;
+      case 'ArrowRight': case 'ArrowDown': shift ? viewerMove(1) : stepViewer(1); break;
+      case 'ArrowLeft': case 'ArrowUp': shift ? viewerMove(-1) : stepViewer(-1); break;
+      case '[': viewerTurn(-90); break;
+      case ']': viewerTurn(90); break;
+      case 'Delete': case 'Backspace': viewerDelete(); break;
+      // Space means the same thing wherever focus happens to be, which costs it
+      // the usual "press the focused button". Enter still does that, and a key
+      // that marked a page here and closed the viewer there would be worse.
+      case ' ': viewerMark(); break;
+      default: return;
+    }
     e.preventDefault();
   });
 
   // A window that changed size while the viewer was open leaves the page drawn
-  // for the old one, so it is drawn again for the new one.
+  // for the old one. The ink is still good, so only the fit is redone.
+  let resizeAt = 0;
   window.addEventListener('resize', () => {
-    if (viewAt >= 0) drawViewer();
+    if (viewAt < 0) return;
+    layoutSheet();
+    clearTimeout(resizeAt);
+    // Once it settles, drawn again at the new size so it is crisp and not scaled.
+    resizeAt = setTimeout(() => {
+      if (viewAt < 0) return;
+      shownItem = null;
+      drawViewer();
+    }, 200);
   });
 
   // --- selection ---------------------------------------------------------------
@@ -410,6 +584,7 @@
       card.classList.toggle('is-selected', selected.has(+card.dataset.index));
     });
     updateTally();
+    if (viewAt >= 0) refreshViewerBar();
   }
 
   grid.addEventListener('click', (e) => {
@@ -503,27 +678,62 @@
     setSelection(pile.map((_, i) => i).filter((i) => !selected.has(i)));
   });
 
-  function turn(delta) {
-    if (!requireSelection()) return;
+  // The three actions below take the pages to act on rather than reading the
+  // selection themselves, because the two surfaces aim at different pages: the
+  // grid at everything you have selected, the viewer at the one page it is
+  // showing. Same list, same history, one code path.
+
+  // Which pages stay selected across an edit is a question about pages, not
+  // about positions: indices move when the pile does, the entries do not. So
+  // selection is carried over by identity, and a page ticked while reading
+  // survives deleting or moving a different one.
+  function markedItems() {
+    const items = new Set();
+    for (const i of selected) if (pile[i]) items.add(pile[i]);
+    return items;
+  }
+
+  function reselect(items) {
+    setSelection(pile.reduce((acc, item, i) => {
+      if (items.has(item)) acc.push(i);
+      return acc;
+    }, []));
+  }
+
+  function turnPages(indices, delta) {
+    if (!indices.length) return;
     remember();
-    for (const i of selected) {
+    for (const i of indices) {
       pile[i].rotate = PDF.ops.normaliseAngle(pile[i].rotate + delta);
     }
-    const keep = selectedSorted();
+    const keep = markedItems();
     render();
-    setSelection(keep);
-    announce('Turned ' + keep.length + (keep.length === 1 ? ' page.' : ' pages.'));
+    reselect(keep);
+  }
+
+  function deletePages(indices) {
+    const gone = new Set(indices);
+    if (!gone.size) return 0;
+    remember();
+    const keep = markedItems();
+    pile = pile.filter((_, i) => !gone.has(i));
+    render();
+    reselect(keep);
+    return gone.size;
+  }
+
+  function turn(delta) {
+    if (!requireSelection()) return;
+    const n = selected.size;
+    turnPages(selectedSorted(), delta);
+    announce('Turned ' + n + (n === 1 ? ' page.' : ' pages.'));
   }
   el('rotL').addEventListener('click', () => turn(-90));
   el('rotR').addEventListener('click', () => turn(90));
 
   el('del').addEventListener('click', () => {
     if (!requireSelection()) return;
-    const gone = selected.size;
-    remember();
-    pile = pile.filter((_, i) => !selected.has(i));
-    selected.clear();
-    render();
+    const gone = deletePages(selectedSorted());
     announce('Removed ' + gone + (gone === 1 ? ' page.' : ' pages.') +
              ' The file on your disk is untouched.');
   });
@@ -545,9 +755,8 @@
     announce('Order reversed.');
   });
 
-  function nudge(dir) {
-    if (!requireSelection()) return;
-    const order = selectedSorted();
+  function movePages(indices, dir) {
+    const order = indices.slice().sort((a, b) => a - b);
     const list = dir < 0 ? order : order.slice().reverse();
     const moved = new Set();
     const before = stateNow();
@@ -562,9 +771,14 @@
     // A selection already against the end moves nothing, and an undo that does
     // nothing visible is worse than no undo at all.
     if (swapped) remember(before);
-    const next = Array.from(moved).filter((i) => i >= 0 && i < pile.length);
+    return { swapped, landed: Array.from(moved).filter((i) => i >= 0 && i < pile.length) };
+  }
+
+  function nudge(dir) {
+    if (!requireSelection()) return;
+    const { landed } = movePages(selectedSorted(), dir);
     render();
-    setSelection(next);
+    setSelection(landed);
   }
   el('moveUp').addEventListener('click', () => nudge(-1));
   el('moveDown').addEventListener('click', () => nudge(1));
