@@ -171,6 +171,64 @@ button { background: transparent; border: 0; font: inherit; color: inherit; }
   .scrawl--beside svg { display: block; }
 }
 
+/* ── overlays ───────────────────────────────────────────────────────────────
+   A scrim, and a panel standing on it. Both surfaces want this in the same
+   form: a reading page raising a plate to full size, an app raising a confirm
+   or a settings sheet. The scrim moved here from app.css, where it could only
+   be raised by an app. `.palette` and `.menu` stay there, because a command
+   palette and a dropped menu are things an app has, and the ground they stand
+   on is not.
+
+   Law 04 licenses one hard cast per view for something temporarily on top of
+   the work rather than part of it, which is exactly this, and one overlay open
+   at a time holds the budget at one. Corners stay square, as the palette's and
+   the menu's do: a panel is a region you are inside, not a thing you touch, so
+   law 01 goes unspent here as well.
+
+     <div class="modal" hidden>
+       <div class="scrim"></div>
+       <div class="modal__panel">
+         <div class="modal__bar">…</div>
+         <div class="modal__body">…</div>
+       </div>
+     </div>
+
+   The bar is a row and the body is what scrolls. Neither states a type size,
+   because what a modal is showing is the consumer's business.
+
+   Behaviour is the consumer's too, as it already is for the palette: Escape to
+   close, focus onto the panel when it opens and back onto the trigger when it
+   shuts, and `inert` on the page behind, so that tabbing cannot wander under a
+   thing that is covering it. */
+.scrim { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .28); }
+
+.modal {
+  position: fixed; inset: 0; z-index: 45; display: flex;
+  align-items: center; justify-content: center; padding: var(--pp-space-3);
+}
+/* The UA rule for [hidden] is display:none at the weakest specificity there
+   is, so the display above would defeat it and every modal would be open on
+   load. Said here rather than left to the surface, because core is the one
+   file a page cannot skip. */
+.modal[hidden] { display: none; }
+
+/* The scrim carries a z-index and the panel stands on it, so the panel has to
+   name one too: source order does not settle it, and a panel left on auto is
+   painted over by the very thing it is supposed to be standing on. 45 over 40
+   is the ladder the palette already uses. */
+.modal__panel {
+  position: relative; z-index: 45; display: flex; flex-direction: column;
+  gap: var(--pp-space-2); max-width: 100%; max-height: 100%;
+  padding: var(--pp-space-2); background: var(--pp-surface);
+  border: var(--pp-rule-structure) solid var(--pp-edge);
+  box-shadow: 5px 5px 0 var(--pp-shadow);
+}
+.modal__bar { display: flex; align-items: center; gap: var(--pp-space-2); }
+/* min-height on a flex child is auto, which refuses to shrink below its
+   content and would push the panel past the bottom of the window instead of
+   scrolling inside it. */
+.modal__body { min-height: 0; overflow: auto; }
+
 /* ── the toast ──────────────────────────────────────────────────────────────
    Says what just happened and leaves. Identical on both surfaces, so it lives
    here whole. */
