@@ -322,6 +322,11 @@ header {
   font-family: var(--pp-font-body);
   font-size: 0.95rem;
   font-weight: var(--pp-weight-strong);
+  /* A button's box is its height, not its leading, and its label is one line.
+     Left unstated it is whatever the page happens to hand a button: the
+     browser's `normal` on a page without core.css, and the body's 1.68 on a
+     page with it, which moves every label off its baseline by a hair. */
+  line-height: normal;
   border-radius: var(--pp-radius-md);
   text-decoration: none;
 }
@@ -517,6 +522,13 @@ button[disabled] {
   text-align: center;
   color: var(--pp-muted);
   font-size: 0.92rem;
+}
+/* The gap under the invitation was the browser's own paragraph margin, which
+   core.css's reset takes away. A tool that links core.css and one that does
+   not have to draw the same box, so the value is stated rather than inherited
+   from whatever a page happens to load. `1em` is what the browser gave. */
+.dropzone > p:first-child {
+  margin: 1em 0;
 }
 .dropzone:hover,
 .dropzone.drag-over {

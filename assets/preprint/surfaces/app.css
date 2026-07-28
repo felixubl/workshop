@@ -259,8 +259,12 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .foot code { font-size: .66rem; color: var(--pp-faint); }
 
-/* ── overlays ─────────────────────────────────────────────────────────── */
-.scrim { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .28); }
+/* ── overlays ───────────────────────────────────────────────────────────
+   `.scrim` and `.modal` are core's now: a page that is read wants to raise
+   something over itself as much as an app does. What stays here is what only
+   an app has. Both take the same 2px edge, the same square corners and the
+   same single hard cast as the panel there, and only one of the three may be
+   open at a time. */
 .palette {
   position: fixed; z-index: 45; left: 50%; top: 12vh; transform: translateX(-50%);
   width: min(560px, calc(100vw - 2rem)); background: var(--pp-surface);
