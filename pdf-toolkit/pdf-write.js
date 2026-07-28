@@ -72,6 +72,21 @@
     }
   }
 
+  // Two unrelated things live under the key /Parent, and only one of them is a
+  // link worth cutting. On a page tree node it walks up into the source tree and
+  // straight back down through /Kids, which drags every other page across: that
+  // is the link this file exists to cut, and a page reached sideways through a
+  // link annotation's /Dest has to be cut too, not just the page being copied.
+  // On an annotation or a form field it is the link to its field, and cutting it
+  // orphans the field and takes /AcroForm down with it. So the decision belongs
+  // to what the dictionary is, never to how deep it happens to sit.
+  const PAGE_NODE_TYPES = new Set(['Page', 'Pages']);
+
+  function isPageNode(dict) {
+    const type = dict.get('Type');
+    return type instanceof Name && PAGE_NODE_TYPES.has(type.name);
+  }
+
   class PDFBuilder {
     constructor(options) {
       const opts = options || {};
@@ -145,14 +160,16 @@
       return value;                   // number, string, Name, boolean, null
     }
 
-    // `skip` applies to the dictionary handed in and to nothing below it. A
-    // page's /Parent has to go, but an annotation's /Parent is the link to its
-    // form field: cutting that leaves a widget with no field, and the field
-    // object then never gets copied, so /AcroForm is dropped as well.
+    // `skip` is spent on the dictionary handed in and on any page tree node
+    // below it, and nowhere else. See isPageNode above for why the same key
+    // must be cut in one place and followed in the other. Depth 0 is included
+    // on its own account because a page dictionary missing its /Type is still
+    // the page being copied.
     copyDict(doc, dict, skip, depth) {
       const out = new Dict();
+      const cut = !!skip && (depth === 0 || isPageNode(dict));
       for (const [k, v] of dict.entries()) {
-        if (depth === 0 && skip && skip.has(k)) continue;
+        if (cut && skip.has(k)) continue;
         out.set(k, this.copy(doc, v, skip, depth + 1));
       }
       return out;
