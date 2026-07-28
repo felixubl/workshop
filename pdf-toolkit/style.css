@@ -10,6 +10,14 @@
   gap: 6px;
 }
 
+/* The tally and the way into the viewer are one thought — how many pages there
+   are, and how to look at them — so they travel together at the right end. */
+.result-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 /* The grid is sized by the thumbnails, not the other way round: a column is
    one page wide, and the count follows the viewport. */
 .page-grid {
@@ -116,6 +124,68 @@
 
 .save-bar {
   margin-top: 4px;
+}
+
+/* --- the viewer ------------------------------------------------------------
+   The shell is the system's: .modal, .scrim, .modal__panel, .modal__bar and
+   .modal__body carry the scrim, the edge and the one hard cast. What is left
+   here is what only this tool wants, a caption naming the page and a sheet of
+   paper to draw it on. */
+.viewer-bar {
+  font-family: var(--pp-font-mono);
+  font-size: 0.72rem;
+  color: var(--pp-muted);
+}
+
+.viewer-bar .btn-row {
+  margin-left: auto;
+}
+
+.scrim {
+  cursor: var(--pp-cursor-point, pointer);
+}
+
+.viewer-count {
+  color: var(--pp-ink);
+  white-space: nowrap;
+}
+
+.viewer-src {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--pp-faint);
+}
+
+/* .modal__body already scrolls. Centring the sheet in it is this tool's. */
+.viewer-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The sheet is sized by the script, because how big a page can be drawn is a
+   question about the window rather than about the stylesheet. */
+.viewer-sheet {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  background: #fff;
+  border: var(--pp-rule-line) solid var(--pp-hair);
+  color: var(--pp-faint);
+  font-family: var(--pp-font-mono);
+  font-size: 0.72rem;
+}
+
+/* Centred on the sheet so that a quarter turn spins about the middle rather
+   than swinging the page out of its own frame. */
+.viewer-sheet canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
 }
 
 /* Files loaded from more than one document get a colour per source, so a

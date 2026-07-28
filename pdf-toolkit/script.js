@@ -5,6 +5,9 @@
 // hands it to PDF.ops.assemble. Merging is loading two files into one pile,
 // splitting is slicing it, deleting is filtering it, and reordering is moving
 // entries about — so none of those are separate code paths.
+//
+// Undo falls out of the same idea: because the whole document is that one list,
+// a history entry is a copy of it, and stepping back is putting a copy back.
 
 (function () {
   'use strict';
@@ -19,10 +22,14 @@
   const loadNote = el('loadNote');
   const saveNote = el('saveNote');
   const say = el('say');
+  const undoBtn = el('undo');
+  const viewBtn = el('view');
 
   const docs = [];            // { id, name, doc }
   let pile = [];              // { docId, pageIndex, rotate }
   const selected = new Set(); // indices into `pile`
+  const history = [];         // past { pile, selected }, oldest first
+  const HISTORY_MAX = 60;
   let thumbQueue = [];
   let thumbRunning = false;
   const fontCache = new Map();
@@ -37,6 +44,53 @@
     loadNote.hidden = !msg;
   }
 
+  // --- history ---------------------------------------------------------------
+
+  // Entries are copied one level down rather than sliced, because turning a page
+  // edits `rotate` in place: a shallow copy of the list would hand the history
+  // the very objects the next action is about to change.
+  function stateNow() {
+    return { pile: pile.map((item) => ({ ...item })), selected: Array.from(selected) };
+  }
+
+  // Selection alone is not remembered. It rides along with a change so undo puts
+  // back the pages you had in hand, but clicking a card is not a step to undo.
+  function remember(state) {
+    history.push(state || stateNow());
+    if (history.length > HISTORY_MAX) history.shift();
+    undoBtn.disabled = false;
+  }
+
+  function undo() {
+    const prev = history.pop();
+    if (!prev) {
+      announce('There is nothing to undo.');
+      return;
+    }
+    pile = prev.pile;
+    render();
+    setSelection(prev.selected);
+    undoBtn.disabled = !history.length;
+    announce('Stepped back. ' + pile.length + (pile.length === 1 ? ' page' : ' pages') +
+             ', ' + history.length + ' more to undo.');
+  }
+
+  undoBtn.addEventListener('click', undo);
+
+  // ⌘Z on a Mac, Ctrl+Z elsewhere. Shift is redo, which this tool does not do,
+  // so it is left alone rather than quietly undoing instead.
+  window.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() !== 'z' || e.shiftKey || e.altKey) return;
+    if (!(e.metaKey || e.ctrlKey)) return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    // The viewer is for reading, not editing: the pile it is showing should not
+    // change out from under it.
+    if (workspace.hidden || viewAt >= 0) return;
+    e.preventDefault();
+    undo();
+  });
+
   // --- loading ---------------------------------------------------------------
 
   async function addFiles(files) {
@@ -48,6 +102,7 @@
     note('Reading ' + list.length + (list.length === 1 ? ' file…' : ' files…'));
 
     let added = 0;
+    const before = stateNow();
     const problems = [];
     for (const file of list) {
       try {
@@ -82,6 +137,9 @@
       return;
     }
     note(problems.length ? problems.join('. ') : '');
+    // Merging a file onto a pile is a step back to. The first load is not:
+    // undoing it would leave an empty grid with nothing behind it.
+    if (added && before.pile.length) remember(before);
     workspace.hidden = false;
     if (docs.length === 1) el('outName').value = suggestName(docs[0].name);
     render();
@@ -148,6 +206,7 @@
     if (docs.length > 1) parts.push('from ' + docs.length + ' files');
     if (selected.size) parts.push(selected.size + ' selected');
     tally.textContent = parts.join(' · ');
+    viewBtn.disabled = !pile.length;
   }
 
   // Thumbnails are rendered one at a time. Rendering a page is real work, and
@@ -209,6 +268,135 @@
     }
   }
 
+  // --- the viewer ---------------------------------------------------------------
+
+  // The thumbnails say what order the pages are in. They are too small to say
+  // whether the right page is there, which is what you want to know before you
+  // save. So the viewer draws one page of the pile, at whatever size the window
+  // allows, in the order and the turn it will be saved with.
+
+  const viewer = el('viewer');
+  const stage = el('viewerStage');
+  const viewCount = el('viewerCount');
+  const viewSrc = el('viewerSrc');
+  const viewPrev = el('viewerPrev');
+  const viewNext = el('viewerNext');
+  let viewAt = -1;     // index into `pile`, or -1 when the viewer is shut
+  let viewToken = 0;   // a page drawn slowly must not land after you paged on
+  let viewReturn = null;
+
+  function openViewer(index) {
+    if (!pile.length) return;
+    viewReturn = document.activeElement;
+    viewAt = Math.min(Math.max(index, 0), pile.length - 1);
+    viewer.hidden = false;
+    // The page underneath is covered, so it should not be tabbable either.
+    document.querySelector('.wrap').inert = true;
+    el('viewerClose').focus();
+    drawViewer();
+  }
+
+  function closeViewer() {
+    viewAt = -1;
+    viewToken++;
+    viewer.hidden = true;
+    stage.textContent = '';
+    document.querySelector('.wrap').inert = false;
+    if (viewReturn && viewReturn.isConnected) viewReturn.focus();
+    viewReturn = null;
+  }
+
+  function stepViewer(delta) {
+    const to = viewAt + delta;
+    if (viewAt < 0 || to < 0 || to >= pile.length) return;
+    viewAt = to;
+    drawViewer();
+  }
+
+  async function drawViewer() {
+    const token = ++viewToken;
+    const item = pile[viewAt];
+    const entry = docs[item.docId];
+    const page = entry.doc.pages[item.pageIndex];
+
+    const size = page.size;
+    const turned = ((item.rotate - page.rotate) % 360 + 360) % 360;
+    const swap = turned === 90 || turned === 270;
+
+    viewCount.textContent = 'Page ' + (viewAt + 1) + ' of ' + pile.length;
+    viewSrc.textContent = entry.name + ', page ' + (item.pageIndex + 1) +
+                          (turned ? ', turned ' + turned + '°' : '');
+    viewPrev.disabled = viewAt <= 0;
+    viewNext.disabled = viewAt >= pile.length - 1;
+
+    // Sized off the window rather than off the panel, because the panel is
+    // sized by the sheet: asking it how much room there is would be circular.
+    const availW = Math.max(200, window.innerWidth - 96);
+    const availH = Math.max(200, window.innerHeight - 140);
+    const scale = Math.min(availW / Math.max(swap ? size.height : size.width, 1),
+                           availH / Math.max(swap ? size.width : size.height, 1));
+    const w = Math.round(size.width * scale);
+    const h = Math.round(size.height * scale);
+
+    const sheet = document.createElement('div');
+    sheet.className = 'viewer-sheet';
+    sheet.textContent = '…';
+    sheet.style.width = (swap ? h : w) + 'px';
+    sheet.style.height = (swap ? w : h) + 'px';
+    stage.textContent = '';
+    stage.appendChild(sheet);
+
+    const canvas = document.createElement('canvas');
+    try {
+      await PDF.renderPageToCanvas(entry.doc, page, canvas, {
+        scale: Math.max(scale, 0.05) * (window.devicePixelRatio || 1),
+        fontCache,
+      });
+    } catch {
+      if (token === viewToken) sheet.textContent = 'This page could not be drawn.';
+      return;
+    }
+    if (token !== viewToken) return;
+
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    canvas.style.transform = 'translate(-50%, -50%) rotate(' + turned + 'deg)';
+    sheet.textContent = '';
+    sheet.appendChild(canvas);
+  }
+
+  viewBtn.addEventListener('click', () => {
+    // Whatever you have in hand is what you most likely want to look at.
+    const first = selected.size ? selectedSorted()[0] : 0;
+    openViewer(first);
+  });
+  viewPrev.addEventListener('click', () => stepViewer(-1));
+  viewNext.addEventListener('click', () => stepViewer(1));
+  viewer.addEventListener('click', (e) => {
+    if (e.target.closest('[data-viewer-close]')) closeViewer();
+  });
+
+  // A single click already means select, so opening a page is the second one.
+  grid.addEventListener('dblclick', (e) => {
+    const card = e.target.closest('.page-card');
+    if (card) openViewer(+card.dataset.index);
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (viewAt < 0) return;
+    if (e.key === 'Escape') closeViewer();
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') stepViewer(1);
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') stepViewer(-1);
+    else return;
+    e.preventDefault();
+  });
+
+  // A window that changed size while the viewer was open leaves the page drawn
+  // for the old one, so it is drawn again for the new one.
+  window.addEventListener('resize', () => {
+    if (viewAt >= 0) drawViewer();
+  });
+
   // --- selection ---------------------------------------------------------------
 
   function setSelection(indices) {
@@ -268,12 +456,17 @@
       const box = card.getBoundingClientRect();
       const after = e.clientX > box.left + box.width / 2;
       let to = +card.dataset.index + (after ? 1 : 0);
-      const moved = pile[dragFrom];
-      pile.splice(dragFrom, 1);
       if (dragFrom < to) to--;
-      pile.splice(to, 0, moved);
-      selected.clear();
-      render();
+      // Dropping a page back where it already was is not a step to undo, for
+      // the same reason a nudge against the end is not.
+      if (to !== dragFrom) {
+        remember();
+        const moved = pile[dragFrom];
+        pile.splice(dragFrom, 1);
+        pile.splice(to, 0, moved);
+        selected.clear();
+        render();
+      }
     }
     dragFrom = -1;
   });
@@ -312,6 +505,7 @@
 
   function turn(delta) {
     if (!requireSelection()) return;
+    remember();
     for (const i of selected) {
       pile[i].rotate = PDF.ops.normaliseAngle(pile[i].rotate + delta);
     }
@@ -326,6 +520,7 @@
   el('del').addEventListener('click', () => {
     if (!requireSelection()) return;
     const gone = selected.size;
+    remember();
     pile = pile.filter((_, i) => !selected.has(i));
     selected.clear();
     render();
@@ -335,6 +530,7 @@
 
   el('keepOnly').addEventListener('click', () => {
     if (!requireSelection()) return;
+    remember();
     pile = selectedSorted().map((i) => pile[i]);
     selected.clear();
     render();
@@ -342,6 +538,7 @@
   });
 
   el('reverse').addEventListener('click', () => {
+    if (pile.length > 1) remember();
     pile.reverse();
     selected.clear();
     render();
@@ -353,12 +550,18 @@
     const order = selectedSorted();
     const list = dir < 0 ? order : order.slice().reverse();
     const moved = new Set();
+    const before = stateNow();
+    let swapped = false;
     for (const i of list) {
       const to = i + dir;
       if (to < 0 || to >= pile.length || moved.has(to)) { moved.add(i); continue; }
       const t = pile[i]; pile[i] = pile[to]; pile[to] = t;
       moved.add(to);
+      swapped = true;
     }
+    // A selection already against the end moves nothing, and an undo that does
+    // nothing visible is worse than no undo at all.
+    if (swapped) remember(before);
     const next = Array.from(moved).filter((i) => i >= 0 && i < pile.length);
     render();
     setSelection(next);
@@ -367,6 +570,7 @@
   el('moveDown').addEventListener('click', () => nudge(1));
 
   el('reset').addEventListener('click', () => {
+    remember();
     pile = [];
     selected.clear();
     docs.forEach((entry) => {

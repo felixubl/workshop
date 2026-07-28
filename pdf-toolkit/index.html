@@ -8,6 +8,9 @@
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
+<!-- Loaded for the overlay: .scrim and .modal are core's. base.css follows it
+     and remains this site's chrome, as the documented order intends. -->
+<link rel="stylesheet" href="../assets/preprint/core.css">
 <link rel="stylesheet" href="../assets/preprint/controls.css">
 <link rel="stylesheet" href="../assets/base.css">
 <link rel="stylesheet" href="../assets/site.css">
@@ -78,6 +81,12 @@
         <div class="btn-row">
           <button class="btn-ghost" type="button" id="del" data-tip="Take the selected pages out of the document being built">Delete</button>
           <button class="btn-ghost" type="button" id="keepOnly" data-tip="Throw away everything except the selected pages">Keep only</button>
+        </div>
+      </div>
+      <div class="group">
+        <label>Step back</label>
+        <div class="btn-row">
+          <button class="btn-ghost" type="button" id="undo" data-tip="Undo the last change to the pile (⌘Z)" disabled>Undo</button>
           <button class="btn-ghost" type="button" id="reset">Start over</button>
         </div>
       </div>
@@ -85,7 +94,10 @@
 
     <div class="result-bar">
       <span class="section-label">Pages</span>
-      <span class="tag" id="tally">nothing loaded</span>
+      <div class="result-right">
+        <button class="btn-ghost" type="button" id="view" data-tip="Read the pages full size, in the order and the turn they will be saved in" disabled>View full size</button>
+        <span class="tag" id="tally">nothing loaded</span>
+      </div>
     </div>
 
     <div id="grid" class="page-grid"></div>
@@ -117,6 +129,23 @@
   </div>
 
   <p class="sr-only" id="say" role="status" aria-live="polite"></p>
+</div>
+
+<!-- The pile as it will be saved, one page at a time and big enough to read. -->
+<div class="modal" id="viewer" role="dialog" aria-modal="true" aria-label="Page preview" hidden>
+  <div class="scrim" data-viewer-close></div>
+  <div class="modal__panel">
+    <div class="modal__bar viewer-bar">
+      <span class="viewer-count" id="viewerCount"></span>
+      <span class="viewer-src" id="viewerSrc"></span>
+      <div class="btn-row">
+        <button class="btn-ghost" type="button" id="viewerPrev" aria-label="Previous page" data-tip="The page before this one">&#8592;</button>
+        <button class="btn-ghost" type="button" id="viewerNext" aria-label="Next page" data-tip="The page after this one">&#8594;</button>
+        <button class="btn-ghost" type="button" id="viewerClose" data-viewer-close>Close</button>
+      </div>
+    </div>
+    <div class="modal__body viewer-stage" id="viewerStage"></div>
+  </div>
 </div>
 
 <script src="pdf-lex.js"></script>
