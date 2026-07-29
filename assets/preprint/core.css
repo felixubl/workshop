@@ -52,6 +52,26 @@ button { background: transparent; border: 0; font: inherit; color: inherit; }
    page sets it inline-flex beside a square, an app paints it faint. */
 .eyebrow { font-size: .68rem; letter-spacing: .2em; text-transform: uppercase; }
 
+/* ── the marker ─────────────────────────────────────────────────────────────
+   The second ink family. It is here rather than on the reading surface because
+   invariants.md calls the three markers identity, in the same breath as the
+   plates and the ground — and an identity only one of the two surfaces can
+   reach is not an identity. An app that wanted the annotated half of "printed
+   first, then annotated" was left copying four lines out of a 300-line sheet
+   it could not link, which is how the workshop ended up writing
+   `background: var(--pp-marker-citron)` by hand.
+
+   A marker is always a field behind type and never type itself. Citron as text
+   on eggshell is 1.6:1; as a field behind ink, 14:1. Same colour, opposite
+   outcome — which is why the ink above one never changes.
+
+   `.mkmenu` did not come down with it. Raising a menu to mark up a selection
+   is a reading page's job, and that sheet keeps it. */
+.mk, [data-pp-mark] { color: inherit; padding: .04em 0; }
+.mk--citron, [data-pp-mark='citron'] { background: var(--pp-marker-citron); }
+.mk--pink, [data-pp-mark='pink'] { background: var(--pp-marker-pink); }
+.mk--cyan, [data-pp-mark='cyan'] { background: var(--pp-marker-cyan); }
+
 /* ── the mark ───────────────────────────────────────────────────────────────
    Three offset plate squares, multiplied. This is the whole mark. The system
    does not have a logo and does not draw one. */
