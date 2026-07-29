@@ -21,6 +21,13 @@
  * switches when you have pulled it far enough, and until you have, you can
  * always change your mind and let go.
  *
+ * The pull is in two dimensions and it fights back. The cord hangs from a fixed
+ * point and swings toward the hand wherever the hand goes, and both the length
+ * and the angle come out of one resistance curve that starts at one to one and
+ * runs out, so the further you have got the more hand the next pixel costs. On
+ * release it swings once past rest and settles. All of that is geometry the
+ * script computes and hands to core.css as two custom properties.
+ *
  * Sound is on by default and this is the only file in the system that makes
  * any. That is a deliberate exception rather than a door left open: the cord
  * depicts a physical mechanism, and a detent that moves in silence is the one
@@ -35,12 +42,21 @@
      brushing the cord on the way to something else, short enough that it is
      one movement of the hand and not a chore.
 
-     GIVE is what is left after the detent: the cord keeps coming, but on a
-     curve that runs out, so pulling harder gets you less and less. A string
-     that tracked the hand forever would say the mechanism has no end in it. */
+     GIVE is the whole stretch the cord has in it and SWAY the whole sideways
+     reach, both approached and never arrived at. A string that tracked the hand
+     forever would say the mechanism has no end in it.
+
+     SWAY is a ceiling and not the limit itself: the real limit is how much page
+     there is beside the cord, measured on the way in, and EDGE is the margin
+     kept between the bead and that edge. A cord hung 25px from the side of a
+     phone gets 25px of sway, because the alternative is a bead that leaves the
+     page and takes a horizontal scrollbar with it. There is a wall there and
+     the cord is allowed to know. */
   var REST = 72;
   var DETENT = 42;
-  var GIVE = 26;
+  var GIVE = 64;
+  var SWAY = 72;
+  var EDGE = 8;
 
   /* Under this, a press was a click and not a pull. It exists because a
      pointer never comes down and up at exactly the same pixel, and a 2px
@@ -207,22 +223,40 @@
     });
   }
 
-  /* Coming home from wherever the hand left it. The inline length goes and the
-     phases take over in the same frame, so one style change carries the cord
-     from a dragged 114px to the recoil's 71 — CSS interpolates it, and there
+  /* Coming home from wherever the hand left it, in length and in angle at
+     once. Both inline values go and the phases take over in the same frame, so
+     one style change carries the cord from a dragged 108px at 24deg to the
+     recoil's 71 at a few degrees the other way. CSS interpolates it, and there
      is no separate spring to write or to keep in step with the click's.
+
+     The counter-swing is a fifth of the angle let go at, reversed. A fraction
+     rather than a fixed number of degrees, because the overshoot has to be
+     proportional to the energy that was in the cord: a gentle nudge sideways
+     that came back through 6deg the other way would look sprung, not hung. A
+     fifth is far enough to read as a swing and near enough that the two beats
+     in core.css are the end of it and nothing needs a third.
 
      Under reduced motion the transitions are already off in core.css, so this
      is a jump to rest and the timers only decide when the lock lifts. */
-  function letGo(el) {
+  function letGo(el, angle) {
     busy = true;
     el.style.removeProperty('--pp-cord-h');
+    el.style.removeProperty('--pp-cord-a');
+    /* Not under reduced motion. With the transitions off an overshoot is not a
+       swing, it is the cord jumping a few degrees sideways for one frame and
+       back, which is the exact thing the query is asking us not to do. Left
+       unwritten it keeps the 0deg core.css declares, phase 2 is the pure recoil,
+       and the cord simply arrives. */
+    if (!reduced) el.style.setProperty('--pp-cord-swing', (-angle / 5).toFixed(1) + 'deg');
     el.removeAttribute('data-dragging');
     el.setAttribute('data-phase', '2');
     setTimeout(function () { el.setAttribute('data-phase', '3'); }, RECOIL);
     setTimeout(function () {
       el.setAttribute('data-phase', '0');
       busy = false;
+      /* Gone once it is spent, so the next click's phase 2 is the pure recoil
+         it was before any of this and not the tail of somebody's last swing. */
+      el.style.removeProperty('--pp-cord-swing');
       /* A click does not always follow a pointer release — let go outside the
          button and the browser fires none at all. Left standing, the flag would
          swallow the NEXT press instead, which for a keyboard user is a control
@@ -234,20 +268,27 @@
   }
 
   /* ── the real pull ──────────────────────────────────────────────────────
-     One to one until the detent, then an exponential that approaches REST +
-     DETENT + GIVE without reaching it. The straight part is what makes the
-     detent findable — travel has to mean distance for a threshold to be felt
-     as a position rather than guessed at — and the curve is the spool running
-     out afterwards.
+     One curve, used on both axes, and tanh is the whole of it. It leaves the
+     origin at one to one, so the beginning of any pull tracks the hand exactly
+     and the cord reads as attached to it, and then it bends over and approaches
+     `max` without ever arriving, so the further out you already are the more
+     hand the next pixel costs. That is the asked-for feel and it is also the
+     honest one: a real cord does not stretch at all, it is a spring in a housing
+     giving way and then running out of travel.
 
-     Upward travel is dropped rather than mirrored. You cannot push a string. */
-  function lengthFor(travel) {
-    if (travel <= DETENT) return REST + travel;
-    var give = GIVE * (1 - Math.exp(-(travel - DETENT) / GIVE));
-    /* Rounded, because the exponential otherwise writes seventeen significant
-       figures into the DOM on every pointer move to describe a length nothing
-       can draw to better than a device pixel. */
-    return Math.round((REST + DETENT + give) * 10) / 10;
+     The same function on both axes is what makes the gesture feel like one
+     object. A cord that resisted going down but swung freely sideways would be
+     two mechanisms sharing a bead. It is signed, so pulling left and pulling
+     right are the same curve read in opposite directions. */
+  function give(x, max) {
+    return max * Math.tanh(x / max);
+  }
+
+  /* Rounded, because tanh otherwise writes seventeen significant figures into
+     the DOM on every pointer move to describe a position nothing can draw to
+     better than a device pixel. */
+  function tidy(n) {
+    return Math.round(n * 10) / 10;
   }
 
   var drag = null;
@@ -263,12 +304,32 @@
     var el = e.target.closest('[data-pullcord]');
     if (!el || busy || drag) return;
 
+    /* The screw in the ceiling, in page coordinates: the middle of the 1px line,
+       read off the line itself rather than computed from the button, so the one
+       place the geometry is written down stays core.css. Safe to read at rest,
+       and `busy` is what guarantees this is rest and not the middle of a
+       recoil. */
+    var line = el.querySelector('.pullcord__cord');
+    var box = (line || el).getBoundingClientRect();
+    var anchor = box.left + box.width / 2;
+
+    /* clientWidth and not innerWidth: the first is where the content ends, the
+       second includes a scrollbar the cord would be swinging underneath. */
+    var page = document.documentElement.clientWidth;
+
     swallowClick = false;
-    drag = { el: el, id: e.pointerId, y0: e.clientY, far: 0, tripped: false };
+    drag = {
+      el: el, id: e.pointerId,
+      x0: e.clientX, y0: e.clientY,
+      roomR: Math.min(SWAY, Math.max(0, page - anchor - EDGE)),
+      roomL: Math.min(SWAY, Math.max(0, anchor - EDGE)),
+      far: 0, angle: 0, tripped: false
+    };
     el.setAttribute('data-dragging', '');
 
     /* Capture, so the cord keeps following a hand that has left the 30px hit
-       area — which it will, because the gesture is longer than the target. */
+       area, which it will, because the gesture is longer than the target and
+       now goes sideways out of it as well. */
     try { el.setPointerCapture(e.pointerId); } catch (err) {}
 
     /* Or the press selects the text behind it and drags a ghost of the bead. */
@@ -277,9 +338,53 @@
 
   document.addEventListener('pointermove', function (e) {
     if (!drag || e.pointerId !== drag.id) return;
-    var travel = Math.max(0, e.clientY - drag.y0);
-    if (travel > drag.far) drag.far = travel;
-    drag.el.style.setProperty('--pp-cord-h', lengthFor(travel) + 'px');
+
+    var dx = e.clientX - drag.x0;
+    var dy = e.clientY - drag.y0;
+
+    /* How far the HAND went, kept separately from what the cord did with it,
+       because this one is only ever asked whether a press was a click. A 30px
+       sideways drag barely lengthens the string and is still unmistakably a
+       drag. */
+    var moved = Math.sqrt(dx * dx + dy * dy);
+    if (moved > drag.far) drag.far = moved;
+
+    /* The tip is taken to start at rest length below the anchor and to move by
+       the drag, whatever part of the cord the hand actually closed on. Measure
+       from the real grab point instead and taking hold near the ceiling would
+       cost 50px of pull before the string moved at all.
+
+       Upward travel is dropped rather than mirrored: you cannot push a string.
+       Dropping the vertical alone rather than the whole vector is what lets an
+       up-and-sideways drag still swing the cord, which is right, because the
+       part of that gesture a string can answer is the sideways part. */
+    var down = Math.max(0, dy);
+
+    /* The distance the mechanism has been given, taken before the resistance
+       decides how much of it to show, and the only thing the detent looks at.
+       Straight down it is exactly `dy`, which is why the trip still happens at
+       the same 42px of hand it always did even though the cord drawn at that
+       moment is shorter than it used to be. Putting the threshold on the drawn
+       length instead would move it every time the curve was tuned. */
+    var travel = Math.sqrt(dx * dx + (REST + down) * (REST + down)) - REST;
+
+    /* Where the tip ends up: one rubber band per axis, out of the same curve,
+       with its own budget. Down it is the stretch the mechanism has. Sideways it
+       is the room beside the cord, and asymptotic rather than clamped, so a hand
+       that keeps going gets less and less rather than a bead that stops dead and
+       stops looking held.
+
+       Length and angle then come out of a position rather than being written
+       independently, and the bead cannot be at an angle the length disagrees
+       with. The angle is negated because a positive CSS rotation is clockwise,
+       and a hand going right takes the bottom of a cord anticlockwise. */
+    var room = dx >= 0 ? drag.roomR : drag.roomL;
+    var tipY = REST + give(down, GIVE);
+    var tipX = room > 0 ? give(dx, room) : 0;
+
+    drag.angle = -tidy(Math.atan2(tipX, tipY) * 180 / Math.PI);
+    drag.el.style.setProperty('--pp-cord-h', tidy(Math.sqrt(tipX * tipX + tipY * tipY)) + 'px');
+    drag.el.style.setProperty('--pp-cord-a', drag.angle + 'deg');
 
     /* Once per pull. Held past the detent the mechanism has already gone, and
        a cord that kept tripping while you held it down would be a strobe. */
@@ -293,6 +398,7 @@
     if (!drag || e.pointerId !== drag.id) return;
     var el = drag.el;
     var tapped = drag.far < TAP;
+    var angle = drag.angle;
     try { el.releasePointerCapture(drag.id); } catch (err) {}
     drag = null;
 
@@ -300,6 +406,7 @@
        is what runs it. Hand the cord back and stay out of the way. */
     if (tapped) {
       el.style.removeProperty('--pp-cord-h');
+      el.style.removeProperty('--pp-cord-a');
       el.removeAttribute('data-dragging');
       return;
     }
@@ -309,7 +416,7 @@
        mode untouched and nothing to hear, which is the whole point of having
        a threshold: the gesture is abandonable right up until it lands. */
     swallowClick = true;
-    letGo(el);
+    letGo(el, angle);
   }
 
   document.addEventListener('pointerup', release);

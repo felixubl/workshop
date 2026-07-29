@@ -56,12 +56,16 @@ control that drives it here. Core ships two, and the workshop takes the cord
 rather than the swatch fubl.org wears: a 1px line hanging off the top edge with
 a bead on the end. Take hold of the bead and it follows the hand until the
 detent trips at 42px, which is where the mode changes — let go short of that
-and it springs back having done nothing. Clicking it plays an abbreviated 13px
-version of the same pull, and Enter and Space go through that too. Either way
-there is a two-part click when the detent goes. The sound is on by default and
-silenced by `localStorage['preprint-sound'] = 'off'` or by
-`prefers-reduced-motion`, which also drops the animation while leaving the
-drag and its threshold intact.
+and it springs back having done nothing. It goes sideways as well as down,
+swinging from the point it hangs off, and it resists as it goes: the first
+pixels track the hand exactly and the last ones barely move, in both
+directions. How far sideways depends on how much page there is next to it, so
+the cord never reaches the edge. Let go and it swings once past rest and
+settles. Clicking it plays an abbreviated 13px version of the same pull, and
+Enter and Space go through that too. Either way there is a two-part click when
+the detent goes. The sound is on by default and silenced by
+`localStorage['preprint-sound'] = 'off'` or by `prefers-reduced-motion`, which
+also drops the animation while leaving the drag and its threshold intact.
 Neither script draws anything: the cord is `.pullcord` in `core.css`, and the
 positioned ancestor it hangs from is `.wrap` / `.masthead` in `base.css`.
 [`assets/preprint/js/controls.js`](assets/preprint/js/controls.js), with
