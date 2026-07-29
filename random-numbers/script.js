@@ -15,6 +15,8 @@ const capMeta = document.getElementById("capMeta");
 const drawTable = document.getElementById("drawTable");
 const drawNote = document.getElementById("drawNote");
 const statsTable = document.getElementById("statsTable");
+const shapeMeta = document.getElementById("shapeMeta");
+const plots = document.getElementById("plots");
 const copyBtn = document.getElementById("copy");
 const csvBtn = document.getElementById("csv");
 const jsonBtn = document.getElementById("json");
@@ -461,6 +463,7 @@ function render(run) {
   drawNote.hidden = run.count <= shown;
 
   renderStats(run, labels);
+  renderPlots(run, labels);
 
   emptyState.hidden = true;
   results.hidden = false;
@@ -500,6 +503,131 @@ function renderStats(run, labels) {
     return `<tr><td>${label}</td><td>${stat(mean)}</td><td>${stat(sd)}</td><td>${format(min, run)}</td><td>${stat(median)}</td><td>${format(max, run)}</td></tr>`;
   });
   statsTable.innerHTML = `${head}<tbody>${body.join("")}</tbody>`;
+}
+
+/* ── The plots ─────────────────────────────────────────────────────────────
+   The tables say what was drawn, one number at a time. The histogram says what
+   the sample looks like, which is the thing a distribution is actually chosen
+   for, so it reads the whole sample rather than the first two hundred rows.
+
+   Drawn in SVG, in user units 600 wide, and stretched to whatever width the
+   sheet has. Only the horizontal axis stretches: the height attribute matches
+   the viewBox height, so the baseline stays a single crisp pixel however wide
+   the page is. */
+
+const PLOT_W = 600;
+const PLOT_H = 72;
+const RUG_TOP = PLOT_H + 2;
+const RUG_H = 7;
+const PLOT_TOTAL = RUG_TOP + RUG_H;
+// Bin counts either side of the integer case: too few and a normal looks like a
+// block, too many and every bin holds one draw and the shape is noise.
+const MIN_BINS = 8;
+const MAX_BINS = 48;
+// One bin per value while the counts are few enough for that to be readable.
+const MAX_INTEGER_BINS = 60;
+
+function histogram(values, integer) {
+  let min = Infinity;
+  let max = -Infinity;
+  for (const v of values) {
+    if (v < min) min = v;
+    if (v > max) max = v;
+  }
+
+  // Every draw identical — a p = 1 geometric, or a one-draw run. There is no
+  // range to divide, so it is one bin holding everything.
+  if (min === max) return { min, max, lo: min - 0.5, hi: max + 0.5, counts: [values.length] };
+
+  const bins =
+    integer && max - min + 1 <= MAX_INTEGER_BINS
+      ? max - min + 1
+      : Math.max(MIN_BINS, Math.min(MAX_BINS, Math.ceil(Math.sqrt(values.length))));
+  // Counts sit on the integers, not between them, so the edges go half a step
+  // out and each bar is centred on the value it counts.
+  const lo = integer ? min - 0.5 : min;
+  const hi = integer ? max + 0.5 : max;
+  const width = (hi - lo) / bins;
+
+  const counts = new Array(bins).fill(0);
+  for (const v of values) {
+    // The maximum sits exactly on the last edge and would index one past the
+    // end, so it is folded back into the last bin rather than dropped.
+    const k = Math.min(bins - 1, Math.floor((v - lo) / width));
+    counts[k]++;
+  }
+  return { min, max, lo, hi, counts };
+}
+
+function plotMarkup(hist, values) {
+  const bins = hist.counts.length;
+  const step = PLOT_W / bins;
+  // Two neighbouring bars of the same height read as one wide bar unless the
+  // gap is wide enough to be a gap. It grows as the bins get fewer, and is
+  // capped so a fifty-bin plot stays mostly bar.
+  const gap = Math.min(6, step / 5);
+  let peak = 0;
+  for (const c of hist.counts) if (c > peak) peak = c;
+
+  const bars = hist.counts
+    .map((c, i) => {
+      if (!c) return "";
+      // A bin with one draw in it still gets a mark: a bar rounded away to
+      // nothing reads as an empty bin, which is a different claim.
+      const h = Math.max(1, (c / peak) * PLOT_H);
+      const x = i * step + gap / 2;
+      const w = Math.max(0.5, step - gap);
+      return `<rect class="hist-bar" x="${x.toFixed(2)}" y="${(PLOT_H - h).toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}"></rect>`;
+    })
+    .join("");
+
+  // The rug is where a twenty-draw run is legible at all: the bars are too few
+  // to have a shape, but the ticks are the sample itself. A hundred thousand
+  // of them is a hundred thousand nodes, so positions round to half a unit and
+  // the duplicates collapse — past a couple of thousand draws the rug is a
+  // solid band either way, and that saturation is honest.
+  const span = hist.hi - hist.lo;
+  const ticks = new Set();
+  for (const v of values) {
+    ticks.add(Math.round((((v - hist.lo) / span) * PLOT_W) * 2) / 2);
+  }
+  const rug = Array.from(
+    ticks,
+    (x) =>
+      `<rect class="hist-rug" x="${Math.min(x, PLOT_W - 1).toFixed(2)}" y="${RUG_TOP}" width="1" height="${RUG_H}"></rect>`
+  ).join("");
+
+  return `${bars}<rect class="hist-base" x="0" y="${PLOT_H}" width="${PLOT_W}" height="1"></rect>${rug}`;
+}
+
+function renderPlots(run, labels) {
+  shapeMeta.textContent = `n = ${run.count.toLocaleString()}${run.dims > 1 ? " per dimension" : ""}`;
+
+  plots.innerHTML = labels
+    .map((label, d) => {
+      const values = [];
+      for (let i = 0; i < run.count; i++) {
+        const v = run.rows[i][d];
+        // A log-normal with a large sigma can overflow to Infinity. One such
+        // draw would collapse every bin into the first, so the plot leaves
+        // them out and says how many it left.
+        if (Number.isFinite(v)) values.push(v);
+      }
+
+      if (!values.length) {
+        return `<figure class="hist"><figcaption class="hist-name">${label}</figcaption><p class="hist-empty">Nothing finite to plot.</p></figure>`;
+      }
+
+      const hist = histogram(values, run.dist.integer);
+      const dropped = run.count - values.length;
+      const bins = hist.counts.length;
+      return `<figure class="hist">
+        <figcaption class="hist-name">${label}</figcaption>
+        <svg class="hist-plot" width="100%" height="${PLOT_TOTAL}" viewBox="0 0 ${PLOT_W} ${PLOT_TOTAL}" preserveAspectRatio="none" role="img" aria-label="Histogram of ${values.length} draws for ${label}, from ${format(hist.min, run)} to ${format(hist.max, run)}, in ${bins} bins.">${plotMarkup(hist, values)}</svg>
+        <div class="hist-axis"><span>${format(hist.min, run)}</span><span class="hist-bins">${bins} ${bins === 1 ? "bin" : "bins"}${dropped ? ` · ${dropped} not finite` : ""}</span><span>${format(hist.max, run)}</span></div>
+      </figure>`;
+    })
+    .join("");
 }
 
 /* ── Export ────────────────────────────────────────────────────────────── */

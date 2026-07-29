@@ -60,6 +60,72 @@
   color: var(--pp-faint);
 }
 
+/* The plots. A sheet has no padding of its own, because a table brings its
+   own, so the figures inside one supply theirs. */
+.plots {
+  padding: 0.9rem 0.8rem 0.8rem;
+}
+.hist + .hist {
+  margin-top: 1.15rem;
+  padding-top: 1.15rem;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+.hist {
+  margin: 0;
+}
+
+/* Column names, so the plot is named the same way its column is. */
+.hist-name,
+.hist-axis {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-label);
+  color: var(--pp-faint);
+}
+.hist-name {
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: var(--pp-track-label);
+}
+.hist-axis {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.4rem;
+}
+/* The ends of the range are read off the plot; the bin count is a note about
+   how it was drawn, so it sits back a step further. */
+.hist-axis span:first-child,
+.hist-axis span:last-child {
+  color: var(--pp-muted);
+}
+.hist-bins {
+  text-align: center;
+}
+
+.hist-plot {
+  display: block;
+}
+/* Bars are the print: solid ink, no outline, because a histogram bar is a
+   filled area and an outline would only draw a box around it. The rug is the
+   sample underneath, so it steps back to the same weight as the figures in
+   the tables, and the baseline is the structure both stand on. */
+.hist-bar {
+  fill: var(--pp-ink);
+}
+.hist-base {
+  fill: var(--pp-edge);
+}
+.hist-rug {
+  fill: var(--pp-muted);
+}
+
+.hist-empty {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--pp-faint);
+}
+
 /* The seed a run actually used, offered back as a control: pressing it puts
    the seed in the field so the run can be repeated.
 
