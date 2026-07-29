@@ -39,6 +39,15 @@ button { background: transparent; border: 0; font: inherit; color: inherit; }
 
 :focus-visible { outline: 3px solid var(--pp-selection); outline-offset: 1px; }
 
+/* Said to a screen reader and to nobody else. Here rather than in a surface
+   sheet because a part whose markup carries a hidden span cannot be shared
+   unless the hiding is: the mode switch below is exactly that, and the three
+   surfaces that had written it had also written this, under three names. */
+.sr {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+
 /* An ink square: the system's punctuation for a button label. Surfaces resize
    it in context (a compact button takes .4rem, a ghost .35rem) but never
    restyle it. */
@@ -134,6 +143,105 @@ button { background: transparent; border: 0; font: inherit; color: inherit; }
   .btn--collapse .sq,
   .btn--collapse .btn__lbl { display: none; }
   .btn--collapse .btn__mark { display: block; line-height: 1; }
+}
+
+/* ── the mode switch ────────────────────────────────────────────────────────
+   The one control that appears in the corner of every page in the system, so
+   it is the one that cannot be left to the surfaces. It had been written three
+   times: a reading page's, a console rail's small square and a word, and a
+   workshop corner's bare swatch. Three corners is how a family stops looking
+   related, and a part used three times is not a breach, it is a part.
+
+   A rectangle three quarters full of ink, with the paper showing in the
+   quarter left over. Dark inverts both colours and drops the ink to the
+   bottom, so the control is a swatch of the mode you are IN, not a picture of
+   the mode it would give you. That is the question a lone sun or moon can
+   never answer, and drawing both answers takes two icons to say what one
+   filled rectangle says by itself.
+
+   CSS fills it from `data-mode`, which `js/mode.js` writes before the first
+   paint, so the switch is right on the first frame and never flashes through a
+   neutral state. The script owns the click and the accessible name. It draws
+   nothing.
+
+   The markup, and all of it:
+
+     <button class="modeswitch" type="button" data-mode-toggle>
+       <span class="modeswitch__box" aria-hidden="true">
+         <span class="modeswitch__fill"></span></span>
+       <span class="modeswitch__label" aria-hidden="true"></span>
+       <span class="sr">Switch between light and dark mode</span>
+     </button>
+
+   No `[data-mode-label]`, deliberately, though the script offers it: that hook
+   is filled at DOMContentLoaded, which swaps the word in front of the reader
+   on every dark load. The word is CSS, for the same reason the fill is. */
+.modeswitch {
+  display: inline-flex; align-items: center; gap: .55rem;
+  height: var(--pp-target); flex: none; padding: 0;
+}
+
+/* The button is the hit box and the box inside it is the drawing. They were
+   one element once, which made the smallest target in the system the control a
+   reader on a phone is most likely to want: 26x34 against a floor of 44.
+   Growing the rectangle was not an option (it is a swatch, and a swatch reads
+   as a swatch at swatch size), so the target grew around it and nothing
+   visible moved. The overflow that clips the sliding block has to travel with
+   the drawing, which is why this is a wrapper rather than padding on the
+   button: padding would have been clipped away with it.
+
+   No radius, and that is not an oversight. This is not a shape on the cut
+   scale, it is a swatch of the two grounds, and a corner would make it a
+   button drawn around an idea instead of the idea itself. */
+.modeswitch__box {
+  display: flex; flex-direction: column;
+  width: 26px; height: 34px;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  background: var(--pp-paper); overflow: hidden;
+}
+.modeswitch:hover .modeswitch__box { border-color: var(--pp-edge); }
+
+/* The word, and the only part of the control that someone who has never seen
+   it can read. It names the DESTINATION, which is what the script's
+   `aria-label` and `[data-tip]` name too, so the three never disagree: in
+   light it says `dark mode`, and pressing it gets you one.
+
+   A swatch with no word is legible only on a surface that draws its own
+   tooltips, because the system sets no `title` on purpose. Most surfaces do
+   not, so the word is on the page rather than behind a hover.
+
+   Uppercase because every other mono label in the system is. Set lowercase it
+   was the one word on the surface breaking the convention, and it read as a
+   caption rather than as a control. */
+.modeswitch__label {
+  font-family: var(--pp-font-mono); font-size: var(--pp-size-label);
+  letter-spacing: var(--pp-track-label); text-transform: uppercase;
+  color: var(--pp-muted); white-space: nowrap;
+}
+.modeswitch__label::after { content: 'dark mode'; }
+[data-mode='dark'] .modeswitch__label::after { content: 'light mode'; }
+.modeswitch:hover .modeswitch__label { color: var(--pp-ink); }
+
+/* The block slides and does nothing else. It had a squash on the way, which
+   read as bounce and made a two-position control look springy. One property
+   changes: the block's vertical offset. `translate` rather than `transform`
+   because it is the narrower statement and nothing else needs to compose.
+
+   An ordinary flex child moved by `translate`, NOT an absolutely positioned
+   one. A <button> wraps its children in an anonymous box that is not a
+   containing block the way `position: relative` on the button implies, so an
+   absolute child silently lands on its static position and `top` does nothing.
+   Measured, not guessed. Moving a block that is 75% tall by a third of its own
+   height slides it exactly the leftover quarter, on the compositor. */
+.modeswitch__fill {
+  height: 75%; flex: none; background: var(--pp-ink);
+  transition: translate var(--pp-dur-state) var(--pp-ease-out);
+}
+[data-mode='dark'] .modeswitch__fill { translate: 0 33.3333%; }
+
+/* It arrives instead of sliding. Nothing else changes. */
+@media (prefers-reduced-motion: reduce) {
+  .modeswitch__fill { transition: none; }
 }
 
 /* ── the scrawl ─────────────────────────────────────────────────────────────

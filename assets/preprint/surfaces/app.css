@@ -90,12 +90,15 @@ input, textarea, select { font: inherit; color: inherit; }
 .rail__cmd:hover { border-color: var(--pp-edge); }
 .rail__cmd span { flex: 1; text-align: left; }
 .rail__cmd code { font-size: .66rem; color: var(--pp-faint); }
-.rail__mode {
-  display: flex; align-items: center; gap: .5rem; padding: .45rem .5rem;
-  cursor: pointer; font-size: .8rem; color: var(--pp-muted);
-}
-.rail__mode:hover { color: var(--pp-ink); }
-.rail__mode .sq { width: .6rem; height: .6rem; background: var(--pp-ink); }
+/* The mode switch is `.modeswitch` in core, and the rail only places it. It was
+   `.rail__mode` here, a .6rem square and a word, which is a second drawing of a
+   control the system already owns. An app is not a different question from a
+   reading page about which mode you are in. */
+/* The cursor stays the surface's, and is not core's to set. A class rule in core
+   would outrank a consumer's `button { cursor: … }` element selector and strip
+   the drawn pointer off every surface that mints one, fubl.org included. Here it
+   only restores what `.rail__mode` declared. */
+.rail .modeswitch { padding: .45rem .5rem; cursor: pointer; }
 
 /* ── screens ──────────────────────────────────────────────────────────── */
 .screens { min-width: 0; }
@@ -312,7 +315,13 @@ input, textarea, select { font: inherit; color: inherit; }
     border-right: 0; border-bottom: var(--pp-rule-line) solid var(--pp-line);
     padding: .35rem .5rem; gap: .25rem; z-index: 25;
   }
-  .rail__brand, .rail__spacer, .rail__i code, .rail__cmd span { display: none; }
+  .rail__brand, .rail__spacer, .rail__i code, .rail__cmd span,
+  .rail .modeswitch__label { display: none; }
+  /* Dropping the word takes the width with it, and the swatch is 26px against a
+     floor of 44, which is the exact defect core's wrapper exists to prevent.
+     Measured at 42x44 before this line. Square on the rung, the shape
+     `.btn--collapse` makes, for the same reason. */
+  .rail .modeswitch { width: var(--pp-target); justify-content: center; padding: 0; }
   .rail__items { display: flex; gap: .25rem; }
   .rail__i { border-left: 0; border-bottom: var(--pp-rule-structure) solid transparent; white-space: nowrap; }
   .rail__i.is-on { border-left-color: transparent; border-bottom-color: var(--pp-edge); }
