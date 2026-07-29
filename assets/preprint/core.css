@@ -259,6 +259,12 @@ button { background: transparent; border: 0; font: inherit; color: inherit; }
    than to the toolbar. A surface picks one. Two mode controls on one page
    is drift, not choice.
 
+   It takes two gestures. Click it and it plays a short scripted pull. Or take
+   hold of the bead and PULL: the cord follows the hand one pixel per pixel and
+   the mode changes when the detent trips at 42px, not when you touch it. Short
+   of that you can let go and nothing happens, which is the reason a threshold
+   is worth having — the gesture stays abandonable until it lands.
+
    The markup, and all of it:
 
      <button class="pullcord" type="button" data-pullcord>
@@ -266,7 +272,7 @@ button { background: transparent; border: 0; font: inherit; color: inherit; }
        <span class="pullcord__bead" aria-hidden="true"></span>
      </button>
 
-   `js/pullcord.js` owns the click, the phases and the accessible name; it
+   `js/pullcord.js` owns both gestures, the phases and the accessible name; it
    calls `js/mode.js` to do the actual flip, so there is still exactly one
    file that knows what dark mode is. Without the script the button is inert
    — deliberately, because a cord that flips with no pull is a worse control
@@ -280,7 +286,17 @@ button { background: transparent; border: 0; font: inherit; color: inherit; }
    `position: absolute`, so the surface must give it a positioned ancestor.
    That ancestor is the thing the cord hangs FROM, and it should be the
    element whose top edge is the top of the page. Hang it off a header with
-   padding above it and the cord starts in mid-air. */
+   padding above it and the cord starts in mid-air.
+
+   The box is where a pull STARTS, not where it happens: the gesture is 42px
+   and the script takes a pointer capture, so the hand is expected to leave
+   here and the cord to follow it out.
+
+   `touch-action: none` is what makes the pull possible on a phone at all. The
+   gesture is a vertical drag and so is a scroll, and without this the browser
+   claims it, cancels the pointer stream and the cord dies in the reader's
+   hand. `user-select: none` for the same reason on a desktop, where the drag
+   would otherwise select the header's text behind it. */
 .pullcord {
   --pp-cord-h: 72px;
   position: absolute; z-index: 5;
@@ -288,7 +304,19 @@ button { background: transparent; border: 0; font: inherit; color: inherit; }
   width: 30px; height: 132px;
   padding: 0; border: 0; background: transparent;
   cursor: var(--pp-cursor-point);
+  touch-action: none;
+  -webkit-user-select: none; user-select: none;
 }
+
+/* Held. The transitions come off so the cord tracks the hand exactly: a
+   transition here is not smoothing, it is lag between the bead and the finger
+   holding it, and 130ms of it makes the string feel like elastic.
+
+   The script writes `--pp-cord-h` inline while this is on, which beats the
+   phase rules below without either knowing about the other. */
+.pullcord[data-dragging] { cursor: var(--pp-cursor-grab); }
+.pullcord[data-dragging] .pullcord__cord,
+.pullcord[data-dragging] .pullcord__bead { transition: none; }
 
 /* Cord and bead are two elements reading ONE length. The cord spends it on
    height and the bead on offset, so there is no arrangement of dropped
