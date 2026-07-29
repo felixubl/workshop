@@ -21,6 +21,18 @@
   --pp-dur-confirm: 200ms;
   --pp-ease: cubic-bezier(.2, .7, .3, 1);
   --pp-ease-out: ease-out;
+
+  /* Mode, and the one duration that is not on the scale above. The scale
+     measures a control changing state; this measures the whole surface
+     changing ground, and the two are not the same event. Flipped instantly,
+     every colour on the page swaps in one frame and the reader loses the
+     thing they were looking at — the flip reads as a reload rather than as a
+     dimmer. Half a second is slow enough that the eye follows a paragraph
+     across the change and fast enough that nobody waits for it.
+
+     Opted into, not automatic. `core.css` puts it on a surface that carries a
+     control the flip is meant to be watched from. */
+  --pp-dur-mode: 520ms;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -28,5 +40,6 @@
     --pp-dur-fast: 0ms;
     --pp-dur-state: 0ms;
     --pp-dur-confirm: 0ms;
+    --pp-dur-mode: 0ms;
   }
 }

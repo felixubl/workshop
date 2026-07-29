@@ -7,6 +7,7 @@
 <meta name="description" content="Merge, split, extract, reorder and rotate PDF pages, with every page shown as a real preview. Runs entirely in your browser: nothing is uploaded.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
+<script src="../assets/preprint/js/pullcord.js" defer></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
 <!-- Loaded for the overlay: .scrim and .modal are core's. base.css follows it
      and remains this site's chrome, as the documented order intends. -->
@@ -18,6 +19,7 @@
 </head>
 <body>
 <div class="wrap">
+  <button class="pullcord" type="button" data-pullcord aria-label="Pull the string to switch colour mode"><span class="pullcord__cord" aria-hidden="true"></span><span class="pullcord__bead" aria-hidden="true"></span></button>
   <header>
     <div>
       <a class="back-link" href="../">
@@ -33,7 +35,6 @@
         <button class="share-btn pin-btn" type="button" data-pin="pdf-toolkit" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
       </div>
     </div>
-    <button class="modeswitch" type="button" data-mode-toggle aria-label="Switch colour mode"><span class="modeswitch__box" aria-hidden="true"><span class="modeswitch__fill"></span></span><span class="sr-only">Switch between light and dark mode</span></button>
   </header>
 
   <div class="spine"></div>

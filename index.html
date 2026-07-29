@@ -7,6 +7,7 @@
 <meta name="description" content="Small self-serve tools, built one at a time. Everything runs in your browser — nothing you upload ever leaves it.">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=5">
 <script src="assets/preprint/js/mode.js"></script>
+<script src="assets/preprint/js/pullcord.js" defer></script>
 <link rel="stylesheet" href="assets/preprint/styles.css">
 <!-- core.css, which this page skipped while base.css was standing in for it. It
      is here for the marker: .mk--citron is one of the two ink families and the
@@ -24,8 +25,11 @@
   }
 
   /* The masthead is fubl.org's in both bands: a shelf carrying the name, then a
-     bar carrying the addresses and the mode key, with the mode key pushed to
-     the far edge. No standfirst — the page is a grid of cards that say what
+     bar carrying the addresses. The mode key was the third thing here, pushed
+     to the far edge of the bar; the cord hangs off this element's top edge
+     instead, which is why it is the positioned ancestor and not .page — .page
+     is full-bleed, and 48px in from a 2000px viewport is nowhere near the
+     column. No standfirst — the page is a grid of cards that say what
      they are, and a sentence explaining them above the fold was explaining the
      obvious.
 
@@ -58,10 +62,11 @@
     gap: 0.75rem clamp(1rem, 4vw, 2.5rem);
   }
 
-  /* The second band: the addresses reading left to right, and the mode key
-     pushed to the far end by auto margin. Below the fold width the key gives
-     up its corner and joins the row, because a lone control hanging off the
-     right of a wrapped stack is not aligned to anything.
+  /* The second band: the addresses, reading left to right, and now nothing
+     else. The mode key used to be pushed to the far end of this row by an auto
+     margin; it is the cord hanging off the masthead's top edge instead, which
+     is a corner rather than a slot and needed none of the alignment rules the
+     key did.
 
      No rule above it, and this is where the workshop parts company with
      fubl.org on purpose. There, the band sits under a 1px line because the
@@ -76,17 +81,6 @@
     align-items: center;
     gap: 0.5rem 1.4rem;
     margin-top: clamp(0.6rem, 2vw, 1rem);
-  }
-  .bar-end {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-left: auto;
-  }
-  @media (max-width: 560px) {
-    .bar-end {
-      margin-left: 0;
-    }
   }
   /* The addresses, built the way the personal site builds the buttons in its
      header bar: one shape at two ranks. Everything that decides SIZE is set
@@ -641,6 +635,7 @@
 <div class="page">
 
   <header class="masthead">
+    <button class="pullcord" type="button" data-pullcord aria-label="Pull the string to switch colour mode"><span class="pullcord__cord" aria-hidden="true"></span><span class="pullcord__bead" aria-hidden="true"></span></button>
     <div class="shelf">
       <h1 class="wordmark">Felix' <span class="mark-w">W</span>orkshop<span class="nails" aria-hidden="true"><i></i><i></i><i></i><i></i></span></h1>
     </div>
@@ -651,9 +646,6 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.42c.58.1.79-.25.79-.55v-2.1c-3.2.7-3.88-1.4-3.88-1.4-.53-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.18-1.49 3.14-1.18 3.14-1.18.63 1.59.24 2.76.12 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.26 5.69.42.36.79 1.06.79 2.14v3.17c0 .3.2.66.8.55A11.5 11.5 0 0 0 12 .5z"></path></svg>
           felixubl/workshop
         </a>
-      <div class="bar-end">
-        <button class="modeswitch" type="button" data-mode-toggle aria-label="Switch colour mode"><span class="modeswitch__box" aria-hidden="true"><span class="modeswitch__fill"></span></span><span class="sr-only">Switch between light and dark mode</span></button>
-      </div>
     </nav>
   </header>
 

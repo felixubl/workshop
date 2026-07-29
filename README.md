@@ -46,13 +46,20 @@ Three CSS layers, in this order:
 | shared chrome | [`assets/base.css`](assets/base.css) | the classes every tool reuses, built only from `--pp-*` tokens |
 | the workshop's own deviations | [`assets/site.css`](assets/site.css) | the whole list: halftone screen, category washes, sticker chips, the tilt |
 
-Two of the three scripts are the system's, vendored with it.
+Three of the four scripts are the system's, vendored with it.
 [`assets/preprint/js/mode.js`](assets/preprint/js/mode.js) sets `data-mode`
-before the first paint and flips it on any `[data-mode-toggle]`. The control
-itself is the one fubl.org wears: a 26×34 swatch three quarters full of ink,
-which slides to the other end rather than naming a mode. It is the system's
-rather than the workshop's because there is one dark mode across everything set
-in PREPRINT, and this file was previously written twice.
+before the first paint and flips it on any `[data-mode-toggle]`. It is the
+system's rather than the workshop's because there is one dark mode across
+everything set in PREPRINT, and this file was previously written twice.
+[`assets/preprint/js/pullcord.js`](assets/preprint/js/pullcord.js) is the
+control that drives it here. Core ships two, and the workshop takes the cord
+rather than the swatch fubl.org wears: a 1px line hanging off the top edge with
+a bead on the end, pulled once per click, the mode flipping on the mechanism's
+release 130ms in with a two-part click to go with it. The sound is on by
+default and silenced by `localStorage['preprint-sound'] = 'off'` or by
+`prefers-reduced-motion`, which also drops the pull and flips on the click.
+Neither script draws anything: the cord is `.pullcord` in `core.css`, and the
+positioned ancestor it hangs from is `.wrap` / `.masthead` in `base.css`.
 [`assets/preprint/js/controls.js`](assets/preprint/js/controls.js), with
 [`assets/preprint/controls.css`](assets/preprint/controls.css) beside it, draws
 the five widgets the browser would otherwise style itself: the number field's
@@ -80,17 +87,21 @@ names it declares must not change.
 ## Adding a new tool
 
 1. Create `<tool-name>/index.html`, `style.css`, `script.js`.
-2. Link `../assets/preprint/js/mode.js` (in `<head>`, before the stylesheets),
-   then `../assets/preprint/styles.css`, `../assets/preprint/controls.css`,
-   `../assets/base.css`, and `../assets/site.css`. Write only the tool-specific
-   layout in the tool's own `style.css`.
+2. Link `../assets/preprint/js/mode.js` (in `<head>`, before the stylesheets)
+   and `../assets/preprint/js/pullcord.js` after it with `defer`, then
+   `../assets/preprint/styles.css`, `../assets/preprint/core.css`,
+   `../assets/preprint/controls.css`, `../assets/base.css`, and
+   `../assets/site.css`. Write only the tool-specific layout in the tool's own
+   `style.css`.
 3. At the end of `<body>`, load the tool's `script.js`, then
    `../assets/preprint/js/controls.js`, `../assets/share.js` and
    `../assets/favourites.js`. The tool's own script goes first so anything it
    builds at startup is already in the DOM when the controls are drawn.
 4. Give the page the shared header: a `.back-link`, a `.title-row` holding the
-   `h1.tool-title` plus the `[data-share]` and `[data-pin]` buttons, and the
-   `.modeswitch` in the opposite corner. Both buttons key off the folder name.
+   `h1.tool-title` plus the `[data-share]` and `[data-pin]` buttons, which both
+   key off the folder name. The `.pullcord` goes above the header as the first
+   child of `.wrap`, not inside it — it hangs from the top of the page, and
+   `<header>` starts below the shell's padding.
 5. Add a card for it to the root [index.html](index.html). A card is the tool's
    name and nothing else — no description, no badge, and no `data-tip`, because
    a grid of nineteen that all speak when hovered is a grid that shouts. What
