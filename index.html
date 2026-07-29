@@ -8,6 +8,11 @@
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=5">
 <script src="assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="assets/preprint/styles.css">
+<!-- core.css, which this page skipped while base.css was standing in for it. It
+     is here for the marker: .mk--citron is one of the two ink families and the
+     annotated half of "printed first, then annotated". base.css follows it and
+     wins every tie. -->
+<link rel="stylesheet" href="assets/preprint/core.css">
 <link rel="stylesheet" href="assets/preprint/controls.css">
 <link rel="stylesheet" href="assets/base.css">
 <link rel="stylesheet" href="assets/site.css">
@@ -242,18 +247,45 @@
     margin: 0 auto;
     padding: clamp(1.75rem, 4vw, 2.75rem) var(--pp-gutter) clamp(2.5rem, 6vw, 4rem);
     display: grid;
-    gap: 1.25rem;
+    /* Two sections now rather than one grid, so the gap between them is the
+       gap between the work and the intentions. One step of the space scale
+       above the gap inside either of them, which is the only thing separating
+       them: same rhythm, further apart. */
+    gap: clamp(2rem, 5vw, 3.25rem);
     align-content: start;
   }
 
-  /* The four-ink bar is the only hint that the card colours mean anything, and
-     it explains nothing. The register stays unnamed on purpose: a category
-     label on every card is nineteen words doing the work one colour does. */
-  .tally {
+  /* ── The band ──────────────────────────────────────────────────────────────
+     What a section is, a rule across the rest of the measure, and the count.
+     The rule is a flex child rather than a border on the row, because it has
+     to start where the label stops and stop where the count starts, which a
+     border-bottom on the whole row cannot do.
+
+     The four-ink bar moved down here to the queue, where the register colours
+     actually are. It is the only key those squares get and it explains
+     nothing, on purpose: a category word on every one of fifteen rows is
+     fifteen words doing the work one colour does. */
+  .band {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
     gap: 0.7rem;
+    margin-bottom: var(--pp-space-4);
+  }
+  .band .section-label {
+    margin: 0;
+    color: var(--pp-muted);
+  }
+  .band-rule {
+    flex: 1;
+    height: 0;
+    border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+  }
+  .band code {
+    font-family: var(--pp-font-mono);
+    font-size: var(--pp-size-label);
+    letter-spacing: var(--w-track-mono);
+    color: var(--pp-faint);
+    white-space: nowrap;
   }
   .ink-bar {
     display: flex;
@@ -267,71 +299,196 @@
   .ink-bar i:nth-child(2) { background: var(--pp-plate-2); }
   .ink-bar i:nth-child(3) { background: var(--pp-plate-3); }
   .ink-bar i:nth-child(4) { background: var(--pp-line); }
-  .tally code {
-    font-family: var(--pp-font-mono);
-    font-size: var(--pp-size-label);
-    letter-spacing: 0.1em;
-    color: var(--pp-faint);
+
+  /* The count of built tools is the one thing on this page worth a pen, so it
+     takes one. This is the annotated half of "printed first, then annotated",
+     which the workshop had been skipping entirely: nineteen cards, all printed,
+     nothing marked. A marker is a field behind type and never type itself, and
+     the class is core's now rather than a local rgba — see the entry in
+     DECISIONS.md, and preprint's own for why it came down to core. */
+  .band .mk--citron {
+    color: var(--pp-ink);
+    padding: 0.08em 0.3em;
   }
 
-  /* A card is the tool's name and nothing else.
+  /* ── The bench ─────────────────────────────────────────────────────────────
+     The four tools that exist.
 
-     It used to carry a description and an "Open tool" affordance, which made
-     each one about 190px tall and the queue four screens long — nineteen
-     paragraphs a reader scrolls past to find the three things they can
-     actually use. The names are the index, and the descriptions are what you
-     read once. They are still here, kept verbatim as an HTML comment beside
-     each card, because the copy is worth keeping and a card is not where it
-     belongs. They are not tips: a tooltip is not a place to put the only
-     description a tool has. The card is now a row on the
-     personal site's .entry rhythm: one display line, a 44px target, and the
-     state carried by the border rather than by a word. */
-  .tools {
+     What changed, and why. All nineteen used to be the same 44px row, so a
+     built tool and a queued one differed by a border weight and a wash and
+     nothing else. The page read as a list of nineteen equals when four of them
+     are the entire point of the site — a hierarchy problem, which law 00 says
+     is never fixed by adding another exception.
+
+     So size is the hierarchy now, and the plate carries the sentence saying
+     what the tool is FOR. That sentence is not new: it has been sitting in an
+     HTML comment beside each card since the cards were compressed, because
+     there was nowhere on a 44px row to put it. There is now.
+
+     The plates do not share a baseline. Two columns, the right one dropped a
+     step, and each plate only as tall as its own sentence needs. That is the
+     whole of the hand-set reading — nothing is scattered and nothing is
+     random, the grid has simply stopped insisting that four different things
+     are the same size. */
+  .plates {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 236px), 1fr));
-    gap: 12px;
+    gap: var(--pp-space-4);
+    align-items: start;
   }
-  .tool-card {
+  @media (min-width: 700px) {
+    .plates {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      /* The air the scrawl hangs in. It is absolutely positioned and
+         contributes no height of its own, which is the point of the part and
+         also means the room for it has to be made here. */
+      margin-top: 2rem;
+    }
+    /* The drop is one step of the space scale, not a hand-picked offset. It is
+       what stops two columns of stock reading as a table of two rows.
+       nth-child and not nth-of-type, and deliberately not recomputed when a pin
+       reorders the grid: `order` moves a plate without moving its offset, so a
+       pinned tool arrives carrying the same lie of the hand it always had. */
+    .plates > :nth-child(even) {
+      margin-top: var(--pp-space-4);
+    }
+  }
+
+  .plate {
     position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    min-height: var(--pp-target);
-    padding: 0.5rem 0.5rem 0.5rem 0.85rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.3rem 0.5rem;
+    padding: var(--pp-space-3) var(--pp-space-3) var(--pp-space-4);
+    background: var(--pp-surface);
+    border: var(--pp-rule-structure) solid var(--pp-edge);
     border-radius: var(--pp-radius-lg);
     color: inherit;
   }
-  /* The name is the link, and it throws a covering layer over the whole card so
-     the entire box is the target. The pin sits above that layer, which is the
-     only reason this is a div wrapping an anchor rather than an anchor: a
-     button inside a link is not a thing HTML allows, and a pin that opens the
+  /* The cast: the same silhouette printed again in a plate ink, off register,
+     which is the plate mark itself. Hover slips it FURTHER out of register
+     rather than lifting the plate. Press pulls it back in. Nothing moves here
+     that a printer could not do.
+
+     This is a declared token and not a law 04 breach — four live tools all
+     carry it, and "the second time a violation appears, it stops being one".
+     It means built and open. It stays plate 2 for all four rather than taking
+     each plate's own register, which was the tempting change and the wrong
+     one: the cast declares a STATE, and a cast that also carried the category
+     would be one mark saying two things, neither of them clearly. */
+  .plate-live {
+    box-shadow: 5px 5px 0 var(--pp-plate-2);
+    transition: box-shadow var(--pp-dur-state) var(--pp-ease-out);
+  }
+  .plate-live:hover {
+    box-shadow: 8px 8px 0 var(--pp-plate-2);
+  }
+  /* Four angles off one declared token, so "a third of the sticker tilt" stays
+     literally true if --w-tilt ever moves. Written out as four multipliers
+     rather than four typed angles, which is the difference between one token
+     used four ways and four undeclared ones. */
+  .plates > :nth-child(1) .plate { transform: rotate(calc(var(--w-tilt-card) * 0.96)); }
+  .plates > :nth-child(2) .plate { transform: rotate(calc(var(--w-tilt-card) * -1.1)); }
+  .plates > :nth-child(3) .plate { transform: rotate(calc(var(--w-tilt-card) * -0.8)); }
+  .plates > :nth-child(4) .plate { transform: rotate(calc(var(--w-tilt-card) * 1.15)); }
+
+  /* The name is the link, and it throws a covering layer over the whole plate
+     so the entire box is the target. The pin sits above that layer, which is
+     the only reason this is a div wrapping an anchor rather than an anchor: a
+     button inside a link is not a thing HTML allows, and a pin that opened the
      tool instead of pinning it would be the obvious bug. */
-  /* The system underlines links with a border rather than a text-decoration, so
-     turning it off here means turning off a border — the same thing .back-link
-     does. A card is a target, not a run of prose with a link in it, and the
-     whole box already says it is one. */
-  .tool-open {
-    flex: 1;
+  .plate-open {
+    grid-column: 1;
     min-width: 0;
     text-decoration: none;
     border-bottom: 0;
     color: inherit;
   }
-  .tool-open::after {
+  .plate-open::after {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: inherit;
   }
-  .tool-card-soon h3 {
-    flex: 1;
-    min-width: 0;
+  .plate h3 {
+    margin: 0;
+    font-family: var(--pp-font-display);
+    font-weight: var(--pp-weight-head);
+    font-size: var(--pp-size-subhead);
+    letter-spacing: var(--pp-track-head);
+    line-height: 1.15;
+    text-wrap: balance;
   }
+  /* Micro, which is the floor and not a size chosen for being small: a plate is
+     a name you are reading and a sentence you are checking, and those are not
+     the same job. The measure is held well short of 66ch because two of these
+     sit side by side. */
+  .plate-say {
+    grid-column: 1 / -1;
+    margin: 0;
+    max-width: 60ch;
+    font-size: var(--pp-size-micro);
+    line-height: var(--pp-leading-micro);
+    color: var(--pp-muted);
+    text-wrap: pretty;
+  }
+
+  /* ── The queue ─────────────────────────────────────────────────────────────
+     Fifteen intentions, and a list of intentions should look like a list.
+
+     They were fifteen dashed boxes over fifteen category washes, which made the
+     single largest field of colour on the page out of the information that
+     mattered least. Now they are an index: the register survives as one square
+     of its plate, the name is set in the machine's face because a queue is a
+     manifest rather than prose, and nothing is drawn around any of them.
+
+     The register squares are the plates at full strength, which is the only
+     form a plate takes. The washes they replace were plates at 7% — a plate
+     "never translucent" is the invariant, and color-mix to transparent was
+     exactly that with a token in front of it. Two rules gone rather than
+     restated. */
+  .queue-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+    gap: 0 var(--pp-space-4);
+  }
+  .q {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: var(--pp-target-compact);
+    color: var(--pp-muted);
+    font-family: var(--pp-font-mono);
+    font-size: var(--pp-size-mono);
+    letter-spacing: var(--w-track-mono);
+  }
+  .q::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    flex: none;
+    background: var(--w-card-ink);
+  }
+  /* The name does not stretch, so the pin sits against the word it belongs to
+     and the column comes out ragged. Stretched, every pin lined up at the far
+     right of a wide column with a gap of dots between it and its own name, and
+     a mark that far from what it marks stops reading as attached to it. Ragged
+     is the correct answer here rather than the tolerated one. */
+  .q-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  /* No pointer change and no hover state on the row itself. These do not open,
+     and a row that lit up under the cursor would be promising that they do. */
+
+  .reg-1 { --w-card-ink: var(--pp-plate-1); }
+  .reg-2 { --w-card-ink: var(--pp-plate-2); }
+  .reg-3 { --w-card-ink: var(--pp-plate-3); }
+  .reg-0 { --w-card-ink: var(--pp-line); }
 
   /* Pinning is nailing it to the board — the same 45° square the wordmark wears
      at its corners, hollow until you drive it in. It reads as a mark rather
-     than a control at rest, which is what keeps a grid of nineteen quiet, and
-     it is the one piece of furniture a card carries besides its name. */
+     than a control at rest, which is what keeps a page of nineteen quiet. */
   .pin {
     position: relative;
     z-index: 2;
@@ -344,95 +501,86 @@
     background: transparent;
     border: 0;
   }
+  .plate .pin {
+    grid-column: 2;
+    grid-row: 1;
+    margin: -0.25rem -0.25rem 0 0;
+  }
   .pin:hover .pin-head {
     border-color: var(--pp-edge);
   }
   .pin:active {
     transform: var(--w-press);
   }
-  .tool-card.is-pinned .pin-head {
+  .pin.is-on .pin-head {
     background: var(--pp-edge);
     border-color: var(--pp-edge);
   }
-  /* Pinned tools come to the front of the grid. Order rather than a move in the
-     DOM, so the tilt each card was dealt by nth-of-type stays with it. */
-  .tool-card.is-pinned {
+  /* A pinned tool comes to the front of its own section. Order rather than a
+     move in the DOM, so the angle a plate was dealt stays with it. */
+  .is-pinned {
     order: -1;
   }
-  .tool-card h3 {
-    margin: 0;
-    font-family: var(--pp-font-display);
-    font-weight: var(--pp-weight-head);
-    font-size: 1rem;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-    text-wrap: balance;
-  }
 
-  /* The cast: the same silhouette printed again in a plate ink, off register,
-     which is the plate mark itself. Hover slips it FURTHER out of register
-     instead of lifting the card. Press pulls it back in. Nothing moves here
-     that a printer could not do.
+  /* ── The scrawl ────────────────────────────────────────────────────────────
+     The system's hand annotation, pointing at the one control on this page that
+     explains nothing about itself. A pin at rest is a small hollow diamond in
+     the corner of a plate, and there is no reading of that shape that gets you
+     to "this drives the tool to the top and keeps it there".
 
-     This started as the page's single law 04 breach, when one tool was live.
-     With a second live tool it is no longer a breach: "the second time a
-     violation appears, it stops being one — name it, give it a slot, write its
-     states, or stop using it." This is that slot. The cast now means built and
-     open, it is declared here with its hover and press states, and it belongs
-     to .tool-card-live rather than to whichever card happened to be first.
+     Core owns the two arrangements and which one is on. What is the surface's
+     is the arrow, where it points from, and the tilt — law 06 is a per-page
+     budget and the system cannot know what else is spending it. Here the
+     rotation is --w-tilt again, the same declared token the wordmark and the
+     plates take, so this adds no new angle to the page.
 
-     One other thing on this page casts: the wordmark's blue text-shadow. That
-     is the brand mark, it predates this slot, and it is deliberately left
-     alone rather than tidied into line — so this comment no longer claims to
-     be the only cast on the index, because it is not. */
-  .tool-card-live {
-    background: var(--pp-surface);
-    border: var(--pp-rule-structure) solid var(--pp-edge);
-    box-shadow: 5px 5px 0 var(--pp-plate-2);
-    transform: rotate(calc(var(--w-tilt-card) * 0.96));
-    transition: box-shadow var(--pp-dur-state) var(--pp-ease-out);
+     Anchored to the first plate's WRAPPER, not to the plate: core puts a scrawl
+     at `bottom: 100%`, so from the wrapper it sits in the air directly above
+     the pin and the arrow can come down onto it. Anchored to the plate itself
+     it would inherit that plate's rotation and swing the arrowhead off its own
+     target. Anchored to the section it pointed at the corner of the page,
+     which is where the count is, not where the pin is. */
+  .plates > div {
+    position: relative;
   }
-  .tool-card-live:hover {
-    box-shadow: 8px 8px 0 var(--pp-plate-2);
-  }
-  .tool-card-live:active {
-    box-shadow: 2px 2px 0 var(--pp-plate-2);
-    transform: var(--w-press) rotate(calc(var(--w-tilt-card) * 0.96));
-  }
-  /* Cards rotate at a third of the sticker tilt, cycling by grid position —
-     the cut-and-pasted rhythm of the original, quiet enough that sixteen of
-     them still read as a grid rather than a spill. Counted with nth-of-type so
-     the cycle is over the <div> cards only and the live <a> stays out of it.
-
-     Every angle is derived from --w-tilt-card rather than typed, so "a third
-     of the sticker tilt" stays literally true if --w-tilt ever moves. The four
-     multipliers are what stops the cycle reading as a pattern: hand-set angles
-     scattered across four rules were four undeclared tokens claiming to be
-     one. */
-  .tool-card-soon {
-    border: var(--pp-rule-structure) dashed var(--w-card-ink);
-    background: var(--w-card-wash);
-  }
-  /* With the badges gone, a card states what it is by what it is made of: the
-     built ones are solid stock with an ink edge and a cast, the queued ones are
-     a dashed outline over a wash, in quieter ink. The pointer finishes the
-     sentence — these do not open, and saying so on the way in beats letting a
-     reader find out by pressing. */
-  .tool-card-soon h3 {
+  .plates > div:first-child .scrawl {
+    right: 0.9rem;
+    /* Over the plate rather than under it. A plate is opaque stock and comes
+       later in the DOM, so at auto the annotation was painted over and lost its
+       descenders to the top border. It is a mark made ON the page, so it wins.
+    */
+    z-index: 3;
+    font-size: 0.95rem;
     color: var(--pp-muted);
-    font-weight: var(--pp-weight-strong);
+    transform: rotate(var(--w-tilt));
   }
-  .tool-card-soon:hover {
-    cursor: var(--pp-cursor-blocked);
+  /* Only the ARROW crosses onto the plate, and the words stay off it. Core
+     positions the two independently in the beside arrangement — the text hangs
+     off `right: 100%` of the scrawl, so translating the svg moves the arrow
+     without dragging the sentence down onto the border with it. That split is
+     the reason this needs no second element and no second position. */
+  .scrawl svg {
+    color: var(--pp-plate-3);
+    translate: 0 1.15rem;
   }
-  .tool-card-soon:nth-of-type(3n + 1) { transform: rotate(calc(var(--w-tilt-card) * 1.2)); }
-  .tool-card-soon:nth-of-type(3n + 2) { transform: rotate(calc(var(--w-tilt-card) * -1.02)); }
-  .tool-card-soon:nth-of-type(3n + 3) { transform: rotate(calc(var(--w-tilt-card) * 0.78)); }
-
-  .reg-1 { --w-card-ink: var(--pp-plate-1); --w-card-wash: var(--w-wash-1); }
-  .reg-2 { --w-card-ink: var(--pp-plate-2); --w-card-wash: var(--w-wash-2); }
-  .reg-3 { --w-card-ink: var(--pp-plate-3); --w-card-wash: var(--w-wash-3); }
-  .reg-0 { --w-card-ink: var(--pp-line); --w-card-wash: var(--w-wash-0); }
+  @media (max-width: 700px) {
+    /* One column, and the plates lose their offsets, so the air the annotation
+       hangs in is gone and it would sit on the band above. It comes off rather
+       than being made to fit: a hand annotation squeezed into a gap it does not
+       fit is drift, and the pin is still reachable without it. */
+    .scrawl {
+      display: none;
+    }
+  }
+  /* And it retires the moment anything is pinned. Two reasons, and the second
+     is the one that made it necessary. It teaches the pin, so once the reader
+     has used one the lesson is over and a note explaining a control back to
+     someone already using it is clutter. And `order` moves a pinned plate to
+     the front, which pushes this one down a row — where the 2rem of air it
+     hangs in does not exist, and it would sit over the plate above. */
+  .bench:has(.is-pinned) .scrawl {
+    display: none;
+  }
 
   /* The footer is one line. What it used to carry is either already in the
      masthead — both site keys sit up there now — or gone by request.
@@ -491,178 +639,203 @@
 
   <main>
 
-    <div class="tally">
-      <span class="ink-bar" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-      <code><span data-pin-count></span>4 live · 15 in the queue</code>
-    </div>
+    <!-- The bench: what is built. The sentence on each plate is the same copy
+         that was kept as an HTML comment beside each card while the cards were
+         one line tall, cut to what fits a plate. The full versions are still in
+         git history rather than duplicated here. -->
+    <section class="bench">
 
-    <div class="tools">
-
-      <div class="tool-card tool-card-live" data-tool="draw-svg">
-        <!-- Draw pixel art on a grid-snapped canvas. Start from a classic sprite size
-           (16&times;16 up to a full Game Boy screen) or type your own, then export exactly
-           what you drew as a real SVG file. -->
-        <a class="tool-open" href="draw-svg/"><h3>Pixel Art SVG Drawer</h3></a>
-        <button class="pin" type="button" data-pin="draw-svg" aria-label="Pin Pixel Art SVG Drawer to the top"><span class="pin-head" aria-hidden="true"></span></button>
+      <div class="band">
+        <p class="section-label">On the bench</p>
+        <span class="band-rule" aria-hidden="true"></span>
+        <code><span data-pin-count></span><span class="mk mk--citron">4 built</span></code>
       </div>
 
-      <div class="tool-card tool-card-live" data-tool="random-numbers">
-        <!-- Draw numbers from eleven distributions, from a plain uniform range through
-           normal, exponential, binomial and Poisson to gamma and beta, in up to ten
-           dimensions at once. Every run prints the seed it used, so any set of numbers can
-           be drawn again, and the whole sample exports as CSV or JSON. -->
-        <a class="tool-open" href="random-numbers/"><h3>Random Number Generator</h3></a>
-        <button class="pin" type="button" data-pin="random-numbers" aria-label="Pin Random Number Generator to the top"><span class="pin-head" aria-hidden="true"></span></button>
+
+      <div class="plates">
+
+        <div data-tool="draw-svg">
+          <!-- Points at this plate's pin. aria-hidden and not a label: the
+               control it annotates already carries its own accessible name, and
+               a reader on a screen reader gets that name rather than a
+               description of an arrow they cannot see. -->
+          <span class="scrawl scrawl--beside" aria-hidden="true">
+            <span class="scrawl__t">pin one to keep it on top</span>
+            <svg width="34" height="28" viewBox="0 0 34 28" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M2 2c13 2 22 10 24 21M26 23l1-8M26 23l-8 2"></path></svg>
+          </span>
+          <div class="plate plate-live">
+            <a class="plate-open" href="draw-svg/"><h3>Pixel Art SVG Drawer</h3></a>
+            <button class="pin" type="button" data-pin="draw-svg" aria-label="Pin Pixel Art SVG Drawer to the top"><span class="pin-head" aria-hidden="true"></span></button>
+            <p class="plate-say">Draw on a grid-snapped canvas, from an 8&times;8 sprite up to a full Game Boy screen, and export exactly what you drew as a real SVG.</p>
+          </div>
+        </div>
+
+        <div data-tool="random-numbers">
+          <div class="plate plate-live">
+            <a class="plate-open" href="random-numbers/"><h3>Random Number Generator</h3></a>
+            <button class="pin" type="button" data-pin="random-numbers" aria-label="Pin Random Number Generator to the top"><span class="pin-head" aria-hidden="true"></span></button>
+            <p class="plate-say">Eleven distributions in up to ten dimensions. Every run prints the seed it used, so any set of numbers can be drawn again.</p>
+          </div>
+        </div>
+
+        <div data-tool="metadata-cleaner">
+          <div class="plate plate-live">
+            <a class="plate-open" href="metadata-cleaner/"><h3>Image Metadata Cleaner</h3></a>
+            <button class="pin" type="button" data-pin="metadata-cleaner" aria-label="Pin Image Metadata Cleaner to the top"><span class="pin-head" aria-hidden="true"></span></button>
+            <p class="plate-say">See what a photo carries besides the photo &mdash; GPS, serial numbers, timestamps, the caption someone left in it &mdash; and choose field by field what to strip. The pixels are never re-encoded.</p>
+          </div>
+        </div>
+
+        <div data-tool="pdf-toolkit">
+          <div class="plate plate-live">
+            <a class="plate-open" href="pdf-toolkit/"><h3>PDF Toolkit</h3></a>
+            <button class="pin" type="button" data-pin="pdf-toolkit" aria-label="Pin PDF Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
+            <p class="plate-say">Merge, split, extract, reorder and turn pages, every one a real preview you can pick up. The PDF engine underneath is written from scratch, with no library involved.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- The queue. Each row keeps the description it always had as a comment,
+         because that copy is the brief for building the thing and a row is not
+         where it belongs. -->
+    <section class="queue">
+
+      <div class="band">
+        <p class="section-label">In the queue</p>
+        <span class="band-rule" aria-hidden="true"></span>
+        <span class="ink-bar" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <code>15 planned</code>
       </div>
 
-      <div class="tool-card tool-card-live" data-tool="metadata-cleaner">
-        <!-- See exactly what a photo is carrying besides the photo: GPS coordinates, camera
-           and lens serial numbers, the timestamp, the software that touched it last, the
-           caption someone left in it, even a thumbnail from before you cropped. Every field
-           is listed with its value and flagged for how much it gives away, and you choose
-           one by one what to keep. JPEG, PNG and WebP, one file or a hundred at a time. The
-           pixels are never re-encoded, so cleaning costs no quality. -->
-        <a class="tool-open" href="metadata-cleaner/"><h3>Image Metadata Cleaner</h3></a>
-        <button class="pin" type="button" data-pin="metadata-cleaner" aria-label="Pin Image Metadata Cleaner to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
-
-      <div class="tool-card tool-card-live" data-tool="pdf-toolkit">
-        <!-- Merge, split, extract, reorder, delete and turn PDF pages, with every page
-           shown as a real preview you can pick up and drag. The PDF engine underneath is
-           written from scratch: it parses the file, reads its fonts, draws the pages, and
-           writes the result back out, with no library involved. Still to come: redaction,
-           signatures, compression, and page numbering. Runs fully client-side: your
-           documents never leave your browser. -->
-        <a class="tool-open" href="pdf-toolkit/"><h3>PDF Toolkit</h3></a>
-        <button class="pin" type="button" data-pin="pdf-toolkit" aria-label="Pin PDF Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
-
-      <div class="tool-card tool-card-soon reg-2" data-tool="image-toolkit">
+      <ul class="queue-list">
         <!-- Convert between PNG/JPEG/WebP/AVIF/HEIC, remove backgrounds, resize or pad
-           without distorting, batch-rename, and generate favicons, app-icon sets, and
-           social-media sizes from one source image. Also home to the pixel randomizer:
-           every color gets swapped for a new, unrelated random one, consistently, so
-           identical pixels always match but neighbors can end up worlds apart. -->
-        <h3>Image Toolkit</h3>
-        <button class="pin" type="button" data-pin="image-toolkit" aria-label="Pin Image Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
+        without distorting, batch-rename, and generate favicons, app-icon sets, and
+        social-media sizes from one source image. Also home to the pixel randomizer:
+        every color gets swapped for a new, unrelated random one, consistently, so
+        identical pixels always match but neighbors can end up worlds apart. -->
+        <li class="q reg-2" data-tool="image-toolkit">
+          <span class="q-name">Image Toolkit</span>
+          <button class="pin" type="button" data-pin="image-toolkit" aria-label="Pin Image Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
 
-      <div class="tool-card tool-card-soon reg-2" data-tool="svg-toolkit">
         <!-- Upload an existing SVG to keep editing it in the Pixel Art SVG Drawer, or reach
-           for the deeper tools here: optimize and simplify paths, replace colors, convert
-           strokes and text to paths, normalize the viewBox, and build sprites from a folder
-           of icons. The flagship: &quot;Fix my SVG,&quot; which auto-resolves clipping,
-           missing viewBoxes, and oversized canvases in one pass. -->
-        <h3>SVG Toolkit</h3>
-        <button class="pin" type="button" data-pin="svg-toolkit" aria-label="Pin SVG Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
+        for the deeper tools here: optimize and simplify paths, replace colors, convert
+        strokes and text to paths, normalize the viewBox, and build sprites from a folder
+        of icons. The flagship: &quot;Fix my SVG,&quot; which auto-resolves clipping,
+        missing viewBoxes, and oversized canvases in one pass. -->
+        <li class="q reg-2" data-tool="svg-toolkit">
+          <span class="q-name">SVG Toolkit</span>
+          <button class="pin" type="button" data-pin="svg-toolkit" aria-label="Pin SVG Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
 
-      <div class="tool-card tool-card-soon reg-2" data-tool="qr-code-and-barcodes">
         <!-- Generate QR codes styled to match this site instead of plain black squares, still
-           verified to scan cleanly, plus Wi-Fi, contact-card, and calendar-event QR codes,
-           barcode generation and reading, and batch generation from a CSV for print-ready
-           label sheets. -->
-        <h3>QR Code &amp; Barcodes</h3>
-        <button class="pin" type="button" data-pin="qr-code-and-barcodes" aria-label="Pin QR Code & Barcodes to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
+        verified to scan cleanly, plus Wi-Fi, contact-card, and calendar-event QR codes,
+        barcode generation and reading, and batch generation from a CSV for print-ready
+        label sheets. -->
+        <li class="q reg-2" data-tool="qr-code-and-barcodes">
+          <span class="q-name">QR Code &amp; Barcodes</span>
+          <button class="pin" type="button" data-pin="qr-code-and-barcodes" aria-label="Pin QR Code & Barcodes to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
 
-      <div class="tool-card tool-card-soon reg-2" data-tool="audio-toolkit">
         <!-- Convert between MP3/WAV/M4A/OGG, trim, join, and normalize volume, remove
-           silence, extract audio from video, and compress to a target file size. Also
-           generates waveform images and strips audio metadata. -->
-        <h3>Audio Toolkit</h3>
-        <button class="pin" type="button" data-pin="audio-toolkit" aria-label="Pin Audio Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
+        silence, extract audio from video, and compress to a target file size. Also
+        generates waveform images and strips audio metadata. -->
+        <li class="q reg-2" data-tool="audio-toolkit">
+          <span class="q-name">Audio Toolkit</span>
+          <button class="pin" type="button" data-pin="audio-toolkit" aria-label="Pin Audio Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
 
-      <div class="tool-card tool-card-soon reg-2" data-tool="video-toolkit">
         <!-- Trim without re-encoding, strip audio, extract a frame, convert to and from GIF,
-           compress to a target size, and fix aspect ratio or orientation. Plus subtitle
-           conversion and timing shifts, and loop/boomerang clip generation. -->
-        <h3>Video Toolkit</h3>
-        <button class="pin" type="button" data-pin="video-toolkit" aria-label="Pin Video Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
+        compress to a target size, and fix aspect ratio or orientation. Plus subtitle
+        conversion and timing shifts, and loop/boomerang clip generation. -->
+        <li class="q reg-2" data-tool="video-toolkit">
+          <span class="q-name">Video Toolkit</span>
+          <button class="pin" type="button" data-pin="video-toolkit" aria-label="Pin Video Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
 
-      <div class="tool-card tool-card-soon reg-1" data-tool="text-and-document-utilities">
         <!-- Clean up pasted text: dedupe and sort lines, fix smart quotes and invisible
-           Unicode characters, diff two files, and convert between Markdown, HTML, and plain
-           text. Also formats and minifies JSON, YAML, CSS, and SQL, and counts tokens for
-           common AI models. -->
-        <h3>Text &amp; Document Utilities</h3>
-        <button class="pin" type="button" data-pin="text-and-document-utilities" aria-label="Pin Text & Document Utilities to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
+        Unicode characters, diff two files, and convert between Markdown, HTML, and plain
+        text. Also formats and minifies JSON, YAML, CSS, and SQL, and counts tokens for
+        common AI models. -->
+        <li class="q reg-1" data-tool="text-and-document-utilities">
+          <span class="q-name">Text &amp; Document Utilities</span>
+          <button class="pin" type="button" data-pin="text-and-document-utilities" aria-label="Pin Text & Document Utilities to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
 
-      <div class="tool-card tool-card-soon reg-1" data-tool="csv-and-spreadsheet-toolkit">
         <!-- &quot;Fix this CSV&quot; detects encoding, delimiter, and broken rows
-           automatically, plus merge, split, dedupe, and diff CSV files, convert to and from
-           XLSX and JSON, reshape wide/long data, and pull a random sample of rows. -->
-        <h3>CSV &amp; Spreadsheet Toolkit</h3>
-        <button class="pin" type="button" data-pin="csv-and-spreadsheet-toolkit" aria-label="Pin CSV & Spreadsheet Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
+        automatically, plus merge, split, dedupe, and diff CSV files, convert to and from
+        XLSX and JSON, reshape wide/long data, and pull a random sample of rows. -->
+        <li class="q reg-1" data-tool="csv-and-spreadsheet-toolkit">
+          <span class="q-name">CSV &amp; Spreadsheet Toolkit</span>
+          <button class="pin" type="button" data-pin="csv-and-spreadsheet-toolkit" aria-label="Pin CSV & Spreadsheet Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
 
-      <div class="tool-card tool-card-soon reg-3" data-tool="developer-tools">
         <!-- JSON/JWT/Base64/URL formatting and decoding, UUID and hash generation, a regex
-           tester, cron explainer, and converters for cURL, TypeScript types, and Zod
-           schemas &mdash; the everyday grab-bag of things a browser tab full of separate
-           sites usually handles. -->
-        <h3>Developer Tools</h3>
-        <button class="pin" type="button" data-pin="developer-tools" aria-label="Pin Developer Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
+        tester, cron explainer, and converters for cURL, TypeScript types, and Zod
+        schemas &mdash; the everyday grab-bag of things a browser tab full of separate
+        sites usually handles. -->
+        <li class="q reg-3" data-tool="developer-tools">
+          <span class="q-name">Developer Tools</span>
+          <button class="pin" type="button" data-pin="developer-tools" aria-label="Pin Developer Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
 
-      <div class="tool-card tool-card-soon reg-2" data-tool="font-tools">
         <!-- Convert TTF/OTF to WOFF2, preview every glyph, detect missing characters, subset
-           a font down to the characters you actually use, and generate a ready-to-paste
-           @font-face block. -->
-        <h3>Font Tools</h3>
-        <button class="pin" type="button" data-pin="font-tools" aria-label="Pin Font Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
+        a font down to the characters you actually use, and generate a ready-to-paste
+        @font-face block. -->
+        <li class="q reg-2" data-tool="font-tools">
+          <span class="q-name">Font Tools</span>
+          <button class="pin" type="button" data-pin="font-tools" aria-label="Pin Font Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
 
-      <div class="tool-card tool-card-soon reg-2" data-tool="color-and-design-tools">
         <!-- Convert between HEX/RGB/HSL/OKLCH, check and auto-repair contrast, extract a
-           palette from an image, build tint/shade scales, and preview a palette under
-           different types of color-vision deficiency. -->
-        <h3>Color &amp; Design Tools</h3>
-        <button class="pin" type="button" data-pin="color-and-design-tools" aria-label="Pin Color & Design Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
+        palette from an image, build tint/shade scales, and preview a palette under
+        different types of color-vision deficiency. -->
+        <li class="q reg-2" data-tool="color-and-design-tools">
+          <span class="q-name">Color &amp; Design Tools</span>
+          <button class="pin" type="button" data-pin="color-and-design-tools" aria-label="Pin Color & Design Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
 
-      <div class="tool-card tool-card-soon reg-3" data-tool="archive-and-file-tools">
         <!-- Zip and unzip files entirely in-browser, strip macOS junk files from an archive,
-           find duplicates by hash, generate and verify checksums, and sanitize or bulk-
-           rename a folder of filenames. -->
-        <h3>Archive &amp; File Tools</h3>
-        <button class="pin" type="button" data-pin="archive-and-file-tools" aria-label="Pin Archive & File Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
+        find duplicates by hash, generate and verify checksums, and sanitize or bulk-
+        rename a folder of filenames. -->
+        <li class="q reg-3" data-tool="archive-and-file-tools">
+          <span class="q-name">Archive &amp; File Tools</span>
+          <button class="pin" type="button" data-pin="archive-and-file-tools" aria-label="Pin Archive & File Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
 
-      <div class="tool-card tool-card-soon reg-3" data-tool="geospatial-tools">
         <!-- Convert between GPX, KML, and GeoJSON, extract or remove GPS data from photos,
-           calculate distances, and simplify or merge GPX tracks. -->
-        <h3>Geospatial Tools</h3>
-        <button class="pin" type="button" data-pin="geospatial-tools" aria-label="Pin Geospatial Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
+        calculate distances, and simplify or merge GPX tracks. -->
+        <li class="q reg-3" data-tool="geospatial-tools">
+          <span class="q-name">Geospatial Tools</span>
+          <button class="pin" type="button" data-pin="geospatial-tools" aria-label="Pin Geospatial Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
 
-      <div class="tool-card tool-card-soon reg-1" data-tool="calendar-and-date-tools">
         <!-- View and convert ICS files, merge calendars, shift event times, fix timezone
-           mistakes, and generate a recurring-event ICS from a plain-language rule. -->
-        <h3>Calendar &amp; Date Tools</h3>
-        <button class="pin" type="button" data-pin="calendar-and-date-tools" aria-label="Pin Calendar & Date Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
+        mistakes, and generate a recurring-event ICS from a plain-language rule. -->
+        <li class="q reg-1" data-tool="calendar-and-date-tools">
+          <span class="q-name">Calendar &amp; Date Tools</span>
+          <button class="pin" type="button" data-pin="calendar-and-date-tools" aria-label="Pin Calendar & Date Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
 
-      <div class="tool-card tool-card-soon reg-1" data-tool="email-tools">
         <!-- View EML files and their attachments, inspect headers with a plain-language
-           SPF/DKIM/DMARC explanation, preview HTML emails at different widths, and strip
-           tracking pixels from saved HTML. -->
-        <h3>Email Tools</h3>
-        <button class="pin" type="button" data-pin="email-tools" aria-label="Pin Email Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
+        SPF/DKIM/DMARC explanation, preview HTML emails at different widths, and strip
+        tracking pixels from saved HTML. -->
+        <li class="q reg-1" data-tool="email-tools">
+          <span class="q-name">Email Tools</span>
+          <button class="pin" type="button" data-pin="email-tools" aria-label="Pin Email Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
 
-      <div class="tool-card tool-card-soon reg-0" data-tool="odds-and-ends">
         <!-- The stuff that doesn't fit a category: webpage-to-PDF, an invoice photo to
-           structured CSV, a slider to compare two image versions, a signature photo to a
-           transparent PNG/SVG, and a passport-photo sheet at exact print dimensions. -->
-        <h3>Odds &amp; Ends</h3>
-        <button class="pin" type="button" data-pin="odds-and-ends" aria-label="Pin Odds & Ends to the top"><span class="pin-head" aria-hidden="true"></span></button>
-      </div>
-
-    </div>
+        structured CSV, a slider to compare two image versions, a signature photo to a
+        transparent PNG/SVG, and a passport-photo sheet at exact print dimensions. -->
+        <li class="q reg-0" data-tool="odds-and-ends">
+          <span class="q-name">Odds &amp; Ends</span>
+          <button class="pin" type="button" data-pin="odds-and-ends" aria-label="Pin Odds & Ends to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
+      </ul>
+    </section>
   </main>
 
   <footer>

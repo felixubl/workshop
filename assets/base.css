@@ -398,9 +398,26 @@ button[disabled] {
   border-radius: var(--pp-radius-lg);
   padding: 1.15rem;
 }
+/* The prompt is a slip of paper left on the bench, not a region of the page.
+   Three changes, each off a rule rather than a preference.
+
+   DOTTED, not dashed. The system fixes the three styles: solid is structure,
+   dashed is a boundary the reader may cross, dotted is provisional or optional.
+   A prompt that disappears the moment you press the button is the definition of
+   provisional, and it had been claiming to be a boundary.
+
+   STOCK, not a wash. It sits ON the paper the way a plate on the index does,
+   which is also what lets the halftone stop dead at its edge rather than
+   showing through a grey film.
+
+   And it stops at the measure. Full-width it was a banner the width of the
+   toolbar, which made one sentence look like a section of the page. */
 .card.prompt {
-  border: var(--pp-rule-structure) dashed var(--pp-line);
-  background: var(--w-wash-0);
+  max-width: 72ch;
+  padding: 1rem 1.15rem;
+  border: var(--pp-rule-line) dotted var(--pp-line);
+  background: var(--pp-surface);
+  transform: rotate(var(--w-tilt-card));
 }
 
 /* This is the page's one law 05 claim, and it is the sentence itself rather

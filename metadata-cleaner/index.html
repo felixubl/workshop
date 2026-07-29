@@ -8,6 +8,11 @@
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
+<!-- core.css, which this page skipped while base.css was standing in for it. It
+     is here for the marker: .mk--citron is one of the two ink families and the
+     annotated half of "printed first, then annotated". base.css follows it and
+     wins every tie. -->
+<link rel="stylesheet" href="../assets/preprint/core.css">
 <link rel="stylesheet" href="../assets/preprint/controls.css">
 <link rel="stylesheet" href="../assets/base.css">
 <link rel="stylesheet" href="../assets/site.css">
@@ -107,7 +112,7 @@
         </div>
 
         <p class="legend">
-          <span class="tag is-marked">identifying</span> names a person, a place, or one specific
+          <span class="tag is-marked mk--citron">identifying</span> names a person, a place, or one specific
           camera. <span class="tag">telling</span> narrows it down: model, software, timestamps,
           exposure. Everything else describes the pixels rather than the photographer, and removing
           it buys you nothing.

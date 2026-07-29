@@ -7,7 +7,7 @@
  *   <link rel="stylesheet" href="…/preprint/reading.css">
  *
  * The boundary: this sheet styles what a RENDERER EMITS — the row grid, the
- * article, sidenotes, figures, tables, code, callouts, the marker layer. The
+ * article, sidenotes, figures, tables, code, callouts, the marker menu. The
  * shell around it (the page grid, the contents rail, the top bar, the reading
  * progress) belongs to the surface, because those are built by a template and
  * carry the surface's own page geometry.
@@ -245,13 +245,10 @@
 .c-note { color: var(--pp-faint); }
 .c-str { color: var(--pp-plate-1-text); }
 /* ══ THE MARKER LAYER ══════════════════════════════════════════════════════
-   A marker is always a field behind type and never type itself. Citron as
-   text on eggshell is 1.6:1; as a field behind ink, 14:1. Same colour,
-   opposite outcome — which is why the ink above one never changes. */
-.mk, [data-pp-mark] { color: inherit; padding: .04em 0; }
-.mk--citron, [data-pp-mark='citron'] { background: var(--pp-marker-citron); }
-.mk--pink, [data-pp-mark='pink'] { background: var(--pp-marker-pink); }
-.mk--cyan, [data-pp-mark='cyan'] { background: var(--pp-marker-cyan); }
+   The pen is core's now. What stays here is the part that is genuinely a
+   reading page's: the menu you raise to apply one, and the passage a shared
+   link arrives at. An app annotates its own chrome and has no selection to
+   mark up. */
 
 /* The menu is temporarily on top of the work rather than part of it, which is
    the one thing here that casts. Licence 2: it opens, it does not arrive. */

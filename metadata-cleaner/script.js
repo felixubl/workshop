@@ -2353,7 +2353,8 @@
         noteCell.className = "col-note";
         if (field.risk === HIGH || field.risk === MED) {
           const mark = document.createElement("span");
-          mark.className = "mark" + (field.risk === HIGH ? " is-high" : "");
+          mark.className =
+            "risk" + (field.risk === HIGH ? " is-high mk--citron" : "");
           mark.textContent = field.risk === HIGH ? "identifying" : "telling";
           if (field.note) mark.setAttribute("data-tip", field.note);
           noteCell.appendChild(mark);

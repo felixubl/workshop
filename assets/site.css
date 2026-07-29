@@ -9,12 +9,19 @@
 :root {
   --w-screen-dot: var(--pp-hair);
 
-  /* Category washes. Translucent on purpose — the halftone screen has to stay
-     visible through a card, or the card stops being paper. color-mix means
-     each wash tracks its plate through the mode switch for free. */
-  --w-wash-1: color-mix(in srgb, var(--pp-plate-1) 8%, transparent);
-  --w-wash-2: color-mix(in srgb, var(--pp-plate-2) 7%, transparent);
-  --w-wash-3: color-mix(in srgb, var(--pp-plate-3) 7%, transparent);
+  /* The three category washes are gone, and they should not come back. They
+     were plates at 7-8%, held behind fifteen queued cards, and the invariant is
+     that a plate is pressed at full strength and never translucent — color-mix
+     to transparent was exactly the thing the rule names, with a token in front
+     of it. What replaced them says the same thing correctly: one 7px square of
+     the plate itself, at full strength, in front of each queued name.
+
+     They also made the single largest field of colour on the index out of the
+     information that mattered least, which is the other half of why the index
+     needed redoing at all. See the entry in DECISIONS.md.
+
+     --w-wash-0 stays. It is ink at 4%, not a plate, and it is the ground of a
+     note rather than a category: .card.prompt and .dropzone both stand on it. */
   --w-wash-0: color-mix(in srgb, var(--pp-ink) 4%, transparent);
 
   /* The sticker chips (--w-chip-live / -soon / -ink) lived here until the
@@ -71,14 +78,11 @@
   --w-artwork-rule: rgba(23, 23, 22, .27);
 }
 
-/* Two adjustments, both about this page's own devices rather than the palette:
-   the halftone screen needs more presence on a dark ground to survive at all,
-   and the category washes need roughly double the strength to register. */
+/* Both about this page's own devices rather than the palette: the halftone
+   screen needs more presence on a dark ground to survive at all, and a note's
+   ground needs roughly double the strength to register. */
 [data-mode='dark'] {
   --w-screen-dot: rgba(239, 238, 232, .16);
-  --w-wash-1: color-mix(in srgb, var(--pp-plate-1) 14%, transparent);
-  --w-wash-2: color-mix(in srgb, var(--pp-plate-2) 14%, transparent);
-  --w-wash-3: color-mix(in srgb, var(--pp-plate-3) 14%, transparent);
   --w-wash-0: color-mix(in srgb, var(--pp-ink) 7%, transparent);
 }
 
