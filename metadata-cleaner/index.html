@@ -7,6 +7,7 @@
 <meta name="description" content="See every piece of metadata hiding in a JPEG, PNG or WebP — GPS coordinates, camera serial numbers, timestamps, editing history — then choose field by field what to keep and what to strip. Runs entirely in your browser.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
+<script src="../assets/preprint/js/pullcord.js" defer></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
 <!-- core.css, which this page skipped while base.css was standing in for it. It
      is here for the marker: .mk--citron is one of the two ink families and the
@@ -20,6 +21,7 @@
 </head>
 <body>
 <div class="wrap">
+  <button class="pullcord" type="button" data-pullcord aria-label="Pull the string to switch colour mode"><span class="pullcord__cord" aria-hidden="true"></span><span class="pullcord__bead" aria-hidden="true"></span></button>
   <header>
     <div>
       <a class="back-link" href="../">
@@ -35,7 +37,6 @@
         <button class="share-btn pin-btn" type="button" data-pin="metadata-cleaner" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
       </div>
     </div>
-    <button class="modeswitch" type="button" data-mode-toggle aria-label="Switch colour mode"><span class="modeswitch__box" aria-hidden="true"><span class="modeswitch__fill"></span></span><span class="sr-only">Switch between light and dark mode</span></button>
   </header>
 
   <div class="spine"></div>

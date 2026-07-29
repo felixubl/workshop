@@ -55,14 +55,29 @@
 
   /* Flipping the attribute is the whole interaction. Anything that moves is
      moved by CSS transitioning its own offset, so there is nothing to drive
-     from here. Delegated, so a toggle built after load still works. */
-  document.addEventListener('click', function (e) {
-    if (!e.target.closest || !e.target.closest('[data-mode-toggle]')) return;
+     from here. */
+  function toggle() {
     var next = other();
     root.setAttribute('data-mode', next);
     try { localStorage.setItem('preprint-mode', next); } catch (err) {}
     label();
+    return next;
+  }
+
+  /* Delegated, so a toggle built after load still works. */
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest || !e.target.closest('[data-mode-toggle]')) return;
+    toggle();
   });
+
+  /* The one seam in this file, and it exists for exactly one caller: a
+     control that flips the mode at a moment of its own choosing rather than
+     at the click. `[data-mode-toggle]` cannot express "not yet" — the
+     delegated handler fires on the way down — so the pull cord, which flips
+     on its mechanism's release 130ms in, drives it from here instead.
+     `other` and `label` come with it so that caller can name itself without
+     a second copy of the rule about naming the destination. */
+  window.PreprintMode = { toggle: toggle, other: other, relabel: label };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', label);

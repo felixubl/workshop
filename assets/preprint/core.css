@@ -244,6 +244,126 @@ button { background: transparent; border: 0; font: inherit; color: inherit; }
   .modeswitch__fill { transition: none; }
 }
 
+/* ── the pull cord ──────────────────────────────────────────────────────────
+   The second mode control, and a different answer to the same question. The
+   swatch above SHOWS the mode you are in and says nothing about how it got
+   there. The cord shows nothing and is entirely about the getting there: a
+   1px line hanging off the top edge with a bead on the end, pulled once, and
+   the light in the room changes. It is the switch you already know how to
+   use, and the only control in the system whose whole meaning is the gesture.
+
+   Both are shipped because they suit different surfaces. A console with a
+   rail of controls wants the swatch, which sits in a row and stays quiet. A
+   page whose top edge is mostly empty can afford a cord, which does not sit
+   in a row at all — it hangs off the edge and belongs to the room rather
+   than to the toolbar. A surface picks one. Two mode controls on one page
+   is drift, not choice.
+
+   The markup, and all of it:
+
+     <button class="pullcord" type="button" data-pullcord>
+       <span class="pullcord__cord" aria-hidden="true"></span>
+       <span class="pullcord__bead" aria-hidden="true"></span>
+     </button>
+
+   `js/pullcord.js` owns the click, the phases and the accessible name; it
+   calls `js/mode.js` to do the actual flip, so there is still exactly one
+   file that knows what dark mode is. Without the script the button is inert
+   — deliberately, because a cord that flips with no pull is a worse control
+   than the swatch and there is no reason to ship it as a fallback. */
+
+/* The button is the hit area and nothing else: 30x132, which is a comfortable
+   thumb around a 1px line and a 7px bead. z-index because a header's own
+   content is laid out after it and would otherwise take the clicks — this is
+   the one number here that is load-bearing rather than aesthetic.
+
+   `position: absolute`, so the surface must give it a positioned ancestor.
+   That ancestor is the thing the cord hangs FROM, and it should be the
+   element whose top edge is the top of the page. Hang it off a header with
+   padding above it and the cord starts in mid-air. */
+.pullcord {
+  --pp-cord-h: 72px;
+  position: absolute; z-index: 5;
+  top: 0; right: var(--pp-cord-inset, 48px);
+  width: 30px; height: 132px;
+  padding: 0; border: 0; background: transparent;
+  cursor: var(--pp-cursor-point);
+}
+
+/* Cord and bead are two elements reading ONE length. The cord spends it on
+   height and the bead on offset, so there is no arrangement of dropped
+   frames or mismatched easing in which the bead comes off the end of the
+   string. That was the failure worth designing against: everything else here
+   is taste, and a detached bead is a bug the eye catches instantly.
+
+   The cord never moves, only grows. It is attached to the ceiling, and a
+   `top` that animated would say it was not. */
+.pullcord__cord {
+  position: absolute; top: 0; left: 14px;
+  width: 1px; height: var(--pp-cord-h);
+  background: var(--pp-ink);
+}
+
+/* A capsule, not a circle. A knurled pull is longer than it is wide and that
+   is most of what makes it read as something to grip rather than as a dot
+   somebody left on the page. The radius is the cut scale's own 4px, which at
+   this width is simply half of it — the shape is a capsule because of its
+   proportions, so law 01 goes unspent.
+
+   The -1px overlap is there so no seam can open between the line and the
+   bead on a fractional device pixel. */
+.pullcord__bead {
+  position: absolute; left: 11px; top: var(--pp-cord-h); margin-top: -1px;
+  width: 7px; height: 11px;
+  border-radius: var(--pp-radius-lg);
+  background: var(--pp-ink);
+}
+
+/* Four phases, and the timing on each governs the move INTO it. Total travel
+   is 13px down and 1px past rest on the way back. That is small on purpose:
+   the pull was 40px at one point and the page read as hectic, because a cord
+   with real slack in it is a cord you are yanking rather than clicking. What
+   sells the mechanism is the overshoot past rest, not the distance.
+
+   The script drives `data-phase` on a fixed clock and flips the mode on the
+   way into phase 2, which is the release — the moment the detent lets go is
+   the moment the light changes, and putting the flip at the click instead
+   makes the cord look like it is reacting to the room rather than the room
+   to it.
+
+   rest and settle are the same length, so 3 → 0 is a reset with nothing to
+   animate. It exists so the next pull starts from phase 0's easing. */
+.pullcord__cord { transition: height 220ms cubic-bezier(.33, 0, .5, 1); }
+.pullcord__bead { transition: top 220ms cubic-bezier(.33, 0, .5, 1); }
+
+.pullcord[data-phase='1'] { --pp-cord-h: 85px; }
+.pullcord[data-phase='1'] .pullcord__cord { transition-duration: 130ms; transition-timing-function: cubic-bezier(.3, .6, .35, 1); }
+.pullcord[data-phase='1'] .pullcord__bead { transition-duration: 130ms; transition-timing-function: cubic-bezier(.3, .6, .35, 1); }
+
+.pullcord[data-phase='2'] { --pp-cord-h: 71px; }
+.pullcord[data-phase='2'] .pullcord__cord { transition-duration: 200ms; transition-timing-function: cubic-bezier(.25, .8, .3, 1); }
+.pullcord[data-phase='2'] .pullcord__bead { transition-duration: 200ms; transition-timing-function: cubic-bezier(.25, .8, .3, 1); }
+
+.pullcord[data-phase='3'] { --pp-cord-h: 72px; }
+.pullcord[data-phase='3'] .pullcord__cord { transition-duration: 160ms; transition-timing-function: cubic-bezier(.4, 0, .5, 1); }
+.pullcord[data-phase='3'] .pullcord__bead { transition-duration: 160ms; transition-timing-function: cubic-bezier(.4, 0, .5, 1); }
+
+/* The cord does not move and the mode still flips. The script skips the
+   phases entirely under this query, so the length never changes and there is
+   nothing for a transition to catch. */
+@media (prefers-reduced-motion: reduce) {
+  .pullcord__cord, .pullcord__bead { transition: none; }
+}
+
+/* The room dimming, rather than the page reloading. Only on a surface that
+   carries the cord: the flip is the cord's payoff and it wants watching, and
+   a surface that flips from a swatch in a rail has not asked for half a
+   second of its colours moving. `--pp-dur-mode` is 0 under reduced motion,
+   which turns this back into the instant swap without a second rule. */
+body:has(.pullcord) {
+  transition: background-color var(--pp-dur-mode) ease, color var(--pp-dur-mode) ease;
+}
+
 /* ── the scrawl ─────────────────────────────────────────────────────────────
    A hand annotation that points at a control and says what it is. The arrow is
    the surface's SVG, because what it points at and from where is a drawing

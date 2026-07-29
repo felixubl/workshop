@@ -307,25 +307,33 @@ header {
   margin: 0 0 1rem;
 }
 
-/* The mode switch is core's now, and this file draws none of it.
+/* The mode control is core's now, and this file draws none of it. It used to be
+   here in full, with a long argument for why the workshop's corner had to match
+   fubl.org's. That argument was right and it has been won somewhere better: the
+   system took the part, because it had been written three times across three
+   surfaces and a part used three times is not a breach, it is a part.
 
-   It used to be here in full, with a long argument for why the workshop's
-   corner had to match fubl.org's. That argument was right and it has been won
-   somewhere better: the system took the part, because it had been written three
-   times across three surfaces and a part used three times is not a breach, it
-   is a part. Deleting the local copy is the whole point of that move.
+   Of core's two mode controls the workshop takes the CORD, not the swatch. The
+   swatch is a control in a row and it wants neighbours; this site's top edge is
+   a back link on the left and nothing at all on the right, which is the one
+   place a cord can hang without competing with anything. fubl.org keeps the
+   swatch, and core.css says why the system ships both. A page shows one.
 
-   Two things the workshop keeps by saying nothing. The markup omits
-   `.modeswitch__label`, so this site's corner stays the wordless swatch it was
-   deliberately reduced to — the word is opt-in markup in core, not a default to
-   override, and this is one of the few surfaces that draws its own [data-tip]
-   and can afford to leave it off. And the button is now a 44px hit box around
-   the 26x34 drawing, which is core fixing a target that was under the floor
-   here too, with nothing visible moving.
+   All this file supplies is the wall it hangs from. The cord is absolutely
+   positioned at `top: 0`, so its ancestor has to be the element whose top edge
+   is the top of the page — the layout shell on a tool page, the masthead on the
+   index, both of which carry the page's own gutter and centre on its measure.
+   Hang it off <header> instead and it starts below the shell's padding, in
+   mid-air.
 
-   What the markup must carry is the `.modeswitch__box` wrapper: the overflow
-   that clips the sliding block lives on it, and a fill placed straight in the
-   button renders as an empty rectangle. */
+   The inset lands the 1px line exactly on the content column's right edge,
+   which is where the swatch used to sit: the hit box reaches 16px past the cord
+   on that side, so the gutter has to give that back. */
+.wrap,
+.masthead {
+  position: relative;
+  --pp-cord-inset: calc(var(--pp-gutter) - 16px);
+}
 
 /* Buttons. Border weight IS the hierarchy — 2px is primary, 1px is secondary.
    Hover changes a border colour or a tint, never a lift and never a shadow.
