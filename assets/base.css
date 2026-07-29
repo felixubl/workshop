@@ -257,56 +257,25 @@ header {
   margin: 0 0 1rem;
 }
 
-/* The mode control, and it is fubl.org's exactly: a 26×34 rectangle three
-   quarters full of ink, which slides to the other end when the mode flips. Not
-   an icon, not a word — a swatch of the two grounds, showing the one it would
-   give you.
+/* The mode switch is core's now, and this file draws none of it.
 
-   This replaces a bullet-and-word key that argued its case at some length in
-   this file. The argument was sound on its own terms and wrong about the
-   surface: PREPRINT is one system across fubl.org and the workshop, the mode
-   control is the single object that appears in the corner of every page in it,
-   and two different corners is how a family stops looking related. The word
-   also had a job that turned out not to exist — it captioned a picture the
-   reader is standing inside, since the mode IS the page.
+   It used to be here in full, with a long argument for why the workshop's
+   corner had to match fubl.org's. That argument was right and it has been won
+   somewhere better: the system took the part, because it had been written three
+   times across three surfaces and a part used three times is not a breach, it
+   is a part. Deleting the local copy is the whole point of that move.
 
-   Sized here rather than by the page for the same reason: the corner of a tool
-   page has to be the corner of the index has to be the corner of fubl.org. */
-.modeswitch {
-  display: flex;
-  flex-direction: column;
-  width: 26px;
-  height: 34px;
-  flex: none;
-  padding: 0;
-  background: var(--pp-paper);
-  border: var(--pp-rule-line) solid var(--pp-line);
-  /* No radius, and that is deliberate: this is not a control on the cut scale,
-     it is a swatch of the two grounds. A corner would make it a button drawn
-     around an idea instead of the idea itself. */
-  overflow: hidden;
-}
-.modeswitch:hover {
-  border-color: var(--pp-edge);
-}
-/* An ordinary flex child moved by translate, not an absolutely positioned one.
-   Inside a button the anonymous child box is not a containing block, so an
-   absolute child silently lands on its static position. Moving a block that is
-   75% tall by a third of its OWN height slides it exactly the leftover 25%. */
-.modeswitch__fill {
-  height: 75%;
-  flex: none;
-  background: var(--pp-ink);
-  transition: translate var(--pp-dur-state) var(--pp-ease-out);
-}
-[data-mode='dark'] .modeswitch__fill {
-  translate: 0 33.3333%;
-}
-@media (prefers-reduced-motion: reduce) {
-  .modeswitch__fill {
-    transition: none;
-  }
-}
+   Two things the workshop keeps by saying nothing. The markup omits
+   `.modeswitch__label`, so this site's corner stays the wordless swatch it was
+   deliberately reduced to — the word is opt-in markup in core, not a default to
+   override, and this is one of the few surfaces that draws its own [data-tip]
+   and can afford to leave it off. And the button is now a 44px hit box around
+   the 26x34 drawing, which is core fixing a target that was under the floor
+   here too, with nothing visible moving.
+
+   What the markup must carry is the `.modeswitch__box` wrapper: the overflow
+   that clips the sliding block lives on it, and a fill placed straight in the
+   button renders as an empty rectangle. */
 
 /* Buttons. Border weight IS the hierarchy — 2px is primary, 1px is secondary.
    Hover changes a border colour or a tint, never a lift and never a shadow.
