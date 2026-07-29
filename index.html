@@ -330,6 +330,22 @@
      whole of the hand-set reading — nothing is scattered and nothing is
      random, the grid has simply stopped insisting that four different things
      are the same size. */
+  /* The register, and it is one vocabulary for both sections. A queue row
+     prints it as the 7px square in front of its name; a plate prints it as the
+     ink its cast is struck in. Same four values, same meaning, two sizes —
+     which is the only reason a reader can look at a pink cast and a pink square
+     and know they are the same claim.
+
+     Plate 2 is media and what you look at, plate 1 is documents and data,
+     plate 3 is developer and file work, and the line is for the things that
+     belong to no group. Two of the four built tools land on plate 2 because
+     two of them really are image tools, and giving one of them another ink to
+     make the row look varied would be the mark lying about what it means. */
+  .reg-1 { --w-card-ink: var(--pp-plate-1); }
+  .reg-2 { --w-card-ink: var(--pp-plate-2); }
+  .reg-3 { --w-card-ink: var(--pp-plate-3); }
+  .reg-0 { --w-card-ink: var(--pp-line); }
+
   .plates {
     display: grid;
     gap: var(--pp-space-4);
@@ -371,16 +387,24 @@
 
      This is a declared token and not a law 04 breach — four live tools all
      carry it, and "the second time a violation appears, it stops being one".
-     It means built and open. It stays plate 2 for all four rather than taking
-     each plate's own register, which was the tempting change and the wrong
-     one: the cast declares a STATE, and a cast that also carried the category
-     would be one mark saying two things, neither of them clearly. */
+
+     It takes each plate's own register rather than plate 2 for all four. The
+     old comment here argued the opposite: that the cast declares the STATE
+     "built and open", and a cast also carrying the category would be one mark
+     saying two things. That argument came from the nineteen-card grid, where a
+     built tool and a queued one stood side by side and the cast was the only
+     thing telling them apart. It does not survive the bench and the queue —
+     being on the bench at all is now what says built, and no queued thing has a
+     plate to cast. The state is carried by the section, so the ink is free to
+     carry the category, which is the same register the queue rows already print
+     in front of their names. One vocabulary across both sections rather than
+     two. */
   .plate-live {
-    box-shadow: 5px 5px 0 var(--pp-plate-2);
+    box-shadow: 5px 5px 0 var(--w-card-ink);
     transition: box-shadow var(--pp-dur-state) var(--pp-ease-out);
   }
   .plate-live:hover {
-    box-shadow: 8px 8px 0 var(--pp-plate-2);
+    box-shadow: 8px 8px 0 var(--w-card-ink);
   }
   /* Four angles off one declared token, so "a third of the sticker tilt" stays
      literally true if --w-tilt ever moves. Written out as four multipliers
@@ -481,11 +505,6 @@
   /* No pointer change and no hover state on the row itself. These do not open,
      and a row that lit up under the cursor would be promising that they do. */
 
-  .reg-1 { --w-card-ink: var(--pp-plate-1); }
-  .reg-2 { --w-card-ink: var(--pp-plate-2); }
-  .reg-3 { --w-card-ink: var(--pp-plate-3); }
-  .reg-0 { --w-card-ink: var(--pp-line); }
-
   /* Pinning is nailing it to the board — the same 45° square the wordmark wears
      at its corners, hollow until you drive it in. It reads as a mark rather
      than a control at rest, which is what keeps a page of nineteen quiet. */
@@ -506,15 +525,12 @@
     grid-row: 1;
     margin: -0.25rem -0.25rem 0 0;
   }
-  .pin:hover .pin-head {
-    border-color: var(--pp-edge);
-  }
+  /* The blow. The head's own half of this — losing the cast it stands on — is
+     in base.css with the other three states, because the nail is one object and
+     splitting its states across two files is how they drift apart. What is left
+     here is only the move, which is the button's and not the head's. */
   .pin:active {
     transform: var(--w-press);
-  }
-  .pin.is-on .pin-head {
-    background: var(--pp-edge);
-    border-color: var(--pp-edge);
   }
   /* A pinned tool comes to the front of its own section. Order rather than a
      move in the DOM, so the angle a plate was dealt stays with it. */
@@ -551,7 +567,14 @@
     */
     z-index: 3;
     font-size: 0.95rem;
-    color: var(--pp-muted);
+    /* The annotated layer, not the printed one. The system draws a scrawl in
+       its own text ink rather than in a quiet grey, because "printed first,
+       then annotated" only reads if the second pass is visibly a second pass.
+       At --pp-muted the sentence and the arrow were two greys sitting near
+       body copy, and the arrow was separately overridden to plate 3, so one
+       annotation was printed in two inks. One ink now, and it is the same
+       register the plate below it casts in. */
+    color: var(--pp-plate-2-text);
     transform: rotate(var(--w-tilt));
   }
   /* Only the ARROW crosses onto the plate, and the words stay off it. Core
@@ -560,7 +583,6 @@
      without dragging the sentence down onto the border with it. That split is
      the reason this needs no second element and no second position. */
   .scrawl svg {
-    color: var(--pp-plate-3);
     translate: 0 1.15rem;
   }
   @media (max-width: 700px) {
@@ -654,14 +676,27 @@
 
       <div class="plates">
 
-        <div data-tool="draw-svg">
+        <div class="reg-2" data-tool="draw-svg">
           <!-- Points at this plate's pin. aria-hidden and not a label: the
                control it annotates already carries its own accessible name, and
                a reader on a screen reader gets that name rather than a
                description of an arrow they cannot see. -->
           <span class="scrawl scrawl--beside" aria-hidden="true">
             <span class="scrawl__t">pin one to keep it on top</span>
-            <svg width="34" height="28" viewBox="0 0 34 28" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M2 2c13 2 22 10 24 21M26 23l1-8M26 23l-8 2"></path></svg>
+            <!-- Round caps and a 1.6 stroke, which are the system's own scrawl
+                 arrow (Preprint Index.dc.html) and not the icon set's. The angle
+                 law governs icons — 16 grid, 1.35px, square caps, 45° only — and
+                 a hand annotation is the one mark it does not govern. Drawn with
+                 square caps it read as a glyph somebody had drawn carefully,
+                 which is the opposite of the point.
+
+                 It ends heading almost straight down. The old curve flattened
+                 out and ran the last third of its length ALONG the plate's top
+                 border before stopping 8px to the right of the pin, so it
+                 pointed past its own target and collided with the edge it was
+                 crossing. Coming down steeply, it crosses the border at a
+                 near-right angle and stops just short of the nail. -->
+            <svg width="34" height="30" viewBox="0 0 34 30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 2c12 2 16 10 18.5 23M20.5 25 16 18.5M20.5 25 25.5 19"></path></svg>
           </span>
           <div class="plate plate-live">
             <a class="plate-open" href="draw-svg/"><h3>Pixel Art SVG Drawer</h3></a>
@@ -670,7 +705,7 @@
           </div>
         </div>
 
-        <div data-tool="random-numbers">
+        <div class="reg-3" data-tool="random-numbers">
           <div class="plate plate-live">
             <a class="plate-open" href="random-numbers/"><h3>Random Number Generator</h3></a>
             <button class="pin" type="button" data-pin="random-numbers" aria-label="Pin Random Number Generator to the top"><span class="pin-head" aria-hidden="true"></span></button>
@@ -678,7 +713,7 @@
           </div>
         </div>
 
-        <div data-tool="metadata-cleaner">
+        <div class="reg-2" data-tool="metadata-cleaner">
           <div class="plate plate-live">
             <a class="plate-open" href="metadata-cleaner/"><h3>Image Metadata Cleaner</h3></a>
             <button class="pin" type="button" data-pin="metadata-cleaner" aria-label="Pin Image Metadata Cleaner to the top"><span class="pin-head" aria-hidden="true"></span></button>
@@ -686,7 +721,7 @@
           </div>
         </div>
 
-        <div data-tool="pdf-toolkit">
+        <div class="reg-1" data-tool="pdf-toolkit">
           <div class="plate plate-live">
             <a class="plate-open" href="pdf-toolkit/"><h3>PDF Toolkit</h3></a>
             <button class="pin" type="button" data-pin="pdf-toolkit" aria-label="Pin PDF Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
