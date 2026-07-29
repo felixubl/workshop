@@ -97,11 +97,21 @@ input[type='number'] {
   padding: clamp(2rem, 5vw, 3rem) var(--pp-gutter) clamp(2.5rem, 6vw, 4rem);
 }
 
-/* The spine: a break that resets the reader. 6px, dashed, once per page —
-   nothing else on a page is 6px. */
+/* The spine: a break that resets the reader. 6px, once per page — nothing else
+   on a page is 6px.
+
+   Solid ink, which is the system's own spine (`.head--spine` in surfaces/app.css
+   is `6px solid var(--pp-edge)`, and the rules card names it "spine · ink"). It
+   was 6px dashed plate-2, which the workshop's reference design does specify —
+   but the system fixes what the three styles MEAN: solid is structure, dashed is
+   a boundary the reader may cross, dotted is provisional. The end of the
+   masthead is structure. It is the full stop between movements, not a line you
+   step over, so it was the wrong style by the system's own rule and reads as
+   hazard tape at this weight. Going back to solid ink is a return to the
+   system rather than a new deviation. */
 .spine {
   height: 0;
-  border-top: var(--pp-rule-spine) dashed var(--pp-plate-2);
+  border-top: var(--pp-rule-spine) solid var(--pp-edge);
 }
 
 header {
@@ -196,11 +206,32 @@ header {
   color: var(--pp-ink);
 }
 
-/* The pin head: a square turned 45°, hollow until the tool is pinned and solid
-   ink after. It is the same nail the index's wordmark wears at its corners,
-   which is the whole idea — pinning a tool is nailing it to the board. Shared
-   because the same mark appears on a tool page beside the title and on every
-   card of the index, and those two have to be the same object. */
+/* The pin head: a square turned 45°. It is the same nail the index's wordmark
+   wears at its corners, which is the whole idea — pinning a tool is nailing it
+   to the board. Shared because the same mark appears on a tool page beside the
+   title and on every card of the index, and those two have to be the same
+   object.
+
+   The four states are one physical sequence, and reading them in order is the
+   only way the shape explains itself:
+
+     rest    hollow outline in --pp-line. An empty hole. Nothing is driven.
+     hover   the outline goes to full ink. The hole is a target.
+     press   the head moves 1px down and right and its cast collapses to
+             nothing. That is the blow, and it is the same --w-press every
+             other pressable thing on this site takes.
+     pinned  filled ink, standing on a 1.5px hard cast. A nail head is a solid
+             object sitting proud of the board, and the cast is the only thing
+             that can say so.
+
+   The cast is the system's own device, not a new one: invariants.md fixes a
+   cast as a hard offset or nothing, and the drawn pointer already does exactly
+   this at 1.1px to make a clickable surface read as raised. It takes
+   --pp-shadow rather than an ink, because --pp-shadow is the one colour the
+   system tunes per mode for this job — ink at 12% on paper, black at 60% on
+   graphite. An --pp-edge cast would be a black block touching a black head in
+   light mode and a white one in dark, which is a fatter diamond rather than a
+   raised one. */
 .pin-head {
   width: 8px;
   height: 8px;
@@ -208,19 +239,38 @@ header {
   background: transparent;
   border: var(--pp-rule-line) solid var(--pp-line);
   transform: rotate(45deg);
-  transition: background var(--pp-dur-fast) var(--pp-ease-out);
+  transition:
+    background var(--pp-dur-fast) var(--pp-ease-out),
+    box-shadow var(--pp-dur-fast) var(--pp-ease-out);
 }
 
-.pin-btn:hover .pin-head {
+.pin-btn:hover .pin-head,
+.pin:hover .pin-head {
   border-color: var(--pp-edge);
 }
 .pin-btn.is-on {
   border-color: var(--pp-edge);
   color: var(--pp-ink);
 }
-.pin-btn.is-on .pin-head {
+.pin-btn.is-on .pin-head,
+.pin.is-on .pin-head {
   background: var(--pp-edge);
   border-color: var(--pp-edge);
+  box-shadow: 1.5px 1.5px 0 var(--pp-shadow);
+}
+/* Driven flush for as long as the blow lasts. The button carries the 1px move
+   (see --w-press at each call site), so all the head has to do is lose the
+   cast it was standing on.
+
+   It has to carry `.is-on` to work at all, and that is not belt and braces.
+   The only nail with a cast to lose is one already driven, and `.pin.is-on
+   .pin-head` outranks a plain `.pin:active .pin-head` on specificity — later
+   source order does not save it. Written without `.is-on` this rule matched
+   only the nails that had no cast in the first place, so the one press where
+   the head should visibly go flush was the one press that did nothing. */
+.pin-btn.is-on:active .pin-head,
+.pin.is-on:active .pin-head {
+  box-shadow: none;
 }
 
 .toolbar {
