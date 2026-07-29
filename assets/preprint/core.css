@@ -260,10 +260,19 @@ button { background: transparent; border: 0; font: inherit; color: inherit; }
    is drift, not choice.
 
    It takes two gestures. Click it and it plays a short scripted pull. Or take
-   hold of the bead and PULL: the cord follows the hand one pixel per pixel and
-   the mode changes when the detent trips at 42px, not when you touch it. Short
-   of that you can let go and nothing happens, which is the reason a threshold
-   is worth having — the gesture stays abandonable until it lands.
+   hold of the bead and PULL: the cord follows the hand, and the mode changes
+   when the detent trips at 42px of pull, not when you touch it. Short of that
+   you can let go and nothing happens, which is the reason a threshold is worth
+   having: the gesture stays abandonable until it lands.
+
+   The pull is not confined to the vertical. The cord hangs from a fixed point
+   and follows the hand in whatever direction the hand goes, swinging as it
+   lengthens, because that is what a cord on a ceiling does and a control that
+   only answered straight down would be a slider drawn as a string. It resists
+   as it goes, harder the further out you are, and it comes home on release.
+   Two numbers say all of that: `--pp-cord-h`, the length, and `--pp-cord-a`,
+   the angle off vertical. Both are the script's to write, and everything below
+   is those two numbers being drawn.
 
    The markup, and all of it:
 
@@ -290,15 +299,25 @@ button { background: transparent; border: 0; font: inherit; color: inherit; }
 
    The box is where a pull STARTS, not where it happens: the gesture is 42px
    and the script takes a pointer capture, so the hand is expected to leave
-   here and the cord to follow it out.
+   here and the cord to follow it out, downward and to either side.
+
+   How far to either side is not a number in this file, because it depends on
+   how much page there is next to wherever the surface hung the cord. The script
+   measures that at the moment of the press and never lets the bead reach the
+   edge, which is also what keeps a hard sideways pull from growing the document
+   and flashing a horizontal scrollbar for the length of the gesture.
 
    `touch-action: none` is what makes the pull possible on a phone at all. The
-   gesture is a vertical drag and so is a scroll, and without this the browser
-   claims it, cancels the pointer stream and the cord dies in the reader's
-   hand. `user-select: none` for the same reason on a desktop, where the drag
-   would otherwise select the header's text behind it. */
+   gesture starts as a drag downward and so does a scroll, and without this the
+   browser claims it, cancels the pointer stream and the cord dies in the
+   reader's hand. It has to be `none` rather than `pan-x`, because the gesture
+   goes sideways too and a browser given either axis takes the whole stream.
+   `user-select: none` for the same reason on a desktop, where the drag would
+   otherwise select the header's text behind it. */
 .pullcord {
   --pp-cord-h: 72px;
+  --pp-cord-a: 0deg;
+  --pp-cord-swing: 0deg;
   position: absolute; z-index: 5;
   top: 0; right: var(--pp-cord-inset, 48px);
   width: 30px; height: 132px;
@@ -308,28 +327,34 @@ button { background: transparent; border: 0; font: inherit; color: inherit; }
   -webkit-user-select: none; user-select: none;
 }
 
+
 /* Held. The transitions come off so the cord tracks the hand exactly: a
    transition here is not smoothing, it is lag between the bead and the finger
    holding it, and 130ms of it makes the string feel like elastic.
 
-   The script writes `--pp-cord-h` inline while this is on, which beats the
-   phase rules below without either knowing about the other. */
+   The script writes `--pp-cord-h` and `--pp-cord-a` inline while this is on,
+   which beats the phase rules below without either knowing about the other. */
 .pullcord[data-dragging] { cursor: var(--pp-cursor-grab); }
 .pullcord[data-dragging] .pullcord__cord,
 .pullcord[data-dragging] .pullcord__bead { transition: none; }
 
-/* Cord and bead are two elements reading ONE length. The cord spends it on
-   height and the bead on offset, so there is no arrangement of dropped
-   frames or mismatched easing in which the bead comes off the end of the
-   string. That was the failure worth designing against: everything else here
-   is taste, and a detached bead is a bug the eye catches instantly.
+/* Cord and bead are two elements reading ONE length and ONE angle. The cord
+   spends the length on height and the bead on a translate along its own
+   rotated axis, so there is no arrangement of dropped frames or mismatched
+   easing in which the bead comes off the end of the string. That was the
+   failure worth designing against: everything else here is taste, and a
+   detached bead is a bug the eye catches instantly.
 
-   The cord never moves, only grows. It is attached to the ceiling, and a
-   `top` that animated would say it was not. */
+   Both rotate about the SAME point, (14.5px, 0), which is the middle of the
+   1px line at the very top of the box. That point is the screw in the ceiling.
+   The cord grows and swings, and its top never moves, because a `top` that
+   animated would say it was hanging from nothing. */
 .pullcord__cord {
   position: absolute; top: 0; left: 14px;
   width: 1px; height: var(--pp-cord-h);
   background: var(--pp-ink);
+  transform-origin: 50% 0;
+  transform: rotate(var(--pp-cord-a));
 }
 
 /* A capsule, not a circle. A knurled pull is longer than it is wide and that
@@ -338,13 +363,20 @@ button { background: transparent; border: 0; font: inherit; color: inherit; }
    this width is simply half of it — the shape is a capsule because of its
    proportions, so law 01 goes unspent.
 
-   The -1px overlap is there so no seam can open between the line and the
-   bead on a fractional device pixel. */
+   It sits at `top: 0` and is carried down the cord by the translate, not by an
+   offset, so one rotation about the shared origin turns the capsule to lie
+   along the string AND puts it at the end of it. Offsetting first and rotating
+   after would need the angle twice and get it wrong once.
+
+   The -1px on the translate is the seam: it is there so no gap can open
+   between the line and the bead on a fractional device pixel. */
 .pullcord__bead {
-  position: absolute; left: 11px; top: var(--pp-cord-h); margin-top: -1px;
+  position: absolute; left: 11px; top: 0;
   width: 7px; height: 11px;
   border-radius: var(--pp-radius-lg);
   background: var(--pp-ink);
+  transform-origin: 50% 0;
+  transform: rotate(var(--pp-cord-a)) translateY(calc(var(--pp-cord-h) - 1px));
 }
 
 /* Four phases, and the timing on each governs the move INTO it. Total travel
@@ -360,19 +392,35 @@ button { background: transparent; border: 0; font: inherit; color: inherit; }
    to it.
 
    rest and settle are the same length, so 3 → 0 is a reset with nothing to
-   animate. It exists so the next pull starts from phase 0's easing. */
-.pullcord__cord { transition: height 220ms cubic-bezier(.33, 0, .5, 1); }
-.pullcord__bead { transition: top 220ms cubic-bezier(.33, 0, .5, 1); }
+   animate. It exists so the next pull starts from phase 0's easing.
+
+   A dragged pull comes home through the same two beats, and this is where the
+   swing comes back with it. `--pp-cord-swing` is written inline at the moment
+   of release and is a small FRACTION of the angle the hand let go at, negated:
+   phase 2 carries the cord a little past vertical the other way, phase 3 brings
+   it to rest. Two beats is a pendulum, and a pendulum is all the eye needs to
+   read weight on the end of a string. Three would be a physics engine and a
+   second timing language to keep in step with the click's.
+
+   It is one variable rather than a spring per axis because the recoil and the
+   counter-swing are the same event: the cord passing rest on its way to
+   stopping. Its rest value is declared above with the other two rather than
+   left to a `var()` fallback, so all three numbers the cord runs on are visible
+   in one place and none of them is a handshake you have to read the script to
+   find. A click never writes it, so phase 2 there is the pure recoil it always
+   was. */
+.pullcord__cord { transition: height 220ms cubic-bezier(.33, 0, .5, 1), transform 220ms cubic-bezier(.33, 0, .5, 1); }
+.pullcord__bead { transition: transform 220ms cubic-bezier(.33, 0, .5, 1); }
 
 .pullcord[data-phase='1'] { --pp-cord-h: 85px; }
 .pullcord[data-phase='1'] .pullcord__cord { transition-duration: 130ms; transition-timing-function: cubic-bezier(.3, .6, .35, 1); }
 .pullcord[data-phase='1'] .pullcord__bead { transition-duration: 130ms; transition-timing-function: cubic-bezier(.3, .6, .35, 1); }
 
-.pullcord[data-phase='2'] { --pp-cord-h: 71px; }
+.pullcord[data-phase='2'] { --pp-cord-h: 71px; --pp-cord-a: var(--pp-cord-swing); }
 .pullcord[data-phase='2'] .pullcord__cord { transition-duration: 200ms; transition-timing-function: cubic-bezier(.25, .8, .3, 1); }
 .pullcord[data-phase='2'] .pullcord__bead { transition-duration: 200ms; transition-timing-function: cubic-bezier(.25, .8, .3, 1); }
 
-.pullcord[data-phase='3'] { --pp-cord-h: 72px; }
+.pullcord[data-phase='3'] { --pp-cord-h: 72px; --pp-cord-a: 0deg; }
 .pullcord[data-phase='3'] .pullcord__cord { transition-duration: 160ms; transition-timing-function: cubic-bezier(.4, 0, .5, 1); }
 .pullcord[data-phase='3'] .pullcord__bead { transition-duration: 160ms; transition-timing-function: cubic-bezier(.4, 0, .5, 1); }
 
