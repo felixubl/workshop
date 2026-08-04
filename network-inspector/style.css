@@ -1,0 +1,201 @@
+/* Tool-specific layout only. The sheet, the toolbar, the buttons and the page
+   shell come from ../assets/base.css over the vendored system. What this file
+   adds is the one thing this tool invents: a table where every row carries who
+   else can see the value in it. */
+
+/* Two sheets side by side above the fold, stacking when there is no room for
+   two readable columns of mono. */
+/* Two sheets side by side, each ending where its own last row does. Without the
+   start alignment the shorter sheet stretches to match the taller one and ends
+   in a stretch of empty ruled paper, which reads as a table still loading. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  align-items: start;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+.grid .sheet {
+  --w-sheet-min: 0;
+  min-width: 0;
+}
+.sheet + .sheet-note {
+  margin-bottom: 1.5rem;
+}
+.section-label.sec {
+  margin: 2.25rem 0 0.85rem;
+}
+.result-bar.sec {
+  margin-top: 2.25rem;
+}
+.sheet-note.foot {
+  margin-top: 2.25rem;
+}
+
+/* A key/value sheet, not a grid of figures: the name is the quiet column and
+   the value is the read. Values go mono and tabular so an address, a byte
+   count and a millisecond all sit on the same rhythm. */
+.sheet td.k {
+  width: 40%;
+  color: var(--pp-faint);
+  font-family: var(--pp-font-body);
+  font-size: 0.86rem;
+}
+.sheet td.v {
+  color: var(--pp-ink);
+  font-variant-numeric: tabular-nums;
+  word-break: break-word;
+}
+.sheet td.v.none {
+  color: var(--pp-faint);
+}
+
+/* WHO ELSE KNOWS IT.
+
+   The square is the index's device, used for the reason the index uses it: a
+   category, printed at full strength as one small solid square in front of the
+   word that names it. Law 05 wants a plate to reinforce a message the words are
+   already carrying rather than to replace it, so the word is never dropped. The
+   square is what lets you scan the column without reading it, which is the whole
+   point of a disclosure table.
+
+   Plate 1 is what stays here, plate 3 is what your network operator sees anyway,
+   plate 2 is what any site you open can read for itself. That last one is the
+   loud one on purpose: it is the answer to "surely they cannot see that". */
+.who {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  font-family: var(--pp-font-mono);
+  font-size: 0.72rem;
+  letter-spacing: var(--w-track-label);
+  color: var(--pp-muted);
+}
+.sheet td.w {
+  width: 8.5rem;
+  text-align: right;
+}
+.sheet td.w .who {
+  justify-content: flex-end;
+}
+.who .sq {
+  width: 7px;
+  height: 7px;
+}
+.who--local .sq { background: var(--pp-plate-1); }
+.who--isp .sq { background: var(--pp-plate-3); }
+.who--site .sq { background: var(--pp-plate-2); }
+
+/* The live traffic table is figures, so it aligns right, except the resource
+   name which is a label and stays left. It is the one table here wide enough to
+   need the sideways scroll base.css already gives every sheet. */
+.sheet table.traffic {
+  --w-sheet-min: 720px;
+  min-width: var(--w-sheet-min);
+}
+.traffic th,
+.traffic td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.traffic th:first-child,
+.traffic td:first-child {
+  width: 34%;
+  text-align: left;
+}
+.traffic td:first-child {
+  color: var(--pp-muted);
+  word-break: break-all;
+}
+.traffic td.blank {
+  color: var(--pp-faint);
+}
+/* A request still in flight has no end timings yet, so its row is provisional
+   until it settles. Dotted is the system's provisional, and it is drawn on the
+   row's own left edge rather than as a wash, because a wash behind figures is
+   the thing site.css says not to bring back. */
+.traffic tr.is-live td:first-child {
+  border-left: var(--pp-rule-structure) dotted var(--pp-plate-3);
+  padding-left: 0.6rem;
+}
+
+.tag.readout {
+  font-variant-numeric: tabular-nums;
+}
+
+.card.prompt {
+  font-size: 0.94rem;
+  line-height: 1.62;
+  color: var(--pp-muted);
+}
+.card.prompt.small {
+  font-size: 0.9rem;
+}
+.card.prompt strong {
+  font-family: var(--pp-font-mono);
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--pp-ink);
+}
+
+/* The measured line. Three readings printed big enough to be the answer, since
+   this is the one panel a visitor actually came for. */
+.readings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.75rem;
+  padding: 0.9rem 0.8rem;
+}
+.reading {
+  margin: 0;
+}
+.reading dt {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--pp-track-label);
+  text-transform: uppercase;
+  color: var(--pp-faint);
+}
+.reading dd {
+  margin: 0.3rem 0 0;
+  font-family: var(--pp-font-mono);
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--pp-ink);
+}
+.reading dd small {
+  font-size: 0.8rem;
+  color: var(--pp-muted);
+}
+
+/* The sweep's progress, and its results. A found address is a row like any
+   other; what makes it worth looking at is the time it took to fail, so that
+   number is printed rather than hidden behind a verdict. */
+.scan-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.8rem;
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-label);
+  color: var(--pp-faint);
+}
+.scan-track {
+  flex: 1;
+  height: 6px;
+  border: var(--pp-rule-line) solid var(--pp-line);
+}
+.scan-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--pp-edge);
+}
+
+/* A running action states itself in words, not a spinner. */
+button.is-busy {
+  color: var(--pp-faint);
+}
