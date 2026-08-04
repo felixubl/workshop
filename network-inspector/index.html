@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Inspector — Felix' Workshop</title>
+<meta name="description" content="See what your browser tells every site you visit, watch the requests this page is making right now, measure your connection, and find out how much a single lookup reveals about where you are.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
+<script src="../assets/preprint/js/mode.js"></script>
+<script src="../assets/preprint/js/pullcord.js" defer></script>
+<link rel="stylesheet" href="../assets/preprint/styles.css">
+<link rel="stylesheet" href="../assets/preprint/core.css">
+<link rel="stylesheet" href="../assets/preprint/controls.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <button class="pullcord" type="button" data-pullcord aria-label="Pull the string to switch colour mode"><span class="pullcord__cord" aria-hidden="true"></span><span class="pullcord__bead" aria-hidden="true"></span></button>
+  <header>
+    <div>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <div class="title-row">
+        <h1 class="tool-title">Network Inspector</h1>
+        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
+          <span data-share-label>copy link</span>
+        </button>
+        <button class="share-btn pin-btn" type="button" data-pin="network-inspector" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="spine"></div>
+
+  <div class="toolbar">
+    <div class="group">
+      <p class="section-label">No requests yet</p>
+    </div>
+    <div class="group">
+      <button class="btn-ghost" type="button" id="measure" data-tip="Pulls this site's own font file a few times to time the line. Same origin, so nobody new learns anything.">Measure the line</button>
+      <button class="btn-primary" type="button" id="lookup" data-tip="Sends your IP to ipwho.is and prints everything it hands back">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M2.5 8h11M8 2.5v11"></path><path d="M8 2.5c2 1.6 3 3.4 3 5.5s-1 3.9-3 5.5c-2-1.6-3-3.4-3-5.5s1-3.9 3-5.5z"></path></svg>
+        Look me up
+      </button>
+      <button class="btn-ghost" type="button" id="webrtc" data-tip="Asks a public STUN server what address your packets arrive from. This is the leak a VPN is supposed to close.">WebRTC probe</button>
+      <button class="btn-ghost" type="button" id="ports" data-tip="Knocks on the ports software on your own computer commonly listens on, and times which ones answer">Scan this machine</button>
+      <button class="btn-ghost" type="button" id="scan" data-tip="Times connection attempts across your local address range to guess which addresses answer">Look for devices</button>
+    </div>
+    <div class="group">
+      <button class="btn-ghost" type="button" id="copyReport">Copy report</button>
+    </div>
+  </div>
+
+  <div class="card prompt" id="intro">
+    Everything below was known to this page the moment it loaded, without asking the network
+    anything. Every site you open learns the same. The buttons above are the parts that
+    <strong>do</strong> send something, and none has run yet.
+  </div>
+
+  <!-- ── Known without asking ─────────────────────────────────────────── -->
+
+  <p class="section-label sec">Known without asking anyone</p>
+
+  <div class="grid">
+    <div class="sheet">
+      <div class="sheet-cap">
+        <code>The line</code>
+        <code class="meta" id="lineMeta">browser estimate</code>
+      </div>
+      <div class="sheet-scroll"><table><tbody id="tLine"></tbody></table></div>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-cap">
+        <code>Where you look like you are</code>
+        <code class="meta">no lookup involved</code>
+      </div>
+      <div class="sheet-scroll"><table><tbody id="tPlace"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- measure() prints the real readings here, under the browser's guesses. -->
+  <div id="lineWrap" class="idle"></div>
+
+  <div class="sheet">
+    <div class="sheet-cap">
+      <code>The machine</code>
+      <code class="meta" id="fpMeta"></code>
+    </div>
+    <div class="sheet-scroll"><table><tbody id="tMachine"></tbody></table></div>
+  </div>
+  <p class="sheet-note">
+    Dull on their own, close to unique together: enough to recognise you again with no cookie and no
+    IP address. The caption is that combination, hashed to eight characters.
+  </p>
+
+  <!-- ── Live traffic ─────────────────────────────────────────────────── -->
+
+  <div class="result-bar sec">
+    <p class="section-label">Requests this page is making</p>
+    <div class="group">
+      <span class="tag readout" id="trafficCount">0</span>
+      <button class="btn-ghost preset" type="button" id="trafficClear">Clear</button>
+    </div>
+  </div>
+
+  <div class="sheet">
+    <div class="sheet-cap">
+      <code>Live</code>
+      <code class="meta">every timing the browser will admit to</code>
+    </div>
+    <div class="sheet-scroll">
+      <table class="traffic">
+        <thead>
+          <tr>
+            <th>Resource</th><th>Proto</th><th>DNS</th><th>TCP</th><th>TLS</th><th>Wait</th><th>Total</th><th>Size</th>
+          </tr>
+        </thead>
+        <tbody id="tTraffic"></tbody>
+      </table>
+    </div>
+  </div>
+  <p class="sheet-note">
+    Finding the address, opening the connection, agreeing on encryption, waiting for the first byte.
+    A row of dashes is a cross-origin server refusing to share its timings. Your ISP sees every one
+    of these, and the hostnames too.
+  </p>
+
+  <!-- ── The three outbound sections ──────────────────────────────────── -->
+
+  <p class="section-label sec">What one lookup gives away</p>
+  <div id="lookupWrap" class="idle">
+    <div class="card prompt small" id="lookupIdle">
+      Nothing sent yet. <strong>Look me up</strong> hands your IP to ipwho.is and prints everything it
+      says back.
+    </div>
+  </div>
+
+  <p class="section-label sec">What WebRTC leaks</p>
+  <div id="rtcWrap" class="idle">
+    <div class="card prompt small" id="rtcIdle">
+      A page can read the addresses your browser offers a peer connection, including ones behind your
+      router. The leak that survives a badly configured VPN.
+    </div>
+  </div>
+
+  <p class="section-label sec">Software running on this computer</p>
+  <div id="portsWrap" class="idle">
+    <div class="card prompt small" id="portsIdle">
+      A page cannot read your disk, but it can knock on your own machine and time the answer. Closed
+      ports refuse instantly, listening ones do not, and the difference names your software. Online
+      shops have been caught doing this to visitors.
+    </div>
+  </div>
+
+  <p class="section-label sec">Other devices on this network</p>
+  <div id="scanWrap" class="idle">
+    <div class="card prompt small" id="scanIdle">
+      A browser cannot scan a network. It can start a connection and time how it fails, which differs
+      between an address that answers and one that is not there. The weakest panel here, false results
+      left in.
+    </div>
+  </div>
+
+  <p class="sheet-note foot">
+    Everything runs in your browser. The only requests that leave it are the ones you press a button
+    for.
+  </p>
+</div>
+
+<script src="script.js"></script>
+<script src="../assets/preprint/js/controls.js"></script>
+<script src="../assets/share.js"></script>
+<script src="../assets/favourites.js"></script>
+</body>
+</html>

@@ -5,6 +5,12 @@ A small collection of self-serve browser tools, hosted at
 server: every tool runs entirely client-side, and the whole thing is open
 source so that claim is checkable rather than just asserted.
 
+There is exactly one place where a request leaves your browser, and it is the
+subject of the tool rather than an exception to the rule: the Network Inspector
+can look your IP address up with a third party, ask a STUN server what it sees,
+and probe your local range. All three sit behind buttons, nothing is sent on
+load, and the page says who it is about to talk to before you press anything.
+
 ## Tools
 
 - [Pixel Art SVG Drawer](draw-svg/) — draw pixel art on a grid-snapped canvas,
@@ -17,6 +23,12 @@ source so that claim is checkable rather than just asserted.
   turn PDF pages, with every page shown as a real preview you can drag. The
   PDF engine underneath is written from scratch: no library parses, renders
   or writes anything here.
+- [Network Inspector](network-inspector/) — see what your browser gives away to
+  every site before you touch anything, from your keyboard layout and installed
+  voices to a fingerprint of the machine, watch the page's own requests broken
+  into DNS, TCP, TLS and wait time, measure the line, then opt in to an IP
+  lookup, a WebRTC probe, a scan of the ports your own computer is listening on,
+  and a sweep of the network around it.
 - [Image Metadata Cleaner](metadata-cleaner/) — read every field a JPEG, PNG or
   WebP is carrying (EXIF, GPS, XMP, IPTC, colour profile, embedded thumbnail),
   see what each one gives away, and choose field by field what to strip. Batch
