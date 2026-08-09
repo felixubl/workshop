@@ -33,6 +33,11 @@ load, and the page says who it is about to talk to before you press anything.
   WebP is carrying (EXIF, GPS, XMP, IPTC, colour profile, embedded thumbnail),
   see what each one gives away, and choose field by field what to strip. Batch
   or single file, and lossless: the pixels are never re-encoded.
+- [Bingo Card Generator](bingo-cards/) — type the squares, and it counts every
+  distinct card that list can make, exactly, however many digits that takes.
+  Ask for as many as you want and it deals that many, no two alike, seeded so
+  the same set comes back. The PDF is one card per page and is written here,
+  byte by byte, with no library involved.
 
 The homepage ([index.html](index.html)) also lists a long line-up of
 "coming soon" tool categories: PDF, image, SVG, QR/barcode, audio, video,
