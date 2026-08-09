@@ -1,0 +1,275 @@
+/* Tool-specific layout only — faces, buttons, fields, the tool title, the
+   toolbar band and the sheet come from ../assets/base.css over the vendored
+   system. What this file draws is the two things this tool invents: the count
+   panel, and a bingo card on screen. */
+
+/* Anything typed that ends up printed on paper goes in mono, the way a typed
+   parameter does everywhere else on this site: the field is the machine's
+   register, and the card is where the type is set properly. */
+.field.num,
+.field.seed,
+.field.heading,
+.field.subtitle,
+.field.freelabel {
+  font-family: var(--pp-font-mono);
+  font-size: 0.86rem;
+}
+.field.num {
+  width: 90px;
+}
+.field.num.narrow {
+  width: 68px;
+}
+.field.seed {
+  width: 132px;
+}
+.field.heading {
+  width: 148px;
+}
+.field.subtitle {
+  width: 190px;
+}
+.field.freelabel {
+  width: 96px;
+}
+
+/* The presets sit inside a group that already has a gap, so they close up
+   against each other and read as one control rather than three buttons. */
+.group.presets {
+  gap: 4px;
+  margin-right: 4px;
+}
+
+.card.prompt {
+  font-size: 0.94rem;
+  line-height: 1.62;
+  color: var(--pp-muted);
+}
+.card.prompt strong {
+  font-family: var(--pp-font-mono);
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--pp-ink);
+}
+
+/* ── The bench ─────────────────────────────────────────────────────────────
+   The list and the count are one thought — you type a square and the number
+   moves — so they sit side by side and the count does not scroll away. Below
+   the measure where both would be cramped they stack, list first. */
+.bench {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 1.5rem 2rem;
+  align-items: start;
+  margin-bottom: 1.75rem;
+}
+@media (max-width: 880px) {
+  .bench {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The list is the one field on the site that holds prose in bulk, and it is
+   still a field: same edge, same focus, mono because every line of it is going
+   to be set on a card and the count depends on where the line ends. */
+.field.list {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 0.7rem 0.8rem;
+  font-family: var(--pp-font-mono);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  resize: vertical;
+}
+
+.entries .result-bar,
+.count .section-label {
+  margin-bottom: 0.85rem;
+}
+
+/* ── The count ─────────────────────────────────────────────────────────────
+   This is the answer to the question the tool exists to answer, so it is set
+   at display size on the sheet rather than as another row of figures. */
+.count-body {
+  padding: 1rem 0.8rem 0.9rem;
+}
+
+.count-big {
+  margin: 0;
+  font-family: var(--pp-font-display);
+  font-weight: var(--pp-weight-head);
+  font-size: clamp(1.5rem, 4.4vw, 2.1rem);
+  letter-spacing: var(--pp-track-head);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+/* Nothing to count is a state, not a failure — the list is simply still short.
+   It steps back to the quiet ink rather than taking a plate. */
+.count-big.is-none {
+  color: var(--pp-faint);
+}
+
+/* The whole figure, under the readable one. It is evidence rather than
+   reading: it wraps anywhere, because the alternative is a sheet that scrolls
+   sideways for a number nobody is going to read left to right anyway. */
+.count-exact {
+  margin: 0.5rem 0 0;
+  font-family: var(--pp-font-mono);
+  font-size: 0.72rem;
+  line-height: 1.6;
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+  overflow-wrap: anywhere;
+}
+.count-exact:empty {
+  display: none;
+}
+
+.count-facts {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 1rem;
+  margin: 0.9rem 0 0;
+  padding-top: 0.75rem;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-label);
+}
+.count-facts dt {
+  color: var(--pp-faint);
+  padding: 0.24rem 0;
+}
+.count-facts dd {
+  margin: 0;
+  padding: 0.24rem 0;
+  text-align: right;
+  color: var(--pp-ink);
+  overflow-wrap: anywhere;
+}
+
+/* The band of settings that makes the cards, separated from the ones that
+   describe them. Same band, no bottom rule: the work it produces is directly
+   underneath and a rule there would cut the button off from its result. */
+.toolbar.make {
+  border-bottom: 0;
+  margin-bottom: 1.35rem;
+}
+
+/* ── The deal ──────────────────────────────────────────────────────────── */
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.8rem;
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+.pager-at,
+.pager-note {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-label);
+  color: var(--pp-muted);
+}
+.pager-note {
+  color: var(--pp-faint);
+}
+.pager-rule {
+  flex: 1;
+  height: 0;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+.pager .preset {
+  width: 32px;
+  padding: 0;
+  font-size: 1rem;
+}
+
+/* The card stands on the sheet the way it will stand on the page: white stock,
+   centred, with room around it. The stage is the paper the card is printed on,
+   so it keeps its own ground rather than taking the sheet's. */
+.card-stage {
+  display: flex;
+  justify-content: center;
+  padding: 1.25rem 0.8rem 1.4rem;
+  background: var(--w-wash-0);
+}
+
+/* A bingo card. Square cells, one rule between them, a heavier edge around the
+   whole — the same three weights the printed page uses, so the preview is a
+   preview and not an interpretation.
+
+   The interior rules are the grid's own ground showing through a 1px gap
+   rather than borders on the cells. Borders would need the last column and the
+   last row turned off again, and which cells those are depends on --cols,
+   which is a number CSS will happily use for a track count and not for an
+   :nth-child step. The gap does not care how many columns there are.
+
+   The frame is an outline for the same kind of reason: it sits outside the
+   grid box, so a 2px edge does not come out of the first cell's width. */
+.bingo {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 5), 1fr);
+  gap: var(--pp-rule-line);
+  width: min(100%, 460px);
+  background: var(--pp-line);
+  outline: var(--pp-rule-structure) solid var(--pp-edge);
+  container-type: inline-size;
+}
+
+.bingo-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  padding: 4px;
+  background: var(--pp-surface);
+  /* Type scaled to the cell, not to the window: a 3×3 preview should read like
+     a poster and an 8×8 one like a ticket, which is what they will do on
+     paper. The clamp above is what a browser without container units gets. */
+  font-size: clamp(0.44rem, 1.4vw, 0.6rem);
+  font-size: max(7px, calc(100cqw / var(--cols, 5) * 0.155));
+  line-height: 1.2;
+  text-align: center;
+  /* A cell on paper shrinks its type until the words fit. A cell on screen
+     cannot, so it breaks anywhere and hides what still will not go: the
+     preview says where each square lands and how crowded it is, and the PDF is
+     where the fitting actually happens. */
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+/* The free square, washed. --pp-tint is ink at an alpha, and every cell here
+   is sitting on the grid's own --pp-line ground, so setting it as the
+   background alone would let the rule colour up through it and print a mid
+   grey. Laid over the stock as a second layer it comes out at the strength it
+   is meant to be. */
+.bingo-cell.is-free {
+  background: linear-gradient(var(--pp-tint), var(--pp-tint)) var(--pp-surface);
+  font-weight: var(--pp-weight-strong);
+  letter-spacing: var(--w-track-label);
+}
+
+/* The seed a deal actually used, offered back as a control: pressing it puts
+   the seed in the field so the same cards can be dealt again. Same object as
+   the Random Number Generator's, because it is the same promise. */
+.seed-tag {
+  padding: 0.1rem 0.5rem;
+  background: transparent;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-sm);
+  font-family: var(--pp-font-mono);
+  font-size: 0.72rem;
+  letter-spacing: var(--w-track-label);
+  color: var(--pp-muted);
+}
+.seed-tag:hover {
+  border-color: var(--pp-edge);
+  color: var(--pp-ink);
+}
+.seed-tag:active {
+  transform: var(--w-press);
+}

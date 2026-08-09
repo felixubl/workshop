@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bingo Card Generator — Felix' Workshop</title>
+<meta name="description" content="Type a list of squares, see exactly how many different bingo cards that list can make, then print as many of them as you want — one card per page, as a PDF written from scratch in the browser.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
+<script src="../assets/preprint/js/mode.js"></script>
+<script src="../assets/preprint/js/pullcord.js" defer></script>
+<link rel="stylesheet" href="../assets/preprint/styles.css">
+<link rel="stylesheet" href="../assets/preprint/core.css">
+<link rel="stylesheet" href="../assets/preprint/controls.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <button class="pullcord" type="button" data-pullcord aria-label="Pull the string to switch colour mode"><span class="pullcord__cord" aria-hidden="true"></span><span class="pullcord__bead" aria-hidden="true"></span></button>
+  <header>
+    <div>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <div class="title-row">
+        <h1 class="tool-title">Bingo Card Generator</h1>
+        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
+          <span data-share-label>copy link</span>
+        </button>
+        <button class="share-btn pin-btn" type="button" data-pin="bingo-cards" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="spine"></div>
+
+  <div class="toolbar">
+    <div class="group">
+      <label for="heading">Heading</label>
+      <input class="field heading" type="text" id="heading" value="BINGO" maxlength="60" spellcheck="false">
+    </div>
+
+    <div class="group">
+      <label for="subtitle">Subheading</label>
+      <input class="field subtitle" type="text" id="subtitle" placeholder="optional" maxlength="90">
+    </div>
+
+    <div class="group">
+      <label id="gridLabel">Grid</label>
+      <div class="group presets" role="group" aria-labelledby="gridLabel" id="sizePresets">
+        <button class="btn-ghost preset" type="button" data-size="3">3×3</button>
+        <button class="btn-ghost preset" type="button" data-size="4">4×4</button>
+        <button class="btn-ghost preset" type="button" data-size="5">5×5</button>
+      </div>
+      <input class="field num narrow" type="number" id="size" min="2" max="8" step="1" value="5" aria-label="Grid size, squares per side">
+    </div>
+
+    <div class="group">
+      <label class="checkbox" data-tip="The centre square, given away. It only exists on an odd grid, because an even one has no centre."><input type="checkbox" id="freeSpace" checked> Free square</label>
+      <input class="field freelabel" type="text" id="freeLabel" value="FREE" maxlength="24" aria-label="What the free square says">
+    </div>
+
+    <div class="group">
+      <label for="paper">Paper</label>
+      <select class="field" id="paper">
+        <option value="a4" selected>A4</option>
+        <option value="letter">US Letter</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="bench">
+    <section class="entries">
+      <div class="result-bar">
+        <p class="section-label">The squares</p>
+        <div class="group">
+          <button class="btn-ghost" type="button" id="example">Example list</button>
+          <button class="btn-ghost" type="button" id="clearItems">Clear</button>
+        </div>
+      </div>
+      <textarea class="field list" id="items" rows="14" spellcheck="false"
+        placeholder="One square per line.&#10;&#10;Someone says “circle back”&#10;You're on mute&#10;Screen sharing fails&#10;…"></textarea>
+      <p class="sheet-note" id="itemsNote">Nothing typed yet.</p>
+    </section>
+
+    <section class="count">
+      <p class="section-label">How many cards exist</p>
+      <div class="sheet">
+        <div class="sheet-cap">
+          <code id="countCap">—</code>
+          <code class="meta" id="countMeta"></code>
+        </div>
+        <div class="count-body">
+          <p class="count-big" id="countBig">—</p>
+          <p class="count-exact" id="countExact"></p>
+          <dl class="count-facts" id="countFacts"></dl>
+        </div>
+      </div>
+      <p class="sheet-note" id="countNote">
+        A card is an arrangement, not a bag: the same squares in different
+        places win on different lines, so two cards holding the same list are
+        two different cards.
+      </p>
+    </section>
+  </div>
+
+  <p class="hint" id="hint" hidden></p>
+
+  <div class="toolbar make">
+    <div class="group">
+      <label for="wanted">Cards to make</label>
+      <input class="field num" type="number" id="wanted" min="1" max="500" step="1" value="12">
+      <button class="btn-ghost" type="button" id="maxOut" data-tip="Fill in the most this list can make, up to the 500-page limit">Most possible</button>
+    </div>
+
+    <div class="group">
+      <label for="seed">Seed</label>
+      <input class="field seed" type="text" id="seed" placeholder="auto" spellcheck="false" autocomplete="off" maxlength="40">
+      <button class="btn-ghost" type="button" id="newSeed">New</button>
+    </div>
+
+    <div class="group">
+      <button class="btn-primary" type="button" id="build">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M2.5 2.5h11v11h-11z"></path><path d="M6.2 2.5v11M9.8 2.5v11M2.5 6.2h11M2.5 9.8h11"></path></svg>
+        Deal the cards
+      </button>
+    </div>
+  </div>
+
+  <div class="card prompt" id="empty">
+    Type your squares one per line, and the panel above counts every card that
+    list can make. Then say how many you want and press <strong>Deal the
+    cards</strong>: each one is a different arrangement, no two alike, and the
+    PDF puts one on every page. The seed is printed on the cards, so the same
+    set can be dealt again. Nothing leaves your browser — the PDF is written
+    here, byte by byte.
+  </div>
+
+  <section id="results" hidden>
+    <div class="result-bar">
+      <p class="section-label">The deal</p>
+      <div class="group">
+        <button class="btn-ghost" type="button" id="copyList">Copy caller's list</button>
+        <button class="btn-primary" type="button" id="download">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M8 2v8M4.5 7.5 8 11l3.5-3.5M2.5 13.5h11"></path></svg>
+          Download PDF
+        </button>
+      </div>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-cap">
+        <code id="dealCap"></code>
+        <code class="meta" id="dealMeta"></code>
+      </div>
+      <div class="pager">
+        <button class="btn-ghost preset" type="button" id="prev" aria-label="Previous card">‹</button>
+        <code class="pager-at" id="pagerAt">1 / 1</code>
+        <button class="btn-ghost preset" type="button" id="next" aria-label="Next card">›</button>
+        <span class="pager-rule" aria-hidden="true"></span>
+        <code class="pager-note">a preview of the page</code>
+      </div>
+      <div class="card-stage">
+        <div class="bingo" id="preview" role="table" aria-label="Bingo card preview"></div>
+      </div>
+    </div>
+    <p class="sheet-note" id="dealNote"></p>
+  </section>
+</div>
+
+<script src="bingo-pdf.js"></script>
+<script src="script.js"></script>
+<script src="../assets/preprint/js/controls.js"></script>
+<script src="../assets/share.js"></script>
+<script src="../assets/favourites.js"></script>
+</body>
+</html>
