@@ -14,6 +14,54 @@ var Terrain = (function () {
   var REFRACTION_K = 0.13;          // standard terrestrial refraction coefficient
   var cache = new Map();            // "z/x/y" -> Promise<ImageData|null>
 
+  /* The horizon is surveyed fact: it never changes, so a scan once made is
+     kept — in IndexedDB, across visits. The key is the exact question asked
+     (site to ~11 m, azimuth window, step, reach, eye height); ask it again
+     and the answer comes back without a single tile fetch. Weather is never
+     stored this way: a forecast is stale in hours, a ridge is not. SCAN_V
+     bumps when the scan algorithm changes, orphaning old answers. */
+  var SCAN_V = 1;
+  var dbP = null;
+  function db() {
+    if (dbP) return dbP;
+    dbP = new Promise(function (resolve) {
+      try {
+        var req = indexedDB.open('recon-terrain', 1);
+        req.onupgradeneeded = function () {
+          req.result.createObjectStore('scans');
+        };
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { resolve(null); };
+      } catch (e) { resolve(null); }
+    });
+    return dbP;
+  }
+  function scanKey(lat, lon, o) {
+    return SCAN_V + '|' + lat.toFixed(4) + ',' + lon.toFixed(4) + '|' +
+      Math.round(o.azCenter) + 'w' + Math.round(o.azSpan) + 's' + o.azStep +
+      '|' + Math.round(o.maxKm) + 'k' + o.eyeM;
+  }
+  function storedScan(key) {
+    return db().then(function (d) {
+      if (!d) return undefined;
+      return new Promise(function (resolve) {
+        try {
+          var rq = d.transaction('scans').objectStore('scans').get(key);
+          rq.onsuccess = function () { resolve(rq.result); };
+          rq.onerror = function () { resolve(undefined); };
+        } catch (e) { resolve(undefined); }
+      });
+    });
+  }
+  function storeScan(key, val) {
+    db().then(function (d) {
+      if (!d) return;
+      try {
+        d.transaction('scans', 'readwrite').objectStore('scans').put(val, key);
+      } catch (e) { /* full or private-mode storage: the scan still ran */ }
+    });
+  }
+
   function tileKey(z, x, y) { return z + '/' + x + '/' + y; }
 
   function fetchTile(z, x, y) {
@@ -106,11 +154,32 @@ var Terrain = (function () {
      resolves { h0, siteElev, profile: [{az, ang, distKm, elevM}] }        */
   function horizonScan(lat, lon, opts) {
     opts = opts || {};
-    var azCenter = opts.azCenter != null ? opts.azCenter : 270;
-    var azSpan = opts.azSpan || 110;
-    var azStep = opts.azStep || 1;
-    var maxKm = opts.maxKm || 120;
-    var eyeM = opts.eyeM != null ? opts.eyeM : 2;
+    var o = {
+      azCenter: opts.azCenter != null ? opts.azCenter : 270,
+      azSpan: opts.azSpan || 110,
+      azStep: opts.azStep || 1,
+      maxKm: opts.maxKm || 120,
+      eyeM: opts.eyeM != null ? opts.eyeM : 2
+    };
+    var key = scanKey(lat, lon, o);
+    return storedScan(key).then(function (hit) {
+      if (hit && hit.profile) {
+        if (opts.onProgress) opts.onProgress(1);
+        return hit;
+      }
+      return scanFresh(lat, lon, o, opts).then(function (res) {
+        storeScan(key, res);
+        return res;
+      });
+    });
+  }
+
+  function scanFresh(lat, lon, o, opts) {
+    var azCenter = o.azCenter;
+    var azSpan = o.azSpan;
+    var azStep = o.azStep;
+    var maxKm = o.maxKm;
+    var eyeM = o.eyeM;
 
     // ranges: 150 m to maxKm, ~9% growth per step
     var ranges = [];

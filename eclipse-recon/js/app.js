@@ -158,8 +158,11 @@
   /* A hybrid is total at greatest and annular at the ends (or the reverse);
      only the full path can say, so it refines the cheap label. */
   function refineType(ecl, path, type) {
-    if (!path.center.length) return 'partial';
-    var ends = [path.center[0], path.center[path.center.length - 1]];
+    // the extreme points, not the graze caps: a hybrid flips where the
+    // cone tip meets the ground, and that is on the axis line
+    var cs = (path.main && path.main.length) ? path.main : path.center;
+    if (!cs.length) return 'partial';
+    var ends = [cs[0], cs[cs.length - 1]];
     var flipped = ends.some(function (p) {
       var lc = Bessel.localCircumstances(ecl, p.lat, p.lon, 0);
       return lc && (lc.type === 'total' || lc.type === 'annular') &&
@@ -316,7 +319,9 @@
         color: P.ink, weight: 1, opacity: 0.6,
         fillColor: '#000', fillOpacity: 0.34, interactive: false
       });
-      S.layers.centerLine = L.polyline(unwrap(path.center), {
+      // the axis-on-ground line only: path.center carries the graze caps
+      // for sampling, and drawn they hook sideways at the extreme points
+      S.layers.centerLine = L.polyline(unwrap(path.main || path.center), {
         color: P.ink, weight: 1.3, opacity: 0.85,
         dashArray: '7 5', interactive: false
       });
@@ -1853,10 +1858,11 @@
 
   $('reach-btn').addEventListener('click', function () {
     if (!S.target) return;
-    runReach(S.target.lat, S.target.lon, +$('reach-km').value);
+    runReach(S.target.lat, S.target.lon, +$('reach-km').value,
+             +$('reach-grid').value);
   });
 
-  function runReach(baseLat, baseLon, radiusKm) {
+  function runReach(baseLat, baseLon, radiusKm, cols) {
     reachStop();
     var run = REACH.run;
     REACH.aborter = typeof AbortController !== 'undefined' ?
@@ -1878,8 +1884,11 @@
     status.textContent = 'sampling';
     status.className = 'h-status';
 
-    // a square grid over the disc; the disc keeps the cells
-    var COLS = 13;
+    /* a square grid over the disc; the disc keeps the cells. The reader
+       picks how fine — finer is quadratically more scans, spent from
+       their own machine, and every scan lands in the persistent cache,
+       so a finer pass after a coarse one only pays for the new points */
+    var COLS = cols || 13;
     var stepKm = 2 * radiusKm / COLS;
     var dLat = stepKm / 111;
     var dLon = stepKm / (111 * Math.max(0.2, Math.cos(baseLat * RAD)));
@@ -1975,7 +1984,10 @@
       status.className = 'h-status ok';
       $('reach-lo').textContent = Math.round(sLo);
       $('reach-hi').textContent = Math.round(sHi);
-      $('reach-note').textContent = radiusKm + ' km · water faint';
+      $('reach-note').textContent = radiusKm + ' km · cells ' +
+        (stepKm < 1 ? Math.round(stepKm * 1000) + ' m'
+                    : (Math.round(stepKm * 10) / 10) + ' km') +
+        ' · water faint';
       $('reach-legend').hidden = false;
     });
   }

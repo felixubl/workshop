@@ -112,6 +112,12 @@
             <option value="100">100 km</option>
             <option value="200">200 km</option>
           </select>
+          <select id="reach-grid" aria-label="Grid resolution"
+            data-tip="Grid resolution — finer costs more horizon scans, all computed on your machine. Every scan is remembered by this browser, so re-runs and finer passes reuse what it has already surveyed.">
+            <option value="13" selected>13×13</option>
+            <option value="19">19×19</option>
+            <option value="27">27×27</option>
+          </select>
           <button id="reach-btn" class="btn-primary" type="button"
             data-tip="Paint the suitability field inside this radius, graded on the local curve: green is the best within reach, red the worst. Water prints faint. Distances are straight-line.">Map the area</button>
         </div>
