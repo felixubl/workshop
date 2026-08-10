@@ -5,11 +5,16 @@ A small collection of self-serve browser tools, hosted at
 server: every tool runs entirely client-side, and the whole thing is open
 source so that claim is checkable rather than just asserted.
 
-There is exactly one place where a request leaves your browser, and it is the
-subject of the tool rather than an exception to the rule: the Network Inspector
-can look your IP address up with a third party, ask a STUN server what it sees,
-and probe your local range. All three sit behind buttons, nothing is sent on
-load, and the page says who it is about to talk to before you press anything.
+Two tools talk to the network, and in both the traffic is the subject of the
+tool rather than an exception to the rule. The Network Inspector can look your
+IP address up with a third party, ask a STUN server what it sees, and probe
+your local range — all behind buttons, nothing sent on load, and the page says
+who it is about to talk to before you press anything. Eclipse Recon is a map
+of the world with live weather on it, which cannot exist without a network:
+it fetches satellite imagery (Esri), map labels (Carto/OSM), elevation tiles
+(Mapzen/AWS) and forecasts (Open-Meteo), plus a keyless reverse geocoder for
+place names, and credits every one of them on screen. The eclipse mathematics
+itself runs entirely in your browser.
 
 ## Tools
 
@@ -38,6 +43,14 @@ load, and the page says who it is about to talk to before you press anything.
   Ask for as many as you want and it deals that many, no two alike, seeded so
   the same set comes back. The PDF is one card per page and is written here,
   byte by byte, with no library involved.
+- [Eclipse Recon](eclipse-recon/) — a satellite-console view of a solar
+  eclipse: the path of totality computed from NASA's Besselian elements in
+  the browser, an animated umbra you can scrub through time, and a dossier
+  for any point you click — contact times, Sun altitude, a terrain-masked
+  horizon profile (does that ridge hide a low Sun?), and the cloud forecast,
+  with the whole centreline sweepable and ranked into good and bad zones.
+  Deliberately not PREPRINT: it dresses as the spy-movie ops console it is,
+  and it is the second tool that talks to the network (see above).
 
 The homepage ([index.html](index.html)) also lists a long line-up of
 "coming soon" tool categories: PDF, image, SVG, QR/barcode, audio, video,
@@ -49,7 +62,10 @@ the front of the grid.
 
 ## Stack
 
-Plain HTML/CSS/JS per tool, no bundler, no framework. The design language is
+Plain HTML/CSS/JS per tool, no bundler, no framework. The one exception to
+"no library" is Eclipse Recon, which vendors Leaflet 1.9.4 (BSD-2) into its
+own folder for the map pane — the eclipse engine, terrain reader and weather
+client beside it are written from scratch. The design language is
 **PREPRINT**: a printed sheet, then annotated by hand. Hepta Slab for display,
 Zilla Slab for anything read at length, Cousine for anything the machine said,
 three press plates instead of an accent colour, hard offset casts instead of
