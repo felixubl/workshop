@@ -307,10 +307,11 @@
 
     var P = palette();
     var path = S.path;
-    if (path.center.length) {
-      var north = unwrap(path.north), south = unwrap(path.south);
-      // keep both edges in the same unwrap frame as the band polygon
-      S.layers.bandPoly = L.polygon(north.concat(south.slice().reverse()), {
+    if (path.center.length && path.ring && path.ring.length) {
+      // the engine hands over one closed ring: rails where they verifiably
+      // sit on the observable boundary, oracle-marched arcs around the ends
+      var ring = unwrap(path.ring);
+      S.layers.bandPoly = L.polygon(ring, {
         color: P.ink, weight: 1, opacity: 0.6,
         fillColor: '#000', fillOpacity: 0.34, interactive: false
       });
@@ -578,9 +579,15 @@
     lastFrame = ts;
     requestAnimationFrame(frame);
   }
+  // drawn glyphs, not characters: iOS renders U+25B6 as an emoji sticker
+  var GLYPH_PLAY = '<svg width="13" height="13" viewBox="0 0 16 16" ' +
+    'aria-hidden="true"><path d="M4 2.5 13.2 8 4 13.5z" fill="currentColor"/></svg>';
+  var GLYPH_PAUSE = '<svg width="13" height="13" viewBox="0 0 16 16" ' +
+    'aria-hidden="true"><path d="M4.2 2.5h2.6v11H4.2zM9.2 2.5h2.6v11H9.2z" ' +
+    'fill="currentColor"/></svg>';
   function togglePlay(on) {
     S.playing = on === undefined ? !S.playing : on;
-    $('play').textContent = S.playing ? '❚❚' : '▶';
+    $('play').innerHTML = S.playing ? GLYPH_PAUSE : GLYPH_PLAY;
     if (S.playing) { lastFrame = null; requestAnimationFrame(frame); }
   }
   $('play').addEventListener('click', function () { togglePlay(); });
@@ -1203,7 +1210,8 @@
     var c = t.circ;
     var code, stamp;
     var rows = [];
-    var central = c && c.type !== 'partial' && c.c2 && c.c3;
+    var central = c && c.type !== 'partial' && c.c2 && c.c3 &&
+                  c.centralVisible !== false;
 
     var tv = t.terrain ? terrainVerdict() : null;
     var visFrac = tv ? tv.frac : null;     // null = terrain unknown
@@ -1507,7 +1515,8 @@
     samples.forEach(function (c) {
       var lon = ((c.lon + 540) % 360) - 180;
       var lc = Bessel.localCircumstances(S.ecl, c.lat, lon, 0);
-      if (!lc || lc.type === 'partial' || !lc.c2 || !lc.c3 || !lc.visible) return;
+      if (!lc || lc.type === 'partial' || !lc.c2 || !lc.c3 ||
+          !lc.visible || !lc.centralVisible) return;
       var minAlt = Infinity, azs = [];
       for (var i = 0; i <= 6; i++) {
         var tt = lc.c2.tTT + (lc.c3.tTT - lc.c2.tTT) * i / 6;

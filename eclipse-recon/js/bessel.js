@@ -174,6 +174,9 @@ var Bessel = (function () {
   function localCircumstances(ecl, lat, lonDeg, hMeters) {
     var geo = geocentric(lat, hMeters);
     var tMax = maximumT(ecl, geo, lonDeg, greatestT(ecl));
+    // outside the fitted window the polynomials are fiction, and Newton can
+    // wander there from a point no eclipse ever touches
+    if (!isFinite(tMax) || Math.abs(tMax - ecl.t0) > 5) return null;
     var s = situation(ecl, tMax, geo, lonDeg);
     var mag = (s.L1 - s.m) / (s.L1 + s.L2);
     if (mag <= 0 || !isFinite(mag)) return null;
@@ -203,6 +206,12 @@ var Bessel = (function () {
         res.c2 = mkContact(ecl, c2, lat, lonDeg);
         res.c3 = mkContact(ecl, c3, lat, lonDeg);
         res.duration = (c3 - c2) * 3600;
+        // the anti-shadow: the cone's geometry also closes for observers on
+        // the night side, where no physical umbra ever stands. A central
+        // phase entirely below the horizon is that phantom, and everything
+        // that draws or scores the band must know it.
+        var midAlt = sunAltAz(ecl, (c2 + c3) / 2, lat, lonDeg).alt;
+        res.centralVisible = midAlt > -0.9;
       }
     }
     // is any of it above the horizon? (refraction allowance at rise/set)
@@ -302,6 +311,7 @@ var Bessel = (function () {
   function centralPath(ecl, stepSec) {
     var step = (stepSec || 60) / 3600;
     var center = [], north = [], south = [];
+    var mainPairs = [];
     var t0 = greatestT(ecl);
     // walk both directions until the axis leaves the Earth
     var range = [];
@@ -328,26 +338,247 @@ var Bessel = (function () {
         tTT: t, date: toDate(ecl, t), lat: c.lat, lon: c.lon,
         sunAlt: sun.alt, sunAz: sun.az, duration: dur
       };
-      // limits: outline extremes of signed cross-track distance on the
-      // ground, using the local track bearing from neighbouring centres
-      var out = shadowOutline(ecl, t, 'umbra', 40);
-      if (out) {
-        var next = centralPointAt(ecl, t + step) || c;
-        var brg = bearing(c.lat, c.lon, next.lat, next.lon);
-        var bestD = -1e9, worstD = 1e9, bp = null, wp = null;
-        for (var j = 0; j < out.length; j++) {
-          var dxt = crossTrack(c.lat, c.lon, brg, out[j].lat, out[j].lon);
-          if (dxt > bestD) { bestD = dxt; bp = out[j]; }
-          if (dxt < worstD) { worstD = dxt; wp = out[j]; }
-        }
-        if (bp && wp) {
-          north.push(bp); south.push(wp);
-          entry.widthKm = Math.abs(bestD) + Math.abs(worstD);
-        }
+      // limits: the axis displaced perpendicular to its own motion by the
+      // umbral radius, in the fundamental plane, then mapped to ground —
+      // the definition of the published limit curves. Reading extremes off
+      // the ground outline instead breaks at low Sun, where the outline is
+      // a sliver hundreds of kilometres long: the 2026 tail drew an 800 km
+      // edge over a 290 km band and the polygon folded over itself.
+      var lim = bandLimits(ecl, t, c);
+      if (lim) {
+        north.push(lim.n); south.push(lim.s);
+        entry.widthKm = lim.width;
+        mainPairs.push({ c: entry, n: lim.n, s: lim.s });
       }
       center.push(entry);
     }
-    return { center: center, north: north, south: south };
+
+    /* The band does not end where the axis leaves the Earth: the umbra is
+       a wide low-Sun ellipse by then, and it keeps grazing the ground for
+       minutes more — the 2026 path covers the Balearics entirely inside
+       that cap, at totality durations over a minute. Both caps are walked
+       with the axis projected onto the disc's rim standing in for the
+       centre, which continues the track smoothly where the axis itself
+       has left. */
+    function cap(dir) {
+      if (!center.length) return;
+      var edgeIdx = dir > 0 ? center.length - 1 : 0;
+      var prev = { lat: center[edgeIdx].lat, lon: center[edgeIdx].lon };
+      var tEdge = center[edgeIdx].tTT;
+      for (var s2 = 1; s2 <= 90; s2++) {
+        var t2 = tEdge + dir * s2 * step;
+        var c2 = limbCentre(ecl, t2);
+        if (!c2) break;
+        var lim2 = bandLimits(ecl, t2, c2);
+        // gone once no rail touches and the rim point is out of the shadow
+        if (!lim2 || (!lim2.nOn && !lim2.sOn && !lim2.live)) break;
+        prev = c2;
+        var sun2 = sunAltAz(ecl, t2, c2.lat, c2.lon);
+        var geo2 = geocentric(c2.lat, 0);
+        var sit2 = situation(ecl, t2, geo2, c2.lon);
+        var n2 = Math.sqrt(sit2.n2);
+        var entry2 = {
+          tTT: t2, date: toDate(ecl, t2), lat: c2.lat, lon: c2.lon,
+          sunAlt: sun2.alt, sunAz: sun2.az, widthKm: lim2.width,
+          duration: n2 > 0 ? 2 * Math.abs(sit2.L2) / n2 * 3600 : 0
+        };
+        if (dir > 0) {
+          center.push(entry2); north.push(lim2.n); south.push(lim2.s);
+        } else {
+          center.unshift(entry2); north.unshift(lim2.n); south.unshift(lim2.s);
+        }
+      }
+    }
+    // the drawn ring wants the exact main-path rails only; the graze walk
+    // below extends the sampling frame, not the outline
+    var mainN = north.slice(), mainS = south.slice();
+    var mainC = center.slice();
+
+    cap(+1);
+    cap(-1);
+
+    /* The rails are exact limit curves, but a band's END is not where they
+       converge: it is a sunrise/sunset contact arc that bulges past them —
+       the 2026 band reaches Menorca east of everything the rails trace,
+       because totality there ran out before the shadow's last ground
+       contact further west. Rather than derive the set curves, each end is
+       closed by asking the engine itself: a fan of bearings from the last
+       on-axis centre — safely inside, and seeing the whole rounded cap —
+       swept rail to rail through the outward direction, each ray bisected
+       against the localCircumstances oracle. The fan IS the boundary, to a
+       kilometre. */
+    function isCentral(lat, lon) {
+      var lc = localCircumstances(ecl, lat, lon, 0);
+      return !!(lc && lc.type !== 'partial' && lc.c2 && lc.c3 &&
+                lc.centralVisible);
+    }
+    /* March along the oracle's own contour: from a rail end, probe ahead
+       at a fixed step, preferring to go straight, turning as the boundary
+       turns; each accepted step is refined onto the contour by bisecting
+       across it. Cusps, lobes, whatever shape the cap takes — the marcher
+       follows it, which no fan from any single origin can promise. The
+       band is kept on the RIGHT of the direction of travel throughout. */
+    function traceBoundary(startPt, heading, target, stepKm, awayFrom) {
+      var P = startPt, h = heading;
+      var pts = [];
+      var TURNS = [0, -20, 20, -40, 40, -60, 60, -85, 85, -110, 110];
+      // the first step self-orients: scan the whole circle, and refuse any
+      // step that walks back toward the rail we came from
+      var FIRST = [0, -20, 20, -40, 40, -60, 60, -80, 80, -100, 100,
+                   -120, 120, -140, 140, -160, 160, 180];
+      for (var i2 = 0; i2 < 140; i2++) {
+        var found = null, hNew = h;
+        var SCAN = i2 === 0 ? FIRST : TURNS;
+        for (var ti = 0; ti < SCAN.length; ti++) {
+          var hh = h + SCAN[ti] * RAD;
+          var Q = destination(P.lat, P.lon, hh * DEG, stepKm);
+          // does the local normal straddle the contour here?
+          var span = stepKm * 1.3;
+          var inP = destination(Q.lat, Q.lon, (hh + Math.PI / 2) * DEG, span);
+          var outP = destination(Q.lat, Q.lon, (hh - Math.PI / 2) * DEG, span);
+          if (!isCentral(inP.lat, inP.lon) || isCentral(outP.lat, outP.lon)) {
+            continue;
+          }
+          // bisect across the contour along that normal
+          var lo2 = -span, hi2 = span;   // +: inside direction
+          for (var it2 = 0; it2 < 14; it2++) {
+            var mid = (lo2 + hi2) / 2;
+            var M = destination(Q.lat, Q.lon, (hh + Math.PI / 2) * DEG, mid);
+            if (isCentral(M.lat, M.lon)) hi2 = mid; else lo2 = mid;
+          }
+          var cand = destination(Q.lat, Q.lon, (hh + Math.PI / 2) * DEG,
+                                 (lo2 + hi2) / 2);
+          if (i2 === 0 && awayFrom &&
+              distKm(cand.lat, cand.lon, awayFrom.lat, awayFrom.lon) <
+              distKm(P.lat, P.lon, awayFrom.lat, awayFrom.lon)) {
+            continue;              // that way lies the rail we came from
+          }
+          found = cand;
+          hNew = hh;
+          break;
+        }
+        if (!found) break;
+        pts.push(found);
+        h = bearing(P.lat, P.lon, found.lat, found.lon);
+        P = found;
+        if (distKm(P.lat, P.lon, target.lat, target.lon) < stepKm * 1.5) break;
+      }
+      return pts;
+    }
+
+    /* The ring: rails through the middle, marched caps at the ends. A
+       rail index is kept only while its point verifiably sits ON the
+       observable boundary (outward feeler dark, inward feeler central) —
+       near a sunrise/sunset end the geometric rails dive INSIDE the
+       observable band, where they are no boundary at all. From the last
+       good index on each side the marcher takes over and rounds the whole
+       end region, whatever its shape. */
+    var ring = [];
+    function onObservable(pr, key) {
+      var e = pr[key], c0 = pr.c;
+      var bOut = bearing(c0.lat, c0.lon, e.lat, e.lon) * DEG;
+      var out = destination(e.lat, e.lon, bOut, 25);
+      var inn = destination(e.lat, e.lon,
+        bearing(e.lat, e.lon, c0.lat, c0.lon) * DEG, 25);
+      return !isCentral(out.lat, out.lon) && isCentral(inn.lat, inn.lon);
+    }
+    var M = mainPairs.length;
+    if (M > 12) {
+      var kEnd = M - 1;
+      while (kEnd > M * 0.5 &&
+             !(onObservable(mainPairs[kEnd], 'n') &&
+               onObservable(mainPairs[kEnd], 's'))) kEnd--;
+      kEnd = Math.max(6, kEnd - 2);
+      var kStart = 0;
+      while (kStart < M * 0.5 &&
+             !(onObservable(mainPairs[kStart], 'n') &&
+               onObservable(mainPairs[kStart], 's'))) kStart++;
+      kStart = Math.min(kEnd - 4, kStart + 2);
+      if (kStart >= 0 && kEnd > kStart + 3) {
+        var pairs = mainPairs.slice(kStart, kEnd + 1);
+        var P0 = pairs.length;
+        var STEP = 18;
+        var hEnd = bearing(pairs[P0 - 2].n.lat, pairs[P0 - 2].n.lon,
+                           pairs[P0 - 1].n.lat, pairs[P0 - 1].n.lon);
+        var capEnd = traceBoundary(pairs[P0 - 1].n, hEnd,
+                                   pairs[P0 - 1].s, STEP,
+                                   pairs[Math.max(0, P0 - 8)].n);
+        var hStart = bearing(pairs[1].s.lat, pairs[1].s.lon,
+                             pairs[0].s.lat, pairs[0].s.lon);
+        var capStart = traceBoundary(pairs[0].s, hStart, pairs[0].n, STEP,
+                                     pairs[Math.min(P0 - 1, 7)].s);
+        ring = pairs.map(function (x) { return x.n; })
+          .concat(capEnd)
+          .concat(pairs.map(function (x) { return x.s; }).reverse())
+          .concat(capStart);
+      }
+    }
+    if (!ring.length && mainN.length > 2) {
+      ring = mainN.concat(mainS.slice().reverse());
+    }
+
+    return { center: center, north: north, south: south, ring: ring };
+  }
+
+  /* Where the axis misses the ground: the nearest point of the disc to it,
+     mapped to the ground — the track's natural continuation into the caps. */
+  function limbCentre(ecl, t) {
+    var el = elements(ecl, t);
+    var onDisc = groundPoint(ecl, el, el.x, el.y);
+    if (onDisc) return onDisc;
+    var rho1 = Math.sqrt(1 - E2 * Math.cos(el.d) * Math.cos(el.d));
+    var u = el.x, v = el.y / rho1;
+    var h = Math.hypot(u, v);
+    if (!h) return null;
+    var s = 0.9995 / h;
+    return groundPoint(ecl, el, u * s, v * s * rho1);
+  }
+
+  /* The umbral limit curves, from the elements themselves: the axis
+     displaced by the local umbral radius perpendicular to the shadow's
+     motion — motion RELATIVE TO THE GROUND, the (a, b) the contact solver
+     already uses, because the band is traced on a rotating Earth and the
+     fixed-frame direction is wrong exactly where it matters, at low Sun.
+     Displacements iterate against the surface height and map to ground.
+     Where a displaced point has slid off the disc it is clamped to the rim
+     (flagged off), so the rails keep following the limb through the caps
+     until the whole band is gone. */
+  function bandLimits(ecl, t, near) {
+    var el = elements(ecl, t);
+    // relative velocity at the nearest ground point the caller knows of;
+    // fall back to the sub-axis point of the disc
+    var at = near || limbCentre(ecl, t);
+    if (!at) return null;
+    var sit = situation(ecl, t, geocentric(at.lat, 0), at.lon);
+    var n = Math.sqrt(sit.n2);
+    if (!n) return null;
+    var nx = -sit.b / n, ny = sit.a / n;   // left of motion: the north side
+    var rho1 = Math.sqrt(1 - E2 * Math.cos(el.d) * Math.cos(el.d));
+    function rail(sign) {
+      var zeta = at.B || 0, q = null;
+      for (var k = 0; k < 4; k++) {
+        var r = Math.abs(el.l2 - zeta * ecl.tanF2);
+        var q2 = groundPoint(ecl, el, el.x + sign * nx * r, el.y + sign * ny * r);
+        if (!q2) break;
+        q = q2; zeta = q2.B;
+      }
+      if (q) return { p: q, on: true };
+      var r0 = Math.abs(el.l2);
+      var u = el.x + sign * nx * r0, v = (el.y + sign * ny * r0) / rho1;
+      var h = Math.hypot(u, v);
+      if (!h) return null;
+      var sc = 0.9995 / h;
+      var rim = groundPoint(ecl, el, u * sc, v * sc * rho1);
+      return rim ? { p: rim, on: false } : null;
+    }
+    var N = rail(+1), S = rail(-1);
+    if (!N || !S) return null;
+    return {
+      n: N.p, s: S.p, nOn: N.on, sOn: S.on,
+      // does the reference point itself still stand in the central shadow?
+      live: sit.m < Math.abs(sit.L2),
+      width: distKm(N.p.lat, N.p.lon, S.p.lat, S.p.lon)
+    };
   }
 
   /* great-circle helpers (km, degrees) */
