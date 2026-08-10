@@ -1,13 +1,15 @@
 /* Eclipse Recon — tool-specific layout.
    The sheet system, the type, the plates and both colour modes come from
-   PREPRINT; this file only lays out a map page: a full-bleed satellite
-   photograph pinned under the masthead, with paper cards floating on it.
+   PREPRINT; this file only lays out a map page: a full-bleed relief map
+   pinned under the masthead, with paper cards floating on it.
 
-   Colour policy: the photograph is greyscale, the Moon's shadow is printed
-   in actual black, and ink does the drawing. Plates appear only where they
-   mean something — plate 3 (blue) is totality wherever it shows up, plate 1
-   (green) is a good verdict, plate 2 (red) a bad one, and the citron marker
-   is "marginal". Everything else is ink on paper. */
+   Colour policy: the ground is drawn from elevation alone — water is the
+   palest tone and dead flat, land darkens in altitude steps — the Moon's
+   shadow is printed in actual black, and ink does the drawing. Plates
+   appear only where they mean something — plate 3 (blue) is totality
+   wherever it shows up, plate 1 (green) is a good verdict, plate 2 (red) a
+   bad one, and the citron marker is "marginal". Everything else is ink on
+   paper. */
 
 /* an explicit display (flex on sheets) must never beat the hidden attribute */
 [hidden] { display: none !important; }
@@ -27,7 +29,11 @@ body {
   display: flex; align-items: flex-end; justify-content: space-between;
   gap: 1rem; flex-wrap: wrap;
 }
-.which-eclipse { display: flex; align-items: center; gap: 0.5rem; }
+/* The pull cord hangs off the content column's right edge with a 16px hit
+   box either side, and this row is the rightmost thing under it — the pad
+   keeps the add button out of the cord's territory. */
+.which-eclipse { display: flex; align-items: center; gap: 0.5rem;
+  padding-right: 34px; }
 /* the drawn select is width:100% of its picker; the picker needs a width
    of its own or the two collapse to zero together */
 .which-eclipse .picker, .which-eclipse select { width: 13.5em; }
@@ -47,10 +53,14 @@ body {
   background: color-mix(in srgb, var(--pp-ink) 8%, var(--pp-paper));
   cursor: var(--pp-cursor-cross, crosshair);
 }
-/* the photograph is greyscale; dark mode dims the exposure */
-#map .pane-imagery { filter: grayscale(1) contrast(1.04); }
-[data-mode="dark"] #map .pane-imagery {
-  filter: grayscale(1) brightness(0.62) contrast(1.1);
+/* The relief arrives already in its final greys — app.js paints the tiles,
+   no filter corrects them. Dark mode dims the sheet, and the SAME filter
+   goes on the key's swatches, because a key that skips the filter is a key
+   to a different map. The reading rule holds in both modes: palest = water,
+   darker = higher. */
+[data-mode="dark"] #map .pane-relief,
+[data-mode="dark"] #hypso-key i {
+  filter: brightness(0.66) contrast(1.05);
 }
 #map .pane-labels { filter: grayscale(1); opacity: 0.85; }
 [data-mode="dark"] #map .pane-labels { filter: grayscale(1) invert(1); }
@@ -130,8 +140,6 @@ body {
 #intel { top: 12px; left: 12px; width: 300px; max-height: calc(100% - 88px); }
 #dossier { top: 12px; right: 12px; width: 360px; max-height: calc(100% - 88px); }
 
-.brief { margin: 0 0 0.7rem; font-size: 0.86rem; line-height: 1.45; }
-
 .stats { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px;
   margin: 0 0 0.8rem; }
 .stats dt { font-size: 0.68rem; text-transform: uppercase;
@@ -164,9 +172,7 @@ body {
 #search-results li:hover { background: var(--w-wash-0); }
 #search-results li small { color: var(--pp-faint); }
 
-#sweep-btn { width: 100%; }
-.sweep-note { margin: 0.4rem 0 0.7rem; font-size: 0.72rem;
-  color: var(--pp-faint); line-height: 1.4; }
+#sweep-btn { width: 100%; margin-bottom: 0.6rem; }
 
 #sweep-progress { position: relative; height: 14px;
   border: 1px solid var(--pp-hair); margin-bottom: 0.6rem; }
@@ -296,9 +302,12 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
 .verdict.cond .stamp { color: var(--pp-ink);
   background: linear-gradient(transparent 12%, var(--w-mark-fill) 12% 90%,
     transparent 90%); }
-.verdict ul { margin: 0; padding-left: 1.05rem; font-size: 0.76rem;
-  line-height: 1.4; }
-.verdict li { margin: 1px 0; }
+.v-facts { flex: 1; display: grid; grid-template-columns: 1fr;
+  gap: 2px 0.8rem; font-size: 0.74rem; }
+.v-facts div { display: flex; justify-content: space-between; gap: 0.4rem; }
+.v-facts span { color: var(--pp-faint); font-size: 0.62rem;
+  text-transform: uppercase; letter-spacing: 0.05em; align-self: baseline; }
+.v-facts code { font-variant-numeric: tabular-nums; }
 
 /* ---- the clock strip ------------------------------------------------ */
 
@@ -341,27 +350,131 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
 .readouts .ro-unit { font-size: 0.6rem; color: var(--pp-faint);
   margin-left: -0.55rem; }
 
-#credits {
+/* The corner annotations: the altitude key standing directly on the credits
+   it belongs with, one pinned stack so neither can wander into the other
+   however many lines the credits wrap to. */
+#map-annot {
   position: absolute; right: 14px; bottom: 66px; z-index: 900;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
+}
+#credits {
   max-width: 340px; text-align: right;
   font-family: var(--pp-font-mono); font-size: 0.56rem; line-height: 1.5;
   color: var(--pp-faint);
   text-shadow: 0 0 3px var(--pp-paper), 0 0 3px var(--pp-paper);
 }
 
-/* ---- small screens -------------------------------------------------- */
+/* The altitude key: the hypsometric bar every printed atlas carries, at the
+   micro scale of the credits it stands on. Swatch, then the metre line
+   where that band begins; app.js fills it from the array that paints the
+   tiles. The swatches keep a hairline so the water swatch does not dissolve
+   into the paper it nearly matches. */
+#hypso-key {
+  display: flex; align-items: center;
+  font-family: var(--pp-font-mono); font-size: 0.56rem; line-height: 1;
+  color: var(--pp-faint);
+  text-shadow: 0 0 3px var(--pp-paper), 0 0 3px var(--pp-paper);
+}
+#hypso-key i {
+  width: 13px; height: 8px; flex: none;
+  border: 1px solid color-mix(in srgb, var(--pp-ink) 25%, transparent);
+}
+#hypso-key b {
+  font-weight: 400; margin: 0 5px 0 3px;
+}
+#hypso-key b:last-child { margin-left: 2px; }
+
+/* ---- the suitability switch ----------------------------------------- */
+
+#suit-ctl {
+  position: absolute; left: 12px; bottom: 66px; z-index: 900;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 5px;
+}
+#suit-btn { background: var(--pp-paper); font-size: 0.72rem;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  font-family: var(--pp-font-mono); padding: 0.35em 0.7em;
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--pp-ink) 14%, transparent); }
+#suit-btn[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 1px var(--pp-ink),
+              3px 3px 0 color-mix(in srgb, var(--pp-ink) 14%, transparent);
+  background: var(--w-wash-0);
+}
+#suit-legend { display: flex; align-items: center; gap: 4px;
+  font-family: var(--pp-font-mono); font-size: 0.56rem;
+  color: var(--pp-faint);
+  text-shadow: 0 0 3px var(--pp-paper), 0 0 3px var(--pp-paper); }
+.suit-ramp { width: 56px; height: 8px; flex: none;
+  border: 1px solid color-mix(in srgb, var(--pp-ink) 25%, transparent);
+  background: linear-gradient(90deg, transparent, var(--pp-plate-1)); }
+#suit-legend b { font-weight: 400; }
+#suit-legend b:first-of-type { order: -1; }
+#suit-mode { margin-left: 4px; }
+#suit-prog { width: 120px; height: 5px; border: 1px solid var(--pp-hair);
+  background: var(--pp-paper); }
+#suit-prog i { display: block; height: 100%; width: 0;
+  background: var(--pp-plate-1); transition: width 0.25s; }
+
+/* ---- the elements dialog -------------------------------------------- */
+
+#add-dlg { border: 1px solid var(--pp-line); background: var(--pp-paper);
+  color: var(--pp-ink); padding: 1rem;
+  width: min(560px, calc(100vw - 2rem));
+  box-shadow: 5px 5px 0 color-mix(in srgb, var(--pp-ink) 14%, transparent); }
+#add-dlg::backdrop { background: rgba(0, 0, 0, 0.35); }
+#add-dlg h3 { margin: 0 0 0.6rem; font-family: var(--pp-font-body);
+  font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: var(--w-track-label, 0.06em); color: var(--pp-faint); }
+#add-text { width: 100%; resize: vertical;
+  font-family: var(--pp-font-mono); font-size: 0.7rem; line-height: 1.5;
+  background: var(--pp-surface); color: var(--pp-ink);
+  border: 1px solid var(--pp-line); padding: 0.5rem; }
+.add-err { min-height: 1em; margin: 0.4rem 0; color: var(--pp-state-danger);
+  font-family: var(--pp-font-mono); font-size: 0.68rem; }
+.add-row { display: flex; justify-content: flex-end; gap: 0.5rem; }
+
+.which-eclipse #ecl-add { min-width: 2em; padding: 0.2em 0.5em;
+  font-size: 0.9rem; line-height: 1; }
+
+/* ---- small screens --------------------------------------------------
+   A phone gets the map, and the sheets become drawers on it: the event
+   panel folds to its head bar and stands out of the way top-left, the
+   dossier rises from the bottom as a half-height sheet above the console,
+   and everything pressable meets the 44 px target the system sets. */
 
 @media (max-width: 900px) {
   .wrap.tool-head { padding-top: 0.9rem; padding-bottom: 0.6rem; }
-  #intel { left: 8px; top: 8px; width: min(280px, 62vw); }
-  #dossier { left: 8px; right: 8px; top: auto; bottom: 64px; width: auto;
-    max-height: 52vh; }
+  /* the console owns the bottom edge; the zoom keys step above it */
+  .leaflet-bottom.leaflet-right { margin-bottom: 58px; }
+  #intel { left: 8px; top: 8px; width: min(300px, 78vw); max-height: 46vh; }
+  #dossier { left: 8px; right: 8px; top: auto; bottom: 62px; width: auto;
+    max-height: 55vh; }
   #console { left: 8px; right: 8px; bottom: 8px; gap: 0.4rem;
     padding: 0.35rem 0.5rem; }
   .readouts { display: none; }
-  #credits { display: none; }
+  #map-annot { display: none; }
+  #suit-ctl { bottom: 62px; left: 8px; }
 }
 @media (max-width: 520px) {
+  .which-eclipse { width: 100%; padding-right: 22px; }
   .which-eclipse .we-label { display: none; }
+  .which-eclipse .picker, .which-eclipse select { flex: 1; width: auto; }
+  /* the share and pin keys drop their words and ride beside the title,
+     so the masthead spends two rows, not four — the map is the page */
+  .share-btn [data-share-label], .share-btn [data-pin-label] { display: none; }
+  .share-btn { padding: 0 0.5rem; }
   #track { display: none; }
+  #intel.folded { width: auto; }
+  #dossier { max-height: 60vh; }
+}
+
+/* Touch: every control meets the target size, and the hover tips that
+   cannot fire do not hold information hostage — everything they say is
+   also in a panel. */
+@media (pointer: coarse) {
+  .sheet-fold { min-width: 44px; min-height: 34px; }
+  .tl-row .btn-ghost { min-height: 30px; padding: 0.05em 0.8em; }
+  #search-results li { padding: 0.55rem 0.6rem; }
+  #sweep-list li { padding: 0.5rem 0.15rem; }
+  #suit-btn { padding: 0.55em 0.9em; }
+  .which-eclipse #ecl-add { min-width: 2.4em; min-height: 36px; }
 }

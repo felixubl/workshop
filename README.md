@@ -11,10 +11,10 @@ IP address up with a third party, ask a STUN server what it sees, and probe
 your local range — all behind buttons, nothing sent on load, and the page says
 who it is about to talk to before you press anything. Eclipse Recon is a map
 of the world with live weather on it, which cannot exist without a network:
-it fetches satellite imagery (Esri), map labels (Carto/OSM), elevation tiles
-(Mapzen/AWS) and forecasts (Open-Meteo), plus a keyless reverse geocoder for
-place names, and credits every one of them on screen. The eclipse mathematics
-itself runs entirely in your browser.
+it fetches elevation tiles (Mapzen/AWS) for both the base map and the horizon
+scans, map labels (Carto/OSM) and forecasts (Open-Meteo), plus a keyless
+reverse geocoder for place names, and credits every one of them on screen.
+The eclipse mathematics itself runs entirely in your browser.
 
 ## Tools
 
@@ -43,18 +43,23 @@ itself runs entirely in your browser.
   Ask for as many as you want and it deals that many, no two alike, seeded so
   the same set comes back. The PDF is one card per page and is written here,
   byte by byte, with no library involved.
-- [Eclipse Recon](eclipse-recon/) — a satellite-console view of a solar
-  eclipse: the path of totality computed from NASA's Besselian elements in
-  the browser, an animated umbra you can scrub through time, and a dossier
-  for any point you click — contact times, Sun altitude, a terrain-masked
-  horizon profile (does that ridge hide a low Sun?), and the cloud forecast,
-  with the whole centreline sweepable and ranked into good and bad zones.
-  It wears PREPRINT like the rest: the satellite map is a greyscale
-  photograph pinned under the masthead, the Moon's shadow is printed in
-  actual black, and the plates appear only where they mean something —
+- [Eclipse Recon](eclipse-recon/) — an ops-console view of a solar
+  eclipse: the path computed from Besselian elements in the browser, an
+  animated umbra you can scrub through time, and a dossier for any point
+  you click or type as coordinates — contact times, Sun altitude, a
+  terrain-masked horizon profile (does that ridge hide a low Sun?), and the
+  cloud outlook. A suitability field paints the whole umbral band as a
+  heatmap of duration × horizon × sky, where a Sun behind terrain scores
+  zero whatever the weather. Nothing is per-eclipse in the code: a
+  catalogue record is elements and a date, everything else is derived, and
+  any other eclipse loads by pasting the Polynomial Besselian Elements
+  block off its NASA/GSFC page. It wears PREPRINT like the rest: the map is
+  drawn from elevation alone — water the palest flat tone, land darkening
+  in altitude steps with a key in the corner — the Moon's shadow is printed
+  in actual black, and the plates appear only where they mean something —
   plate 3 is totality, plate 1 a good verdict, plate 2 a bad one, the
-  citron marker "marginal". It is the second tool that talks to the
-  network (see above).
+  citron marker "marginal". It is the second tool that talks to the network
+  (see above), and it works on a phone.
 
 The homepage ([index.html](index.html)) also lists a long line-up of
 "coming soon" tool categories: PDF, image, SVG, QR/barcode, audio, video,
