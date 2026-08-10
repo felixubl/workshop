@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+"""Press each live tool's dates onto its card.
+
+    tools/stamp-dates
+
+For every plate on the index — the divs carrying `data-tool` around a
+`.plate-say` sentence — this reads the tool's git history and rewrites the
+`<code class="plate-dates">` line under that sentence: the day the folder's
+first commit landed, and the day of the last commit that touched it. One
+date when they are the same day, because "added and unchanged since" is one
+fact, not two.
+
+The dates are baked into index.html because the site has no build step and
+fetches nothing on load; this script is the press that keeps them true. Run
+it after committing a change to any tool and commit what it rewrites — the
+stamping commit touches only the index, so it never moves the dates it just
+printed. A tool with no committed history yet is skipped with a note:
+commit the tool first, then stamp.
+"""
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+INDEX = ROOT / "index.html"
+
+
+def git_dates(tool):
+    """(first-added, last-changed) as %Y-%m-%d, or None without history."""
+    log = subprocess.run(
+        ["git", "log", "--format=%as", "--", f"{tool}/"],
+        cwd=ROOT, capture_output=True, text=True, check=True,
+    ).stdout.split()
+    if not log:
+        return None
+    return log[-1], log[0]
+
+
+def stamp(html):
+    # A card is the div opened by data-tool; the tempered dot keeps each match
+    # inside its own card, so a queue row (data-tool but no sentence) never
+    # borrows the next plate's.
+    card = re.compile(
+        r'(data-tool="([a-z0-9-]+)">'
+        r'(?:(?!data-tool=).)*?'
+        r'( *)<p class="plate-say">(?:(?!data-tool=).)*?</p>)'
+        r'(\n *<code class="plate-dates">[^<]*</code>)?',
+        re.S,
+    )
+
+    def press(m):
+        head, tool, indent = m.group(1), m.group(2), m.group(3)
+        dates = git_dates(tool)
+        if dates is None:
+            print(f"  {tool}: no committed history, skipped", file=sys.stderr)
+            return m.group(0)
+        first, last = dates
+        line = f"added {first}" if first == last else f"added {first} · changed {last}"
+        return f'{head}\n{indent}<code class="plate-dates">{line}</code>'
+
+    return card.sub(press, html)
+
+
+html = INDEX.read_text(encoding="utf-8")
+out = stamp(html)
+if out == html:
+    print("index.html: dates already true")
+else:
+    INDEX.write_text(out, encoding="utf-8")
+    print("index.html: dates pressed")

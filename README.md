@@ -72,9 +72,11 @@ The homepage ([index.html](index.html)) also lists a long line-up of
 "coming soon" tool categories: PDF, image, SVG, QR/barcode, audio, video,
 text/document, CSV/spreadsheet, developer, font, color, archive, geospatial,
 calendar, email, and more. Each new tool lands in its own top-level folder, and
-its card goes from a dashed outline to solid stock with a cast once it's built.
-A card carries the tool's name and nothing else, plus a pin that drives it to
-the front of the grid.
+its card goes from a queue row to solid stock with a cast once it's built.
+A card carries the tool's name, one sentence of what it is for, and two dates
+in small print — the day the tool first landed and the day it last changed,
+read out of git history by `tools/stamp-dates` rather than written by hand —
+plus a pin that drives it to the front of the grid.
 
 ## Stack
 
@@ -162,12 +164,15 @@ names it declares must not change.
    key off the folder name. The `.pullcord` goes above the header as the first
    child of `.wrap`, not inside it — it hangs from the top of the page, and
    `<header>` starts below the shell's padding.
-5. Add a card for it to the root [index.html](index.html). A card is the tool's
-   name and nothing else — no description, no badge, and no `data-tip`, because
-   a grid of nineteen that all speak when hovered is a grid that shouts. What
-   the tool does goes in an HTML comment on the card. Swap `tool-card-soon` for
-   `tool-card-live`, drop the `reg-N` class, wrap the `h3` in
-   `a.tool-open`, and update the tally count.
+5. Add a card for it to the root [index.html](index.html): a `div` on the
+   bench with the tool's register class (`reg-N`) and `data-tool`, holding a
+   `.plate.plate-live` — the name in an `h3` wrapped in `a.plate-open`, the
+   pin, and one `.plate-say` sentence. Remove the tool's queue row if it had
+   one, and update both tally counts.
+6. Commit, then run `tools/stamp-dates` and commit what it rewrites: it reads
+   git history and presses two dates onto every card — the day the tool first
+   landed, the day it last changed — and that script is the only thing that
+   writes those lines. Run it again after any later change to a tool.
 
 ## License
 
