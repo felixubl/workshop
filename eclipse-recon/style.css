@@ -125,6 +125,7 @@ body {
   border: none; background: none; cursor: var(--pp-cursor-point, pointer);
   color: var(--pp-faint); font-size: 0.75rem; padding: 0 0.2rem;
 }
+.head-keys { display: flex; align-items: center; gap: 0.2rem; }
 .sheet-fold:hover { color: var(--pp-ink); }
 .sheet-body { padding: 0.75rem; overflow-y: auto; scrollbar-width: thin; }
 .sheet.folded .sheet-body { display: none; }
@@ -457,16 +458,26 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
 
 @media (max-width: 900px) {
   .wrap.tool-head { padding-top: 0.9rem; padding-bottom: 0.6rem; }
-  /* the console owns the bottom edge; the zoom keys step above it */
-  .leaflet-bottom.leaflet-right { margin-bottom: 58px; }
+  /* the console owns the bottom edge; the zoom keys step above it, and
+     everything pinned to the bottom respects the phone's home bar */
+  .leaflet-bottom.leaflet-right {
+    margin-bottom: calc(58px + env(safe-area-inset-bottom, 0px)); }
   #intel { left: 8px; top: 8px; width: min(300px, 78vw); max-height: 46vh; }
-  #dossier { left: 8px; right: 8px; top: auto; bottom: 62px; width: auto;
-    max-height: 55vh; }
-  #console { left: 8px; right: 8px; bottom: 8px; gap: 0.4rem;
+  #dossier { left: 8px; right: 8px; top: auto;
+    bottom: calc(62px + env(safe-area-inset-bottom, 0px)); width: auto;
+    max-height: 48vh; }
+  /* folded, the dossier is a handle at the bottom: the map comes back and
+     the site is one tap away */
+  #dossier.folded { max-height: none; }
+  #console { left: 8px; right: 8px;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px)); gap: 0.4rem;
     padding: 0.35rem 0.5rem; }
   .readouts { display: none; }
   #map-annot { display: none; }
-  #suit-ctl { bottom: 62px; left: 8px; }
+  /* the suitability switch moves to the top corner, where no bottom sheet
+     can ever bury it */
+  #suit-ctl { top: 8px; right: 8px; left: auto; bottom: auto;
+    align-items: flex-end; }
 }
 @media (max-width: 520px) {
   .which-eclipse { width: 100%; padding-right: 22px; }
@@ -478,7 +489,6 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
   .share-btn { padding: 0 0.5rem; }
   #track { display: none; }
   #intel.folded { width: auto; }
-  #dossier { max-height: 60vh; }
 }
 
 /* Touch: every control meets the target size, and the hover tips that
@@ -486,6 +496,10 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
    also in a panel. */
 @media (pointer: coarse) {
   .sheet-fold { min-width: 44px; min-height: 34px; }
+  /* a 3px scrub thumb is a mouse's control; a thumb needs a post */
+  #scrub::-webkit-slider-thumb { width: 16px; height: 24px;
+    margin-top: -11px; }
+  #scrub::-moz-range-thumb { width: 16px; height: 24px; }
   .tl-row .btn-ghost { min-height: 30px; padding: 0.05em 0.8em; }
   #search-results li { padding: 0.55rem 0.6rem; }
   #sweep-list li { padding: 0.5rem 0.15rem; }

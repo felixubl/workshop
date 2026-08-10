@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Eclipse Recon — Felix' Workshop</title>
 <meta name="description" content="Solar eclipse visibility on an elevation map: local circumstances for any point, terrain-checked horizon profiles, and the cloud outlook along the path of totality.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
@@ -72,7 +72,10 @@
   <aside id="dossier" class="sheet" hidden>
     <div class="sheet-head">
       <h2>Site</h2>
-      <button class="sheet-fold" type="button" id="dossier-close" aria-label="Close site panel">✕</button>
+      <div class="head-keys">
+        <button class="sheet-fold" type="button" data-fold="dossier" aria-label="Collapse panel">▁</button>
+        <button class="sheet-fold" type="button" id="dossier-close" aria-label="Close site panel">✕</button>
+      </div>
     </div>
     <div class="sheet-body">
       <div class="tgt-id">
@@ -80,37 +83,6 @@
         <code id="tgt-coords"></code>
         <code id="tgt-elev"></code>
       </div>
-
-      <section id="sec-circ">
-        <h3>Local circumstances</h3>
-        <div id="circ-body"></div>
-      </section>
-
-      <section id="sec-terrain">
-        <h3>Horizon profile <span class="h-status" id="terrain-status"></span></h3>
-        <div id="terrain-body"></div>
-      </section>
-
-      <section id="sec-wx">
-        <h3>Sky conditions <span class="h-status" id="wx-status"></span></h3>
-        <div id="wx-body"></div>
-      </section>
-
-      <section id="sec-reach">
-        <h3>Within reach <span class="h-status" id="reach-status"></span></h3>
-        <div class="reach-row">
-          <select id="reach-km" aria-label="Travel radius">
-            <option value="10">10 km</option>
-            <option value="25">25 km</option>
-            <option value="50" selected>50 km</option>
-            <option value="100">100 km</option>
-            <option value="200">200 km</option>
-          </select>
-          <button id="reach-btn" class="btn-primary" type="button"
-            data-tip="Grade a grid of sites around this point — astronomy, terrain horizon, sky — and rank the best you can actually get to. Distances are straight-line.">Rank the area</button>
-        </div>
-        <ol id="reach-list" hidden></ol>
-      </section>
 
       <section id="sec-verdict">
         <h3>Assessment</h3>
@@ -130,6 +102,37 @@
           worse of overhead and the sightline decks toward its azimuth.</p>
         </details>
       </section>
+      <section id="sec-reach">
+        <h3>Within reach <span class="h-status" id="reach-status"></span></h3>
+        <div class="reach-row">
+          <select id="reach-km" aria-label="Travel radius">
+            <option value="10">10 km</option>
+            <option value="25">25 km</option>
+            <option value="50" selected>50 km</option>
+            <option value="100">100 km</option>
+            <option value="200">200 km</option>
+          </select>
+          <button id="reach-btn" class="btn-primary" type="button"
+            data-tip="Grade a grid of sites around this point — astronomy, terrain horizon, sky — and rank the best you can actually get to. Distances are straight-line.">Rank the area</button>
+        </div>
+        <ol id="reach-list" hidden></ol>
+      </section>
+
+      <section id="sec-circ">
+        <h3>Local circumstances</h3>
+        <div id="circ-body"></div>
+      </section>
+
+      <section id="sec-terrain">
+        <h3>Horizon profile <span class="h-status" id="terrain-status"></span></h3>
+        <div id="terrain-body"></div>
+      </section>
+
+      <section id="sec-wx">
+        <h3>Sky conditions <span class="h-status" id="wx-status"></span></h3>
+        <div id="wx-body"></div>
+      </section>
+
     </div>
   </aside>
 

@@ -702,6 +702,7 @@
     }).addTo(map);
 
     $('dossier').hidden = false;
+    $('dossier').classList.remove('folded');
     $('tgt-name').textContent = '…';
     $('tgt-coords').textContent = fmtLat(lat) + ' ' + fmtLon(lon);
     $('tgt-elev').textContent = 'elev —';
