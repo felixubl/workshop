@@ -385,12 +385,12 @@
     if (c) {
       var c2 = Bessel.centralPointAt(ecl, t + 30 / 3600);
       var vel = c2 ? Bessel.distKm(c.lat, c.lon, c2.lat, c2.lon) / 30 : null;
-      $('ro-shadow').textContent = 'shadow ' + fmtLat(c.lat) + ' ' + fmtLon(c.lon);
+      $('ro-shadow').textContent = 'umbra ' + fmtLat(c.lat) + ' ' + fmtLon(c.lon);
       $('ro-vel').textContent = vel ? vel.toFixed(2) + ' km/s' : '—';
       var near = nearestCenter(c.lat, c.lon);
       $('ro-dur').textContent = near ? 'totality ' + fmtDur(near.duration) : '—';
     } else {
-      $('ro-shadow').textContent = 'shadow off Earth';
+      $('ro-shadow').textContent = 'umbra off Earth';
       $('ro-vel').textContent = '—'; $('ro-dur').textContent = '—';
     }
 
@@ -482,20 +482,20 @@
     var stats = [
       ['type', e.type],
       ['gamma', g.gamma.toFixed(4)],
-      ['longest totality', fmtDur(g.maxDuration)],
-      ['moon : sun', g.ratioGE ? g.ratioGE.toFixed(4) : '—'],
-      ['greatest at', g.latGE !== null ?
+      ['max totality', fmtDur(g.maxDuration)],
+      ['diameter ratio', g.ratioGE ? g.ratioGE.toFixed(4) : '—'],
+      ['greatest eclipse', g.latGE !== null ?
         fmtLat(g.latGE) + ' ' + fmtLon(g.lonGE) : '—']
     ];
     $('intel-stats').innerHTML = stats.map(function (s) {
       return '<dt>' + s[0] + '</dt><dd>' + esc(s[1]) + '</dd>';
     }).join('');
     var rows = [
-      ['P1', g.p1Date, 'first bite of the partial'],
-      ['U1', g.u1Date, 'umbra touches down'],
+      ['P1', g.p1Date, 'partial eclipse begins'],
+      ['U1', g.u1Date, 'umbral path begins'],
       ['MAX', g.dateGE, 'greatest eclipse'],
-      ['U4', g.u4Date, 'umbra lifts off'],
-      ['P4', g.p4Date, 'last partial contact']
+      ['U4', g.u4Date, 'umbral path ends'],
+      ['P4', g.p4Date, 'partial eclipse ends']
     ];
     $('tl-rows').innerHTML = rows.map(function (r, i) {
       return '<div class="tl-row"><b>' + r[0] + '</b><code>' +
@@ -541,13 +541,13 @@
     }).addTo(map);
 
     $('dossier').hidden = false;
-    $('tgt-name').textContent = 'looking the place up…';
+    $('tgt-name').textContent = 'resolving name…';
     $('tgt-coords').textContent = fmtLat(lat) + ' ' + fmtLon(lon);
     $('tgt-elev').textContent = 'elev —';
     $('terrain-status').textContent = ''; $('terrain-status').className = 'h-status';
     $('wx-status').textContent = ''; $('wx-status').className = 'h-status';
-    $('terrain-body').innerHTML = '<p class="terrain-note">fetching elevations…</p>';
-    $('wx-body').innerHTML = '<p class="terrain-note">asking about the sky…</p>';
+    $('terrain-body').innerHTML = '<p class="terrain-note">loading elevation data…</p>';
+    $('wx-body').innerHTML = '<p class="terrain-note">loading sky data…</p>';
 
     // instant: the astronomy
     var circ = Bessel.localCircumstances(S.ecl, lat, lon, 0);
@@ -559,7 +559,7 @@
     // name
     Wx.placeName(lat, lon, signal).then(function (nm) {
       if (S.target && S.target.lat === lat) {
-        $('tgt-name').textContent = nm || 'unnamed spot (open water?)';
+        $('tgt-name').textContent = nm || 'unnamed location';
       }
     });
 
@@ -583,7 +583,7 @@
           if (!S.target || S.target.lat !== lat) return;
           S.target.wx = res;
           S.target.offSec = res.data[0].utcOffsetSec;
-          $('wx-status').textContent = 'live'; $('wx-status').className = 'h-status ok';
+          $('wx-status').textContent = 'loaded'; $('wx-status').className = 'h-status ok';
           renderCirc();          // now with local clock
           renderWeather();
           renderVerdict();
@@ -592,10 +592,10 @@
           if (err && err.name === 'AbortError') return;
           $('wx-status').textContent = 'unreachable'; $('wx-status').className = 'h-status err';
           $('wx-body').innerHTML =
-            '<p class="terrain-note">the weather service did not answer — the verdict leaves the sky out.</p>';
+            '<p class="terrain-note">Weather service unavailable; sky omitted from the assessment.</p>';
         });
     } else {
-      $('wx-body').innerHTML = '<p class="terrain-note">no eclipse at this spot.</p>';
+      $('wx-body').innerHTML = '<p class="terrain-note">No eclipse at this location.</p>';
     }
 
     // terrain horizon
@@ -625,12 +625,12 @@
         $('terrain-status').textContent = 'scan failed';
         $('terrain-status').className = 'h-status err';
         $('terrain-body').innerHTML =
-          '<p class="terrain-note">the elevation tiles did not answer — horizon unknown.</p>';
+          '<p class="terrain-note">Elevation data unavailable; horizon unknown.</p>';
       });
     } else {
       $('terrain-body').innerHTML = '<p class="terrain-note">' +
-        (circ ? 'the eclipse never clears the horizon here — nothing for the terrain to hide.'
-              : 'no eclipse at this spot.') + '</p>';
+        (circ ? 'Event below the local horizon; no profile computed.'
+              : 'No eclipse at this location.') + '</p>';
     }
 
     if (!opts.keepView && !map.getBounds().contains([lat, lon])) {
@@ -658,7 +658,7 @@
     var c = t.circ;
     if (!c) {
       $('circ-body').innerHTML = '<p class="terrain-note">the Moon’s shadow ' +
-        'misses this point entirely. Pick a spot inside the shaded zone.</p>';
+        'misses this point entirely. Select a point inside the shaded region.</p>';
       return;
     }
     var off = t.offSec;
@@ -667,11 +667,10 @@
       c.type === 'annular' ? 'annular' :
         'partial — ' + Math.round(c.obscuration * 100) + '% of the Sun covered';
     var typeCls = c.type === 'total' ? 'total' : 'partial';
-    var html = '<div class="circ-type">Here: <b class="' + typeCls + '">' +
+    var html = '<div class="circ-type">Type: <b class="' + typeCls + '">' +
                typeWord + '</b></div>';
     if (!c.visible) {
-      html += '<p class="terrain-note">⚠ the whole event runs below the local ' +
-              'horizon — it happens, but not for an observer here.</p>';
+      html += '<p class="terrain-note">The entire event occurs below the local horizon.</p>';
     }
     var rows = [
       ['C1', c.c1, 'partial begins'],
@@ -698,10 +697,10 @@
       fact('magnitude', c.magnitude.toFixed(3)) +
       fact('obscuration', (c.obscuration * 100).toFixed(1) + '%') +
       fact('sun at max', c.sunAlt.toFixed(1) + '° ' + compass(c.sunAz)) +
-      fact('w/ refraction', c.sunAltApparent.toFixed(1) + '°');
+      fact('refracted alt', c.sunAltApparent.toFixed(1) + '°');
     if (c.type !== 'total' && S.path.center.length) {
       var near = nearestPathKm(t.lat, t.lon);
-      html += fact('to centreline', Math.round(near.d) + ' km ' + near.dir);
+      html += fact('centreline dist', Math.round(near.d) + ' km ' + near.dir);
     }
     html += '</div>';
     $('circ-body').innerHTML = html;
@@ -840,9 +839,9 @@
 
     // verdict text
     var v = terrainVerdict();
-    var note = '<p class="terrain-note">horizon scanned to 120 km from ' +
-      Math.round(scan.siteElev) + ' m ASL + 2 m of observer; Earth curvature ' +
-      'and standard refraction applied.</p>';
+    var note = '<p class="terrain-note">Scan radius 120 km; observer ' +
+      Math.round(scan.siteElev) + ' m ASL + 2 m; Earth curvature and ' +
+      'standard refraction applied.</p>';
     $('terrain-body').innerHTML =
       '<div class="hz-wrap">' + svg + '<div class="hz-tip"></div></div>' +
       '<div class="terrain-verdict">' + v.html + '</div>' + note;
@@ -871,19 +870,18 @@
       var minMargin = Math.min.apply(null, margins);
       if (blocked === 0) {
         return { code: 'clear', margin: minMargin, html:
-          '<b class="ok">clear horizon</b> — totality rides ' +
-          minMargin.toFixed(1) + '° above the terrain at its lowest.' };
+          '<b class="ok">horizon clear</b> — minimum clearance ' +
+          minMargin.toFixed(1) + '° during totality.' };
       }
       if (blocked > nb - 2) {
         return { code: 'blocked', margin: minMargin, html:
-          '<b class="bad">terrain blocks totality</b> — the ridge stands ' +
-          (-minMargin).toFixed(1) + '° above the Sun the whole time. ' +
-          'Move.' };
+          '<b class="bad">terrain obstructs totality</b> — the horizon exceeds ' +
+          'solar altitude by ' + (-minMargin).toFixed(1) + '° throughout.' };
       }
       return { code: 'partial', margin: minMargin, html:
-        '<b class="part">partly hidden</b> — ' +
+        '<b class="part">partial obstruction</b> — ' +
         Math.round(blocked / (nb + 1) * 100) +
-        '% of totality is behind terrain here.' };
+        '% of totality is behind terrain.' };
     }
     // partial-phase site: how much of the show clears the ridge?
     var nb2 = 30, seen = 0;
@@ -894,10 +892,10 @@
     var pct = Math.round(seen / (nb2 + 1) * 100);
     return { code: pct > 80 ? 'clear' : pct > 20 ? 'partial' : 'blocked',
       html: pct > 80 ?
-        '<b class="ok">clear horizon</b> — ' + pct + '% of the partial phases are in view.' :
+        '<b class="ok">horizon clear</b> — ' + pct + '% of the event is above the terrain.' :
         pct > 20 ?
-        '<b class="part">partly hidden</b> — only ' + pct + '% of the event clears the terrain.' :
-        '<b class="bad">terrain blocks it</b> — the event is almost entirely behind terrain.' };
+        '<b class="part">partial obstruction</b> — ' + pct + '% of the event clears the terrain.' :
+        '<b class="bad">obstructed</b> — the event is almost entirely behind terrain.' };
   }
 
   function attachHzTip(prof, track) {
@@ -939,11 +937,11 @@
     var vCls = v.code === 'GO' ? 'go' : v.code === 'COND' ? 'cond' : 'nogo';
 
     var modeLine = mode === 'forecast' ?
-        '<b>forecast</b> · Open-Meteo, at this site’s own eclipse hour' :
+        '<b>Forecast</b> (Open-Meteo), interpolated to mid-eclipse' :
       mode === 'archive' ?
-        '<b>archive</b> · what the sky actually did (ERA5 reanalysis)' :
-        '<b>climatology</b> · same date, last ' + (pdata.years || 8) +
-        ' years averaged — odds, not a promise';
+        '<b>Archive</b> (ERA5 reanalysis) — observed conditions' :
+        '<b>Climatology</b> (ERA5) — same date, mean of the last ' +
+        (pdata.years || 8) + ' years';
 
     var html = '<div class="wx-mode">' + modeLine + '</div>';
     if (score !== null) {
@@ -1028,65 +1026,66 @@
     var t = S.target;
     if (!t) return;
     var c = t.circ;
-    var reasons = [], code = 'go', stamp = 'good site';
+    var reasons = [], code = 'go', stamp = 'suitable';
 
     if (!c) {
       code = 'nogo'; stamp = 'no eclipse';
-      reasons.push('the shadow misses this spot — move into the shaded corridor.');
+      reasons.push('No eclipse at this location.');
     } else if (!c.visible) {
       code = 'nogo'; stamp = 'below horizon';
-      reasons.push('the event runs below the horizon here.');
+      reasons.push('The event occurs below the local horizon.');
     } else {
       if (c.type === 'total') {
-        reasons.push('total eclipse — ' + fmtDur(c.duration) +
-          ' of totality, Sun at ' + c.sunAlt.toFixed(1) + '°.');
+        reasons.push('Total eclipse; totality ' + fmtDur(c.duration) +
+          '; Sun at ' + c.sunAlt.toFixed(1) + '°.');
       } else {
         var near = nearestPathKm(t.lat, t.lon);
-        code = 'cond'; stamp = 'relocate';
-        reasons.push('partial only (' + Math.round(c.obscuration * 100) +
-          '% covered) — the centreline is ' + Math.round(near.d) + ' km ' +
+        code = 'cond'; stamp = 'outside path';
+        reasons.push('Partial eclipse only (' + Math.round(c.obscuration * 100) +
+          '% obscuration); centreline ' + Math.round(near.d) + ' km ' +
           near.dir + '.');
       }
       if (c.sunAlt < 3) {
         code = code === 'nogo' ? 'nogo' : 'cond';
-        reasons.push('Sun under 3° — even flat terrain is a risk; scout an open ' +
-          compass(c.sunAz) + ' horizon.');
+        reasons.push('Sun below 3°; an unobstructed ' + compass(c.sunAz) +
+          ' horizon is required.');
       } else if (c.sunAlt < 12) {
-        reasons.push('low Sun (' + c.sunAlt.toFixed(1) + '° ' +
-          compass(c.sunAz) + ') — the horizon check is the one that matters.');
+        reasons.push('Low Sun (' + c.sunAlt.toFixed(1) + '° ' +
+          compass(c.sunAz) + '); horizon obstruction is the dominant risk.');
       }
       // terrain
       if (t.terrain) {
         var tv = terrainVerdict();
-        if (tv.code === 'blocked') { code = 'nogo'; stamp = 'bad site'; }
-        else if (tv.code === 'partial' && code !== 'nogo') { code = 'cond'; if (stamp === 'good site') stamp = 'marginal'; }
+        if (tv.code === 'blocked') { code = 'nogo'; stamp = 'unsuitable'; }
+        else if (tv.code === 'partial' && code !== 'nogo') { code = 'cond'; if (stamp === 'suitable') stamp = 'marginal'; }
         else if (tv.code === 'clear' && tv.margin !== undefined && tv.margin < 1.5 && c.type === 'total') {
           if (code === 'go') { code = 'cond'; stamp = 'marginal'; }
-          reasons.push('horizon margin only ' + tv.margin.toFixed(1) +
-            '° — verify your exact spot on foot.');
+          reasons.push('Horizon clearance only ' + tv.margin.toFixed(1) +
+            '°; verify the exact site locally.');
         }
-        reasons.push(tv.html.replace(/<[^>]+>/g, ''));
+        var tvText = tv.html.replace(/<[^>]+>/g, '');
+        reasons.push(tvText.charAt(0).toUpperCase() + tvText.slice(1));
       } else {
-        reasons.push('terrain: scan pending or unavailable.');
+        reasons.push('Horizon profile pending or unavailable.');
       }
       // sky
       if (t.wx) {
         var cond = Wx.atTime(t.wx.data[0], c.dateMax);
         var score = Wx.skyScore(cond);
         var wv = Wx.verdictFor(score);
-        if (wv.code === 'NOGO') { if (code !== 'nogo') { code = 'nogo'; stamp = 'bad site'; } }
+        if (wv.code === 'NOGO') { if (code !== 'nogo') { code = 'nogo'; stamp = 'unsuitable'; } }
         else if (wv.code === 'COND' && code === 'go') { code = 'cond'; stamp = 'marginal'; }
         var lead = cond && cond.low > 40 ? 'low cloud ' + Math.round(cond.low) + '%' :
           cond && cond.mid > 40 ? 'mid cloud ' + Math.round(cond.mid) + '%' :
           cond && cond.high > 50 ? 'cirrus ' + Math.round(cond.high) + '%' : null;
-        reasons.push('sky score ' + (score === null ? '—' : Math.round(score)) +
-          '/100 (' + t.wx.mode + ')' + (lead ? ' — ' + lead : '') + '.');
+        reasons.push('Sky score ' + (score === null ? '—' : Math.round(score)) +
+          '/100 (' + t.wx.mode + ')' + (lead ? '; ' + lead : '') + '.');
       } else {
-        reasons.push('sky: no data yet.');
+        reasons.push('Sky data pending.');
       }
     }
     if (code === 'go' && c && c.type === 'total') {
-      reasons.unshift('clears every check currently in hand.');
+      reasons.unshift('All available checks pass.');
     }
     $('verdict-body').innerHTML = '<div class="verdict ' + code + '">' +
       '<span class="stamp">' + stamp + '</span><ul>' +
@@ -1105,14 +1104,14 @@
     var btn = $('sweep-btn');
     btn.disabled = true;
     $('sweep-progress').hidden = false;
-    setProgress(0.05, 'sampling path');
+    setProgress(0.05, 'sampling centreline');
 
     // every nth centre point, at most 72 probes
     var step = Math.max(1, Math.ceil(centers.length / 72));
     var pts = [];
     for (var i = 0; i < centers.length; i += step) pts.push(centers[i]);
 
-    setProgress(0.15, 'pulling sky data');
+    setProgress(0.15, 'retrieving sky data');
     Wx.get(pts.map(function (p) { return { lat: p.lat, lon: p.lon }; }),
            S.gt.dateGE)
       .then(function (res) {
@@ -1133,8 +1132,8 @@
       .catch(function (e) {
         $('sweep-list').hidden = false;
         $('sweep-list').innerHTML =
-          '<li><span class="meta">sweep failed — the weather service did not answer (' +
-          esc(e.message) + ')</span></li>';
+          '<li><span class="meta">Survey failed; weather service unavailable (' +
+          esc(e.message) + ').</span></li>';
       })
       .then(function () {
         btn.disabled = false;
@@ -1144,7 +1143,7 @@
   function setProgress(f, word) {
     $('sweep-progress').querySelector('i').style.width = (f * 100) + '%';
     $('sweep-progress').querySelector('span').textContent =
-      (word || 'sweep') + ' ' + Math.round(f * 100) + '%';
+      (word || 'survey') + ' ' + Math.round(f * 100) + '%';
   }
 
   function sweepDotStyle(vCode) {
@@ -1180,9 +1179,9 @@
     list.hidden = false;
     list.innerHTML = '<li><span class="meta">' +
       (mode === 'climatology' ?
-        'ranked by climatological odds (same date, recent years)' :
-        mode === 'archive' ? 'ranked by the sky as it actually was' :
-        'ranked by forecast sky at each point’s own eclipse time') +
+        'Ranked by climatological mean for the calendar date.' :
+        mode === 'archive' ? 'Ranked by observed conditions (archive).' :
+        'Ranked by forecast sky at each point’s mid-eclipse.') +
       '</span></li>';
     return Promise.all(ranked.map(function (r) {
       return Wx.placeName(r.lat, r.lon).catch(function () { return null; });
@@ -1191,7 +1190,7 @@
         var li = document.createElement('li');
         var vCls = r.v.code === 'GO' ? 'go' : r.v.code === 'COND' ? 'cond' : 'nogo';
         li.innerHTML = '<span class="rk">' + pad2(i + 1) + '</span>' +
-          '<span class="nm">' + esc(names[i] || 'open water / unnamed') + '</span>' +
+          '<span class="nm">' + esc(names[i] || 'unnamed location') + '</span>' +
           '<span class="sc ' + vCls + '">' +
           Math.round(r.score) + '</span>' +
           '<span class="meta">' + fmtLat(r.lat) + ' ' + fmtLon(r.lon) +

@@ -215,9 +215,9 @@ var Wx = (function () {
 
   function verdictFor(score) {
     if (score === null) return { code: 'UNKN', word: 'no data' };
-    if (score >= 70) return { code: 'GO', word: 'good' };
-    if (score >= 45) return { code: 'COND', word: 'chancy' };
-    return { code: 'NOGO', word: 'poor' };
+    if (score >= 70) return { code: 'GO', word: 'favourable' };
+    if (score >= 45) return { code: 'COND', word: 'uncertain' };
+    return { code: 'NOGO', word: 'unfavourable' };
   }
 
   /* Place search (Open-Meteo geocoder). */

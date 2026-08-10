@@ -28,11 +28,11 @@ var ECLIPSES = [
     mu: [88.747787,  15.003090,   0.0,        0.0],
     tanF1: 0.0046141,
     tanF2: 0.0045911,
-    // where to look first, and the story in one line
+    // initial view, and one line of context
     home: { lat: 55, lon: -20, zoom: 3 },
-    brief: 'Arctic Ocean > Greenland > Iceland > open Atlantic > northern Spain. ' +
-           'Totality arrives over Iberia with the Sun under 12 degrees high and ' +
-           'sinking — western horizons decide everything.'
+    brief: 'Path: Arctic Ocean, Greenland, Iceland, northern Spain. Over ' +
+           'Iberia the Sun stands below 12° and setting; western horizon ' +
+           'obstruction is often decisive.'
   },
   {
     id: '2027-08-02',
@@ -51,9 +51,9 @@ var ECLIPSES = [
     tanF1: 0.0046064,
     tanF2: 0.0045834,
     home: { lat: 27, lon: 15, zoom: 4 },
-    brief: 'Strait of Gibraltar > North Africa > Luxor > Arabian peninsula. ' +
-           'Six minutes twenty-three of totality at maximum, high Sun, ' +
-           'desert climatology. The one to travel for.'
+    brief: 'Path: southern Spain, North Africa, Egypt, Arabian peninsula. ' +
+           'Maximum totality 6 m 23 s near Luxor; high Sun; dry-season ' +
+           'climatology.'
   },
   {
     id: '2028-07-22',
@@ -72,9 +72,9 @@ var ECLIPSES = [
     tanF1: 0.0046016,
     tanF2: 0.0045786,
     home: { lat: -25, lon: 133, zoom: 4 },
-    brief: 'Indian Ocean > Kimberley > outback > Sydney Harbour at 14:00 local ' +
-           '> New Zealand at dusk. Five minutes of totality over northwest ' +
-           'Australia in the dry season.'
+    brief: 'Path: Indian Ocean, northwest and central Australia, Sydney, ' +
+           'New Zealand at dusk. Totality up to 5 m 10 s over the Kimberley ' +
+           'in the dry season.'
   },
   {
     id: '2024-04-08',
@@ -93,10 +93,9 @@ var ECLIPSES = [
     tanF1: 0.0046683,
     tanF2: 0.0046450,
     home: { lat: 35, lon: -95, zoom: 4 },
-    brief: 'The replay: Mazatlan > Texas > the Ohio valley > Newfoundland, ' +
-           '2024 April 8. Kept as the calibration record — the engine is ' +
-           'checked against what actually happened that afternoon, clouds ' +
-           'included.'
+    brief: 'Replay: Mazatlan, Texas, the Ohio valley, Newfoundland ' +
+           '(2024 Apr 8). Retained for calibration; the archive shows ' +
+           'observed conditions.'
   }
 ];
 
