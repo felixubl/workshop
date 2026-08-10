@@ -49,8 +49,12 @@ itself runs entirely in your browser.
   for any point you click — contact times, Sun altitude, a terrain-masked
   horizon profile (does that ridge hide a low Sun?), and the cloud forecast,
   with the whole centreline sweepable and ranked into good and bad zones.
-  Deliberately not PREPRINT: it dresses as the spy-movie ops console it is,
-  and it is the second tool that talks to the network (see above).
+  It wears PREPRINT like the rest: the satellite map is a greyscale
+  photograph pinned under the masthead, the Moon's shadow is printed in
+  actual black, and the plates appear only where they mean something —
+  plate 3 is totality, plate 1 a good verdict, plate 2 a bad one, the
+  citron marker "marginal". It is the second tool that talks to the
+  network (see above).
 
 The homepage ([index.html](index.html)) also lists a long line-up of
 "coming soon" tool categories: PDF, image, SVG, QR/barcode, audio, video,
@@ -65,7 +69,10 @@ the front of the grid.
 Plain HTML/CSS/JS per tool, no bundler, no framework. The one exception to
 "no library" is Eclipse Recon, which vendors Leaflet 1.9.4 (BSD-2) into its
 own folder for the map pane — the eclipse engine, terrain reader and weather
-client beside it are written from scratch. The design language is
+client beside it are written from scratch, and everything the tool draws
+(map overlays, charts) reads its colour off the PREPRINT tokens at draw
+time, so the pull cord restyles the map along with the page. The design
+language is
 **PREPRINT**: a printed sheet, then annotated by hand. Hepta Slab for display,
 Zilla Slab for anything read at length, Cousine for anything the machine said,
 three press plates instead of an accent colour, hard offset casts instead of
