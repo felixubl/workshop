@@ -1,10 +1,10 @@
 /* Eclipse Recon — the page.
-   Wiring: Leaflet satellite map, the Besselian engine, the terrain reader
+   Wiring: Leaflet relief map, the Besselian engine, the terrain reader
    and the weather client. All colour comes off the PREPRINT tokens at draw
    time, so the pull cord restyles the map and charts along with the page:
-   the photograph is greyscale, the shadow is printed in black, plate 3 is
-   totality, plate 1 a good verdict, plate 2 a bad one, and the citron
-   marker means marginal. */
+   the ground is an altitude ramp drawn from elevation data, the shadow is
+   printed in black, plate 3 is totality, plate 1 a good verdict, plate 2 a
+   bad one, and the citron marker means marginal. */
 
 (function () {
   'use strict';
@@ -125,8 +125,8 @@
   });
   L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-  map.createPane('imagery').style.zIndex = 200;
-  map.getPane('imagery').classList.add('pane-imagery');
+  map.createPane('relief').style.zIndex = 200;
+  map.getPane('relief').classList.add('pane-relief');
   map.createPane('heat').style.zIndex = 290;
   map.createPane('night').style.zIndex = 300;
   map.createPane('labels').style.zIndex = 380;
@@ -137,13 +137,107 @@
   map.getPane('heat').style.pointerEvents = 'none';
   map.getPane('eclShadow').style.pointerEvents = 'none';
 
-  L.tileLayer(
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    { pane: 'imagery', maxZoom: 17 }).addTo(map);
+  /* The ground layer is not a photograph. It was — Esri imagery through a
+     grayscale() filter — and a photograph turned grey still ranks a forest
+     against a desert by how much light each threw at a satellite, which is a
+     fact about vegetation and weather, not about the ground. The recon map
+     has to answer exactly two questions about the ground: is that water, and
+     how high is that. So it is drawn from the answers themselves: the same
+     Mapzen terrarium tiles the horizon scan reads, decoded to metres per
+     pixel and pressed into altitude bands.
+
+     Water is the palest tone on the map and dead flat; land starts a step
+     darker and darkens with height. Lighter than everything = water, darker
+     = higher, and the key beside the credits says where the steps fall. The
+     bands are steps rather than a smooth ramp because a smooth ramp can only
+     be compared ("higher than there"), while a step can be read ("above two
+     thousand"), and reading is the point.
+
+     The one lie the data tells: terrarium's zero is the sea. A lake above
+     sea level is a positive elevation like the land around it, and the shore
+     of a below-sea-level basin (the Dead Sea's, Death Valley's) sits under
+     zero like the sea does. No single elevation number can say "wet", and
+     this map would rather be simple than pretend otherwise. */
+  var HYPSO_WATER = 236;
+  var HYPSO_BANDS = [
+    { upTo: 200,      shade: 208 },
+    { upTo: 500,      shade: 189 },
+    { upTo: 1000,     shade: 170 },
+    { upTo: 1500,     shade: 150 },
+    { upTo: 2000,     shade: 129 },
+    { upTo: 3000,     shade: 106 },
+    { upTo: 4000,     shade: 82 },
+    { upTo: Infinity, shade: 58 }
+  ];
+
+  function hypsoShade(h) {
+    if (h <= 0) return HYPSO_WATER;
+    for (var i = 0; i < HYPSO_BANDS.length; i++) {
+      if (h < HYPSO_BANDS[i].upTo) return HYPSO_BANDS[i].shade;
+    }
+    return HYPSO_BANDS[HYPSO_BANDS.length - 1].shade;
+  }
+
+  var ReliefLayer = L.GridLayer.extend({
+    createTile: function (coords, done) {
+      var tile = document.createElement('canvas');
+      tile.width = tile.height = 256;
+      var img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function () {
+        try {
+          var ctx = tile.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(img, 0, 0);
+          var id = ctx.getImageData(0, 0, 256, 256);
+          var p = id.data;
+          for (var i = 0; i < p.length; i += 4) {
+            var s = hypsoShade(p[i] * 256 + p[i + 1] + p[i + 2] / 256 - 32768);
+            p[i] = p[i + 1] = p[i + 2] = s;
+            p[i + 3] = 255;
+          }
+          ctx.putImageData(id, 0, 0);
+        } catch (e) { /* a blank tile is the paper showing through */ }
+        done(null, tile);
+      };
+      img.onerror = function () { done(null, tile); };
+      img.src = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/' +
+                coords.z + '/' + coords.x + '/' + coords.y + '.png';
+      return tile;
+    }
+  });
+  // terrarium stops at z15; past that the bands upscale, which costs a
+  // stepped map nothing
+  new ReliefLayer({ pane: 'relief', maxNativeZoom: 15, maxZoom: 17 })
+    .addTo(map);
+
   L.tileLayer(
     'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
     { pane: 'labels', subdomains: 'abcd', maxZoom: 17 }).addTo(map);
   map.getPane('labels').classList.add('pane-labels');
+
+  /* The key, built from the same array that paints the tiles so the two
+     cannot drift apart. Each label is the metre line where its band begins. */
+  (function buildHypsoKey() {
+    var key = $('hypso-key');
+    if (!key) return;
+    function cell(shade, label) {
+      var i = document.createElement('i');
+      i.style.background = 'rgb(' + shade + ',' + shade + ',' + shade + ')';
+      var b = document.createElement('b');
+      b.textContent = label;
+      key.appendChild(i);
+      key.appendChild(b);
+    }
+    cell(HYPSO_WATER, 'water');
+    var from = 0;
+    HYPSO_BANDS.forEach(function (band) {
+      cell(band.shade, from >= 1000 ? (from / 1000) + 'k' : String(from));
+      from = band.upTo;
+    });
+    var unit = document.createElement('b');
+    unit.textContent = 'm+';
+    key.appendChild(unit);
+  })();
 
   /* ================= static geometry per eclipse ================= */
 

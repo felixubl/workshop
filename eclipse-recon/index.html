@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Eclipse Recon — Felix' Workshop</title>
-<meta name="description" content="Solar eclipse visibility on a satellite map: local circumstances for any point, terrain-checked horizon profiles, and the cloud outlook along the path of totality.">
+<meta name="description" content="Solar eclipse visibility on an elevation map: local circumstances for any point, terrain-checked horizon profiles, and the cloud outlook along the path of totality.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <script src="../assets/preprint/js/pullcord.js" defer></script>
@@ -128,10 +128,13 @@
     </div>
   </div>
 
-  <div id="credits">
-    imagery Esri/Maxar · labels Carto/OSM · terrain Mapzen/AWS ·
-    weather &amp; geocoding Open-Meteo · names BigDataCloud ·
-    elements NASA-GSFC (Espenak) · smooth-limb model, contact times ±2s
+  <div id="map-annot">
+    <div id="hypso-key" title="Altitude bands, in metres. Water is the palest tone; land darkens with height."></div>
+    <div id="credits">
+      relief &amp; horizons Mapzen/AWS terrain · labels Carto/OSM ·
+      weather &amp; geocoding Open-Meteo · names BigDataCloud ·
+      elements NASA-GSFC (Espenak) · smooth-limb model, contact times ±2s
+    </div>
   </div>
 </main>
 

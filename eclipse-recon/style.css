@@ -1,13 +1,15 @@
 /* Eclipse Recon — tool-specific layout.
    The sheet system, the type, the plates and both colour modes come from
-   PREPRINT; this file only lays out a map page: a full-bleed satellite
-   photograph pinned under the masthead, with paper cards floating on it.
+   PREPRINT; this file only lays out a map page: a full-bleed relief map
+   pinned under the masthead, with paper cards floating on it.
 
-   Colour policy: the photograph is greyscale, the Moon's shadow is printed
-   in actual black, and ink does the drawing. Plates appear only where they
-   mean something — plate 3 (blue) is totality wherever it shows up, plate 1
-   (green) is a good verdict, plate 2 (red) a bad one, and the citron marker
-   is "marginal". Everything else is ink on paper. */
+   Colour policy: the ground is drawn from elevation alone — water is the
+   palest tone and dead flat, land darkens in altitude steps — the Moon's
+   shadow is printed in actual black, and ink does the drawing. Plates
+   appear only where they mean something — plate 3 (blue) is totality
+   wherever it shows up, plate 1 (green) is a good verdict, plate 2 (red) a
+   bad one, and the citron marker is "marginal". Everything else is ink on
+   paper. */
 
 /* an explicit display (flex on sheets) must never beat the hidden attribute */
 [hidden] { display: none !important; }
@@ -47,10 +49,14 @@ body {
   background: color-mix(in srgb, var(--pp-ink) 8%, var(--pp-paper));
   cursor: var(--pp-cursor-cross, crosshair);
 }
-/* the photograph is greyscale; dark mode dims the exposure */
-#map .pane-imagery { filter: grayscale(1) contrast(1.04); }
-[data-mode="dark"] #map .pane-imagery {
-  filter: grayscale(1) brightness(0.62) contrast(1.1);
+/* The relief arrives already in its final greys — app.js paints the tiles,
+   no filter corrects them. Dark mode dims the sheet, and the SAME filter
+   goes on the key's swatches, because a key that skips the filter is a key
+   to a different map. The reading rule holds in both modes: palest = water,
+   darker = higher. */
+[data-mode="dark"] #map .pane-relief,
+[data-mode="dark"] #hypso-key i {
+  filter: brightness(0.66) contrast(1.05);
 }
 #map .pane-labels { filter: grayscale(1); opacity: 0.85; }
 [data-mode="dark"] #map .pane-labels { filter: grayscale(1) invert(1); }
@@ -341,13 +347,39 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
 .readouts .ro-unit { font-size: 0.6rem; color: var(--pp-faint);
   margin-left: -0.55rem; }
 
-#credits {
+/* The corner annotations: the altitude key standing directly on the credits
+   it belongs with, one pinned stack so neither can wander into the other
+   however many lines the credits wrap to. */
+#map-annot {
   position: absolute; right: 14px; bottom: 66px; z-index: 900;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
+}
+#credits {
   max-width: 340px; text-align: right;
   font-family: var(--pp-font-mono); font-size: 0.56rem; line-height: 1.5;
   color: var(--pp-faint);
   text-shadow: 0 0 3px var(--pp-paper), 0 0 3px var(--pp-paper);
 }
+
+/* The altitude key: the hypsometric bar every printed atlas carries, at the
+   micro scale of the credits it stands on. Swatch, then the metre line
+   where that band begins; app.js fills it from the array that paints the
+   tiles. The swatches keep a hairline so the water swatch does not dissolve
+   into the paper it nearly matches. */
+#hypso-key {
+  display: flex; align-items: center;
+  font-family: var(--pp-font-mono); font-size: 0.56rem; line-height: 1;
+  color: var(--pp-faint);
+  text-shadow: 0 0 3px var(--pp-paper), 0 0 3px var(--pp-paper);
+}
+#hypso-key i {
+  width: 13px; height: 8px; flex: none;
+  border: 1px solid color-mix(in srgb, var(--pp-ink) 25%, transparent);
+}
+#hypso-key b {
+  font-weight: 400; margin: 0 5px 0 3px;
+}
+#hypso-key b:last-child { margin-left: 2px; }
 
 /* ---- small screens -------------------------------------------------- */
 
@@ -359,7 +391,7 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
   #console { left: 8px; right: 8px; bottom: 8px; gap: 0.4rem;
     padding: 0.35rem 0.5rem; }
   .readouts { display: none; }
-  #credits { display: none; }
+  #map-annot { display: none; }
 }
 @media (max-width: 520px) {
   .which-eclipse .we-label { display: none; }
