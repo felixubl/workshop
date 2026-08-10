@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Eclipse Recon — Felix' Workshop</title>
-<meta name="description" content="The path of totality on a satellite map: exact timings for any point you pick, a terrain-checked horizon for a low Sun, and the cloud outlook along the whole track — good zones and bad, ranked.">
+<meta name="description" content="Solar eclipse visibility on a satellite map: local circumstances for any point, terrain-checked horizon profiles, and the cloud outlook along the path of totality.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <script src="../assets/preprint/js/pullcord.js" defer></script>
@@ -47,7 +47,7 @@
   <!-- left: the event -->
   <aside id="intel" class="sheet">
     <div class="sheet-head">
-      <h2>The event</h2>
+      <h2>Event</h2>
       <button class="sheet-fold" type="button" data-fold="intel" aria-label="Collapse panel">▁</button>
     </div>
     <div class="sheet-body">
@@ -58,14 +58,14 @@
         <div id="tl-rows"></div>
       </div>
       <div class="search">
-        <h3>Find a place</h3>
+        <h3>Search</h3>
         <input id="search" class="field" type="search" placeholder="place name…" autocomplete="off" spellcheck="false" aria-label="Search for a place">
         <ul id="search-results" hidden></ul>
       </div>
-      <button id="sweep-btn" class="btn-primary" type="button">Sweep the path</button>
-      <p class="sweep-note">samples the centreline and pulls the cloud outlook
-        for every point — the good and bad zones, ranked.</p>
-      <div id="sweep-progress" hidden><i></i><span>sweep 0%</span></div>
+      <button id="sweep-btn" class="btn-primary" type="button">Survey the centreline</button>
+      <p class="sweep-note">Samples the centreline and retrieves the cloud
+        outlook for each point, ranked.</p>
+      <div id="sweep-progress" hidden><i></i><span>survey 0%</span></div>
       <ol id="sweep-list" hidden></ol>
     </div>
   </aside>
@@ -73,33 +73,33 @@
   <!-- right: the site report -->
   <aside id="dossier" class="sheet" hidden>
     <div class="sheet-head">
-      <h2>Site report</h2>
-      <button class="sheet-fold" type="button" id="dossier-close" aria-label="Close site report">✕</button>
+      <h2>Site</h2>
+      <button class="sheet-fold" type="button" id="dossier-close" aria-label="Close site panel">✕</button>
     </div>
     <div class="sheet-body">
       <div class="tgt-id">
-        <span id="tgt-name">looking the place up…</span>
+        <span id="tgt-name">resolving name…</span>
         <code id="tgt-coords"></code>
         <code id="tgt-elev"></code>
       </div>
 
       <section id="sec-circ">
-        <h3>Timing here</h3>
+        <h3>Local circumstances</h3>
         <div id="circ-body"></div>
       </section>
 
       <section id="sec-terrain">
-        <h3>Horizon <span class="h-status" id="terrain-status"></span></h3>
+        <h3>Horizon profile <span class="h-status" id="terrain-status"></span></h3>
         <div id="terrain-body"></div>
       </section>
 
       <section id="sec-wx">
-        <h3>Sky <span class="h-status" id="wx-status"></span></h3>
+        <h3>Sky conditions <span class="h-status" id="wx-status"></span></h3>
         <div id="wx-body"></div>
       </section>
 
       <section id="sec-verdict">
-        <h3>Verdict</h3>
+        <h3>Assessment</h3>
         <div id="verdict-body"></div>
       </section>
     </div>
@@ -114,7 +114,7 @@
       <option value="1800">×1800</option>
     </select>
     <button id="track" class="btn-ghost" type="button" aria-pressed="false"
-      title="Keep the shadow centred while time runs">follow</button>
+      title="Keep the umbra centred during playback">follow</button>
     <div id="scrub-wrap">
       <div id="scrub-band" aria-hidden="true"></div>
       <input id="scrub" type="range" min="0" max="1000" value="0" step="1" aria-label="Simulation time" data-plain>
@@ -122,9 +122,9 @@
     </div>
     <div class="readouts">
       <code id="clock-ut" title="Simulation clock (UTC)">--:--:--</code><span class="ro-unit">UT</span>
-      <code id="ro-shadow" title="Where the shadow is on the ground">shadow —</code>
-      <code id="ro-vel" title="Ground speed of the shadow">—</code>
-      <code id="ro-dur" title="Totality on the centreline here">—</code>
+      <code id="ro-shadow" title="Umbra ground position">umbra —</code>
+      <code id="ro-vel" title="Umbra ground speed">—</code>
+      <code id="ro-dur" title="Centreline totality duration">—</code>
     </div>
   </div>
 
