@@ -59,7 +59,8 @@ The eclipse mathematics itself runs entirely in your browser.
   printed in the tool, factor by factor, for every site you click. A
   "within reach" panel answers the practical question — I am here, where
   could I go? — by painting that field inside a travel radius, graded on
-  the local curve, at a grid resolution the reader chooses: finer costs
+  the local curve, at a cell size the reader chooses — down to 100 m,
+  the scale at which the terrain data itself runs out: finer costs
   more horizon scans, all computed on their own machine, and every scan
   is kept in the browser (IndexedDB) — the horizon is surveyed fact and
   never expires — so finer passes and return visits only pay for ground

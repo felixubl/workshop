@@ -1360,7 +1360,7 @@
 
   function pooledTerrain(list, signal, dead, onOne) {
     return new Promise(function (resolve) {
-      var i = 0, active = 0, LIMIT = 4;
+      var i = 0, active = 0, done = 0, LIMIT = 4;
       (function next() {
         if (dead()) { resolve(); return; }
         if (i >= list.length && active === 0) { resolve(); return; }
@@ -1368,7 +1368,12 @@
           active++;
           scanVis(list[i++], signal).then(function () {
             if (onOne) onOne();
-            active--; next();
+            active--;
+            /* cached scans resolve in microtasks, which never yield to
+               the renderer: without a real timeout a warm survey of
+               thousands runs as one unbroken task and the page — and
+               its own progress line — freezes until the end */
+            if (++done % 40 === 0) setTimeout(next, 0); else next();
           });
         }
       })();
@@ -1859,11 +1864,32 @@
   $('reach-btn').addEventListener('click', function () {
     if (!S.target) return;
     runReach(S.target.lat, S.target.lon, +$('reach-km').value,
-             +$('reach-grid').value);
+             +$('reach-grid').value || 0);
   });
 
-  function runReach(baseLat, baseLon, radiusKm, cols) {
+  function fmtCellKm(km) {
+    return km < 1 ? Math.round(km * 1000) + ' m'
+                  : (Math.round(km * 10) / 10) + ' km';
+  }
+
+  function runReach(baseLat, baseLon, radiusKm, cellKm) {
     reachStop();
+    var status = $('reach-status');
+    status.className = 'h-status';
+
+    /* a square grid over the disc; the disc keeps the cells. The reader
+       picks the cell size — finer is quadratically more scans, spent
+       from their own machine, and every scan lands in the persistent
+       cache, so a finer pass after a coarse one only pays for the new
+       points. The cap is the survey's patience, not the maths: 200
+       cells across, which makes each cell size good for one decade of
+       radius — 100 m to 10 km, 250 m to 25 km, and so on up. */
+    var COLS = cellKm ? Math.round(2 * radiusKm / cellKm) : 13;
+    if (COLS > 200) {
+      status.textContent = fmtCellKm(cellKm) + ' cells hold to ' +
+        Math.floor(cellKm * 100) + ' km — shrink the radius';
+      return;
+    }
     var run = REACH.run;
     REACH.aborter = typeof AbortController !== 'undefined' ?
       new AbortController() : null;
@@ -1880,15 +1906,7 @@
       })
     ]).addTo(map);
 
-    var status = $('reach-status');
     status.textContent = 'sampling';
-    status.className = 'h-status';
-
-    /* a square grid over the disc; the disc keeps the cells. The reader
-       picks how fine — finer is quadratically more scans, spent from
-       their own machine, and every scan lands in the persistent cache,
-       so a finer pass after a coarse one only pays for the new points */
-    var COLS = cols || 13;
     var stepKm = 2 * radiusKm / COLS;
     var dLat = stepKm / 111;
     var dLon = stepKm / (111 * Math.max(0.2, Math.cos(baseLat * RAD)));
@@ -1905,14 +1923,35 @@
       }
     }
 
-    // astronomy, then everything else only where there is an eclipse
-    cells.forEach(function (c) {
-      var a = assessPoint(c.lat, c.lon);
-      if (!a) return;
-      c.central = true; c.lc = a.lc; c.lonN = a.lonN;
-      c.minAlt = a.minAlt; c.azs = a.azs; c.dur = a.dur;
-      if (a.minAlt >= 30) c.vis = 1;
-    });
+    /* the astronomy, in slices the paint loop can breathe between:
+       ~90 µs a cell is nothing at 137 cells and three frozen seconds at
+       31,000. Each answer is slimmed to the fields the survey reads —
+       31,000 full dossiers would be real memory on a phone. */
+    var ai = 0;
+    (function astroChunk() {
+      if (dead()) return;
+      var until = Math.min(cells.length, ai + 400);
+      for (; ai < until; ai++) {
+        var c = cells[ai];
+        var a = assessPoint(c.lat, c.lon);
+        if (!a) continue;
+        c.central = true; c.lonN = a.lonN;
+        c.minAlt = a.minAlt; c.azs = a.azs; c.dur = a.dur;
+        c.lc = { c2: { tTT: a.lc.c2.tTT }, c3: { tTT: a.lc.c3.tTT },
+                 dateMax: a.lc.dateMax, sunAz: a.lc.sunAz,
+                 sunAltApparent: a.lc.sunAltApparent };
+        if (a.minAlt >= 30) c.vis = 1;
+      }
+      if (ai < cells.length) {
+        status.textContent = 'geometry ' +
+          Math.round(ai / cells.length * 100) + '%';
+        setTimeout(astroChunk, 0);
+        return;
+      }
+      survey();
+    })();
+
+    function survey() {
     var central = cells.filter(function (c) { return c.central; });
 
     if (!central.length) {
@@ -1925,16 +1964,19 @@
     var wxDone = fetchSuitSky(central, signal).catch(function () { return null; });
 
     var scans = central.filter(function (c) { return c.vis === null; });
-    var done = 0;
+    var done = 0, lastPc = -1;
     var terrainDone = pooledTerrain(scans, signal, dead, function () {
       done++;
-      status.textContent = 'scanning ' +
-        Math.round(done / (scans.length || 1) * 100) + '%';
+      var pc = Math.round(done / (scans.length || 1) * 100);
+      if (pc !== lastPc) {
+        lastPc = pc;
+        status.textContent = 'scanning ' + pc + '%';
+      }
     });
 
     // land or water, for the print weight — same tiles the scans read
     var elevDone = new Promise(function (resolve) {
-      var i = 0, active = 0, LIMIT = 6;
+      var i = 0, active = 0, eDone = 0, LIMIT = 6;
       (function next() {
         if (dead()) { resolve(); return; }
         if (i >= central.length && active === 0) { resolve(); return; }
@@ -1943,7 +1985,10 @@
             active++;
             Terrain.elevationAt(c.lat, c.lonN, 10).then(function (e) {
               c.elev = e;
-              active--; next();
+              active--;
+              // cached tiles resolve in microtasks, which never yield to
+              // the renderer — breathe every so often on a big survey
+              if (++eDone % 150 === 0) setTimeout(next, 0); else next();
             });
           })(central[i++]);
         }
@@ -1969,27 +2014,75 @@
         return rampColor(sHi - sLo < 0.5 ? 50 : (v - sLo) / (sHi - sLo) * 100);
       }
 
-      S.layers.reachCells = L.layerGroup(central.map(function (c) {
-        var water = c.elev !== null && c.elev <= 0.5;
-        return L.rectangle(
-          [[c.lat - dLat / 2, c.lonN - dLon / 2],
-           [c.lat + dLat / 2, c.lonN + dLon / 2]], {
-            pane: 'suit', stroke: false, interactive: false,
-            fillColor: localRamp(c.score),
-            fillOpacity: water ? 0.2 : 0.52
-          });
-      })).addTo(map);
+      /* past ~1200 cells one vector rectangle each stops being drawable —
+         a 100 m survey is 31,000 of them — so a big field is printed once
+         into a canvas and laid over its own bounds */
+      var layer = central.length > 1200
+        ? cellImage(central, dLat, dLon, localRamp)
+        : L.layerGroup(central.map(function (c) {
+            var water = c.elev !== null && c.elev <= 0.5;
+            return L.rectangle(
+              [[c.lat - dLat / 2, c.lonN - dLon / 2],
+               [c.lat + dLat / 2, c.lonN + dLon / 2]], {
+                pane: 'suit', stroke: false, interactive: false,
+                fillColor: localRamp(c.score),
+                fillOpacity: water ? 0.2 : 0.52
+              });
+          }));
+      S.layers.reachCells = layer.addTo(map);
 
       status.textContent = central.length + ' cells · sky ' + (res[0] || '—');
       status.className = 'h-status ok';
       $('reach-lo').textContent = Math.round(sLo);
       $('reach-hi').textContent = Math.round(sHi);
       $('reach-note').textContent = radiusKm + ' km · cells ' +
-        (stepKm < 1 ? Math.round(stepKm * 1000) + ' m'
-                    : (Math.round(stepKm * 10) / 10) + ' km') +
-        ' · water faint';
+        fmtCellKm(stepKm) + ' · water faint';
       $('reach-legend').hidden = false;
     });
+    }
+  }
+
+  /* The big-field printer. Each cell is filled into a canvas at its
+     Mercator position — the same projection the vector rectangles sat in,
+     so the two renderers agree — with the water weight baked into the
+     alpha. One image element instead of tens of thousands of paths. */
+  function cellImage(central, dLat, dLon, ramp) {
+    var latT = -90, latB = 90, lonL = 180, lonR = -180;
+    central.forEach(function (c) {
+      if (c.lat > latT) latT = c.lat;
+      if (c.lat < latB) latB = c.lat;
+      if (c.lonN < lonL) lonL = c.lonN;
+      if (c.lonN > lonR) lonR = c.lonN;
+    });
+    latT += dLat / 2; latB -= dLat / 2; lonL -= dLon / 2; lonR += dLon / 2;
+    function merc(lat) {
+      var s = Math.sin(lat * RAD);
+      return Math.log((1 + s) / (1 - s)) / 2;
+    }
+    var mT = merc(latT), mB = merc(latB);
+    var W = Math.min(1600, Math.max(600,
+      Math.round(8 * (lonR - lonL) / dLon)));
+    var H = Math.max(2, Math.round(W * (mT - mB) / ((lonR - lonL) * RAD)));
+    var cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    var g = cv.getContext('2d');
+    central.forEach(function (c) {
+      /* edges snapped to whole pixels: neighbours compute the shared
+         edge from the same value, so the rounding meets exactly —
+         no antialiased gap, and no overlap to double the alpha into
+         a visible seam grid when the image is blown up */
+      var x0 = Math.round((c.lonN - dLon / 2 - lonL) / (lonR - lonL) * W);
+      var x1 = Math.round((c.lonN + dLon / 2 - lonL) / (lonR - lonL) * W);
+      var y0 = Math.round((mT - merc(c.lat + dLat / 2)) / (mT - mB) * H);
+      var y1 = Math.round((mT - merc(c.lat - dLat / 2)) / (mT - mB) * H);
+      var water = c.elev !== null && c.elev <= 0.5;
+      g.fillStyle = ramp(c.score)
+        .replace('rgb(', 'rgba(')
+        .replace(')', water ? ',0.2)' : ',0.52)');
+      g.fillRect(x0, y0, Math.max(1, x1 - x0), Math.max(1, y1 - y0));
+    });
+    return L.imageOverlay(cv.toDataURL(), [[latB, lonL], [latT, lonR]],
+      { pane: 'suit', interactive: false, className: 'suit-img' });
   }
 
 
