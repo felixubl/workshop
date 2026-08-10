@@ -42,6 +42,7 @@ var Terrain = (function () {
       '|' + Math.round(o.maxKm) + 'k' + o.eyeM;
   }
   function storedScan(key) {
+    if (putQ.has(key)) return Promise.resolve(putQ.get(key));
     return db().then(function (d) {
       if (!d) return undefined;
       return new Promise(function (resolve) {
@@ -53,12 +54,24 @@ var Terrain = (function () {
       });
     });
   }
+  /* Writes are batched: a fine survey stores tens of thousands of scans,
+     and one transaction each would trail the survey by minutes. A tab
+     closed mid-survey loses at most the last few hundred milliseconds. */
+  var putQ = new Map(), putTimer = null;
   function storeScan(key, val) {
+    putQ.set(key, val);
+    if (!putTimer) putTimer = setTimeout(flushScans, 400);
+  }
+  function flushScans() {
+    putTimer = null;
+    var batch = putQ;
+    putQ = new Map();
     db().then(function (d) {
       if (!d) return;
       try {
-        d.transaction('scans', 'readwrite').objectStore('scans').put(val, key);
-      } catch (e) { /* full or private-mode storage: the scan still ran */ }
+        var st = d.transaction('scans', 'readwrite').objectStore('scans');
+        batch.forEach(function (v, k) { st.put(v, k); });
+      } catch (e) { /* full or private-mode storage: the scans still ran */ }
     });
   }
 
