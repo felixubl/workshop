@@ -18,6 +18,10 @@ html, body { height: 100%; }
 body {
   display: flex; flex-direction: column;
   overflow: hidden;
+  /* the dynamic viewport, where it exists: a phone's URL bar grows and
+     shrinks, and 100% of the initial containing block leaves either a gap
+     or a console under the browser chrome */
+  height: 100dvh;
 }
 
 /* compact masthead: the page below needs the room */
@@ -303,8 +307,9 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
 .v-facts { display: grid; grid-template-columns: 1fr;
   gap: 3px 0.8rem; font-size: 0.8rem; }
 .v-facts div { display: flex; align-items: baseline; gap: 0.5rem; }
+/* wide enough for CENTRELINE, the longest label the panel prints */
 .v-facts span { color: var(--pp-faint); font-size: 0.66rem;
-  text-transform: uppercase; letter-spacing: 0.05em; width: 5.2em;
+  text-transform: uppercase; letter-spacing: 0.05em; width: 6.8em;
   flex: none; }
 .v-facts code { font-variant-numeric: tabular-nums; }
 .v-facts code:first-of-type { flex: 1; }
@@ -336,6 +341,11 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
   padding: 0.45rem 0.75rem;
 }
 #play { min-width: 2.2em; }
+/* the system floors a select face at 12rem for menus of words; ×300 is
+   not twelve rems of words, and every pixel the face hoards here comes
+   straight out of the scrub */
+#console .picker { flex: 0 0 auto; width: 5.4em; }
+#console .picker .select-trigger { min-width: 0; width: 100%; }
 #track[aria-pressed="true"] {
   background: var(--w-wash-0);
   box-shadow: inset 0 0 0 1px var(--pp-ink);
@@ -481,7 +491,10 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
   #console { left: 8px; right: 8px;
     bottom: calc(8px + env(safe-area-inset-bottom, 0px)); gap: 0.4rem;
     padding: 0.35rem 0.5rem; }
-  .readouts { display: none; }
+  /* the clock stays — a simulation without its clock is unreadable —
+     and the umbra telemetry goes, because the scrub needs the room */
+  .readouts { gap: 0.45rem; }
+  .ro-unit, #ro-shadow, #ro-vel, #ro-dur { display: none; }
   #map-annot { display: none; }
   /* the suitability switch moves to the top corner, where no bottom sheet
      can ever bury it */
@@ -489,6 +502,19 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
     align-items: flex-end; }
 }
 @media (max-width: 520px) {
+  /* one row of chrome — the arrow, the name, the two keys — then the
+     eclipse row, then the map. Every rem here is taken from the map. */
+  .wrap.tool-head { padding-top: 0.5rem; padding-bottom: 0.45rem; }
+  .wrap.tool-head header { gap: 0.45rem; }
+  .wrap.tool-head header > div:first-child {
+    display: flex; align-items: center; gap: 0.55rem; min-width: 0; }
+  /* the arrow alone: font-size 0 hides the words while a screen reader
+     keeps the link's full name */
+  .back-link { font-size: 0; gap: 0; }
+  .back-link svg { width: 15px; height: 15px; }
+  .title-row { margin: 0; gap: 0.5rem; min-width: 0; }
+  .tool-title { font-size: 1.3rem; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; }
   .which-eclipse { width: 100%; padding-right: 22px; }
   .which-eclipse .we-label { display: none; }
   .which-eclipse .picker, .which-eclipse select { flex: 1; width: auto; }
@@ -497,7 +523,20 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
   .share-btn [data-share-label], .share-btn [data-pin-label] { display: none; }
   .share-btn { padding: 0 0.5rem; }
   #track { display: none; }
-  #intel.folded { width: auto; }
+  /* the event panel opens as a full-width drawer rather than a 300px
+     card — search results and the timeline need the measure — and folds
+     back to a chip that leaves the map alone */
+  #intel { left: 8px; right: 8px; width: auto; max-height: 52vh; }
+  #intel.folded { width: auto; right: auto; }
+  /* the scrub is the simulation's main control, and squeezed beside the
+     clock it was 120px of a four-hour eclipse. It takes its own row;
+     everything above the console steps up to clear the taller bar. */
+  #console { flex-wrap: wrap; row-gap: 0.25rem; }
+  #scrub-wrap { flex: 1 1 100%; order: 5; }
+  .readouts { margin-left: auto; }
+  #dossier { bottom: calc(102px + env(safe-area-inset-bottom, 0px)); }
+  .leaflet-bottom.leaflet-right {
+    margin-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
 }
 
 /* Touch: every control meets the target size, and the hover tips that
