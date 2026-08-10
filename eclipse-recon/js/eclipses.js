@@ -14,8 +14,8 @@
 var ECLIPSES = [
   {
     id: '2026-08-12',
-    name: 'TOTAL — 2026 AUG 12',
-    short: '2026 AUG 12',
+    name: 'Total · 2026 Aug 12',
+    short: '2026 Aug 12',
     type: 'total',
     date: [2026, 8, 12],
     t0: 18.0,
@@ -36,8 +36,8 @@ var ECLIPSES = [
   },
   {
     id: '2027-08-02',
-    name: 'TOTAL — 2027 AUG 02',
-    short: '2027 AUG 02',
+    name: 'Total · 2027 Aug 02',
+    short: '2027 Aug 02',
     type: 'total',
     date: [2027, 8, 2],
     t0: 10.0,
@@ -57,8 +57,8 @@ var ECLIPSES = [
   },
   {
     id: '2028-07-22',
-    name: 'TOTAL — 2028 JUL 22',
-    short: '2028 JUL 22',
+    name: 'Total · 2028 Jul 22',
+    short: '2028 Jul 22',
     type: 'total',
     date: [2028, 7, 22],
     t0: 3.0,
@@ -78,8 +78,8 @@ var ECLIPSES = [
   },
   {
     id: '2024-04-08',
-    name: 'TOTAL — 2024 APR 08',
-    short: '2024 APR 08',
+    name: 'Total · 2024 Apr 08 (replay)',
+    short: '2024 Apr 08',
     type: 'total',
     date: [2024, 4, 8],
     t0: 18.0,
@@ -93,9 +93,10 @@ var ECLIPSES = [
     tanF1: 0.0046683,
     tanF2: 0.0046450,
     home: { lat: 35, lon: -95, zoom: 4 },
-    brief: 'ARCHIVE REPLAY. Mazatlan > Texas > the Ohio valley > Newfoundland, ' +
-           '2024 April 8. Kept aboard as the calibration tape: the engine is ' +
-           'checked against what actually happened that afternoon.'
+    brief: 'The replay: Mazatlan > Texas > the Ohio valley > Newfoundland, ' +
+           '2024 April 8. Kept as the calibration record — the engine is ' +
+           'checked against what actually happened that afternoon, clouds ' +
+           'included.'
   }
 ];
 

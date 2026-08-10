@@ -1,7 +1,10 @@
-/* Eclipse Recon — the console.
-   Wiring: Leaflet satellite map, the Besselian engine, terrain interrogation
-   and the weather desk, presented as the orbital reconnaissance tool it
-   secretly always wanted to be. */
+/* Eclipse Recon — the page.
+   Wiring: Leaflet satellite map, the Besselian engine, the terrain reader
+   and the weather client. All colour comes off the PREPRINT tokens at draw
+   time, so the pull cord restyles the map and charts along with the page:
+   the photograph is greyscale, the shadow is printed in black, plate 3 is
+   totality, plate 1 a good verdict, plate 2 a bad one, and the citron
+   marker means marginal. */
 
 (function () {
   'use strict';
@@ -20,12 +23,14 @@
   function fmtLocal(date, offSec) {
     if (!date || offSec === null || offSec === undefined) return null;
     var d = new Date(date.getTime() + offSec * 1000);
+    return pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' +
+           pad2(d.getUTCSeconds());
+  }
+  function fmtOffset(offSec) {
     var oh = offSec / 3600;
     var sign = oh >= 0 ? '+' : '−';
     var abs = Math.abs(oh);
-    var oStr = sign + (abs % 1 ? abs.toFixed(1) : abs);
-    return pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' +
-           pad2(d.getUTCSeconds()) + ' UTC' + oStr;
+    return 'UTC' + sign + (abs % 1 ? abs.toFixed(1) : abs);
   }
   function fmtDur(sec) {
     if (!sec || sec <= 0) return '—';
@@ -69,13 +74,28 @@
     });
     return out;
   }
-  function setLamp(id, state) {           // '', 'on', 'warn', 'err'
-    var el = $(id);
-    el.classList.remove('on', 'warn', 'err');
-    if (state) el.classList.add(state);
+  /* the live PREPRINT palette — read fresh at draw time so both colour
+     modes get their own steps */
+  function cssVar(name, fallback) {
+    var v = getComputedStyle(document.documentElement)
+      .getPropertyValue(name).trim();
+    return v || fallback;
   }
-  var reduceMotion = window.matchMedia &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function palette() {
+    return {
+      ink: cssVar('--pp-ink', '#171716'),
+      faint: cssVar('--pp-faint', '#6a6a62'),
+      paper: cssVar('--pp-paper', '#fbfbf9'),
+      hair: cssVar('--pp-hair', 'rgba(23,23,22,.11)'),
+      total: cssVar('--pp-plate-3-text', '#0052cc'),
+      totalLine: cssVar('--pp-plate-3', '#0066ff'),
+      ok: cssVar('--pp-state-ok', '#017a4e'),
+      okFill: cssVar('--pp-plate-1', '#01a368'),
+      danger: cssVar('--pp-state-danger', '#c8082f'),
+      dangerFill: cssVar('--pp-plate-2', '#ed0a3f'),
+      citron: cssVar('--w-mark-fill', '#deee2e')
+    };
+  }
 
   /* ================= state ================= */
 
@@ -117,15 +137,13 @@
   map.getPane('heat').style.pointerEvents = 'none';
   map.getPane('eclShadow').style.pointerEvents = 'none';
 
-  var imagery = L.tileLayer(
+  L.tileLayer(
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     { pane: 'imagery', maxZoom: 17 }).addTo(map);
   L.tileLayer(
     'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
     { pane: 'labels', subdomains: 'abcd', maxZoom: 17 }).addTo(map);
-
-  imagery.on('load', function () { setLamp('lamp-sat', 'on'); });
-  imagery.on('tileerror', function () { setLamp('lamp-sat', 'warn'); });
+  map.getPane('labels').classList.add('pane-labels');
 
   /* ================= static geometry per eclipse ================= */
 
@@ -137,26 +155,26 @@
     ['band', 'center', 'limits', 'ge', 'contours', 'heat', 'sweepDots']
       .forEach(clearRole);
 
+    var P = palette();
     var path = S.path;
     if (path.center.length) {
       var north = unwrap(path.north), south = unwrap(path.south);
       // keep both edges in the same unwrap frame as the band polygon
-      var band = L.polygon(north.concat(south.slice().reverse()), {
-        color: '#1898bd', weight: 1, opacity: 0.55,
-        fillColor: '#000', fillOpacity: 0.38, interactive: false
+      S.layers.bandPoly = L.polygon(north.concat(south.slice().reverse()), {
+        color: P.ink, weight: 1, opacity: 0.6,
+        fillColor: '#000', fillOpacity: 0.34, interactive: false
       });
-      var group = [band,
-        L.polyline(unwrap(path.center), {
-          color: '#4fc3e0', weight: 1.4, opacity: 0.85,
-          dashArray: '7 5', interactive: false
-        })
-      ];
+      S.layers.centerLine = L.polyline(unwrap(path.center), {
+        color: P.ink, weight: 1.3, opacity: 0.85,
+        dashArray: '7 5', interactive: false
+      });
+      var group = [S.layers.bandPoly, S.layers.centerLine];
       if (S.gt.latGE !== null) {
         group.push(L.marker([S.gt.latGE, S.gt.lonGE], {
           interactive: false,
           icon: L.divIcon({
             className: '', iconSize: [130, 30], iconAnchor: [8, 8],
-            html: '<div class="ge-label">◈ GREATEST ECLIPSE<br>' +
+            html: '<div class="ge-label">× greatest eclipse<br>' +
                   fmtUT(S.gt.dateGE) + ' UT · ' + fmtDur(S.gt.maxDuration) +
                   '</div>'
           })
@@ -193,7 +211,6 @@
       }
       if (row < H) { setTimeout(chunk, 0); return; }
       renderRaster(grid, lats, lons, W, H, run);
-      setLamp('lamp-eph', 'on');
     }
     setTimeout(chunk, 0);
   }
@@ -236,8 +253,10 @@
         }
         var o = (y * CW + x) * 4;
         if (!isNaN(v) && v > 0.02) {
-          px[o] = 24; px[o + 1] = 152; px[o + 2] = 189;
-          px[o + 3] = Math.min(150, v * 150);
+          // the shadow, printed as actual shadow: black, deeper where more
+          // of the Sun is gone
+          px[o] = 0; px[o + 1] = 0; px[o + 2] = 0;
+          px[o + 3] = Math.min(120, v * 125);
         }
       }
     }
@@ -251,6 +270,7 @@
 
   /* marching-squares contours of the obscuration field */
   function buildContours(grid, lats, lons, W, H) {
+    var P = palette();
     var levels = [0.2, 0.4, 0.6, 0.8];
     var layers = [];
     levels.forEach(function (lv) {
@@ -272,7 +292,7 @@
       }
       if (segs.length) {
         layers.push(L.polyline(segs, {
-          color: '#1898bd', weight: 0.8, opacity: 0.5, interactive: false
+          color: P.ink, weight: 0.7, opacity: 0.4, interactive: false
         }));
         // one label per level, on a segment ~1/3 through the list
         var at = segs[Math.floor(segs.length / 3)][0];
@@ -314,6 +334,7 @@
 
   function updateDynamic() {
     var ecl = S.ecl, t = S.T;
+    var P = palette();
 
     // umbra
     var out = Bessel.shadowOutline(ecl, t, 'umbra', 90);
@@ -321,7 +342,7 @@
       var ll = unwrap(out);
       if (!S.layers.umbra) {
         S.layers.umbra = L.polygon(ll, {
-          pane: 'eclShadow', color: '#4fc3e0', weight: 1.6, opacity: 0.9,
+          pane: 'eclShadow', color: P.ink, weight: 1.6, opacity: 0.9,
           fillColor: '#000', fillOpacity: 0.72, interactive: false
         }).addTo(map);
       } else { S.layers.umbra.setLatLngs(ll); }
@@ -333,8 +354,8 @@
       var pll = unwrap(pout);
       if (!S.layers.penumbra) {
         S.layers.penumbra = L.polygon(pll, {
-          pane: 'night', color: '#9ab8c8', weight: 0.8, opacity: 0.35,
-          dashArray: '3 6', fillColor: '#000', fillOpacity: 0.12,
+          pane: 'night', color: P.ink, weight: 0.8, opacity: 0.3,
+          dashArray: '3 6', fillColor: '#000', fillOpacity: 0.1,
           interactive: false
         }).addTo(map);
       } else { S.layers.penumbra.setLatLngs(pll); }
@@ -364,12 +385,12 @@
     if (c) {
       var c2 = Bessel.centralPointAt(ecl, t + 30 / 3600);
       var vel = c2 ? Bessel.distKm(c.lat, c.lon, c2.lat, c2.lon) / 30 : null;
-      $('ro-shadow').textContent = 'UMBRA ' + fmtLat(c.lat) + ' ' + fmtLon(c.lon);
-      $('ro-vel').textContent = vel ? 'GND SPD ' + vel.toFixed(2) + ' km/s' : '—';
+      $('ro-shadow').textContent = 'shadow ' + fmtLat(c.lat) + ' ' + fmtLon(c.lon);
+      $('ro-vel').textContent = vel ? vel.toFixed(2) + ' km/s' : '—';
       var near = nearestCenter(c.lat, c.lon);
-      $('ro-dur').textContent = near ? 'TOTALITY ' + fmtDur(near.duration) : '—';
+      $('ro-dur').textContent = near ? 'totality ' + fmtDur(near.duration) : '—';
     } else {
-      $('ro-shadow').textContent = 'UMBRA OFF-EARTH';
+      $('ro-shadow').textContent = 'shadow off Earth';
       $('ro-vel').textContent = '—'; $('ro-dur').textContent = '—';
     }
 
@@ -459,11 +480,11 @@
     var e = S.ecl, g = S.gt;
     $('intel-brief').textContent = e.brief;
     var stats = [
-      ['TYPE', e.type.toUpperCase()],
-      ['GAMMA', g.gamma.toFixed(4)],
-      ['MAX TOTALITY', fmtDur(g.maxDuration)],
-      ['MOON/SUN Ø', g.ratioGE ? g.ratioGE.toFixed(4) : '—'],
-      ['GREATEST AT', g.latGE !== null ?
+      ['type', e.type],
+      ['gamma', g.gamma.toFixed(4)],
+      ['longest totality', fmtDur(g.maxDuration)],
+      ['moon : sun', g.ratioGE ? g.ratioGE.toFixed(4) : '—'],
+      ['greatest at', g.latGE !== null ?
         fmtLat(g.latGE) + ' ' + fmtLon(g.lonGE) : '—']
     ];
     $('intel-stats').innerHTML = stats.map(function (s) {
@@ -479,7 +500,8 @@
     $('tl-rows').innerHTML = rows.map(function (r, i) {
       return '<div class="tl-row"><b>' + r[0] + '</b><code>' +
              fmtUT(r[1]) + '</code><span>' + r[2] + '</span>' +
-             '<button type="button" data-jump="' + i + '">GOTO</button></div>';
+             '<button class="btn-ghost" type="button" data-jump="' + i +
+             '">go</button></div>';
     }).join('');
     $('tl-rows').querySelectorAll('button').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -519,13 +541,13 @@
     }).addTo(map);
 
     $('dossier').hidden = false;
-    $('tgt-name').textContent = 'ACQUIRING…';
+    $('tgt-name').textContent = 'looking the place up…';
     $('tgt-coords').textContent = fmtLat(lat) + ' ' + fmtLon(lon);
-    $('tgt-elev').textContent = 'ELEV —';
+    $('tgt-elev').textContent = 'elev —';
     $('terrain-status').textContent = ''; $('terrain-status').className = 'h-status';
     $('wx-status').textContent = ''; $('wx-status').className = 'h-status';
-    $('terrain-body').innerHTML = '<p class="terrain-note">awaiting elevation downlink…</p>';
-    $('wx-body').innerHTML = '<p class="terrain-note">contacting the weather desk…</p>';
+    $('terrain-body').innerHTML = '<p class="terrain-note">fetching elevations…</p>';
+    $('wx-body').innerHTML = '<p class="terrain-note">asking about the sky…</p>';
 
     // instant: the astronomy
     var circ = Bessel.localCircumstances(S.ecl, lat, lon, 0);
@@ -537,7 +559,7 @@
     // name
     Wx.placeName(lat, lon, signal).then(function (nm) {
       if (S.target && S.target.lat === lat) {
-        $('tgt-name').textContent = nm || 'GRID REFERENCE (OPEN WATER?)';
+        $('tgt-name').textContent = nm || 'unnamed spot (open water?)';
       }
     });
 
@@ -546,37 +568,34 @@
       if (!S.target || S.target.lat !== lat) return;
       if (e !== null) {
         S.target.elev = e;
-        $('tgt-elev').textContent = 'ELEV ' + Math.round(e) + ' m';
+        $('tgt-elev').textContent = 'elev ' + Math.round(e) + ' m';
         S.target.circ = Bessel.localCircumstances(S.ecl, lat, lon, e);
         renderCirc();
       } else {
-        $('tgt-elev').textContent = 'ELEV n/a';
+        $('tgt-elev').textContent = 'elev n/a';
       }
     });
 
     // weather
     if (circ) {
-      setLamp('lamp-wx', 'warn');
       Wx.get([{ lat: lat, lon: lon }], circ.dateMax, signal)
         .then(function (res) {
           if (!S.target || S.target.lat !== lat) return;
           S.target.wx = res;
           S.target.offSec = res.data[0].utcOffsetSec;
-          setLamp('lamp-wx', 'on');
-          $('wx-status').textContent = 'LINK OK'; $('wx-status').className = 'h-status ok';
+          $('wx-status').textContent = 'live'; $('wx-status').className = 'h-status ok';
           renderCirc();          // now with local clock
           renderWeather();
           renderVerdict();
         })
         .catch(function (err) {
           if (err && err.name === 'AbortError') return;
-          setLamp('lamp-wx', 'err');
-          $('wx-status').textContent = 'LINK FAILED'; $('wx-status').className = 'h-status err';
+          $('wx-status').textContent = 'unreachable'; $('wx-status').className = 'h-status err';
           $('wx-body').innerHTML =
-            '<p class="terrain-note">weather desk unreachable — scores omit sky condition.</p>';
+            '<p class="terrain-note">the weather service did not answer — the verdict leaves the sky out.</p>';
         });
     } else {
-      $('wx-body').innerHTML = '<p class="terrain-note">no eclipse at this target.</p>';
+      $('wx-body').innerHTML = '<p class="terrain-note">no eclipse at this spot.</p>';
     }
 
     // terrain horizon
@@ -587,34 +606,31 @@
       if (hi - lo > 180) { /* wrapped: rare, widen fully */ lo = circ.sunAz - 80; hi = circ.sunAz + 80; }
       var center = (lo + hi) / 2;
       var span = Math.max(90, Math.min(160, hi - lo + 44));
-      setLamp('lamp-ter', 'warn');
-      $('terrain-status').textContent = 'SCANNING 0%';
+      $('terrain-status').textContent = 'scanning 0%';
       Terrain.horizonScan(lat, lon, {
         azCenter: center, azSpan: span, azStep: 1, maxKm: 120,
         signal: signal,
         onProgress: function (f) {
-          $('terrain-status').textContent = 'SCANNING ' + Math.round(f * 100) + '%';
+          $('terrain-status').textContent = 'scanning ' + Math.round(f * 100) + '%';
         }
       }).then(function (scan) {
         if (!S.target || S.target.lat !== lat) return;
         S.target.terrain = scan;
-        setLamp('lamp-ter', 'on');
-        $('terrain-status').textContent = Terrain.cacheSize() + ' TILES';
+        $('terrain-status').textContent = Terrain.cacheSize() + ' tiles';
         $('terrain-status').className = 'h-status ok';
         renderTerrain();
         renderVerdict();
       }).catch(function (err) {
         if (err && err.message === 'aborted') return;
-        setLamp('lamp-ter', 'err');
-        $('terrain-status').textContent = 'SCAN FAILED';
+        $('terrain-status').textContent = 'scan failed';
         $('terrain-status').className = 'h-status err';
         $('terrain-body').innerHTML =
-          '<p class="terrain-note">terrain downlink failed — horizon unknown.</p>';
+          '<p class="terrain-note">the elevation tiles did not answer — horizon unknown.</p>';
       });
     } else {
       $('terrain-body').innerHTML = '<p class="terrain-note">' +
-        (circ ? 'the eclipse never clears the horizon here — no mask to compute.'
-              : 'no eclipse at this target.') + '</p>';
+        (circ ? 'the eclipse never clears the horizon here — nothing for the terrain to hide.'
+              : 'no eclipse at this spot.') + '</p>';
     }
 
     if (!opts.keepView && !map.getBounds().contains([lat, lon])) {
@@ -642,16 +658,16 @@
     var c = t.circ;
     if (!c) {
       $('circ-body').innerHTML = '<p class="terrain-note">the Moon’s shadow ' +
-        'misses this point entirely. Choose a target inside the shaded zone.</p>';
+        'misses this point entirely. Pick a spot inside the shaded zone.</p>';
       return;
     }
     var off = t.offSec;
     var typeWord = c.type === 'total' ?
-        'TOTAL — ' + fmtDur(c.duration) + ' of totality' :
-      c.type === 'annular' ? 'ANNULAR' :
-        'PARTIAL — ' + Math.round(c.obscuration * 100) + '% of the Sun covered';
+        'total — ' + fmtDur(c.duration) + ' of totality' :
+      c.type === 'annular' ? 'annular' :
+        'partial — ' + Math.round(c.obscuration * 100) + '% of the Sun covered';
     var typeCls = c.type === 'total' ? 'total' : 'partial';
-    var html = '<div class="circ-type">CONDITION: <b class="' + typeCls + '">' +
+    var html = '<div class="circ-type">Here: <b class="' + typeCls + '">' +
                typeWord + '</b></div>';
     if (!c.visible) {
       html += '<p class="terrain-note">⚠ the whole event runs below the local ' +
@@ -659,14 +675,14 @@
     }
     var rows = [
       ['C1', c.c1, 'partial begins'],
-      ['C2', c.c2, 'TOTALITY BEGINS'],
+      ['C2', c.c2, 'totality begins'],
       ['MAX', { date: c.dateMax, alt: c.sunAlt, az: c.sunAz }, 'maximum eclipse'],
-      ['C3', c.c3, 'TOTALITY ENDS'],
+      ['C3', c.c3, 'totality ends'],
       ['C4', c.c4, 'partial ends']
     ];
     html += '<table class="circ"><tr><th></th><th>UT</th>' +
-            (off !== null ? '<th>SITE</th>' : '') +
-            '<th>ALT</th><th>AZ</th></tr>';
+            (off !== null ? '<th>site ' + fmtOffset(off) + '</th>' : '') +
+            '<th>alt</th><th>az</th></tr>';
     rows.forEach(function (r) {
       if (!r[1]) return;
       var hl = r[0] === 'C2' || r[0] === 'C3';
@@ -675,17 +691,17 @@
         (off !== null ? '<td>' + (fmtLocal(r[1].date, off) || '—') + '</td>' : '') +
         '<td' + (r[1].alt < 0 ? ' class="dim"' : '') + '>' +
         r[1].alt.toFixed(1) + '°</td>' +
-        '<td>' + Math.round(r[1].az) + '° ' + compass(r[1].az) + '</td></tr>';
+        '<td>' + compass(r[1].az) + '</td></tr>';
     });
     html += '</table>';
     html += '<div class="circ-facts">' +
-      fact('MAGNITUDE', c.magnitude.toFixed(3)) +
-      fact('OBSCURATION', (c.obscuration * 100).toFixed(1) + '%') +
-      fact('SUN AT MAX', c.sunAlt.toFixed(1) + '° ' + compass(c.sunAz)) +
-      fact('W/ REFRACTION', c.sunAltApparent.toFixed(1) + '°');
+      fact('magnitude', c.magnitude.toFixed(3)) +
+      fact('obscuration', (c.obscuration * 100).toFixed(1) + '%') +
+      fact('sun at max', c.sunAlt.toFixed(1) + '° ' + compass(c.sunAz)) +
+      fact('w/ refraction', c.sunAltApparent.toFixed(1) + '°');
     if (c.type !== 'total' && S.path.center.length) {
       var near = nearestPathKm(t.lat, t.lon);
-      html += fact('TO CENTRELINE', Math.round(near.d) + ' km ' + near.dir);
+      html += fact('to centreline', Math.round(near.d) + ' km ' + near.dir);
     }
     html += '</div>';
     $('circ-body').innerHTML = html;
@@ -740,6 +756,7 @@
     var t = S.target;
     var scan = t.terrain, c = t.circ;
     if (!scan || !c) return;
+    var P = palette();
     var track = sunTrackSamples();
     var prof = scan.profile;
 
@@ -764,27 +781,26 @@
     // gridlines
     for (var g = 0; g <= maxAng; g += 5) {
       svg += '<line x1="' + mL + '" x2="' + (W - mR) + '" y1="' + Y(g) +
-        '" y2="' + Y(g) + '" stroke="rgba(184,207,192,0.10)" stroke-width="0.6"/>' +
+        '" y2="' + Y(g) + '" stroke="' + P.hair + '" stroke-width="0.6"/>' +
         '<text x="' + (mL - 4) + '" y="' + (Y(g) + 3) + '" text-anchor="end" ' +
-        'font-size="7.5" fill="#64796d">' + g + '°</text>';
+        'font-size="7.5" fill="' + P.faint + '">' + g + '°</text>';
     }
     // horizon zero line
     svg += '<line x1="' + mL + '" x2="' + (W - mR) + '" y1="' + Y(0) + '" y2="' +
-      Y(0) + '" stroke="rgba(184,207,192,0.25)" stroke-width="0.8" stroke-dasharray="2 3"/>';
-    // terrain silhouette
+      Y(0) + '" stroke="' + P.faint + '" stroke-width="0.7" stroke-dasharray="2 3"/>';
+    // terrain silhouette, printed solid
     var d = 'M' + X(prof[0].az) + ',' + Y(Math.max(minAng, prof[0].ang));
     prof.forEach(function (p) {
       d += 'L' + X(p.az).toFixed(1) + ',' + Y(Math.max(minAng, p.ang)).toFixed(1);
     });
     d += 'L' + X(prof[n - 1].az) + ',' + Y(minAng) + 'L' + X(prof[0].az) + ',' +
          Y(minAng) + 'Z';
-    svg += '<path d="' + d + '" fill="rgba(13,26,20,0.92)" stroke="#18a373" ' +
-           'stroke-width="1"/>';
-    // sun track segments, coloured by phase and blockage
+    svg += '<path d="' + d + '" fill="' + P.ink + '" fill-opacity="0.85"/>';
+    // sun track segments: grey partial, plate-3 totality, plate-2 hidden
     for (var i = 1; i < track.length; i++) {
       var a = track[i - 1], b = track[i];
       var blocked = b.alt < horizonAngleAt(prof, b.az);
-      var col = blocked ? '#e0524e' : (b.phase === 'total' ? '#1898bd' : '#cf7420');
+      var col = blocked ? P.danger : (b.phase === 'total' ? P.totalLine : P.faint);
       var wd = b.phase === 'total' ? 3 : 1.8;
       svg += '<line x1="' + X(a.az).toFixed(1) + '" y1="' + Y(a.alt).toFixed(1) +
         '" x2="' + X(b.az).toFixed(1) + '" y2="' + Y(b.alt).toFixed(1) +
@@ -794,31 +810,32 @@
     // max-eclipse sun disc
     var sunMax = { az: c.sunAz, alt: c.sunAltApparent };
     svg += '<circle cx="' + X(sunMax.az).toFixed(1) + '" cy="' +
-      Y(sunMax.alt).toFixed(1) + '" r="4" fill="none" stroke="#f0a050" ' +
-      'stroke-width="1.4"/>';
+      Y(sunMax.alt).toFixed(1) + '" r="4" fill="none" stroke="' + P.ink +
+      '" stroke-width="1.3"/>';
     // contact labels
     [['C2', c.c2], ['C3', c.c3]].forEach(function (ct) {
       if (!ct[1]) return;
       svg += '<text x="' + X(ct[1].az).toFixed(1) + '" y="' +
         (Y(ct[1].alt + Bessel.refraction(ct[1].alt)) - 6).toFixed(1) +
-        '" text-anchor="middle" font-size="7.5" fill="#4fc3e0">' + ct[0] + '</text>';
+        '" text-anchor="middle" font-size="7.5" fill="' + P.total + '">' +
+        ct[0] + '</text>';
     });
     // x axis: compass ticks every 15 deg
     for (var az = Math.ceil(azMin / 15) * 15; ; az += 15) {
       var rel = ((az - azMin) % 360 + 360) % 360;
       if (rel > azSpanTotal) break;
       svg += '<text x="' + X(az).toFixed(1) + '" y="' + (H - 8) +
-        '" text-anchor="middle" font-size="7.5" fill="#64796d">' +
+        '" text-anchor="middle" font-size="7.5" fill="' + P.faint + '">' +
         compass(az) + '</text>';
       if (az > azMin + 720) break;    // safety
     }
     // legend (direct labels, small)
     svg += '<text x="' + (W - mR) + '" y="' + (mT + 2) + '" text-anchor="end" ' +
-      'font-size="7.5" fill="#cf7420">partial</text>' +
+      'font-size="7.5" fill="' + P.faint + '">partial</text>' +
       '<text x="' + (W - mR) + '" y="' + (mT + 12) + '" text-anchor="end" ' +
-      'font-size="7.5" fill="#1898bd">totality</text>' +
+      'font-size="7.5" fill="' + P.total + '">totality</text>' +
       '<text x="' + (W - mR) + '" y="' + (mT + 22) + '" text-anchor="end" ' +
-      'font-size="7.5" fill="#e0524e">masked</text>';
+      'font-size="7.5" fill="' + P.danger + '">hidden</text>';
     svg += '</svg>';
 
     // verdict text
@@ -854,17 +871,17 @@
       var minMargin = Math.min.apply(null, margins);
       if (blocked === 0) {
         return { code: 'clear', margin: minMargin, html:
-          '<b class="ok">LOS CLEAR</b> — totality rides ' +
-          minMargin.toFixed(1) + '° above the local horizon at its lowest.' };
+          '<b class="ok">clear horizon</b> — totality rides ' +
+          minMargin.toFixed(1) + '° above the terrain at its lowest.' };
       }
       if (blocked > nb - 2) {
         return { code: 'blocked', margin: minMargin, html:
-          '<b class="bad">LOS DENIED</b> — the terrain stands ' +
-          (-minMargin).toFixed(1) + '° above the Sun for all of totality. ' +
-          'Relocate.' };
+          '<b class="bad">terrain blocks totality</b> — the ridge stands ' +
+          (-minMargin).toFixed(1) + '° above the Sun the whole time. ' +
+          'Move.' };
       }
       return { code: 'partial', margin: minMargin, html:
-        '<b class="part">PARTIAL MASK</b> — ' +
+        '<b class="part">partly hidden</b> — ' +
         Math.round(blocked / (nb + 1) * 100) +
         '% of totality is behind terrain here.' };
     }
@@ -877,10 +894,10 @@
     var pct = Math.round(seen / (nb2 + 1) * 100);
     return { code: pct > 80 ? 'clear' : pct > 20 ? 'partial' : 'blocked',
       html: pct > 80 ?
-        '<b class="ok">LOS CLEAR</b> — ' + pct + '% of the partial phases are in view.' :
+        '<b class="ok">clear horizon</b> — ' + pct + '% of the partial phases are in view.' :
         pct > 20 ?
-        '<b class="part">PARTIAL MASK</b> — only ' + pct + '% of the event clears the terrain.' :
-        '<b class="bad">LOS DENIED</b> — the event is almost entirely behind terrain.' };
+        '<b class="part">partly hidden</b> — only ' + pct + '% of the event clears the terrain.' :
+        '<b class="bad">terrain blocks it</b> — the event is almost entirely behind terrain.' };
   }
 
   function attachHzTip(prof, track) {
@@ -922,26 +939,26 @@
     var vCls = v.code === 'GO' ? 'go' : v.code === 'COND' ? 'cond' : 'nogo';
 
     var modeLine = mode === 'forecast' ?
-        '<b>FORECAST</b> · Open-Meteo, eclipse hour, this site' :
+        '<b>forecast</b> · Open-Meteo, at this site’s own eclipse hour' :
       mode === 'archive' ?
-        '<b>ARCHIVE</b> · what the sky actually did (ERA5 reanalysis)' :
-        '<b>CLIMATOLOGY</b> · same date, last ' + (pdata.years || 8) +
+        '<b>archive</b> · what the sky actually did (ERA5 reanalysis)' :
+        '<b>climatology</b> · same date, last ' + (pdata.years || 8) +
         ' years averaged — odds, not a promise';
 
     var html = '<div class="wx-mode">' + modeLine + '</div>';
     if (score !== null) {
       html += '<div class="wx-hero"><div class="wx-score ' + vCls + '">' +
-        Math.round(score) + '</div><div><div class="lbl">SKY SCORE / 100</div>' +
+        Math.round(score) + '</div><div><div class="lbl">sky score / 100</div>' +
         '<div class="word ' + vCls + '">' + v.word + '</div></div></div>';
       html += '<div class="cloudbars">' +
-        cbar('LOW', c.low) + cbar('MID', c.mid) + cbar('HIGH', c.high) +
-        cbar('TOTAL', c.total) + '</div>';
+        cbar('low', c.low) + cbar('mid', c.mid) + cbar('high', c.high) +
+        cbar('total', c.total) + '</div>';
       html += '<div class="wx-extra">' +
-        wxCell('PRECIP', c.precipProb !== null && c.precipProb !== undefined ?
+        wxCell('precip', c.precipProb !== null && c.precipProb !== undefined ?
           Math.round(c.precipProb) + '%' :
           (c.precip !== null ? (c.precip || 0).toFixed(1) + ' mm' : '—')) +
-        wxCell('WIND', c.wind !== null ? Math.round(c.wind) + ' km/h' : '—') +
-        wxCell('TEMP', c.temp !== null ? Math.round(c.temp) + '°C' : '—') +
+        wxCell('wind', c.wind !== null ? Math.round(c.wind) + ' km/h' : '—') +
+        wxCell('temp', c.temp !== null ? Math.round(c.temp) + '°C' : '—') +
         '</div>';
       html += wxStrip(pdata, t.circ);
     } else {
@@ -962,6 +979,7 @@
   function wxStrip(pdata, circ) {
     var hs = pdata.hours.filter(function (h) { return h.total !== null; });
     if (hs.length < 3) return '';
+    var P = palette();
     var W = 336, H = 66, mL = 26, mR = 6, mT = 6, mB = 14;
     var t0 = hs[0].tUTCms, t1 = hs[hs.length - 1].tUTCms;
     function X(ms) { return mL + (ms - t0) / (t1 - t0) * (W - mL - mR); }
@@ -970,35 +988,37 @@
       '" role="img" aria-label="Cloud cover through the day">';
     [0, 50, 100].forEach(function (g) {
       svg += '<line x1="' + mL + '" x2="' + (W - mR) + '" y1="' + Y(g) +
-        '" y2="' + Y(g) + '" stroke="rgba(184,207,192,0.10)" stroke-width="0.6"/>' +
+        '" y2="' + Y(g) + '" stroke="' + P.hair + '" stroke-width="0.6"/>' +
         '<text x="' + (mL - 3) + '" y="' + (Y(g) + 2.5) + '" text-anchor="end" ' +
-        'font-size="7" fill="#64796d">' + g + '</text>';
+        'font-size="7" fill="' + P.faint + '">' + g + '</text>';
     });
-    // eclipse window
+    // eclipse window, washed in the totality plate
     var w1 = circ.c1 ? circ.c1.date.getTime() : circ.dateMax.getTime();
     var w2 = circ.c4 ? circ.c4.date.getTime() : circ.dateMax.getTime();
     svg += '<rect x="' + X(w1).toFixed(1) + '" y="' + mT + '" width="' +
       Math.max(2, X(w2) - X(w1)).toFixed(1) + '" height="' + (H - mT - mB) +
-      '" fill="rgba(24,152,189,0.14)"/>';
+      '" fill="' + P.totalLine + '" fill-opacity="0.12"/>';
     var mx = X(circ.dateMax.getTime());
     svg += '<line x1="' + mx.toFixed(1) + '" x2="' + mx.toFixed(1) + '" y1="' + mT +
-      '" y2="' + (H - mB) + '" stroke="#4fc3e0" stroke-width="1" stroke-dasharray="2 2"/>';
+      '" y2="' + (H - mB) + '" stroke="' + P.total +
+      '" stroke-width="1" stroke-dasharray="2 2"/>';
     // cloud line
     var d = '';
     hs.forEach(function (h, i) {
       d += (i ? 'L' : 'M') + X(h.tUTCms).toFixed(1) + ',' + Y(h.total).toFixed(1);
     });
-    svg += '<path d="' + d + '" fill="none" stroke="#1898bd" stroke-width="1.6"/>';
+    svg += '<path d="' + d + '" fill="none" stroke="' + P.ink +
+      '" stroke-width="1.5"/>';
     // time labels every 6 hours (site clock if known)
     var off = pdata.utcOffsetSec || 0;
     for (var ms = t0; ms <= t1; ms += 6 * 3600000) {
       var dd = new Date(ms + off * 1000);
       svg += '<text x="' + X(ms).toFixed(1) + '" y="' + (H - 3) +
-        '" text-anchor="middle" font-size="7" fill="#64796d">' +
+        '" text-anchor="middle" font-size="7" fill="' + P.faint + '">' +
         pad2(dd.getUTCHours()) + 'h</text>';
     }
     svg += '<text x="' + (W - mR) + '" y="' + (mT + 6) + '" text-anchor="end" ' +
-      'font-size="7" fill="#1898bd">total cloud %</text>';
+      'font-size="7" fill="' + P.faint + '">total cloud %</text>';
     return svg + '</svg></div>';
   }
 
@@ -1008,23 +1028,23 @@
     var t = S.target;
     if (!t) return;
     var c = t.circ;
-    var reasons = [], code = 'go', stamp = 'GO';
+    var reasons = [], code = 'go', stamp = 'good site';
 
     if (!c) {
-      code = 'nogo'; stamp = 'NO-GO';
-      reasons.push('no eclipse at this target — move into the shaded corridor.');
+      code = 'nogo'; stamp = 'no eclipse';
+      reasons.push('the shadow misses this spot — move into the shaded corridor.');
     } else if (!c.visible) {
-      code = 'nogo'; stamp = 'NO-GO';
+      code = 'nogo'; stamp = 'below horizon';
       reasons.push('the event runs below the horizon here.');
     } else {
       if (c.type === 'total') {
-        reasons.push('TOTAL eclipse — ' + fmtDur(c.duration) +
+        reasons.push('total eclipse — ' + fmtDur(c.duration) +
           ' of totality, Sun at ' + c.sunAlt.toFixed(1) + '°.');
       } else {
         var near = nearestPathKm(t.lat, t.lon);
-        code = 'cond'; stamp = 'RELOCATE';
+        code = 'cond'; stamp = 'relocate';
         reasons.push('partial only (' + Math.round(c.obscuration * 100) +
-          '% covered) — centreline is ' + Math.round(near.d) + ' km ' +
+          '% covered) — the centreline is ' + Math.round(near.d) + ' km ' +
           near.dir + '.');
       }
       if (c.sunAlt < 3) {
@@ -1033,15 +1053,15 @@
           compass(c.sunAz) + ' horizon.');
       } else if (c.sunAlt < 12) {
         reasons.push('low Sun (' + c.sunAlt.toFixed(1) + '° ' +
-          compass(c.sunAz) + ') — the terrain mask is decisive here.');
+          compass(c.sunAz) + ') — the horizon check is the one that matters.');
       }
       // terrain
       if (t.terrain) {
         var tv = terrainVerdict();
-        if (tv.code === 'blocked') { code = 'nogo'; stamp = 'NO-GO'; }
-        else if (tv.code === 'partial' && code !== 'nogo') { code = 'cond'; if (stamp === 'GO') stamp = 'CONDITIONAL'; }
+        if (tv.code === 'blocked') { code = 'nogo'; stamp = 'bad site'; }
+        else if (tv.code === 'partial' && code !== 'nogo') { code = 'cond'; if (stamp === 'good site') stamp = 'marginal'; }
         else if (tv.code === 'clear' && tv.margin !== undefined && tv.margin < 1.5 && c.type === 'total') {
-          if (code === 'go') { code = 'cond'; stamp = 'CONDITIONAL'; }
+          if (code === 'go') { code = 'cond'; stamp = 'marginal'; }
           reasons.push('horizon margin only ' + tv.margin.toFixed(1) +
             '° — verify your exact spot on foot.');
         }
@@ -1054,8 +1074,8 @@
         var cond = Wx.atTime(t.wx.data[0], c.dateMax);
         var score = Wx.skyScore(cond);
         var wv = Wx.verdictFor(score);
-        if (wv.code === 'NOGO') { if (code !== 'nogo') { code = 'nogo'; stamp = 'NO-GO'; } }
-        else if (wv.code === 'COND' && code === 'go') { code = 'cond'; stamp = 'CONDITIONAL'; }
+        if (wv.code === 'NOGO') { if (code !== 'nogo') { code = 'nogo'; stamp = 'bad site'; } }
+        else if (wv.code === 'COND' && code === 'go') { code = 'cond'; stamp = 'marginal'; }
         var lead = cond && cond.low > 40 ? 'low cloud ' + Math.round(cond.low) + '%' :
           cond && cond.mid > 40 ? 'mid cloud ' + Math.round(cond.mid) + '%' :
           cond && cond.high > 50 ? 'cirrus ' + Math.round(cond.high) + '%' : null;
@@ -1065,8 +1085,8 @@
         reasons.push('sky: no data yet.');
       }
     }
-    if (code === 'go' && stamp === 'GO' && c && c.type === 'total') {
-      reasons.unshift('site clears every check currently in hand.');
+    if (code === 'go' && c && c.type === 'total') {
+      reasons.unshift('clears every check currently in hand.');
     }
     $('verdict-body').innerHTML = '<div class="verdict ' + code + '">' +
       '<span class="stamp">' + stamp + '</span><ul>' +
@@ -1085,20 +1105,18 @@
     var btn = $('sweep-btn');
     btn.disabled = true;
     $('sweep-progress').hidden = false;
-    setProgress(0.05, 'SAMPLING PATH');
+    setProgress(0.05, 'sampling path');
 
     // every nth centre point, at most 72 probes
     var step = Math.max(1, Math.ceil(centers.length / 72));
     var pts = [];
     for (var i = 0; i < centers.length; i += step) pts.push(centers[i]);
 
-    setLamp('lamp-wx', 'warn');
-    setProgress(0.15, 'PULLING SKY DATA');
+    setProgress(0.15, 'pulling sky data');
     Wx.get(pts.map(function (p) { return { lat: p.lat, lon: p.lon }; }),
            S.gt.dateGE)
       .then(function (res) {
-        setLamp('lamp-wx', 'on');
-        setProgress(0.8, 'SCORING');
+        setProgress(0.8, 'scoring');
         var rows = pts.map(function (p, i) {
           var cond = Wx.atTime(res.data[i], p.date);
           var score = Wx.skyScore(cond);
@@ -1113,10 +1131,9 @@
         return rankSweep(rows, res.mode);
       })
       .catch(function (e) {
-        setLamp('lamp-wx', 'err');
         $('sweep-list').hidden = false;
         $('sweep-list').innerHTML =
-          '<li><span class="meta">sweep failed — weather desk unreachable (' +
+          '<li><span class="meta">sweep failed — the weather service did not answer (' +
           esc(e.message) + ')</span></li>';
       })
       .then(function () {
@@ -1127,20 +1144,26 @@
   function setProgress(f, word) {
     $('sweep-progress').querySelector('i').style.width = (f * 100) + '%';
     $('sweep-progress').querySelector('span').textContent =
-      (word || 'SWEEP') + ' ' + Math.round(f * 100) + '%';
+      (word || 'sweep') + ' ' + Math.round(f * 100) + '%';
   }
 
+  function sweepDotStyle(vCode) {
+    var P = palette();
+    return {
+      pane: 'sweep', radius: 5, color: P.ink, weight: 1.5,
+      fillColor: vCode === 'GO' ? P.okFill :
+                 vCode === 'COND' ? P.citron : P.dangerFill,
+      fillOpacity: 0.95
+    };
+  }
   function drawSweep(rows, mode) {
     clearRole('sweepDots');
     var marks = rows.map(function (r) {
-      var col = r.v.code === 'GO' ? '#18a373' :
-                r.v.code === 'COND' ? '#cf7420' : '#e0524e';
-      return L.circleMarker([r.lat, r.lon], {
-        pane: 'sweep', radius: 5, color: '#02040a', weight: 1,
-        fillColor: col, fillOpacity: 0.92
-      }).bindTooltip(
-        fmtUT(r.date) + ' UT · totality ' + fmtDur(r.duration) +
-        ' · sun ' + r.sunAlt.toFixed(0) + '° · sky ' +
+      var mk = L.circleMarker([r.lat, r.lon], sweepDotStyle(r.v.code));
+      mk._sweepV = r.v.code;
+      return mk.bindTooltip(
+        r.v.word + ' · ' + fmtUT(r.date) + ' UT · totality ' +
+        fmtDur(r.duration) + ' · sun ' + r.sunAlt.toFixed(0) + '° · sky ' +
         (r.score === null ? '—' : Math.round(r.score)),
         { className: 'sweep-dot-tip', direction: 'top', offset: [0, -6] }
       ).on('click', function () { setTarget(r.lat, r.lon); });
@@ -1168,7 +1191,7 @@
         var li = document.createElement('li');
         var vCls = r.v.code === 'GO' ? 'go' : r.v.code === 'COND' ? 'cond' : 'nogo';
         li.innerHTML = '<span class="rk">' + pad2(i + 1) + '</span>' +
-          '<span class="nm">' + esc(names[i] || 'OPEN WATER / NO NAME') + '</span>' +
+          '<span class="nm">' + esc(names[i] || 'open water / unnamed') + '</span>' +
           '<span class="sc ' + vCls + '">' +
           Math.round(r.score) + '</span>' +
           '<span class="meta">' + fmtLat(r.lat) + ' ' + fmtLon(r.lon) +
@@ -1248,7 +1271,7 @@
   sel.addEventListener('change', function () { loadEclipse(this.value); });
 
   /* fold buttons */
-  document.querySelectorAll('.panel-fold[data-fold]').forEach(function (b) {
+  document.querySelectorAll('.sheet-fold[data-fold]').forEach(function (b) {
     b.addEventListener('click', function () {
       $(b.dataset.fold).classList.toggle('folded');
     });
@@ -1265,50 +1288,33 @@
     }
   });
 
-  /* ================= boot ================= */
+  /* ================= colour mode ================= */
 
-  var BOOT_LINES = [
-    'UMBRA//RECON — ORBITAL ECLIPSE RECONNAISSANCE CONSOLE',
-    'ESTABLISHING DOWNLINK .................... OK',
-    'BESSELIAN ELEMENTS [NASA-GSFC/ESPENAK] ... 4 MISSIONS ABOARD',
-    'CALIBRATION TAPE [2024 APR 08] ........... ENGINE MATCHES THE TAPE',
-    'TERRAIN GRID [MAPZEN/AWS] ................ STANDBY',
-    'WEATHER DESK [OPEN-METEO] ................ STANDBY',
-    '',
-    'ALL SYSTEMS NOMINAL.',
-    'CLICK ANYWHERE ON THE GLOBE TO ACQUIRE A TARGET.'
-  ];
-  function runBoot(done) {
-    var boot = $('boot'), log = $('boot-log');
-    boot.hidden = false;
-    var li = 0, ci = 0, out = '';
-    var timer = null;
-    function finish() {
-      clearTimeout(timer);
-      boot.hidden = true;
-      try { sessionStorage.setItem('umbra-booted', '1'); } catch (e) { /* private mode */ }
-      done();
+  /* the pull cord flips data-mode on <html>; everything drawn in JS —
+     leaflet vectors, the SVG charts — re-reads the tokens and follows */
+  function applyMode() {
+    var P = palette();
+    if (S.layers.bandPoly) S.layers.bandPoly.setStyle({ color: P.ink });
+    if (S.layers.centerLine) S.layers.centerLine.setStyle({ color: P.ink });
+    if (S.layers.umbra) S.layers.umbra.setStyle({ color: P.ink });
+    if (S.layers.penumbra) S.layers.penumbra.setStyle({ color: P.ink });
+    if (S.layers.contours) {
+      S.layers.contours.eachLayer(function (l) {
+        if (l.setStyle) l.setStyle({ color: P.ink });
+      });
     }
-    $('boot-skip').addEventListener('click', finish);
-    boot.addEventListener('click', function (e) {
-      if (e.target !== $('boot-skip')) finish();
-    });
-    function tick() {
-      if (li >= BOOT_LINES.length) { timer = setTimeout(finish, 700); return; }
-      var line = BOOT_LINES[li];
-      if (ci < line.length) {
-        ci = Math.min(line.length, ci + 3);
-        log.textContent = out + line.slice(0, ci) + '▌';
-        timer = setTimeout(tick, 16);
-      } else {
-        out += line + '\n';
-        log.textContent = out;
-        li++; ci = 0;
-        timer = setTimeout(tick, line === '' ? 60 : 160);
-      }
+    if (S.layers.sweepDots) {
+      S.layers.sweepDots.eachLayer(function (l) {
+        if (l._sweepV) l.setStyle(sweepDotStyle(l._sweepV));
+      });
     }
-    tick();
+    if (S.target) {
+      if (S.target.terrain) renderTerrain();
+      if (S.target.wx) renderWeather();
+    }
   }
+  new MutationObserver(applyMode).observe(document.documentElement,
+    { attributes: true, attributeFilter: ['data-mode'] });
 
   /* ================= go ================= */
 
@@ -1326,9 +1332,6 @@
     loadEclipse(id || ECLIPSES[0].id, tgt);
   }
 
-  var booted = false;
-  try { booted = !!sessionStorage.getItem('umbra-booted'); } catch (e) { booted = true; }
-  if (booted || reduceMotion) { start(); }
-  else { runBoot(function () { }); start(); }
+  start();
 
 })();

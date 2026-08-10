@@ -214,10 +214,10 @@ var Wx = (function () {
   }
 
   function verdictFor(score) {
-    if (score === null) return { code: 'UNKN', word: 'NO DATA' };
-    if (score >= 70) return { code: 'GO', word: 'GO' };
-    if (score >= 45) return { code: 'COND', word: 'CONDITIONAL' };
-    return { code: 'NOGO', word: 'NO-GO' };
+    if (score === null) return { code: 'UNKN', word: 'no data' };
+    if (score >= 70) return { code: 'GO', word: 'good' };
+    if (score >= 45) return { code: 'COND', word: 'chancy' };
+    return { code: 'NOGO', word: 'poor' };
   }
 
   /* Place search (Open-Meteo geocoder). */
