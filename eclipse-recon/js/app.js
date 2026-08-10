@@ -931,52 +931,79 @@
     var P = palette();
     var track = sunTrackSamples();
     var prof = scan.profile;
+    var n = prof.length;
 
-    var W = 336, H = 200, mL = 34, mR = 10, mT = 12, mB = 28;
-    var azMin = prof[0].az, n = prof.length;
+    /* The window is the Sun's own track, padded — not the whole scanned
+       horizon. A 2° eclipse squeezed under a 45° ridge axis was a chart of
+       the ridge, not of the eclipse. Terrain taller than the window clips
+       flat against its top edge, which is honest: it left the frame. The
+       figure is taller than wide territory now, which is what a phone
+       wants and what a track that mostly moves vertically deserves. */
+    var azMin = prof[0].az;
     var azSpanTotal = ((prof[n - 1].az - azMin) % 360 + 360) % 360 || 1;
-    var maxAng = Math.max(6,
-      Math.max.apply(null, prof.map(function (p) { return p.ang; })) + 2,
-      Math.max.apply(null, track.map(function (p) { return p.alt; })) + 3);
-    var minAng = -1.5;
-    function X(az) {
+    function relOf(az) {
       var rel = ((az - azMin) % 360 + 360) % 360;
-      if (rel > azSpanTotal) rel = rel - 360 < 0 ? 0 : azSpanTotal;
-      return mL + rel / azSpanTotal * (W - mL - mR);
+      return rel > azSpanTotal + 90 ? 0 : Math.min(rel, azSpanTotal);
+    }
+    var rels = track.map(function (p) { return relOf(p.az); });
+    var azLo = Math.max(0, Math.min.apply(null, rels) - 10);
+    var azHi = Math.min(azSpanTotal, Math.max.apply(null, rels) + 10);
+    if (azHi - azLo < 24) {           // a short track still gets a window
+      var mid = (azLo + azHi) / 2;
+      azLo = Math.max(0, mid - 12);
+      azHi = Math.min(azSpanTotal, mid + 12);
+    }
+    var window2 = azHi - azLo || 1;
+
+    var maxAng = Math.max(6,
+      Math.max.apply(null, track.map(function (p) { return p.alt; })) + 4);
+    var minAng = -1.5;
+
+    var W = 336, H = 240, mL = 34, mR = 10, mT = 12, mB = 28;
+    function X(az) {
+      var rel = Math.max(azLo, Math.min(azHi, relOf(az)));
+      return mL + (rel - azLo) / window2 * (W - mL - mR);
     }
     function Y(ang) {
-      return mT + (maxAng - ang) / (maxAng - minAng) * (H - mT - mB);
+      var a = Math.max(minAng, Math.min(maxAng, ang));
+      return mT + (maxAng - a) / (maxAng - minAng) * (H - mT - mB);
     }
 
     var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" ' +
       'aria-label="Horizon profile with the Sun’s eclipse track">';
-    // gridlines
-    for (var g = 0; g <= maxAng; g += 5) {
+    // gridlines: step fits the window
+    var gStep = maxAng > 30 ? 10 : maxAng > 14 ? 5 : 2;
+    for (var g = 0; g <= maxAng; g += gStep) {
       svg += '<line x1="' + mL + '" x2="' + (W - mR) + '" y1="' + Y(g) +
-        '" y2="' + Y(g) + '" stroke="' + P.hair + '" stroke-width="0.6"/>';
-      if (g % 10 === 0 || maxAng <= 15) {
-        svg += '<text x="' + (mL - 4) + '" y="' + (Y(g) + 3.5) +
-          '" text-anchor="end" font-size="10" fill="' + P.faint + '">' +
-          g + '°</text>';
-      }
+        '" y2="' + Y(g) + '" stroke="' + P.hair + '" stroke-width="0.6"/>' +
+        '<text x="' + (mL - 4) + '" y="' + (Y(g) + 3.5) +
+        '" text-anchor="end" font-size="10" fill="' + P.faint + '">' +
+        g + '°</text>';
     }
     // horizon zero line
     svg += '<line x1="' + mL + '" x2="' + (W - mR) + '" y1="' + Y(0) + '" y2="' +
       Y(0) + '" stroke="' + P.faint + '" stroke-width="0.7" stroke-dasharray="2 3"/>';
-    // terrain silhouette, printed solid
-    var d = 'M' + X(prof[0].az) + ',' + Y(Math.max(minAng, prof[0].ang));
+    // terrain silhouette inside the window, printed solid, clipped flat
+    // where it leaves the top
+    var d = '';
+    var started = false;
     prof.forEach(function (p) {
-      d += 'L' + X(p.az).toFixed(1) + ',' + Y(Math.max(minAng, p.ang)).toFixed(1);
+      var rel = relOf(p.az);
+      if (rel < azLo - 3 || rel > azHi + 3) return;
+      var cmd = started ? 'L' : 'M';
+      d += cmd + X(p.az).toFixed(1) + ',' + Y(p.ang).toFixed(1);
+      started = true;
     });
-    d += 'L' + X(prof[n - 1].az) + ',' + Y(minAng) + 'L' + X(prof[0].az) + ',' +
-         Y(minAng) + 'Z';
-    svg += '<path d="' + d + '" fill="' + P.ink + '" fill-opacity="0.85"/>';
+    if (started) {
+      d += 'L' + (W - mR) + ',' + Y(minAng) + 'L' + mL + ',' + Y(minAng) + 'Z';
+      svg += '<path d="' + d + '" fill="' + P.ink + '" fill-opacity="0.85"/>';
+    }
     // sun track segments: grey partial, plate-3 totality, plate-2 hidden
     for (var i = 1; i < track.length; i++) {
       var a = track[i - 1], b = track[i];
       var blocked = b.alt < horizonAngleAt(prof, b.az);
       var col = blocked ? P.danger : (b.phase === 'total' ? P.totalLine : P.faint);
-      var wd = b.phase === 'total' ? 3 : 1.8;
+      var wd = b.phase === 'total' ? 3.5 : 2;
       svg += '<line x1="' + X(a.az).toFixed(1) + '" y1="' + Y(a.alt).toFixed(1) +
         '" x2="' + X(b.az).toFixed(1) + '" y2="' + Y(b.alt).toFixed(1) +
         '" stroke="' + col + '" stroke-width="' + wd + '"' +
@@ -985,24 +1012,32 @@
     // max-eclipse sun disc
     var sunMax = { az: c.sunAz, alt: c.sunAltApparent };
     svg += '<circle cx="' + X(sunMax.az).toFixed(1) + '" cy="' +
-      Y(sunMax.alt).toFixed(1) + '" r="4" fill="none" stroke="' + P.ink +
-      '" stroke-width="1.3"/>';
-    // contact labels
-    [['C2', c.c2], ['C3', c.c3]].forEach(function (ct) {
-      if (!ct[1]) return;
-      svg += '<text x="' + X(ct[1].az).toFixed(1) + '" y="' +
-        (Y(ct[1].alt + Bessel.refraction(ct[1].alt)) - 7).toFixed(1) +
+      Y(sunMax.alt).toFixed(1) + '" r="4.5" fill="none" stroke="' + P.ink +
+      '" stroke-width="1.4"/>';
+    // contact labels; a short totality puts them on top of each other, so
+    // near-coincident ones step apart
+    var cts = [['C2', c.c2], ['C3', c.c3]].filter(function (ct) { return ct[1]; });
+    var ctXs = cts.map(function (ct) { return X(ct[1].az); });
+    cts.forEach(function (ct, ci) {
+      var x = ctXs[ci];
+      if (cts.length === 2 && Math.abs(ctXs[0] - ctXs[1]) < 18) {
+        x += ci === 0 ? -10 : 10;
+      }
+      svg += '<text x="' + x.toFixed(1) + '" y="' +
+        (Y(ct[1].alt + Bessel.refraction(ct[1].alt)) - 8).toFixed(1) +
         '" text-anchor="middle" font-size="10" fill="' + P.total + '">' +
         ct[0] + '</text>';
     });
-    // x axis: compass ticks every 15 deg
-    for (var az = Math.ceil(azMin / 15) * 15; ; az += 15) {
-      var rel = ((az - azMin) % 360 + 360) % 360;
-      if (rel > azSpanTotal) break;
-      svg += '<text x="' + X(az).toFixed(1) + '" y="' + (H - 9) +
+    // x axis: compass names on wide windows, degrees on tight ones
+    var tickStep = window2 >= 45 ? 15 : window2 >= 22 ? 10 : 5;
+    var azStart = azMin + azLo;
+    for (var az2 = Math.ceil(azStart / tickStep) * tickStep;
+         az2 <= azStart + window2 + 0.01; az2 += tickStep) {
+      var lbl = tickStep >= 15 ? compass(az2) :
+        Math.round(((az2 % 360) + 360) % 360) + '°';
+      svg += '<text x="' + X(az2).toFixed(1) + '" y="' + (H - 9) +
         '" text-anchor="middle" font-size="10" fill="' + P.faint + '">' +
-        compass(az) + '</text>';
-      if (az > azMin + 720) break;    // safety
+        lbl + '</text>';
     }
     // legend (direct labels, small)
     svg += '<text x="' + (W - mR) + '" y="' + (mT + 3) + '" text-anchor="end" ' +
@@ -1020,7 +1055,7 @@
     $('terrain-body').innerHTML =
       '<div class="hz-wrap">' + svg + '<div class="hz-tip"></div></div>' +
       '<div class="terrain-verdict">' + v.html + '</div>' + note;
-    attachHzTip(prof, track);
+    attachHzTip(prof, track, { azMin: azMin, azLo: azLo, azHi: azHi });
   }
 
   function terrainVerdict() {
@@ -1072,17 +1107,18 @@
         '</b> <code>' + pct + '% above terrain</code>' };
   }
 
-  function attachHzTip(prof, track) {
+  function attachHzTip(prof, track, view) {
     var wrap = document.querySelector('.hz-wrap');
     var tip = wrap.querySelector('.hz-tip');
     var svg = wrap.querySelector('svg');
-    var azMin = prof[0].az;
+    var azMin = view.azMin;
     var azSpanTotal = ((prof[prof.length - 1].az - azMin) % 360 + 360) % 360 || 1;
     wrap.addEventListener('mousemove', function (ev) {
       var r = svg.getBoundingClientRect();
       var fx = (ev.clientX - r.left) / r.width * 336;
       if (fx < 34 || fx > 326) { tip.style.display = 'none'; return; }
-      var az = azMin + (fx - 34) / (326 - 34) * azSpanTotal;
+      var az = azMin + view.azLo +
+        (fx - 34) / (326 - 34) * (view.azHi - view.azLo);
       var hz = horizonAngleAt(prof, az);
       // nearest profile entry for ridge distance
       var pi = Math.round(((az - azMin) % 360 + 360) % 360 /
@@ -1896,14 +1932,28 @@
       });
       graded.sort(function (a, b) { return b.score - a.score; });
       var top = graded.slice(0, 10);
-      status.textContent = graded.length + ' sites · sky ' + (res[0] || '—');
+
+      /* The colours are LOCAL here: the best score within reach is green
+         and the worst is red, whatever their absolute values — a person
+         standing on Mallorca is not choosing between here and Egypt, they
+         are choosing between the sites they can drive to. The numbers
+         stay absolute, so a row still reads against the dossier and the
+         field; only the ink is graded on the local curve, and the header
+         states the range so nobody mistakes a local green for a global
+         one. */
+      var sLo = graded[graded.length - 1].score, sHi = graded[0].score;
+      function localRamp(v) {
+        return rampColor(sHi - sLo < 0.5 ? 50 : (v - sLo) / (sHi - sLo) * 100);
+      }
+      status.textContent = graded.length + ' sites · ' + Math.round(sLo) +
+        '–' + Math.round(sHi) + ' · sky ' + (res[0] || '—');
       status.className = 'h-status ok';
 
-      // dots for everything graded, the ramp telling the story
+      // dots for everything graded, inked on the local curve
       S.layers.reachDots = L.layerGroup(graded.map(function (g) {
         return L.circleMarker([g.lat, g.lonN], {
           pane: 'sweep', radius: 4.5, color: P.ink, weight: 1.2,
-          fillColor: rampColor(g.score), fillOpacity: 0.95
+          fillColor: localRamp(g.score), fillOpacity: 0.95
         }).bindTooltip(
           Math.round(g.score) + ' · ' + fmtDur(g.dur) + ' · sun ' +
           g.lc.sunAlt.toFixed(0) + '° · ' + Math.round(g.dist) + ' km',
@@ -1916,7 +1966,9 @@
       var list = $('reach-list');
       list.hidden = false;
       list.innerHTML = '<li><span class="meta">from ' + fmtLat(baseLat) +
-        ' ' + fmtLon(baseLon) + ' · ' + radiusKm + ' km</span></li>';
+        ' ' + fmtLon(baseLon) + ' · ' + radiusKm +
+        ' km · colours graded ' + Math.round(sLo) + '–' + Math.round(sHi) +
+        '</span></li>';
       Promise.all(top.map(function (g) {
         return Wx.placeName(g.lat, g.lonN).catch(function () { return null; });
       })).then(function (names) {
@@ -1926,7 +1978,7 @@
           li.innerHTML = '<span class="rk">' + pad2(i + 1) + '</span>' +
             '<span class="nm">' + esc(names[i] ||
               (fmtLat(g.lat) + ' ' + fmtLon(g.lonN))) + '</span>' +
-            '<span class="sc" style="color:' + rampColor(g.score) + '">' +
+            '<span class="sc" style="color:' + localRamp(g.score) + '">' +
             Math.round(g.score) + '</span>' +
             '<span class="meta">' + Math.round(g.dist) + ' km ' +
             (g.dist ? compass(g.brg) : 'here') + ' · ' + fmtDur(g.dur) +
