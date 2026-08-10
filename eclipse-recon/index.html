@@ -113,9 +113,12 @@
             <option value="200">200 km</option>
           </select>
           <button id="reach-btn" class="btn-primary" type="button"
-            data-tip="Grade a grid of sites around this point — astronomy, terrain horizon, sky — and rank the best you can actually get to. Distances are straight-line.">Rank the area</button>
+            data-tip="Paint the suitability field inside this radius, graded on the local curve: green is the best within reach, red the worst. Water prints faint. Distances are straight-line.">Map the area</button>
         </div>
-        <ol id="reach-list" hidden></ol>
+        <div id="reach-legend" class="score-legend" hidden>
+          <i class="suit-ramp" aria-hidden="true"></i><b id="reach-lo">0</b><b id="reach-hi">100</b>
+          <span id="reach-note"></span>
+        </div>
       </section>
 
       <section id="sec-circ">
@@ -164,7 +167,7 @@
   <div id="suit-ctl">
     <button id="suit-btn" class="btn-ghost" type="button" aria-pressed="false"
       data-tip="Suitability along the band, 0–100: red = the eclipse cannot be seen there, green = everything lines up. Blocked terrain or certain storm is 0 — the formula is under the site assessment.">suitability</button>
-    <div id="suit-legend" hidden>
+    <div id="suit-legend" class="score-legend" hidden>
       <i class="suit-ramp" aria-hidden="true"></i><b>0</b><b>100</b>
       <span id="suit-mode"></span>
     </div>
