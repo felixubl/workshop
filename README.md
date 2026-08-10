@@ -49,8 +49,10 @@ The eclipse mathematics itself runs entirely in your browser.
   you click or type as coordinates — contact times, Sun altitude, a
   terrain-masked horizon profile (does that ridge hide a low Sun?), and the
   cloud outlook. A suitability field paints the whole umbral band as a
-  heatmap of duration × horizon × sky, where a Sun behind terrain scores
-  zero whatever the weather. Nothing is per-eclipse in the code: a
+  heatmap, weighted by certainty: the horizon is surveyed fact and counts
+  squared, the sky is a prognosis and is softened — though a certain storm
+  still scores zero — and duration counts gently, because any totality is
+  the event. A Sun behind terrain is zero whatever the forecast. Nothing is per-eclipse in the code: a
   catalogue record is elements and a date, everything else is derived, and
   any other eclipse loads by pasting the Polynomial Besselian Elements
   block off its NASA/GSFC page. It wears PREPRINT like the rest: the map is
