@@ -413,15 +413,19 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
               3px 3px 0 color-mix(in srgb, var(--pp-ink) 14%, transparent);
   background: var(--w-wash-0);
 }
-#suit-legend { display: flex; align-items: center; gap: 4px;
+.score-legend { display: flex; align-items: center; gap: 4px;
   font-family: var(--pp-font-mono); font-size: 0.56rem;
   color: var(--pp-faint);
   text-shadow: 0 0 3px var(--pp-paper), 0 0 3px var(--pp-paper); }
+#reach-legend { margin-top: 0.5rem; font-size: 0.66rem; text-shadow: none; }
+#reach-legend b { font-weight: 400; }
+#reach-legend b:first-of-type { order: -1; }
+#reach-note { margin-left: 6px; }
 .suit-ramp { width: 74px; height: 9px; flex: none;
   border: 1px solid color-mix(in srgb, var(--pp-ink) 25%, transparent);
   background: linear-gradient(90deg, var(--pp-plate-2), var(--w-mark-fill),
     var(--pp-plate-1)); }
-#suit-legend b { font-weight: 400; }
+.score-legend b { font-weight: 400; }
 #suit-legend b:first-of-type { order: -1; }
 #suit-mode { margin-left: 4px; }
 #suit-prog { width: 120px; height: 5px; border: 1px solid var(--pp-hair);

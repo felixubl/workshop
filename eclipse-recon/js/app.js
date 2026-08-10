@@ -1828,24 +1828,26 @@
 
 
   /* ================= within reach ================= */
+  /* ================= within reach ================= */
 
   /* The base-camp question: standing at a hotel, a house, a harbour —
-     where is the best score I can actually get to? A polar grid of
-     candidates around the base, out to the chosen radius, every one
-     graded exactly like a clicked site (astronomy, the terrain gate, its
-     own sky), ranked. Straight-line distance — the tool does not know
-     roads or ferries, so each row states how far and which way, and the
-     reader knows their own island. */
+     where could I go? Not a list of proposed points (a polar grid over a
+     bay dutifully ranks open water first, which is true and useless) but
+     the suitability field itself, clipped to the chosen radius and graded
+     on the local curve: the best cell within reach is green, the worst
+     red, whatever their absolute scores. Water still scores — a boat is a
+     place to stand — but it prints fainter, because the question is
+     usually about land. Distance is straight-line; the ring says what
+     "reach" meant, and the reader knows their own island. */
 
   var REACH = { run: 0, aborter: null, base: null };
 
   function reachStop() {
     REACH.run++;
     if (REACH.aborter) { REACH.aborter.abort(); REACH.aborter = null; }
-    clearRole('reachDots');
+    clearRole('reachCells');
     clearRole('reachRing');
-    $('reach-list').hidden = true;
-    $('reach-list').innerHTML = '';
+    $('reach-legend').hidden = true;
     $('reach-status').textContent = '';
   }
 
@@ -1864,7 +1866,7 @@
     REACH.base = { lat: baseLat, lon: baseLon };
     var P = palette();
 
-    // the ring of what "reach" means, drawn while the ranking stands
+    // the ring of what "reach" means, drawn while the field stands
     S.layers.reachRing = L.layerGroup([
       L.circle([baseLat, baseLon], {
         pane: 'sweep', radius: radiusKm * 1000, color: P.ink, weight: 1,
@@ -1876,48 +1878,44 @@
     status.textContent = 'sampling';
     status.className = 'h-status';
 
-    // polar grid: base + 4 rings × 12 bearings
-    var cand = [{ lat: baseLat, lon: baseLon, dist: 0, brg: 0 }];
-    for (var r = 1; r <= 4; r++) {
-      for (var b = 0; b < 12; b++) {
-        var brg = b * 30 + (r % 2) * 15;
-        var d = radiusKm * r / 4;
-        var pt = Bessel.destination(baseLat, baseLon, brg, d);
-        cand.push({ lat: pt.lat, lon: pt.lon, dist: d, brg: brg });
+    // a square grid over the disc; the disc keeps the cells
+    var COLS = 13;
+    var stepKm = 2 * radiusKm / COLS;
+    var dLat = stepKm / 111;
+    var dLon = stepKm / (111 * Math.max(0.2, Math.cos(baseLat * RAD)));
+    var cells = [];
+    for (var r = 0; r < COLS; r++) {
+      for (var q = 0; q < COLS; q++) {
+        var la = baseLat + (r - (COLS - 1) / 2) * dLat;
+        var lo = baseLon + (q - (COLS - 1) / 2) * dLon;
+        if (Bessel.distKm(baseLat, baseLon, la, lo) > radiusKm + stepKm * 0.2) {
+          continue;
+        }
+        cells.push({ lat: la, lon: lo, central: false, vis: null,
+                     sky: null, elev: null, score: 0 });
       }
     }
 
-    var graded = [];
-    cand.forEach(function (c) {
+    // astronomy, then everything else only where there is an eclipse
+    cells.forEach(function (c) {
       var a = assessPoint(c.lat, c.lon);
       if (!a) return;
-      graded.push({
-        lat: c.lat, lonN: a.lonN, dist: c.dist, brg: c.brg,
-        lc: a.lc, minAlt: a.minAlt, azs: a.azs, dur: a.dur,
-        vis: a.minAlt >= 30 ? 1 : null, sky: null
-      });
+      c.central = true; c.lc = a.lc; c.lonN = a.lonN;
+      c.minAlt = a.minAlt; c.azs = a.azs; c.dur = a.dur;
+      if (a.minAlt >= 30) c.vis = 1;
     });
+    var central = cells.filter(function (c) { return c.central; });
 
-    if (!graded.length) {
+    if (!central.length) {
       var near = nearestPathKm(baseLat, baseLon);
-      status.textContent = 'no totality in ' + radiusKm + ' km';
-      $('reach-list').hidden = false;
-      $('reach-list').innerHTML = '<li><span class="meta">centreline ' +
-        Math.round(near.d) + ' km ' + near.dir + '</span></li>';
+      status.textContent = 'no totality in ' + radiusKm + ' km · centreline ' +
+        Math.round(near.d) + ' km ' + near.dir;
       return;
     }
 
-    // sky for every candidate, batched; terrain pooled alongside
-    var wxDone = Wx.get(graded.map(function (g) {
-      return { lat: g.lat, lon: g.lonN };
-    }), S.gt.dateGE, signal).then(function (res) {
-      graded.forEach(function (g, i) {
-        g.sky = Wx.skyScore(Wx.atTime(res.data[i], g.lc.dateMax));
-      });
-      return res.mode;
-    }).catch(function () { return null; });
+    var wxDone = fetchSuitSky(central, signal).catch(function () { return null; });
 
-    var scans = graded.filter(function (g) { return g.vis === null; });
+    var scans = central.filter(function (c) { return c.vis === null; });
     var done = 0;
     var terrainDone = pooledTerrain(scans, signal, dead, function () {
       done++;
@@ -1925,77 +1923,63 @@
         Math.round(done / (scans.length || 1) * 100) + '%';
     });
 
-    Promise.all([wxDone, terrainDone]).then(function (res) {
-      if (dead()) return;
-      graded.forEach(function (g) {
-        g.score = g.vis === null ? 0 :
-          suitabilityOf(g.dur, g.vis, g.lc.sunAltApparent, g.sky);
-      });
-      graded.sort(function (a, b) { return b.score - a.score; });
-      var top = graded.slice(0, 10);
+    // land or water, for the print weight — same tiles the scans read
+    var elevDone = new Promise(function (resolve) {
+      var i = 0, active = 0, LIMIT = 6;
+      (function next() {
+        if (dead()) { resolve(); return; }
+        if (i >= central.length && active === 0) { resolve(); return; }
+        while (active < LIMIT && i < central.length) {
+          (function (c) {
+            active++;
+            Terrain.elevationAt(c.lat, c.lonN, 10).then(function (e) {
+              c.elev = e;
+              active--; next();
+            });
+          })(central[i++]);
+        }
+      })();
+    });
 
-      /* The colours are LOCAL here: the best score within reach is green
-         and the worst is red, whatever their absolute values — a person
-         standing on Mallorca is not choosing between here and Egypt, they
-         are choosing between the sites they can drive to. The numbers
-         stay absolute, so a row still reads against the dossier and the
-         field; only the ink is graded on the local curve, and the header
-         states the range so nobody mistakes a local green for a global
-         one. */
-      var sLo = graded[graded.length - 1].score, sHi = graded[0].score;
+    Promise.all([wxDone, terrainDone, elevDone]).then(function (res) {
+      if (dead()) return;
+      central.forEach(function (c) {
+        c.score = c.vis === null ? 0 :
+          suitabilityOf(c.dur, c.vis, c.lc.sunAltApparent, c.sky);
+      });
+
+      /* graded on the local curve: within this ring, the best is green
+         and the worst is red — the numbers behind the colours stay
+         absolute, and the legend states the range */
+      var sLo = Infinity, sHi = -Infinity;
+      central.forEach(function (c) {
+        if (c.score < sLo) sLo = c.score;
+        if (c.score > sHi) sHi = c.score;
+      });
       function localRamp(v) {
         return rampColor(sHi - sLo < 0.5 ? 50 : (v - sLo) / (sHi - sLo) * 100);
       }
-      status.textContent = graded.length + ' sites · ' + Math.round(sLo) +
-        '–' + Math.round(sHi) + ' · sky ' + (res[0] || '—');
-      status.className = 'h-status ok';
 
-      // dots for everything graded, inked on the local curve
-      S.layers.reachDots = L.layerGroup(graded.map(function (g) {
-        return L.circleMarker([g.lat, g.lonN], {
-          pane: 'sweep', radius: 4.5, color: P.ink, weight: 1.2,
-          fillColor: localRamp(g.score), fillOpacity: 0.95
-        }).bindTooltip(
-          Math.round(g.score) + ' · ' + fmtDur(g.dur) + ' · sun ' +
-          g.lc.sunAlt.toFixed(0) + '° · ' + Math.round(g.dist) + ' km',
-          { className: 'sweep-dot-tip', direction: 'top', offset: [0, -6] }
-        ).on('click', function () {
-          setTarget(g.lat, g.lonN, { keepView: true });
-        });
+      S.layers.reachCells = L.layerGroup(central.map(function (c) {
+        var water = c.elev !== null && c.elev <= 0.5;
+        return L.rectangle(
+          [[c.lat - dLat / 2, c.lonN - dLon / 2],
+           [c.lat + dLat / 2, c.lonN + dLon / 2]], {
+            pane: 'suit', stroke: false, interactive: false,
+            fillColor: localRamp(c.score),
+            fillOpacity: water ? 0.2 : 0.52
+          });
       })).addTo(map);
 
-      var list = $('reach-list');
-      list.hidden = false;
-      list.innerHTML = '<li><span class="meta">from ' + fmtLat(baseLat) +
-        ' ' + fmtLon(baseLon) + ' · ' + radiusKm +
-        ' km · colours graded ' + Math.round(sLo) + '–' + Math.round(sHi) +
-        '</span></li>';
-      Promise.all(top.map(function (g) {
-        return Wx.placeName(g.lat, g.lonN).catch(function () { return null; });
-      })).then(function (names) {
-        if (dead()) return;
-        top.forEach(function (g, i) {
-          var li = document.createElement('li');
-          li.innerHTML = '<span class="rk">' + pad2(i + 1) + '</span>' +
-            '<span class="nm">' + esc(names[i] ||
-              (fmtLat(g.lat) + ' ' + fmtLon(g.lonN))) + '</span>' +
-            '<span class="sc" style="color:' + localRamp(g.score) + '">' +
-            Math.round(g.score) + '</span>' +
-            '<span class="meta">' + Math.round(g.dist) + ' km ' +
-            (g.dist ? compass(g.brg) : 'here') + ' · ' + fmtDur(g.dur) +
-            ' · sun ' + g.lc.sunAlt.toFixed(0) + '° · horizon ' +
-            (g.vis === null ? '—' : Math.round(g.vis * 100) + '%') +
-            (g.sky === null ? '' : ' · sky ' + Math.round(g.sky)) +
-            '</span>';
-          li.addEventListener('click', function () {
-            map.flyTo([g.lat, g.lonN], Math.max(map.getZoom(), 9));
-            setTarget(g.lat, g.lonN, { keepView: true });
-          });
-          list.appendChild(li);
-        });
-      });
+      status.textContent = central.length + ' cells · sky ' + (res[0] || '—');
+      status.className = 'h-status ok';
+      $('reach-lo').textContent = Math.round(sLo);
+      $('reach-hi').textContent = Math.round(sHi);
+      $('reach-note').textContent = radiusKm + ' km · water faint';
+      $('reach-legend').hidden = false;
     });
   }
+
 
   /* ================= search ================= */
 
