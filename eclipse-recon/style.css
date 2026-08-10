@@ -183,20 +183,22 @@ body {
   font-size: 0.6rem; letter-spacing: 0.12em; line-height: 13px;
   text-transform: uppercase; color: var(--pp-faint); }
 
-#sweep-list { list-style: none; margin: 0; padding: 0; }
-#sweep-list li { display: grid; grid-template-columns: 1.6em 1fr auto;
+#sweep-list, #reach-list { list-style: none; margin: 0.5rem 0 0; padding: 0; }
+#sweep-list li, #reach-list li { display: grid;
+  grid-template-columns: 1.6em 1fr auto;
   gap: 1px 0.5rem; padding: 0.35rem 0.15rem; align-items: baseline;
   border-bottom: 1px solid var(--pp-hair);
   cursor: var(--pp-cursor-point, pointer); }
-#sweep-list li:hover { background: var(--w-wash-0); }
-#sweep-list .rk { color: var(--pp-faint); font-family: var(--pp-font-mono);
-  font-size: 0.7rem; }
-#sweep-list .nm { font-size: 0.82rem; overflow: hidden;
+#sweep-list li:hover, #reach-list li:hover { background: var(--w-wash-0); }
+#sweep-list .rk, #reach-list .rk { color: var(--pp-faint);
+  font-family: var(--pp-font-mono); font-size: 0.7rem; }
+#sweep-list .nm, #reach-list .nm { font-size: 0.82rem; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap; }
-#sweep-list .sc { font-family: var(--pp-font-mono); font-weight: 700;
-  font-variant-numeric: tabular-nums; }
-#sweep-list .meta { grid-column: 2 / 4; color: var(--pp-faint);
-  font-family: var(--pp-font-mono); font-size: 0.66rem; }
+#sweep-list .sc, #reach-list .sc { font-family: var(--pp-font-mono);
+  font-weight: 700; font-variant-numeric: tabular-nums; }
+#sweep-list .meta, #reach-list .meta { grid-column: 2 / 4;
+  color: var(--pp-faint); font-family: var(--pp-font-mono);
+  font-size: 0.66rem; }
 
 
 /* ---- site report ---------------------------------------------------- */
@@ -306,6 +308,11 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
 .v-facts code { font-variant-numeric: tabular-nums; }
 .v-facts code:first-of-type { flex: 1; }
 .v-facts .fx { color: var(--pp-faint); text-align: right; min-width: 3.4em; }
+
+.reach-row { display: flex; gap: 0.5rem; align-items: stretch; }
+.reach-row select { flex: 0 0 auto; }
+.reach-row .picker { flex: 0 0 auto; width: 7em; }
+.reach-row #reach-btn { flex: 1; }
 
 .score-how { margin-top: 0.6rem; font-size: 0.74rem; }
 .score-how summary { color: var(--pp-faint); font-size: 0.66rem;

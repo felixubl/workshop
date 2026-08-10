@@ -96,6 +96,22 @@
         <div id="wx-body"></div>
       </section>
 
+      <section id="sec-reach">
+        <h3>Within reach <span class="h-status" id="reach-status"></span></h3>
+        <div class="reach-row">
+          <select id="reach-km" aria-label="Travel radius">
+            <option value="10">10 km</option>
+            <option value="25">25 km</option>
+            <option value="50" selected>50 km</option>
+            <option value="100">100 km</option>
+            <option value="200">200 km</option>
+          </select>
+          <button id="reach-btn" class="btn-primary" type="button"
+            data-tip="Grade a grid of sites around this point — astronomy, terrain horizon, sky — and rank the best you can actually get to. Distances are straight-line.">Rank the area</button>
+        </div>
+        <ol id="reach-list" hidden></ol>
+      </section>
+
       <section id="sec-verdict">
         <h3>Assessment</h3>
         <div id="verdict-body"></div>
