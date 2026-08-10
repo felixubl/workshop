@@ -1272,6 +1272,67 @@
     return Math.max(0, Math.min(100, s));
   }
 
+  /* One point, graded the way every instrument here grades it. Astronomy
+     first (null = no observable central phase there), then a pooled
+     terrain pass that fills c.vis with the fraction of the central phase
+     the horizon lets through. */
+  function assessPoint(lat, lon) {
+    var lonN = ((lon + 540) % 360) - 180;
+    var lc = Bessel.localCircumstances(S.ecl, lat, lonN, 0);
+    if (!lc || lc.type === 'partial' || !lc.c2 || !lc.c3 ||
+        !lc.visible || !lc.centralVisible) return null;
+    var minAlt = Infinity, azs = [];
+    for (var i = 0; i <= 6; i++) {
+      var tt = lc.c2.tTT + (lc.c3.tTT - lc.c2.tTT) * i / 6;
+      var sun = Bessel.sunAltAz(S.ecl, tt, lat, lonN);
+      var alt = sun.alt + Bessel.refraction(sun.alt);
+      if (alt < minAlt) minAlt = alt;
+      azs.push(sun.az);
+    }
+    if (minAlt <= -0.3) return null;   // the Sun sets inside the central phase
+    return { lc: lc, lonN: lonN, minAlt: minAlt, azs: azs, dur: lc.duration };
+  }
+
+  function scanVis(c, signal) {
+    var lo = Math.min.apply(null, c.azs), hi = Math.max.apply(null, c.azs);
+    if (hi - lo > 180) { lo = c.lc.sunAz - 12; hi = c.lc.sunAz + 12; }
+    var maxKm = Math.min(120, Math.max(8,
+      5.0 / Math.tan(Math.max(1, c.minAlt) * RAD)));
+    return Terrain.horizonScan(c.lat, c.lonN, {
+      azCenter: (lo + hi) / 2, azSpan: Math.min(60, hi - lo + 8),
+      azStep: 3, maxKm: maxKm, eyeM: 2, signal: signal
+    }).then(function (scan) {
+      var n = 12, seen = 0;
+      for (var i = 0; i <= n; i++) {
+        var tt = c.lc.c2.tTT + (c.lc.c3.tTT - c.lc.c2.tTT) * i / n;
+        var sun = Bessel.sunAltAz(S.ecl, tt, c.lat, c.lonN);
+        var alt = sun.alt + Bessel.refraction(sun.alt);
+        if (alt >= horizonAngleAt(scan.profile, sun.az)) seen++;
+      }
+      c.vis = seen / (n + 1);
+    }).catch(function () {
+      // no elevation data is the sea or a dead tile: an open horizon
+      c.vis = 1;
+    });
+  }
+
+  function pooledTerrain(list, signal, dead, onOne) {
+    return new Promise(function (resolve) {
+      var i = 0, active = 0, LIMIT = 4;
+      (function next() {
+        if (dead()) { resolve(); return; }
+        if (i >= list.length && active === 0) { resolve(); return; }
+        while (active < LIMIT && i < list.length) {
+          active++;
+          scanVis(list[i++], signal).then(function () {
+            if (onOne) onOne();
+            active--; next();
+          });
+        }
+      })();
+    });
+  }
+
   /* Every score on this page wears the same colour: a ramp from plate 2
      through the citron marker to plate 1 — cannot see it, gamble, go.
      Read off the live palette so both modes get their own inks. */
@@ -1632,22 +1693,11 @@
 
     // 1 · astronomy, cheap and exact
     samples.forEach(function (c) {
-      var lon = ((c.lon + 540) % 360) - 180;
-      var lc = Bessel.localCircumstances(S.ecl, c.lat, lon, 0);
-      if (!lc || lc.type === 'partial' || !lc.c2 || !lc.c3 ||
-          !lc.visible || !lc.centralVisible) return;
-      var minAlt = Infinity, azs = [];
-      for (var i = 0; i <= 6; i++) {
-        var tt = lc.c2.tTT + (lc.c3.tTT - lc.c2.tTT) * i / 6;
-        var sun = Bessel.sunAltAz(S.ecl, tt, c.lat, lon);
-        var alt = sun.alt + Bessel.refraction(sun.alt);
-        if (alt < minAlt) minAlt = alt;
-        azs.push(sun.az);
-      }
-      if (minAlt <= -0.3) return;      // the Sun sets inside the central phase
-      c.central = true; c.lc = lc; c.lonN = lon;
-      c.minAlt = minAlt; c.azs = azs; c.dur = lc.duration;
-      if (minAlt >= 30) c.vis = 1;     // nothing at sample scale blocks 30°
+      var a = assessPoint(c.lat, c.lon);
+      if (!a) return;
+      c.central = true; c.lc = a.lc; c.lonN = a.lonN;
+      c.minAlt = a.minAlt; c.azs = a.azs; c.dur = a.dur;
+      if (a.minAlt >= 30) c.vis = 1;   // nothing at sample scale blocks 30°
     });
     var central = samples.filter(function (c) { return c.central; });
     if (!central.length) {
@@ -1662,41 +1712,9 @@
     // 3 · terrain, pooled, only where it can matter
     var scans = central.filter(function (c) { return c.vis === null; });
     var done = 0;
-    function scanCell(c) {
-      var lo = Math.min.apply(null, c.azs), hi = Math.max.apply(null, c.azs);
-      if (hi - lo > 180) { lo = c.lc.sunAz - 12; hi = c.lc.sunAz + 12; }
-      var maxKm = Math.min(120, Math.max(8,
-        5.0 / Math.tan(Math.max(1, c.minAlt) * RAD)));
-      return Terrain.horizonScan(c.lat, c.lonN, {
-        azCenter: (lo + hi) / 2, azSpan: Math.min(60, hi - lo + 8),
-        azStep: 3, maxKm: maxKm, eyeM: 2, signal: signal
-      }).then(function (scan) {
-        var n = 12, seen = 0;
-        for (var i = 0; i <= n; i++) {
-          var tt = c.lc.c2.tTT + (c.lc.c3.tTT - c.lc.c2.tTT) * i / n;
-          var sun = Bessel.sunAltAz(S.ecl, tt, c.lat, c.lonN);
-          var alt = sun.alt + Bessel.refraction(sun.alt);
-          if (alt >= horizonAngleAt(scan.profile, sun.az)) seen++;
-        }
-        c.vis = seen / (n + 1);
-      }).catch(function () {
-        // no elevation data is the sea or a dead tile: an open horizon
-        c.vis = 1;
-      }).then(function () {
-        done++;
-        suitProg(0.1 + 0.8 * done / (scans.length || 1));
-      });
-    }
-    var terrainDone = new Promise(function (resolve) {
-      var i = 0, active = 0, LIMIT = 4;
-      (function next() {
-        if (dead()) { resolve(); return; }
-        if (i >= scans.length && active === 0) { resolve(); return; }
-        while (active < LIMIT && i < scans.length) {
-          active++;
-          scanCell(scans[i++]).then(function () { active--; next(); });
-        }
-      })();
+    var terrainDone = pooledTerrain(scans, signal, dead, function () {
+      done++;
+      suitProg(0.1 + 0.8 * done / (scans.length || 1));
     });
 
     Promise.all([wxDone, terrainDone]).then(function (res) {
@@ -1771,6 +1789,160 @@
     $('suit-mode').textContent = 'sky · ' + (g.sky || '—');
   }
 
+
+  /* ================= within reach ================= */
+
+  /* The base-camp question: standing at a hotel, a house, a harbour —
+     where is the best score I can actually get to? A polar grid of
+     candidates around the base, out to the chosen radius, every one
+     graded exactly like a clicked site (astronomy, the terrain gate, its
+     own sky), ranked. Straight-line distance — the tool does not know
+     roads or ferries, so each row states how far and which way, and the
+     reader knows their own island. */
+
+  var REACH = { run: 0, aborter: null, base: null };
+
+  function reachStop() {
+    REACH.run++;
+    if (REACH.aborter) { REACH.aborter.abort(); REACH.aborter = null; }
+    clearRole('reachDots');
+    clearRole('reachRing');
+    $('reach-list').hidden = true;
+    $('reach-list').innerHTML = '';
+    $('reach-status').textContent = '';
+  }
+
+  $('reach-btn').addEventListener('click', function () {
+    if (!S.target) return;
+    runReach(S.target.lat, S.target.lon, +$('reach-km').value);
+  });
+
+  function runReach(baseLat, baseLon, radiusKm) {
+    reachStop();
+    var run = REACH.run;
+    REACH.aborter = typeof AbortController !== 'undefined' ?
+      new AbortController() : null;
+    var signal = REACH.aborter ? REACH.aborter.signal : undefined;
+    var dead = function () { return run !== REACH.run; };
+    REACH.base = { lat: baseLat, lon: baseLon };
+    var P = palette();
+
+    // the ring of what "reach" means, drawn while the ranking stands
+    S.layers.reachRing = L.layerGroup([
+      L.circle([baseLat, baseLon], {
+        pane: 'sweep', radius: radiusKm * 1000, color: P.ink, weight: 1,
+        opacity: 0.55, dashArray: '5 5', fillOpacity: 0.02, interactive: false
+      })
+    ]).addTo(map);
+
+    var status = $('reach-status');
+    status.textContent = 'sampling';
+    status.className = 'h-status';
+
+    // polar grid: base + 4 rings × 12 bearings
+    var cand = [{ lat: baseLat, lon: baseLon, dist: 0, brg: 0 }];
+    for (var r = 1; r <= 4; r++) {
+      for (var b = 0; b < 12; b++) {
+        var brg = b * 30 + (r % 2) * 15;
+        var d = radiusKm * r / 4;
+        var pt = Bessel.destination(baseLat, baseLon, brg, d);
+        cand.push({ lat: pt.lat, lon: pt.lon, dist: d, brg: brg });
+      }
+    }
+
+    var graded = [];
+    cand.forEach(function (c) {
+      var a = assessPoint(c.lat, c.lon);
+      if (!a) return;
+      graded.push({
+        lat: c.lat, lonN: a.lonN, dist: c.dist, brg: c.brg,
+        lc: a.lc, minAlt: a.minAlt, azs: a.azs, dur: a.dur,
+        vis: a.minAlt >= 30 ? 1 : null, sky: null
+      });
+    });
+
+    if (!graded.length) {
+      var near = nearestPathKm(baseLat, baseLon);
+      status.textContent = 'no totality in ' + radiusKm + ' km';
+      $('reach-list').hidden = false;
+      $('reach-list').innerHTML = '<li><span class="meta">centreline ' +
+        Math.round(near.d) + ' km ' + near.dir + '</span></li>';
+      return;
+    }
+
+    // sky for every candidate, batched; terrain pooled alongside
+    var wxDone = Wx.get(graded.map(function (g) {
+      return { lat: g.lat, lon: g.lonN };
+    }), S.gt.dateGE, signal).then(function (res) {
+      graded.forEach(function (g, i) {
+        g.sky = Wx.skyScore(Wx.atTime(res.data[i], g.lc.dateMax));
+      });
+      return res.mode;
+    }).catch(function () { return null; });
+
+    var scans = graded.filter(function (g) { return g.vis === null; });
+    var done = 0;
+    var terrainDone = pooledTerrain(scans, signal, dead, function () {
+      done++;
+      status.textContent = 'scanning ' +
+        Math.round(done / (scans.length || 1) * 100) + '%';
+    });
+
+    Promise.all([wxDone, terrainDone]).then(function (res) {
+      if (dead()) return;
+      graded.forEach(function (g) {
+        g.score = g.vis === null ? 0 :
+          suitabilityOf(g.dur, g.vis, g.lc.sunAltApparent, g.sky);
+      });
+      graded.sort(function (a, b) { return b.score - a.score; });
+      var top = graded.slice(0, 10);
+      status.textContent = graded.length + ' sites · sky ' + (res[0] || '—');
+      status.className = 'h-status ok';
+
+      // dots for everything graded, the ramp telling the story
+      S.layers.reachDots = L.layerGroup(graded.map(function (g) {
+        return L.circleMarker([g.lat, g.lonN], {
+          pane: 'sweep', radius: 4.5, color: P.ink, weight: 1.2,
+          fillColor: rampColor(g.score), fillOpacity: 0.95
+        }).bindTooltip(
+          Math.round(g.score) + ' · ' + fmtDur(g.dur) + ' · sun ' +
+          g.lc.sunAlt.toFixed(0) + '° · ' + Math.round(g.dist) + ' km',
+          { className: 'sweep-dot-tip', direction: 'top', offset: [0, -6] }
+        ).on('click', function () {
+          setTarget(g.lat, g.lonN, { keepView: true });
+        });
+      })).addTo(map);
+
+      var list = $('reach-list');
+      list.hidden = false;
+      list.innerHTML = '<li><span class="meta">from ' + fmtLat(baseLat) +
+        ' ' + fmtLon(baseLon) + ' · ' + radiusKm + ' km</span></li>';
+      Promise.all(top.map(function (g) {
+        return Wx.placeName(g.lat, g.lonN).catch(function () { return null; });
+      })).then(function (names) {
+        if (dead()) return;
+        top.forEach(function (g, i) {
+          var li = document.createElement('li');
+          li.innerHTML = '<span class="rk">' + pad2(i + 1) + '</span>' +
+            '<span class="nm">' + esc(names[i] ||
+              (fmtLat(g.lat) + ' ' + fmtLon(g.lonN))) + '</span>' +
+            '<span class="sc" style="color:' + rampColor(g.score) + '">' +
+            Math.round(g.score) + '</span>' +
+            '<span class="meta">' + Math.round(g.dist) + ' km ' +
+            (g.dist ? compass(g.brg) : 'here') + ' · ' + fmtDur(g.dur) +
+            ' · sun ' + g.lc.sunAlt.toFixed(0) + '° · horizon ' +
+            (g.vis === null ? '—' : Math.round(g.vis * 100) + '%') +
+            (g.sky === null ? '' : ' · sky ' + Math.round(g.sky)) +
+            '</span>';
+          li.addEventListener('click', function () {
+            map.flyTo([g.lat, g.lonN], Math.max(map.getZoom(), 9));
+            setTarget(g.lat, g.lonN, { keepView: true });
+          });
+          list.appendChild(li);
+        });
+      });
+    });
+  }
 
   /* ================= search ================= */
 
@@ -1881,6 +2053,7 @@
     // teardown
     togglePlay(false);
     suitStop();
+    reachStop();
     Object.keys(S.layers).forEach(clearRole);
     if (reticle) { map.removeLayer(reticle); reticle = null; }
     S.target = null;
