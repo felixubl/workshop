@@ -130,7 +130,7 @@
        cell of the visible map instead of one point -->
   <div id="suit-ctl">
     <button id="suit-btn" class="btn-ghost" type="button" aria-pressed="false"
-      data-tip="Suitability over the visible map: duration × horizon × sky. Terrain-blocked is 0 whatever the weather.">suitability</button>
+      data-tip="Suitability along the band: horizon² × sky^0.75 × √duration. The horizon is fact and counts double; the sky is a forecast and is softened; blocked terrain or certain storm is 0.">suitability</button>
     <div id="suit-legend" hidden>
       <i class="suit-ramp" aria-hidden="true"></i><b>0</b><b>100</b>
       <span id="suit-mode"></span>

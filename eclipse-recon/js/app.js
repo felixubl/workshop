@@ -1168,15 +1168,32 @@
   /* ---- assessment ---- */
 
   /* One suitability number, 0..100, and it is the same arithmetic the
-     heatmap paints: normalised central duration × the fraction of the
-     central phase the terrain lets through × sky score. The gates are
-     absolute — below the horizon, outside the central band, or fully
-     behind terrain is 0 whatever the weather says. A null sky (service
-     unreachable, or simply not fetched yet) drops the factor rather than
-     the score, and the display says which. */
+     heatmap paints. Three factors, weighted by how certain each one is:
+
+     TERRAIN, squared. The horizon is surveyed fact, not a forecast — a
+     ridge does not clear up on the day. So the visible fraction of the
+     central phase counts twice over: 90% visible costs a fifth, half
+     visible costs three quarters, a quarter visible is nearly worthless,
+     and fully blocked is the hard 0 it always was.
+
+     SKY, softened. A forecast (or a climatology) is a probability, so a
+     middling number must not kill a site the way a middling horizon does
+     — the 0.75 power lifts the middle of the curve. It still runs to 0:
+     a sky that is certainly storm is a site where the eclipse cannot be
+     seen, and scores like one.
+
+     DURATION, square-rooted. Half the maximum is still most of the show
+     — any totality is the event — so duration separates sites gently
+     rather than dominating them.
+
+     The gates stay absolute — below the horizon, outside the central
+     band, or fully behind terrain is 0 whatever the weather says. A null
+     sky (service unreachable) drops the factor rather than the score,
+     and the display says which. */
   function suitabilityOf(dur, visFrac, sky) {
     var durN = S.gt.maxDuration > 0 ? Math.min(1, dur / S.gt.maxDuration) : 0;
-    var s = 100 * durN * visFrac * (sky === null ? 1 : sky / 100);
+    var s = 100 * Math.sqrt(durN) * visFrac * visFrac *
+            (sky === null ? 1 : Math.pow(sky / 100, 0.75));
     return Math.max(0, Math.min(100, s));
   }
 
