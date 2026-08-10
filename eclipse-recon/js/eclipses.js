@@ -1,22 +1,27 @@
 /* Eclipse Recon — the catalogue.
-   Polynomial Besselian elements, transcribed from NASA/GSFC eclipse
-   predictions by Fred Espenak (VSOP87/ELP2000-82 ephemerides). Each element
-   a(t) = a0 + a1*t + a2*t^2 + a3*t^3 with t = TT hours since t0.
+   Pure data: polynomial Besselian elements, nothing else. Everything a
+   record used to carry beside them — a display name, a type word, a home
+   view, a line of prose — is derivable from the elements, so app.js derives
+   it. A record is:
+     { id, date: [y,m,d], t0, deltaT,
+       x, y, d, l1, l2, mu (each a0..a3), tanF1, tanF2 }
+   a(t) = a0 + a1*t + a2*t^2 + a3*t^3, t = TT hours since t0.
    x, y      shadow-axis intersection with the fundamental plane, Earth radii
    d, mu     declination and ephemeris hour angle of the shadow axis, degrees
    l1, l2    penumbral / umbral cone radii in the fundamental plane
    tanF1/2   cone half-angle tangents
-   deltaT    TT - UT1 in seconds. The NASA pages carry the value predicted at
-             publication time; the values here are the observed/modern ones,
-             which land the path within ~1 km of the NASA plot and put the
-             contact clocks on real UTC. */
+   deltaT    TT - UT1 in seconds; observed/modern values, which land the
+             path within ~1 km of the NASA plot.
+
+   The shipped records are transcribed from NASA/GSFC eclipse predictions by
+   Fred Espenak (VSOP87/ELP2000-82). Any other eclipse loads at runtime:
+   parseElements() below reads the "Polynomial Besselian Elements" block off
+   a NASA page verbatim, and the app keeps what it parses in localStorage.
+   That is the whole generalisation story — data in, everything computed. */
 
 var ECLIPSES = [
   {
     id: '2026-08-12',
-    name: 'Total · 2026 Aug 12',
-    short: '2026 Aug 12',
-    type: 'total',
     date: [2026, 8, 12],
     t0: 18.0,
     deltaT: 69.2,
@@ -27,18 +32,10 @@ var ECLIPSES = [
     l2: [-0.0081420,  0.0000935, -0.0000121,  0.0],
     mu: [88.747787,  15.003090,   0.0,        0.0],
     tanF1: 0.0046141,
-    tanF2: 0.0045911,
-    // initial view, and one line of context
-    home: { lat: 55, lon: -20, zoom: 3 },
-    brief: 'Path: Arctic Ocean, Greenland, Iceland, northern Spain. Over ' +
-           'Iberia the Sun stands below 12° and setting; western horizon ' +
-           'obstruction is often decisive.'
+    tanF2: 0.0045911
   },
   {
     id: '2027-08-02',
-    name: 'Total · 2027 Aug 02',
-    short: '2027 Aug 02',
-    type: 'total',
     date: [2027, 8, 2],
     t0: 10.0,
     deltaT: 69.3,
@@ -49,17 +46,10 @@ var ECLIPSES = [
     l2: [-0.0154640,  0.0000137, -0.0000128,  0.0],
     mu: [328.422490, 15.002093,   0.0,        0.0],
     tanF1: 0.0046064,
-    tanF2: 0.0045834,
-    home: { lat: 27, lon: 15, zoom: 4 },
-    brief: 'Path: southern Spain, North Africa, Egypt, Arabian peninsula. ' +
-           'Maximum totality 6 m 23 s near Luxor; high Sun; dry-season ' +
-           'climatology.'
+    tanF2: 0.0045834
   },
   {
     id: '2028-07-22',
-    name: 'Total · 2028 Jul 22',
-    short: '2028 Jul 22',
-    type: 'total',
     date: [2028, 7, 22],
     t0: 3.0,
     deltaT: 69.4,
@@ -70,17 +60,10 @@ var ECLIPSES = [
     l2: [-0.0108470, -0.0000854, -0.0000122,  0.0],
     mu: [223.378660, 15.001018,   0.0,        0.0],
     tanF1: 0.0046016,
-    tanF2: 0.0045786,
-    home: { lat: -25, lon: 133, zoom: 4 },
-    brief: 'Path: Indian Ocean, northwest and central Australia, Sydney, ' +
-           'New Zealand at dusk. Totality up to 5 m 10 s over the Kimberley ' +
-           'in the dry season.'
+    tanF2: 0.0045786
   },
   {
     id: '2024-04-08',
-    name: 'Total · 2024 Apr 08 (replay)',
-    short: '2024 Apr 08',
-    type: 'total',
     date: [2024, 4, 8],
     t0: 18.0,
     deltaT: 69.1,
@@ -91,12 +74,66 @@ var ECLIPSES = [
     l2: [-0.0102720,  0.0000615, -0.0000127,  0.0],
     mu: [89.591217,  15.004080,   0.0,        0.0],
     tanF1: 0.0046683,
-    tanF2: 0.0046450,
-    home: { lat: 35, lon: -95, zoom: 4 },
-    brief: 'Replay: Mazatlan, Texas, the Ohio valley, Newfoundland ' +
-           '(2024 Apr 8). Retained for calibration; the archive shows ' +
-           'observed conditions.'
+    tanF2: 0.0046450
   }
 ];
 
-if (typeof module !== 'undefined') module.exports = ECLIPSES;
+/* Parses the "Polynomial Besselian Elements" block from a NASA/GSFC eclipse
+   page, pasted as plain text. Tolerant of the page's own variations: the
+   coefficient table is read as rows n = 0..3 of six numbers in the fixed
+   column order x y d l1 l2 mu; t0, tan f1/f2 and ΔT are read off their
+   labelled lines; the date comes from the page title. Returns a catalogue
+   record, or throws with the first thing it could not find. */
+function parseElements(text) {
+  var MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+                 jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+  var lines = String(text).split(/\r?\n/);
+
+  var date = null;
+  var t0 = null, deltaT = null, tanF1 = null, tanF2 = null;
+  var rows = [];
+
+  lines.forEach(function (raw) {
+    var line = raw.trim();
+    if (!line) return;
+
+    var m = line.match(/(\d{4})\s+([A-Za-z]{3})[A-Za-z]*\s+(\d{1,2})/);
+    if (m && !date && MONTHS[m[2].toLowerCase()]) {
+      date = [+m[1], MONTHS[m[2].toLowerCase()], +m[3]];
+    }
+    m = line.match(/t0\s*=\s*(\d{1,2})(?::(\d{2}))?/i);
+    if (m && t0 === null) t0 = +m[1] + (+m[2] || 0) / 60;
+    m = line.match(/tan\s*[fƒ]\s*1\s*=?\s*(-?[\d.]+)/i);
+    if (m) tanF1 = +m[1];
+    m = line.match(/tan\s*[fƒ]\s*2\s*=?\s*(-?[\d.]+)/i);
+    if (m) tanF2 = +m[1];
+    m = line.match(/(?:ΔT|delta\s*T)\s*=?\s*(-?[\d.]+)/i);
+    if (m) deltaT = +m[1];
+
+    // a coefficient row: the order 0-3, then six numbers
+    m = line.match(/^([0-3])\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)$/);
+    if (m) rows[+m[1]] = [+m[2], +m[3], +m[4], +m[5], +m[6], +m[7]];
+  });
+
+  if (!rows[0] || !rows[1]) throw new Error('coefficient rows not found');
+  if (t0 === null) throw new Error('t0 not found');
+  if (tanF1 === null || tanF2 === null) throw new Error('tan f1/f2 not found');
+  if (!date) throw new Error('date not found');
+  if (deltaT === null) deltaT = 69 + (date[0] - 2020) * 0.4;  // ΔT drifts ~0.4 s/yr
+
+  function col(i) {
+    return [rows[0][i], rows[1][i],
+            rows[2] ? rows[2][i] : 0, rows[3] ? rows[3][i] : 0];
+  }
+  var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+  return {
+    id: date[0] + '-' + pad(date[1]) + '-' + pad(date[2]),
+    date: date, t0: t0, deltaT: deltaT,
+    x: col(0), y: col(1), d: col(2), l1: col(3), l2: col(4), mu: col(5),
+    tanF1: tanF1, tanF2: tanF2
+  };
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = { ECLIPSES: ECLIPSES, parseElements: parseElements };
+}

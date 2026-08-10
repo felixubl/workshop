@@ -27,17 +27,18 @@
       </a>
       <div class="title-row">
         <h1 class="tool-title">Eclipse Recon</h1>
-        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+        <button class="share-btn" type="button" data-share aria-label="Copy a link to this tool" data-tip="Copy a link to this tool, to hand it to somebody else">
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
           <span data-share-label>copy link</span>
         </button>
         <button class="share-btn pin-btn" type="button" data-pin="eclipse-recon" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
       </div>
     </div>
-    <label class="which-eclipse">
+    <div class="which-eclipse">
       <span class="we-label">Eclipse</span>
       <select id="eclipse-select" aria-label="Choose eclipse"></select>
-    </label>
+      <button id="ecl-add" class="btn-ghost" type="button" data-tip="Load any other eclipse: paste the Polynomial Besselian Elements block from its NASA/GSFC page" aria-label="Add an eclipse from pasted Besselian elements">+</button>
+    </div>
   </header>
 </div>
 
@@ -51,7 +52,6 @@
       <button class="sheet-fold" type="button" data-fold="intel" aria-label="Collapse panel">▁</button>
     </div>
     <div class="sheet-body">
-      <p id="intel-brief" class="brief"></p>
       <dl class="stats" id="intel-stats"></dl>
       <div class="tl-global">
         <h3>Timeline <small>UT</small></h3>
@@ -59,12 +59,10 @@
       </div>
       <div class="search">
         <h3>Search</h3>
-        <input id="search" class="field" type="search" placeholder="place name…" autocomplete="off" spellcheck="false" aria-label="Search for a place">
+        <input id="search" class="field" type="search" placeholder="place, or 46.62, 13.85" autocomplete="off" spellcheck="false" aria-label="Search for a place or coordinates">
         <ul id="search-results" hidden></ul>
       </div>
       <button id="sweep-btn" class="btn-primary" type="button">Survey the centreline</button>
-      <p class="sweep-note">Samples the centreline and retrieves the cloud
-        outlook for each point, ranked.</p>
       <div id="sweep-progress" hidden><i></i><span>survey 0%</span></div>
       <ol id="sweep-list" hidden></ol>
     </div>
@@ -128,6 +126,18 @@
     </div>
   </div>
 
+  <!-- the suitability switch: the dossier's verdict, computed for every
+       cell of the visible map instead of one point -->
+  <div id="suit-ctl">
+    <button id="suit-btn" class="btn-ghost" type="button" aria-pressed="false"
+      data-tip="Suitability over the visible map: duration × horizon × sky. Terrain-blocked is 0 whatever the weather.">suitability</button>
+    <div id="suit-legend" hidden>
+      <i class="suit-ramp" aria-hidden="true"></i><b>0</b><b>100</b>
+      <span id="suit-mode"></span>
+    </div>
+    <div id="suit-prog" hidden><i></i></div>
+  </div>
+
   <div id="map-annot">
     <div id="hypso-key" title="Altitude bands, in metres. Water is the palest tone; land darkens with height."></div>
     <div id="credits">
@@ -136,6 +146,17 @@
       elements NASA-GSFC (Espenak) · smooth-limb model, contact times ±2s
     </div>
   </div>
+
+  <dialog id="add-dlg">
+    <h3>Besselian elements</h3>
+    <textarea id="add-text" rows="12" spellcheck="false"
+      placeholder="Paste the Polynomial Besselian Elements block from the eclipse's NASA/GSFC page — the n = 0…3 table, t0, tan ƒ1, tan ƒ2, ΔT."></textarea>
+    <p id="add-err" class="add-err"></p>
+    <div class="add-row">
+      <button id="add-cancel" class="btn-ghost" type="button">Cancel</button>
+      <button id="add-load" class="btn-primary" type="button">Load</button>
+    </div>
+  </dialog>
 </main>
 
 <script src="vendor/leaflet/leaflet.js"></script>
