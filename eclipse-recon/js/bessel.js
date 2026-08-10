@@ -517,7 +517,13 @@ var Bessel = (function () {
       ring = mainN.concat(mainS.slice().reverse());
     }
 
-    return { center: center, north: north, south: south, ring: ring };
+    /* `center` carries the caps because the sampling frame wants them; the
+       DRAWN centreline must not. A rim stand-in is a fine oracle but a false
+       centre: at the sunset cap it walks the terminator, mostly cross-track,
+       and a dashed line following it turns a hard corner where the axis
+       leaves the ground. The central line ends at the extreme points, the
+       way every published eclipse map ends it — `main` is that line. */
+    return { center: center, main: mainC, north: north, south: south, ring: ring };
   }
 
   /* Where the axis misses the ground: the nearest point of the disc to it,

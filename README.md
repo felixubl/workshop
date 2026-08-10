@@ -56,7 +56,14 @@ The eclipse mathematics itself runs entirely in your browser.
   prognosis and is softened — though a certain storm still scores zero —
   and duration counts gently, because any totality is the event. A Sun
   behind terrain is zero whatever the forecast, and the formula is
-  printed in the tool, factor by factor, for every site you click. Nothing is per-eclipse in the code: a
+  printed in the tool, factor by factor, for every site you click. A
+  "within reach" panel answers the practical question — I am here, where
+  could I go? — by painting that field inside a travel radius, graded on
+  the local curve, at a grid resolution the reader chooses: finer costs
+  more horizon scans, all computed on their own machine, and every scan
+  is kept in the browser (IndexedDB) — the horizon is surveyed fact and
+  never expires — so finer passes and return visits only pay for ground
+  not yet surveyed. Forecasts are never stored that way. Nothing is per-eclipse in the code: a
   catalogue record is elements and a date, everything else is derived, and
   any other eclipse loads by pasting the Polynomial Besselian Elements
   block off its NASA/GSFC page. It wears PREPRINT like the rest: the map is
