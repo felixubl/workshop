@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Eclipse Recon — Felix' Workshop</title>
+  <meta name="description" content="Orbital eclipse reconnaissance: the path of totality from a satellite's point of view, with local timing, terrain-masked horizons and the cloud forecast for any point you target.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23060a08'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%2318a373' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23060a08' stroke='%23cf7420' stroke-width='1'/%3E%3Cpath d='M16 2v5M16 25v5M2 16h5M25 16h5' stroke='%2318a373' stroke-width='1.5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- boot sequence: pure theatre, skippable, once per session -->
+  <div id="boot" hidden>
+    <pre id="boot-log" aria-live="off"></pre>
+    <button id="boot-skip" type="button">[ SKIP ]</button>
+  </div>
+
+  <header id="topbar">
+    <a class="exit" href="../" title="Back to the workshop">⏻ EXIT</a>
+    <div class="wordmark">
+      <span class="wm-main">UMBRA<i>//</i>RECON</span>
+      <span class="wm-sub">ORBITAL ECLIPSE RECONNAISSANCE CONSOLE</span>
+    </div>
+    <label class="mission-select">
+      <span>MISSION</span>
+      <select id="eclipse-select" aria-label="Choose eclipse"></select>
+    </label>
+    <div class="clock" title="Simulation clock (UTC)">
+      <span id="clock-ut">--:--:--</span><em>UT</em>
+    </div>
+    <div class="lamps" aria-hidden="false">
+      <span class="lamp" id="lamp-eph" title="Ephemeris engine">EPH</span>
+      <span class="lamp" id="lamp-sat" title="Imagery downlink">SAT</span>
+      <span class="lamp" id="lamp-ter" title="Terrain downlink">TER</span>
+      <span class="lamp" id="lamp-wx"  title="Weather desk">WX</span>
+    </div>
+  </header>
+
+  <main>
+    <div id="map" aria-label="Eclipse map"></div>
+
+    <!-- left: mission intel -->
+    <aside id="intel" class="panel">
+      <div class="panel-head">
+        <h2>MISSION INTEL</h2>
+        <button class="panel-fold" type="button" data-fold="intel" aria-label="Collapse panel">▁</button>
+      </div>
+      <div class="panel-body">
+        <p id="intel-brief" class="brief"></p>
+        <dl class="stats" id="intel-stats"></dl>
+        <div class="tl-global">
+          <h3>EVENT TIMELINE <small>UT</small></h3>
+          <div id="tl-rows"></div>
+        </div>
+        <div class="search">
+          <h3>TARGET SEARCH</h3>
+          <input id="search" type="search" placeholder="place name…" autocomplete="off" spellcheck="false" aria-label="Search for a place">
+          <ul id="search-results" hidden></ul>
+        </div>
+        <button id="sweep-btn" type="button">▶ RUN RECON SWEEP</button>
+        <p class="sweep-note">samples the centreline and pulls the cloud outlook
+          for every point — the good and bad zones, ranked.</p>
+        <div id="sweep-progress" hidden><i></i><span>SWEEP 0%</span></div>
+        <ol id="sweep-list" hidden></ol>
+      </div>
+    </aside>
+
+    <!-- right: target dossier -->
+    <aside id="dossier" class="panel" hidden>
+      <div class="panel-head">
+        <h2>TARGET DOSSIER</h2>
+        <button class="panel-fold" type="button" id="dossier-close" aria-label="Close dossier">✕</button>
+      </div>
+      <div class="panel-body">
+        <div class="tgt-id">
+          <span id="tgt-name">ACQUIRING…</span>
+          <code id="tgt-coords"></code>
+          <code id="tgt-elev"></code>
+        </div>
+
+        <section id="sec-circ">
+          <h3>LOCAL CIRCUMSTANCES</h3>
+          <div id="circ-body"></div>
+        </section>
+
+        <section id="sec-terrain">
+          <h3>TERRAIN MASK <span class="h-status" id="terrain-status"></span></h3>
+          <div id="terrain-body"></div>
+        </section>
+
+        <section id="sec-wx">
+          <h3>SKY CONDITION <span class="h-status" id="wx-status"></span></h3>
+          <div id="wx-body"></div>
+        </section>
+
+        <section id="sec-verdict">
+          <h3>ASSESSMENT</h3>
+          <div id="verdict-body"></div>
+        </section>
+      </div>
+    </aside>
+
+    <!-- bottom: time console -->
+    <div id="console">
+      <button id="play" type="button" aria-label="Play or pause">▶</button>
+      <select id="speed" aria-label="Playback speed">
+        <option value="60">×60</option>
+        <option value="300" selected>×300</option>
+        <option value="1800">×1800</option>
+      </select>
+      <button id="track" type="button" aria-pressed="false"
+        title="Keep the umbra centred while time runs">TRACK</button>
+      <div id="scrub-wrap">
+        <div id="scrub-band" aria-hidden="true"></div>
+        <input id="scrub" type="range" min="0" max="1000" value="0" step="1" aria-label="Simulation time">
+        <div id="scrub-marks" aria-hidden="true"></div>
+      </div>
+      <div class="readouts">
+        <code id="ro-shadow" title="Umbra ground position">UMBRA —</code>
+        <code id="ro-vel" title="Umbra ground speed">—</code>
+        <code id="ro-dur" title="Totality duration on the centreline here">—</code>
+      </div>
+    </div>
+
+    <div class="scanlines" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <div id="credits">
+      IMG ESRI/MAXAR · LBL CARTO/OSM · TERRAIN MAPZEN/AWS · WX+GEO OPEN-METEO ·
+      NAMES BIGDATACLOUD · ELEMENTS NASA-GSFC (ESPENAK) · SMOOTH-LIMB ±2s
+    </div>
+  </main>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="js/eclipses.js"></script>
+  <script src="js/bessel.js"></script>
+  <script src="js/terrain.js"></script>
+  <script src="js/weather.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
