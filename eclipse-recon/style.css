@@ -7,9 +7,9 @@
    palest tone and dead flat, land darkens in altitude steps — the Moon's
    shadow is printed in actual black, and ink does the drawing. Plates
    appear only where they mean something — plate 3 (blue) is totality
-   wherever it shows up, plate 1 (green) is a good verdict, plate 2 (red) a
-   bad one, and the citron marker is "marginal". Everything else is ink on
-   paper. */
+   wherever it shows up, and every score on the page wears one ramp
+   pressed from plate 2 through the citron marker to plate 1: cannot see
+   it, gamble, go. Everything else is ink on paper. */
 
 /* an explicit display (flex on sheets) must never beat the hidden attribute */
 [hidden] { display: none !important; }
@@ -138,7 +138,7 @@ body {
 .sheet code { font-family: var(--pp-font-mono); font-size: 0.85em; }
 
 #intel { top: 12px; left: 12px; width: 300px; max-height: calc(100% - 88px); }
-#dossier { top: 12px; right: 12px; width: 360px; max-height: calc(100% - 88px); }
+#dossier { top: 12px; right: 12px; width: 384px; max-height: calc(100% - 88px); }
 
 .stats { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px;
   margin: 0 0 0.8rem; }
@@ -197,10 +197,7 @@ body {
   font-variant-numeric: tabular-nums; }
 #sweep-list .meta { grid-column: 2 / 4; color: var(--pp-faint);
   font-family: var(--pp-font-mono); font-size: 0.66rem; }
-.sc.go { color: var(--pp-state-ok); }
-.sc.cond { color: var(--pp-ink); background: linear-gradient(transparent 15%,
-  var(--w-mark-fill) 15% 88%, transparent 88%); padding: 0 0.15em; }
-.sc.nogo { color: var(--pp-state-danger); }
+
 
 /* ---- site report ---------------------------------------------------- */
 
@@ -222,16 +219,16 @@ body {
 .circ-type b.total { color: var(--pp-plate-3-text); }
 .circ-type b.partial { color: var(--pp-ink); }
 table.circ { width: 100%; border-collapse: collapse;
-  font-family: var(--pp-font-mono); font-size: 0.74rem; }
+  font-family: var(--pp-font-mono); font-size: 0.8rem; }
 table.circ th { text-align: left; color: var(--pp-faint); font-weight: 400;
-  font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.06em;
-  padding: 1px 0.35rem 1px 0; }
-table.circ td { padding: 1px 0.35rem 1px 0;
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 2px 0.35rem 2px 0; }
+table.circ td { padding: 2px 0.35rem 2px 0;
   font-variant-numeric: tabular-nums; }
 table.circ td.dim { color: var(--pp-faint); }
 table.circ tr.hl td { color: var(--pp-plate-3-text); }
 .circ-facts { display: grid; grid-template-columns: 1fr 1fr;
-  gap: 2px 0.8rem; margin-top: 0.5rem; font-size: 0.74rem; }
+  gap: 3px 0.8rem; margin-top: 0.55rem; font-size: 0.8rem; }
 .circ-facts div { display: flex; justify-content: space-between;
   gap: 0.4rem; }
 .circ-facts span { color: var(--pp-faint); font-size: 0.64rem;
@@ -263,21 +260,22 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
   letter-spacing: 0.1em; color: var(--pp-faint); }
 .wx-hero .word { font-size: 0.85rem; font-weight: 700;
   letter-spacing: 0.04em; }
-.wx-score.go, .word.go { color: var(--pp-state-ok); }
-.wx-score.cond, .word.cond { color: var(--pp-ink); }
-.word.cond { background: linear-gradient(transparent 15%,
-  var(--w-mark-fill) 15% 88%, transparent 88%); padding: 0 0.15em; }
-.wx-score.nogo, .word.nogo { color: var(--pp-state-danger); }
+.wx-corridor { margin: 0.45rem 0; font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.05em; color: var(--pp-faint); }
+.wx-corridor b { font-family: var(--pp-font-mono); font-size: 0.88rem; }
+.wx-corridor code { display: block; text-transform: none;
+  letter-spacing: 0; font-size: 0.72rem; color: var(--pp-muted);
+  margin-top: 1px; }
 .cloudbars { margin: 0.5rem 0; }
-.cbar { display: grid; grid-template-columns: 3.2em 1fr 2.4em; gap: 0.5rem;
-  align-items: center; margin: 3px 0;
-  font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.cbar { display: grid; grid-template-columns: 3.2em 1fr 2.6em; gap: 0.5rem;
+  align-items: center; margin: 4px 0;
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
 .cbar .t { color: var(--pp-faint); }
-.cbar .rail { height: 6px; background: var(--w-wash-0); position: relative; }
+.cbar .rail { height: 8px; background: var(--w-wash-0); position: relative; }
 .cbar .rail i { position: absolute; inset: 0 auto 0 0;
   background: color-mix(in srgb, var(--pp-ink) 55%, transparent); }
 .cbar .v { text-align: right; font-family: var(--pp-font-mono);
-  font-size: 0.72rem; font-variant-numeric: tabular-nums;
+  font-size: 0.78rem; font-variant-numeric: tabular-nums;
   text-transform: none; }
 .wx-extra { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.4rem;
   font-size: 0.66rem; margin-top: 0.4rem; }
@@ -288,26 +286,34 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
 .wx-strip { margin-top: 0.5rem; }
 .wx-strip svg { display: block; width: 100%; height: auto; }
 
-/* the verdict, stamped */
-.verdict { display: flex; align-items: center; gap: 0.9rem;
-  padding: 0.55rem; border: 1px solid var(--pp-hair); }
-.verdict .stamp {
-  font-family: var(--pp-font-display); font-size: 0.95rem; font-weight: 800;
-  letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap;
-  padding: 0.3em 0.55em; border: 2.5px solid currentColor;
-  transform: rotate(-2deg);
-}
-.verdict.go .stamp { color: var(--pp-state-ok); }
-.verdict.nogo .stamp { color: var(--pp-state-danger); }
-.verdict.cond .stamp { color: var(--pp-ink);
-  background: linear-gradient(transparent 12%, var(--w-mark-fill) 12% 90%,
-    transparent 90%); }
-.v-facts { flex: 1; display: grid; grid-template-columns: 1fr;
-  gap: 2px 0.8rem; font-size: 0.74rem; }
-.v-facts div { display: flex; justify-content: space-between; gap: 0.4rem; }
-.v-facts span { color: var(--pp-faint); font-size: 0.62rem;
-  text-transform: uppercase; letter-spacing: 0.05em; align-self: baseline; }
+/* the verdict: the score itself, in the ramp's own ink, with the factor
+   arithmetic laid out underneath — a number you can audit, not a stamp */
+.v-hero { display: flex; align-items: baseline; gap: 0.35rem;
+  margin-bottom: 0.55rem; }
+.v-num { font-family: var(--pp-font-mono); font-size: 2.3rem;
+  font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.v-num.pending { color: var(--pp-faint); }
+.v-unit { color: var(--pp-faint); font-family: var(--pp-font-mono);
+  font-size: 0.8rem; }
+.v-gate { margin-left: 0.6rem; font-family: var(--pp-font-mono);
+  font-size: 0.72rem; letter-spacing: 0.05em; color: var(--pp-faint); }
+.v-facts { display: grid; grid-template-columns: 1fr;
+  gap: 3px 0.8rem; font-size: 0.8rem; }
+.v-facts div { display: flex; align-items: baseline; gap: 0.5rem; }
+.v-facts span { color: var(--pp-faint); font-size: 0.66rem;
+  text-transform: uppercase; letter-spacing: 0.05em; width: 5.2em;
+  flex: none; }
 .v-facts code { font-variant-numeric: tabular-nums; }
+.v-facts code:first-of-type { flex: 1; }
+.v-facts .fx { color: var(--pp-faint); text-align: right; min-width: 3.4em; }
+
+.score-how { margin-top: 0.6rem; font-size: 0.74rem; }
+.score-how summary { color: var(--pp-faint); font-size: 0.66rem;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  cursor: var(--pp-cursor-point, pointer); }
+.score-how code { display: block; margin: 0.45rem 0;
+  font-size: 0.74rem; }
+.score-how p { margin: 0; line-height: 1.5; color: var(--pp-muted); }
 
 /* ---- the clock strip ------------------------------------------------ */
 
@@ -403,9 +409,10 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
   font-family: var(--pp-font-mono); font-size: 0.56rem;
   color: var(--pp-faint);
   text-shadow: 0 0 3px var(--pp-paper), 0 0 3px var(--pp-paper); }
-.suit-ramp { width: 56px; height: 8px; flex: none;
+.suit-ramp { width: 74px; height: 9px; flex: none;
   border: 1px solid color-mix(in srgb, var(--pp-ink) 25%, transparent);
-  background: linear-gradient(90deg, transparent, var(--pp-plate-1)); }
+  background: linear-gradient(90deg, var(--pp-plate-2), var(--w-mark-fill),
+    var(--pp-plate-1)); }
 #suit-legend b { font-weight: 400; }
 #suit-legend b:first-of-type { order: -1; }
 #suit-mode { margin-left: 4px; }

@@ -48,20 +48,25 @@ The eclipse mathematics itself runs entirely in your browser.
   animated umbra you can scrub through time, and a dossier for any point
   you click or type as coordinates — contact times, Sun altitude, a
   terrain-masked horizon profile (does that ridge hide a low Sun?), and the
-  cloud outlook. A suitability field paints the whole umbral band as a
-  heatmap, weighted by certainty: the horizon is surveyed fact and counts
-  squared, the sky is a prognosis and is softened — though a certain storm
-  still scores zero — and duration counts gently, because any totality is
-  the event. A Sun behind terrain is zero whatever the forecast. Nothing is per-eclipse in the code: a
+  cloud outlook, including the sightline: for a low Sun, cloud is read
+  where the line to the Sun crosses each deck, tens of kilometres toward
+  its azimuth. A suitability field paints the whole umbral band in a
+  red-to-green ramp, weighted by certainty: the horizon is surveyed fact
+  and counts squared, air mass punishes a Sun under 8°, the sky is a
+  prognosis and is softened — though a certain storm still scores zero —
+  and duration counts gently, because any totality is the event. A Sun
+  behind terrain is zero whatever the forecast, and the formula is
+  printed in the tool, factor by factor, for every site you click. Nothing is per-eclipse in the code: a
   catalogue record is elements and a date, everything else is derived, and
   any other eclipse loads by pasting the Polynomial Besselian Elements
   block off its NASA/GSFC page. It wears PREPRINT like the rest: the map is
   drawn from elevation alone — water the palest flat tone, land darkening
   in altitude steps with a key in the corner — the Moon's shadow is printed
   in actual black, and the plates appear only where they mean something —
-  plate 3 is totality, plate 1 a good verdict, plate 2 a bad one, the
-  citron marker "marginal". It is the second tool that talks to the network
-  (see above), and it works on a phone.
+  plate 3 is totality, and every score wears one ramp pressed from plate 2
+  through the citron marker to plate 1: cannot see it, gamble, go. It is
+  the second tool that talks to the network (see above), and it works on a
+  phone.
 
 The homepage ([index.html](index.html)) also lists a long line-up of
 "coming soon" tool categories: PDF, image, SVG, QR/barcode, audio, video,

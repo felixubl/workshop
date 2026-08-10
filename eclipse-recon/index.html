@@ -99,6 +99,20 @@
       <section id="sec-verdict">
         <h3>Assessment</h3>
         <div id="verdict-body"></div>
+        <details class="score-how">
+          <summary>how the score is computed</summary>
+          <code>score = 100 · √(t/t<sub>max</sub>) · vis² · √(alt/8°) · sky<sup>0.75</sup></code>
+          <p>Factors are weighted by certainty. The horizon is surveyed
+          fact, so its visible fraction counts squared — half of totality
+          behind terrain costs three quarters of the score, fully blocked
+          is 0 whatever the sky. Below 8° the Sun stands in many air
+          masses, where haze and horizon murk live: geometry, so it counts
+          with the certain factors. The sky is a forecast, so its middle
+          is softened — but under 20 it falls quadratically, and a certain
+          storm is 0. Duration counts gently: half the maximum is still
+          most of the show. For a Sun under 20° the sky number is the
+          worse of overhead and the sightline decks toward its azimuth.</p>
+        </details>
       </section>
     </div>
   </aside>
@@ -130,7 +144,7 @@
        cell of the visible map instead of one point -->
   <div id="suit-ctl">
     <button id="suit-btn" class="btn-ghost" type="button" aria-pressed="false"
-      data-tip="Suitability along the band: horizon² × sky^0.75 × √duration. The horizon is fact and counts double; the sky is a forecast and is softened; blocked terrain or certain storm is 0.">suitability</button>
+      data-tip="Suitability along the band, 0–100: red = the eclipse cannot be seen there, green = everything lines up. Blocked terrain or certain storm is 0 — the formula is under the site assessment.">suitability</button>
     <div id="suit-legend" hidden>
       <i class="suit-ramp" aria-hidden="true"></i><b>0</b><b>100</b>
       <span id="suit-mode"></span>
