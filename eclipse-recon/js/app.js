@@ -3,8 +3,9 @@
    and the weather client. All colour comes off the PREPRINT tokens at draw
    time, so the pull cord restyles the map and charts along with the page:
    the ground is an altitude ramp drawn from elevation data, the shadow is
-   printed in black, plate 3 is totality, plate 1 a good verdict, plate 2 a
-   bad one, and the citron marker means marginal.
+   printed in black, plate 3 is totality, and every score wears one ramp
+   pressed from plate 2 through the citron marker to plate 1 — cannot see
+   it, gamble, go.
 
    Nothing about a particular eclipse lives in here. A catalogue record is
    Besselian elements and a date, and everything shown — the name, the
@@ -736,12 +737,27 @@
       }
     });
 
-    // weather
+    // weather — and, for a low Sun, the sightline: an eclipse at 2° is
+    // seen through cloud decks that stand tens of kilometres toward its
+    // azimuth, not overhead. One point per deck, placed where the line to
+    // the Sun crosses that deck's height.
     if (circ) {
-      Wx.get([{ lat: lat, lon: lon }], circ.dateMax, signal)
+      var wxPts = [{ lat: lat, lon: lon }];
+      var decks = null;
+      if (circ.visible && circ.sunAltApparent < 20) {
+        var tanA = Math.tan(Math.max(0.8, circ.sunAltApparent) * RAD);
+        decks = [1.5, 5, 9].map(function (km) {
+          var d = Math.min(250, km / tanA);
+          var p = Bessel.destination(lat, lon, circ.sunAz, d);
+          return { deckKm: km, distKm: d, lat: p.lat, lon: p.lon };
+        });
+        decks.forEach(function (d) { wxPts.push({ lat: d.lat, lon: d.lon }); });
+      }
+      Wx.get(wxPts, circ.dateMax, signal)
         .then(function (res) {
           if (!S.target || S.target.lat !== lat) return;
           S.target.wx = res;
+          S.target.decks = decks;
           S.target.offSec = res.data[0].utcOffsetSec;
           $('wx-status').textContent = 'loaded'; $('wx-status').className = 'h-status ok';
           renderCirc();          // now with local clock
@@ -916,7 +932,7 @@
     var track = sunTrackSamples();
     var prof = scan.profile;
 
-    var W = 336, H = 168, mL = 30, mR = 8, mT = 10, mB = 22;
+    var W = 336, H = 200, mL = 34, mR = 10, mT = 12, mB = 28;
     var azMin = prof[0].az, n = prof.length;
     var azSpanTotal = ((prof[n - 1].az - azMin) % 360 + 360) % 360 || 1;
     var maxAng = Math.max(6,
@@ -937,9 +953,12 @@
     // gridlines
     for (var g = 0; g <= maxAng; g += 5) {
       svg += '<line x1="' + mL + '" x2="' + (W - mR) + '" y1="' + Y(g) +
-        '" y2="' + Y(g) + '" stroke="' + P.hair + '" stroke-width="0.6"/>' +
-        '<text x="' + (mL - 4) + '" y="' + (Y(g) + 3) + '" text-anchor="end" ' +
-        'font-size="7.5" fill="' + P.faint + '">' + g + '°</text>';
+        '" y2="' + Y(g) + '" stroke="' + P.hair + '" stroke-width="0.6"/>';
+      if (g % 10 === 0 || maxAng <= 15) {
+        svg += '<text x="' + (mL - 4) + '" y="' + (Y(g) + 3.5) +
+          '" text-anchor="end" font-size="10" fill="' + P.faint + '">' +
+          g + '°</text>';
+      }
     }
     // horizon zero line
     svg += '<line x1="' + mL + '" x2="' + (W - mR) + '" y1="' + Y(0) + '" y2="' +
@@ -972,26 +991,26 @@
     [['C2', c.c2], ['C3', c.c3]].forEach(function (ct) {
       if (!ct[1]) return;
       svg += '<text x="' + X(ct[1].az).toFixed(1) + '" y="' +
-        (Y(ct[1].alt + Bessel.refraction(ct[1].alt)) - 6).toFixed(1) +
-        '" text-anchor="middle" font-size="7.5" fill="' + P.total + '">' +
+        (Y(ct[1].alt + Bessel.refraction(ct[1].alt)) - 7).toFixed(1) +
+        '" text-anchor="middle" font-size="10" fill="' + P.total + '">' +
         ct[0] + '</text>';
     });
     // x axis: compass ticks every 15 deg
     for (var az = Math.ceil(azMin / 15) * 15; ; az += 15) {
       var rel = ((az - azMin) % 360 + 360) % 360;
       if (rel > azSpanTotal) break;
-      svg += '<text x="' + X(az).toFixed(1) + '" y="' + (H - 8) +
-        '" text-anchor="middle" font-size="7.5" fill="' + P.faint + '">' +
+      svg += '<text x="' + X(az).toFixed(1) + '" y="' + (H - 9) +
+        '" text-anchor="middle" font-size="10" fill="' + P.faint + '">' +
         compass(az) + '</text>';
       if (az > azMin + 720) break;    // safety
     }
     // legend (direct labels, small)
-    svg += '<text x="' + (W - mR) + '" y="' + (mT + 2) + '" text-anchor="end" ' +
-      'font-size="7.5" fill="' + P.faint + '">partial</text>' +
-      '<text x="' + (W - mR) + '" y="' + (mT + 12) + '" text-anchor="end" ' +
-      'font-size="7.5" fill="' + P.total + '">totality</text>' +
-      '<text x="' + (W - mR) + '" y="' + (mT + 22) + '" text-anchor="end" ' +
-      'font-size="7.5" fill="' + P.danger + '">hidden</text>';
+    svg += '<text x="' + (W - mR) + '" y="' + (mT + 3) + '" text-anchor="end" ' +
+      'font-size="10" fill="' + P.faint + '">partial</text>' +
+      '<text x="' + (W - mR) + '" y="' + (mT + 16) + '" text-anchor="end" ' +
+      'font-size="10" fill="' + P.total + '">totality</text>' +
+      '<text x="' + (W - mR) + '" y="' + (mT + 29) + '" text-anchor="end" ' +
+      'font-size="10" fill="' + P.danger + '">hidden</text>';
     svg += '</svg>';
 
     // verdict text
@@ -1062,8 +1081,8 @@
     wrap.addEventListener('mousemove', function (ev) {
       var r = svg.getBoundingClientRect();
       var fx = (ev.clientX - r.left) / r.width * 336;
-      if (fx < 30 || fx > 328) { tip.style.display = 'none'; return; }
-      var az = azMin + (fx - 30) / (328 - 30) * azSpanTotal;
+      if (fx < 34 || fx > 326) { tip.style.display = 'none'; return; }
+      var az = azMin + (fx - 34) / (326 - 34) * azSpanTotal;
       var hz = horizonAngleAt(prof, az);
       // nearest profile entry for ridge distance
       var pi = Math.round(((az - azMin) % 360 + 360) % 360 /
@@ -1081,15 +1100,38 @@
 
   /* ---- weather panel ---- */
 
+  /* The sightline's own sky: cloud read where the line to the Sun crosses
+     each deck — low cloud at the near sample, mid further out, cirrus far
+     out — scored with the same weights as overhead sky. */
+  function corridorScore(t, c) {
+    if (!t.wx || !t.decks || t.wx.data.length < 4) return null;
+    var at = function (i) { return Wx.atTime(t.wx.data[i], c.dateMax); };
+    var lo = at(1), mi = at(2), hi = at(3);
+    if (!lo || lo.total === null) return null;
+    return Wx.skyScore({
+      low: lo.low, mid: mi ? mi.mid : 0, high: hi ? hi.high : 0,
+      total: Math.max(lo.total || 0, (mi && mi.total) || 0, (hi && hi.total) || 0),
+      precipProb: lo.precipProb, precip: lo.precip
+    });
+  }
+
+  /* The sky number the score uses: overhead cloud — and for a low Sun,
+     the worse of overhead and the sightline. */
+  function skyUsed(t, c) {
+    if (!t.wx || !c) return null;
+    var local = Wx.skyScore(Wx.atTime(t.wx.data[0], c.dateMax));
+    if (local === null) return null;
+    var cor = corridorScore(t, c);
+    return cor === null ? local : Math.min(local, cor);
+  }
+
   function renderWeather() {
     var t = S.target;
     if (!t || !t.wx || !t.circ) return;
     var mode = t.wx.mode;
     var pdata = t.wx.data[0];
     var c = Wx.atTime(pdata, t.circ.dateMax);
-    var score = Wx.skyScore(c);
-    var v = Wx.verdictFor(score);
-    var vCls = v.code === 'GO' ? 'go' : v.code === 'COND' ? 'cond' : 'nogo';
+    var score = skyUsed(t, t.circ);
 
     var modeLine = mode === 'forecast' ? '<b>forecast</b>' :
       mode === 'archive' ? '<b>archive</b> era5' :
@@ -1097,12 +1139,25 @@
 
     var html = '<div class="wx-mode">' + modeLine + '</div>';
     if (score !== null) {
-      html += '<div class="wx-hero"><div class="wx-score ' + vCls + '">' +
-        Math.round(score) + '</div><div><div class="lbl">sky / 100</div>' +
-        '<div class="word ' + vCls + '">' + v.word + '</div></div></div>';
+      html += '<div class="wx-hero"><div class="wx-score" style="color:' +
+        rampColor(score) + '">' + Math.round(score) +
+        '</div><div><div class="lbl">sky / 100</div></div></div>';
       html += '<div class="cloudbars">' +
         cbar('low', c.low) + cbar('mid', c.mid) + cbar('high', c.high) +
         cbar('total', c.total) + '</div>';
+      var cor = corridorScore(t, t.circ);
+      if (cor !== null && t.decks) {
+        var at2 = function (i) { return Wx.atTime(t.wx.data[i], t.circ.dateMax); };
+        var lo2 = at2(1), mi2 = at2(2), hi2 = at2(3);
+        html += '<div class="wx-corridor">sightline ' + compass(t.circ.sunAz) +
+          ' <b style="color:' + rampColor(cor) + '">' + Math.round(cor) + '</b>' +
+          '<code>low ' + Math.round(lo2.low || 0) + '% @ ' +
+            Math.round(t.decks[0].distKm) + ' km · mid ' +
+            Math.round((mi2 && mi2.mid) || 0) + '% @ ' +
+            Math.round(t.decks[1].distKm) + ' km · high ' +
+            Math.round((hi2 && hi2.high) || 0) + '% @ ' +
+            Math.round(t.decks[2].distKm) + ' km</code></div>';
+      }
       html += '<div class="wx-extra">' +
         wxCell('precip', c.precipProb !== null && c.precipProb !== undefined ?
           Math.round(c.precipProb) + '%' :
@@ -1130,7 +1185,7 @@
     var hs = pdata.hours.filter(function (h) { return h.total !== null; });
     if (hs.length < 3) return '';
     var P = palette();
-    var W = 336, H = 66, mL = 26, mR = 6, mT = 6, mB = 14;
+    var W = 336, H = 100, mL = 32, mR = 8, mT = 8, mB = 18;
     var t0 = hs[0].tUTCms, t1 = hs[hs.length - 1].tUTCms;
     function X(ms) { return mL + (ms - t0) / (t1 - t0) * (W - mL - mR); }
     function Y(v) { return mT + (100 - v) / 100 * (H - mT - mB); }
@@ -1139,8 +1194,8 @@
     [0, 50, 100].forEach(function (g) {
       svg += '<line x1="' + mL + '" x2="' + (W - mR) + '" y1="' + Y(g) +
         '" y2="' + Y(g) + '" stroke="' + P.hair + '" stroke-width="0.6"/>' +
-        '<text x="' + (mL - 3) + '" y="' + (Y(g) + 2.5) + '" text-anchor="end" ' +
-        'font-size="7" fill="' + P.faint + '">' + g + '</text>';
+        '<text x="' + (mL - 4) + '" y="' + (Y(g) + 3.5) + '" text-anchor="end" ' +
+        'font-size="9.5" fill="' + P.faint + '">' + g + '</text>';
     });
     // eclipse window, washed in the totality plate
     var w1 = circ.c1 ? circ.c1.date.getTime() : circ.dateMax.getTime();
@@ -1163,102 +1218,141 @@
     var off = pdata.utcOffsetSec || 0;
     for (var ms = t0; ms <= t1; ms += 6 * 3600000) {
       var dd = new Date(ms + off * 1000);
-      svg += '<text x="' + X(ms).toFixed(1) + '" y="' + (H - 3) +
-        '" text-anchor="middle" font-size="7" fill="' + P.faint + '">' +
+      svg += '<text x="' + X(ms).toFixed(1) + '" y="' + (H - 4) +
+        '" text-anchor="middle" font-size="9.5" fill="' + P.faint + '">' +
         pad2(dd.getUTCHours()) + 'h</text>';
     }
-    svg += '<text x="' + (W - mR) + '" y="' + (mT + 6) + '" text-anchor="end" ' +
-      'font-size="7" fill="' + P.faint + '">total cloud %</text>';
+    svg += '<text x="' + (W - mR) + '" y="' + (mT + 8) + '" text-anchor="end" ' +
+      'font-size="9.5" fill="' + P.faint + '">total cloud %</text>';
     return svg + '</svg></div>';
   }
 
   /* ---- assessment ---- */
 
   /* One suitability number, 0..100, and it is the same arithmetic the
-     heatmap paints. Three factors, weighted by how certain each one is:
+     heatmap paints. Four factors, each 0..1, weighted by how certain the
+     thing it measures is:
 
-     TERRAIN, squared. The horizon is surveyed fact, not a forecast — a
-     ridge does not clear up on the day. So the visible fraction of the
-     central phase counts twice over: 90% visible costs a fifth, half
-     visible costs three quarters, a quarter visible is nearly worthless,
-     and fully blocked is the hard 0 it always was.
+     HORIZON, squared. Surveyed fact — a ridge does not clear up on the
+     day. The visible fraction of the central phase counts twice over:
+     90% visible costs a fifth, half visible costs three quarters, fully
+     blocked is the hard 0 it always was.
 
-     SKY, softened. A forecast (or a climatology) is a probability, so a
-     middling number must not kill a site the way a middling horizon does
-     — the 0.75 power lifts the middle of the curve. It still runs to 0:
-     a sky that is certainly storm is a site where the eclipse cannot be
-     seen, and scores like one.
+     AIR, √(alt/8°). Below 8° the eclipsed Sun stands in many air masses
+     — at 2° it is twenty — and haze, marine murk and unforecastable
+     horizon cloud live there. Geometry, not weather, so it belongs with
+     the certain factors, but gently: √.
 
-     DURATION, square-rooted. Half the maximum is still most of the show
-     — any totality is the event — so duration separates sites gently
-     rather than dominating them.
+     SKY, softened in the middle, steep at the floor. A forecast is a
+     probability, so 50/50 must not kill a site the way a 50%-blocked
+     horizon does — the 0.75 power lifts the middle. Below 20 it falls
+     quadratically: a sky that is certainly storm is a site where the
+     eclipse cannot be seen, and scores like one.
+
+     DURATION, square-rooted. Half the maximum is still most of the show.
 
      The gates stay absolute — below the horizon, outside the central
-     band, or fully behind terrain is 0 whatever the weather says. A null
+     band, fully behind terrain is 0 whatever the weather says. A null
      sky (service unreachable) drops the factor rather than the score,
      and the display says which. */
-  function suitabilityOf(dur, visFrac, sky) {
+  function scoreFactors(dur, visFrac, altApp, sky) {
     var durN = S.gt.maxDuration > 0 ? Math.min(1, dur / S.gt.maxDuration) : 0;
-    var s = 100 * Math.sqrt(durN) * visFrac * visFrac *
-            (sky === null ? 1 : Math.pow(sky / 100, 0.75));
+    return {
+      dur: Math.sqrt(durN),
+      vis: visFrac * visFrac,
+      air: Math.sqrt(Math.max(0, Math.min(1, altApp / 8))),
+      sky: sky === null ? null :
+        Math.pow(sky / 100, 0.75) *
+        (sky < 20 ? Math.pow(sky / 20, 2) : 1)
+    };
+  }
+  function suitabilityOf(dur, visFrac, altApp, sky) {
+    var f = scoreFactors(dur, visFrac, altApp, sky);
+    var s = 100 * f.dur * f.vis * f.air * (f.sky === null ? 1 : f.sky);
     return Math.max(0, Math.min(100, s));
+  }
+
+  /* Every score on this page wears the same colour: a ramp from plate 2
+     through the citron marker to plate 1 — cannot see it, gamble, go.
+     Read off the live palette so both modes get their own inks. */
+  function rampColor(score) {
+    var P = palette();
+    function hex(h) {
+      var m = h.match(/^#(..)(..)(..)$/);
+      return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)]
+               : [128, 128, 128];
+    }
+    var stops = [hex(P.dangerFill), hex(P.citron), hex(P.okFill)];
+    var t = Math.max(0, Math.min(100, score)) / 50;
+    var a = stops[t < 1 ? 0 : 1], b = stops[t < 1 ? 1 : 2];
+    var f = t < 1 ? t : t - 1;
+    return 'rgb(' + a.map(function (v, i) {
+      return Math.round(v + (b[i] - v) * f);
+    }).join(',') + ')';
   }
 
   function renderVerdict() {
     var t = S.target;
     if (!t) return;
     var c = t.circ;
-    var code, stamp;
-    var rows = [];
     var central = c && c.type !== 'partial' && c.c2 && c.c3 &&
                   c.centralVisible !== false;
 
     var tv = t.terrain ? terrainVerdict() : null;
     var visFrac = tv ? tv.frac : null;     // null = terrain unknown
-    var sky = t.wx ? Wx.skyScore(Wx.atTime(t.wx.data[0], c ? c.dateMax : 0)) : null;
+    var sky = t.wx ? skyUsed(t, c) : null;
 
-    if (!c) { code = 'nogo'; stamp = 'no eclipse'; }
-    else if (!c.visible) { code = 'nogo'; stamp = 'below horizon'; }
-    else if (!central) { code = 'nogo'; stamp = 'outside path'; }
-    else if (tv && tv.code === 'blocked') { code = 'nogo'; stamp = 'blocked'; }
+    // the hard gates, shown as the factor that fired
+    var gate = !c ? 'no eclipse' :
+               !c.visible ? 'below horizon' :
+               !central ? 'no totality here' : null;
+
+    var score, f = null;
+    if (gate) { score = 0; }
+    else if (visFrac === null) { score = null; }   // terrain still scanning
     else {
-      var wv = Wx.verdictFor(sky);
-      var risky = (tv && tv.code === 'partial') ||
-                  (tv && tv.margin !== undefined && tv.margin < 1.5) ||
-                  wv.code === 'COND' || c.sunAlt < 3;
-      code = wv.code === 'NOGO' ? 'nogo' : risky ? 'cond' : 'go';
-      stamp = code === 'nogo' ? 'unsuitable' :
-              code === 'cond' ? 'marginal' : 'suitable';
+      f = scoreFactors(c.duration, visFrac, c.sunAltApparent, sky);
+      score = suitabilityOf(c.duration, visFrac, c.sunAltApparent, sky);
     }
 
+    var rows = [];
+    function row(k, v, factor) {
+      rows.push('<div><span>' + k + '</span><code>' + esc(v) + '</code>' +
+        '<code class="fx">' + (factor === null || factor === undefined ?
+          '' : '×' + factor.toFixed(2)) + '</code></div>');
+    }
     if (c) {
-      rows.push(['phase', c.type === 'partial' ?
-        'partial · ' + Math.round(c.obscuration * 100) + '%' :
-        c.type + ' · ' + fmtDur(c.duration)]);
-      rows.push(['sun', c.sunAlt.toFixed(1) + '° ' + compass(c.sunAz)]);
-      if (!central) {
+      row('duration', (c.type === 'partial' ?
+          'partial · ' + Math.round(c.obscuration * 100) + '%' :
+          fmtDur(c.duration) + ' / ' + fmtDur(S.gt.maxDuration)),
+        f && f.dur);
+      row('horizon', tv ?
+          (tv.code === 'clear' ? 'clear +' + tv.margin.toFixed(1) + '°' :
+           tv.code === 'blocked' ? 'blocked' :
+           Math.round((1 - visFrac) * 100) + '% behind') : '…',
+        f && f.vis);
+      row('air', c.sunAltApparent.toFixed(1) + '° ' + compass(c.sunAz),
+        f && f.air);
+      row('sky', sky === null ? (t.wx ? '—' : '…') :
+          Math.round(sky) + ' · ' + t.wx.mode,
+        f ? f.sky : null);
+      if (gate === 'no totality here' && c.type === 'partial') {
         var near = nearestPathKm(t.lat, t.lon);
-        rows.push(['centreline', Math.round(near.d) + ' km ' + near.dir]);
+        rows.push('<div><span>centreline</span><code>' +
+          Math.round(near.d) + ' km ' + near.dir + '</code><code class="fx"></code></div>');
       }
-      rows.push(['horizon', tv ?
-        (tv.code === 'clear' ? '+' + tv.margin.toFixed(1) + '°' :
-         tv.code === 'blocked' ? 'blocked' :
-         Math.round((1 - visFrac) * 100) + '% behind') : '…']);
-      rows.push(['sky', sky === null ? (t.wx ? '—' : '…') :
-        Math.round(sky) + ' · ' + t.wx.mode]);
-      var suit = (!c.visible || !central) ? 0 :
-        (visFrac === null ? null :
-          suitabilityOf(c.duration, visFrac, sky));
-      rows.push(['suitability', suit === null ? '…' :
-        Math.round(suit) + (sky === null ? ' · no sky' : '')]);
     }
 
-    $('verdict-body').innerHTML = '<div class="verdict ' + code + '">' +
-      '<span class="stamp">' + stamp + '</span>' +
-      '<div class="v-facts">' + rows.map(function (r) {
-        return '<div><span>' + r[0] + '</span><code>' + esc(r[1]) +
-               '</code></div>';
-      }).join('') + '</div></div>';
+    var hero = score === null ?
+      '<span class="v-num pending">…</span>' :
+      '<span class="v-num" style="color:' + rampColor(score) + '">' +
+        Math.round(score) + '</span><span class="v-unit">/100</span>' +
+      (gate ? '<span class="v-gate">' + gate + '</span>' :
+       sky === null && t.wx ? '<span class="v-gate">no sky data</span>' : '');
+
+    $('verdict-body').innerHTML =
+      '<div class="v-hero">' + hero + '</div>' +
+      '<div class="v-facts">' + rows.join('') + '</div>';
   }
 
   /* ================= recon sweep ================= */
@@ -1314,22 +1408,21 @@
       (word || 'survey') + ' ' + Math.round(f * 100) + '%';
   }
 
-  function sweepDotStyle(vCode) {
+  function sweepDotStyle(score) {
     var P = palette();
     return {
       pane: 'sweep', radius: 5, color: P.ink, weight: 1.5,
-      fillColor: vCode === 'GO' ? P.okFill :
-                 vCode === 'COND' ? P.citron : P.dangerFill,
+      fillColor: rampColor(score === null ? 0 : score),
       fillOpacity: 0.95
     };
   }
   function drawSweep(rows, mode) {
     clearRole('sweepDots');
     var marks = rows.map(function (r) {
-      var mk = L.circleMarker([r.lat, r.lon], sweepDotStyle(r.v.code));
-      mk._sweepV = r.v.code;
+      var mk = L.circleMarker([r.lat, r.lon], sweepDotStyle(r.score));
+      mk._sweepV = r.score;
       return mk.bindTooltip(
-        r.v.word + ' · ' + fmtUT(r.date) + ' UT · totality ' +
+        fmtUT(r.date) + ' UT · totality ' +
         fmtDur(r.duration) + ' · sun ' + r.sunAlt.toFixed(0) + '° · sky ' +
         (r.score === null ? '—' : Math.round(r.score)),
         { className: 'sweep-dot-tip', direction: 'top', offset: [0, -6] }
@@ -1351,10 +1444,9 @@
     })).then(function (names) {
       ranked.forEach(function (r, i) {
         var li = document.createElement('li');
-        var vCls = r.v.code === 'GO' ? 'go' : r.v.code === 'COND' ? 'cond' : 'nogo';
         li.innerHTML = '<span class="rk">' + pad2(i + 1) + '</span>' +
           '<span class="nm">' + esc(names[i] || 'unnamed location') + '</span>' +
-          '<span class="sc ' + vCls + '">' +
+          '<span class="sc" style="color:' + rampColor(r.score) + '">' +
           Math.round(r.score) + '</span>' +
           '<span class="meta">' + fmtLat(r.lat) + ' ' + fmtLon(r.lon) +
           ' · ' + fmtUT(r.date) + ' UT · ' + fmtDur(r.duration) +
@@ -1442,7 +1534,7 @@
 
     var path = S.path;
     var nC = path.center.length;
-    if (!nC || !path.north.length || !path.south.length) {
+    if (!nC) {
       SUIT.grid = { samples: [], sky: null };
       renderSuit(); suitProg(1);
       return;
@@ -1464,11 +1556,14 @@
     var cols = [];
     for (i = idx[0]; i <= idx[idx.length - 1]; i += step) cols.push(i);
 
-    // band edges per column, longitudes unwrapped into one running frame
-    var nN = path.north.length, nS = path.south.length;
-    function edge(arr, n, i) {
-      var j = Math.round(i / (nC - 1) * (n - 1));
-      return arr[Math.max(0, Math.min(n - 1, j))];
+    // one cross-line per column, laid square across the local track, its
+    // extents bisected against the same observable-centrality oracle the
+    // band outline uses — identical construction mid-path and through the
+    // graze caps, where the t-parameterised rails collapse
+    function centralAt(lat2, lon2) {
+      var lc2 = Bessel.localCircumstances(S.ecl, lat2, ((lon2 + 540) % 360) - 180, 0);
+      return !!(lc2 && lc2.type !== 'partial' && lc2.c2 && lc2.c3 &&
+                lc2.centralVisible);
     }
     var frame = null;
     function unwrapLon(lon) {
@@ -1478,17 +1573,41 @@
       frame = (frame * 3 + lon) / 4;
       return lon;
     }
-    var rails = cols.map(function (ci) {
-      var N = edge(path.north, nN, ci), Sd = edge(path.south, nS, ci);
-      var nLon = unwrapLon(N.lon);
-      var sLon = Sd.lon;
-      while (sLon - nLon > 180) sLon -= 360;
-      while (sLon - nLon < -180) sLon += 360;
-      return { n: [N.lat, nLon], s: [Sd.lat, sLon] };
+    var colsGeo = [];
+    cols.forEach(function (ci) {
+      var C = path.center[ci];
+      if (!centralAt(C.lat, C.lon)) return;
+      var pv = path.center[Math.max(0, ci - 1)];
+      var nb = path.center[Math.min(nC - 1, ci + 1)];
+      var brg = Bessel.bearing(pv.lat, pv.lon, nb.lat, nb.lon) * 180 / Math.PI;
+      function extent(side) {          // +1 north of track, -1 south
+        var lo = 0, hi = 900;
+        for (var i2 = 0; i2 < 16; i2++) {
+          var mid = (lo + hi) / 2;
+          var p2 = Bessel.destination(C.lat, C.lon, brg - side * 90, mid);
+          if (centralAt(p2.lat, p2.lon)) lo = mid; else hi = mid;
+        }
+        return lo;
+      }
+      colsGeo.push({
+        lat: C.lat, lon: unwrapLon(C.lon), brg: brg,
+        dN: extent(1) * 1.03 + 5, dS: extent(-1) * 1.03 + 5
+      });
     });
+    if (colsGeo.length < 2) {
+      SUIT.grid = { samples: [], sky: null };
+      renderSuit(); suitProg(1);
+      return;
+    }
     function railAt(k, f) {
-      var r = rails[Math.max(0, Math.min(rails.length - 1, k))];
-      return [r.n[0] + (r.s[0] - r.n[0]) * f, r.n[1] + (r.s[1] - r.n[1]) * f];
+      var g = colsGeo[Math.max(0, Math.min(colsGeo.length - 1, k))];
+      var d = g.dN - f * (g.dN + g.dS);  // f 0 → north edge, 1 → south edge
+      var p2 = Bessel.destination(g.lat, ((g.lon + 540) % 360) - 180,
+                                  g.brg - 90, d);
+      var L = p2.lon;
+      while (L - g.lon > 180) L -= 360;
+      while (L - g.lon < -180) L += 360;
+      return [p2.lat, L];
     }
     function railMid(k, f) {
       var a = railAt(k, f), c = railAt(k + 1, f);
@@ -1497,7 +1616,7 @@
 
     // the samples, with their quad corners
     var samples = [];
-    for (var k = 0; k < cols.length; k++) {
+    for (var k = 0; k < colsGeo.length; k++) {
       for (var j = 0; j < ACROSS; j++) {
         var f = (j + 0.5) / ACROSS;
         var at = railAt(k, f);
@@ -1584,7 +1703,7 @@
       if (dead()) return;
       samples.forEach(function (c) {
         if (!c.central || c.vis === null) return;
-        c.score = suitabilityOf(c.dur, c.vis, c.sky);
+        c.score = suitabilityOf(c.dur, c.vis, c.lc.sunAltApparent, c.sky);
       });
       SUIT.grid = { samples: samples, sky: res[0] };
       renderSuit();
@@ -1631,19 +1750,20 @@
     });
   }
 
-  /* Painted as one quad per sample in the band's own frame: plate 1,
-     denser where the number is higher, nothing at all at 0. */
+  /* Painted as one quad per sample in the band's own frame, in the score
+     ramp: red where the eclipse cannot be seen (a blocked horizon inside
+     the band is information, not blankness), through citron, to plate-1
+     green where everything lines up. Outside the band, nothing. */
   function renderSuit() {
     clearRole('suit');
     var g = SUIT.grid;
     if (!g) return;
-    var P = palette();
     var quads = [];
     g.samples.forEach(function (c) {
-      if (c.score <= 0.5) return;
+      if (!c.central || c.vis === null) return;
       quads.push(L.polygon(c.quad, {
         pane: 'suit', stroke: false, interactive: false,
-        fillColor: P.okFill, fillOpacity: 0.06 + c.score / 100 * 0.66
+        fillColor: rampColor(c.score), fillOpacity: 0.45
       }));
     });
     if (quads.length) S.layers.suit = L.layerGroup(quads).addTo(map);
@@ -1864,6 +1984,7 @@
     if (S.target) {
       if (S.target.terrain) renderTerrain();
       if (S.target.wx) renderWeather();
+      renderVerdict();
     }
     if (SUIT.grid) renderSuit();
   }
