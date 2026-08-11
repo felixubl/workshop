@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Felix' Workshop</title>
-<meta name="description" content="Small self-serve tools, built one at a time. Everything runs in your browser — nothing you upload ever leaves it.">
+<meta name="description" content="Small self-serve tools, built one at a time. Every card carries a mark saying what leaves your machine, from nothing at all upward.">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=5">
 <script src="assets/preprint/js/mode.js"></script>
 <script src="assets/preprint/js/pullcord.js" defer></script>
@@ -462,20 +462,91 @@
     letter-spacing: var(--w-track-mono);
     color: var(--pp-faint);
   }
-  /* Which tools leave the browser. NO mark is the default and the claim:
-     an unmarked card runs entirely on your machine. The tools that talk
-     to the network say so here, in plate 3 — the ink of the machine
-     reaching out — and their own pages say to whom, before anything is
-     sent. "Everything is local" is a per-tool promise now, not a
-     site-wide one. */
-  .plate-net {
+  /* ── What leaves your machine ──────────────────────────────────────────────
+     One of these on every plate, the local ones included, and the key at the
+     foot of the page says what each rung means.
+
+     What was here before: a `network` line printed on the two tools that talk
+     to one, and nothing on the other five, so the promise for most of the page
+     was the ABSENCE of a mark. An absent mark and a forgotten mark look
+     exactly alike, which is the wrong way round for the claim that matters
+     most — the reassuring case is the one that should be printed, and the
+     reader should not have to know the convention to collect it. It also had
+     one rung, so it could only answer "does this touch a network", and that
+     stopped being the interesting question as soon as any of this could KEEP
+     something. Fetching a map tile and holding your files on a server are the
+     same bit set and nowhere near the same promise.
+
+     So: five rungs, ordered by what happens to YOUR material, printed on every
+     card. Nothing on the bench is above `fetch` today; `store` and `account`
+     exist because the ladder has to be built before the tool that needs it,
+     not after — a scale invented in a hurry to describe something already
+     shipped describes that one thing.
+
+     The ladder is measured in INK and never in a plate, which is the whole of
+     why it can sit on a card that already carries a colour. The plates are
+     this page's category vocabulary — the cast here, the square in front of a
+     queued name, one meaning across both sections — and a green mark for
+     "local" beside a red cast for "media" would be two colour codes on one
+     object, each making the other harder to trust. Ink coverage is an axis the
+     register does not use: more of your material leaving means more ink on the
+     card, in the squares and in the word alike, so the mark states its own
+     quantity. It survives every form of colour vision, and it does not
+     editorialise — plate 2 for `account` would be the page calling signing in
+     an error, and this system's own note says red is not "error" unless the
+     component says so in words.
+
+     Three inks across five rungs, because the ink scale has three stops.
+     Inventing a fourth grey to give every rung its own would be an undeclared
+     token bought for one step of contrast the squares have already made. */
+  .plate-custody {
     grid-column: 1 / -1;
+    display: flex;
+    /* Baseline, not centre. The squares carry no text, so flex synthesises
+       their baseline from the bottom edge and they sit ON the line like five
+       small glyphs — which at one line is a third of a pixel away from centred
+       and at two is the difference between a mark beside its first line and a
+       mark floating in the middle of both. A long list of hosts wraps on a
+       phone, so two lines is a case this has to be right in. */
+    align-items: baseline;
+    gap: 0.45rem;
     justify-self: start;
     margin-top: 0.05rem;
     font-family: var(--pp-font-mono);
     font-size: var(--pp-size-label);
     letter-spacing: var(--w-track-mono);
-    color: var(--pp-plate-3);
+    color: var(--pp-faint);
+  }
+  [data-custody='send'],
+  [data-custody='store'] {
+    color: var(--pp-muted);
+  }
+  [data-custody='account'] {
+    color: var(--pp-ink);
+  }
+
+  /* Five squares, driven in from the left and hollow the rest of the way,
+     which is the pin's own idiom at half its size: in or not, nothing between.
+     currentColor for both states, so the squares and the word take the same
+     ink and the mark gets heavier as one object rather than two. */
+  .custody-meter {
+    display: flex;
+    flex: none;
+    gap: 2px;
+  }
+  .custody-meter i {
+    width: 6px;
+    height: 6px;
+    /* --line and not --hairline: the same 1px, but a hairline splits inside a
+       container and never encloses, and this one encloses. */
+    border: var(--pp-rule-line) solid currentColor;
+  }
+  [data-custody='local'] .custody-meter i:nth-child(-n+1),
+  [data-custody='fetch'] .custody-meter i:nth-child(-n+2),
+  [data-custody='send'] .custody-meter i:nth-child(-n+3),
+  [data-custody='store'] .custody-meter i:nth-child(-n+4),
+  [data-custody='account'] .custody-meter i:nth-child(-n+5) {
+    background: currentColor;
   }
 
   /* ── The queue ─────────────────────────────────────────────────────────────
@@ -526,6 +597,90 @@
   }
   /* No pointer change and no hover state on the row itself. These do not open,
      and a row that lit up under the cursor would be promising that they do. */
+
+  /* ── The key ───────────────────────────────────────────────────────────────
+     What the marks on the plates mean, printed once at the foot rather than
+     five times up the page.
+
+     It is a description list because that is what it is: a term and what the
+     term means, five times. Each pair is wrapped in a div so it has somewhere
+     to carry data-custody — the same attribute doing the same job here as on a
+     card, which is what keeps the key and the thing it explains from drifting
+     apart. There is no third state to define:
+     the mark in the key and the mark on the plate are the same two elements
+     under the same rules.
+
+     Last on the page on purpose. A key belongs where a colophon belongs, and
+     the cards are legible without it — `local` and `fetch — Open-Meteo` say
+     enough on their own, and a reader who wants the exact ladder is a reader
+     who will look for it. */
+  .key-list {
+    display: grid;
+    gap: 0.6rem;
+  }
+  .key-row {
+    display: grid;
+    gap: 0.15rem;
+  }
+  /* Wide, the five rows are ONE grid rather than five: display:contents drops
+     each pair's box so the dt and dd become items of the list itself, and the
+     mark column is then measured once, against the longest word, instead of
+     five times against five. Five independent grids each sized their own auto
+     column, which set every definition to start at a different x — a ragged
+     left edge down a column of prose, which is the one place ragged is just
+     wrong. The row div still carries data-custody and colour still inherits
+     through it, which is the whole reason this works without moving the
+     attribute onto both children. */
+  @media (min-width: 561px) {
+    .key-list {
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 0.55rem 0.9rem;
+      align-items: baseline;
+    }
+    .key-row {
+      display: contents;
+    }
+  }
+  .key-row dt {
+    display: flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    font-family: var(--pp-font-mono);
+    font-size: var(--pp-size-label);
+    letter-spacing: var(--w-track-mono);
+  }
+  /* The prose stays one ink at every rung. The ramp is the MARK's job, and a
+     definition set darker because of what it defines would be the page raising
+     its voice on the sentence that is only there to be clear. */
+  .key-row dd {
+    max-width: 60ch;
+    font-size: var(--pp-size-micro);
+    line-height: var(--pp-leading-micro);
+    color: var(--pp-muted);
+    text-wrap: pretty;
+  }
+  /* Below 561px there is no room for a mark column and a measure beside it, so
+     the pair stacks and the mark reads as a heading over its own paragraph —
+     the same relationship, turned through ninety degrees. */
+  .key-note {
+    margin-top: var(--pp-space-4);
+    max-width: 60ch;
+    font-size: var(--pp-size-micro);
+    line-height: var(--pp-leading-micro);
+    color: var(--pp-faint);
+    text-wrap: pretty;
+  }
+  /* A bare <code> is styled nowhere in this family — every other one on the
+     page carries a class that sets the face — so naming a rung inside a
+     sentence has to set it here or fall back to whatever monospace the
+     browser keeps. Slightly under 1em because Cousine sets larger than Zilla
+     at the same size, and a word quoted mid-sentence should not outgrow the
+     sentence. */
+  .key-note code {
+    font-family: var(--pp-font-mono);
+    font-size: 0.94em;
+    letter-spacing: var(--w-track-mono);
+  }
 
   /* Pinning is nailing it to the board — the same 45° square the wordmark wears
      at its corners, hollow until you drive it in. It reads as a mark rather
@@ -723,6 +878,7 @@
             <button class="pin" type="button" data-pin="draw-svg" aria-label="Pin Pixel Art SVG Drawer to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">Draw on a grid-snapped canvas, from an 8&times;8 sprite up to a full Game Boy screen, and export exactly what you drew as a real SVG.</p>
             <code class="plate-dates">added 2026-07-23 · changed 2026-07-29</code>
+            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local &mdash; nothing leaves this page</code>
           </div>
         </div>
 
@@ -732,6 +888,7 @@
             <button class="pin" type="button" data-pin="random-numbers" aria-label="Pin Random Number Generator to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">Eleven distributions in up to ten dimensions. Every run prints the seed it used, so any set of numbers can be drawn again.</p>
             <code class="plate-dates">added 2026-07-27 · changed 2026-07-29</code>
+            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local &mdash; nothing leaves this page</code>
           </div>
         </div>
 
@@ -741,6 +898,7 @@
             <button class="pin" type="button" data-pin="metadata-cleaner" aria-label="Pin Image Metadata Cleaner to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">See what a photo carries besides the photo &mdash; GPS, serial numbers, timestamps, the caption someone left in it &mdash; and choose field by field what to strip. The pixels are never re-encoded.</p>
             <code class="plate-dates">added 2026-07-27 · changed 2026-07-29</code>
+            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local &mdash; nothing leaves this page</code>
           </div>
         </div>
 
@@ -750,7 +908,7 @@
             <button class="pin" type="button" data-pin="network-inspector" aria-label="Pin Network Inspector to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">Everything your browser hands over before you touch anything, the requests it is making right now, and what a single lookup adds. The parts that send something are buttons you press.</p>
             <code class="plate-dates">added 2026-08-04</code>
-            <code class="plate-net">network — on your press</code>
+            <code class="plate-custody" data-custody="fetch"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>fetch &mdash; ipwho.is, ipify, a STUN server &middot; on your press</code>
           </div>
         </div>
 
@@ -760,6 +918,7 @@
             <button class="pin" type="button" data-pin="pdf-toolkit" aria-label="Pin PDF Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">Merge, split, extract, reorder and turn pages, every one a real preview you can pick up. The PDF engine underneath is written from scratch, with no library involved.</p>
             <code class="plate-dates">added 2026-07-27 · changed 2026-07-29</code>
+            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local &mdash; nothing leaves this page</code>
           </div>
         </div>
 
@@ -769,6 +928,7 @@
             <button class="pin" type="button" data-pin="bingo-cards" aria-label="Pin Bingo Card Generator to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">Type the squares and it counts every card that list can make &mdash; exactly, however many digits that takes. Ask for as many as you want and it prints them, one to a page.</p>
             <code class="plate-dates">added 2026-08-09</code>
+            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local &mdash; nothing leaves this page</code>
           </div>
         </div>
 
@@ -778,7 +938,7 @@
             <button class="pin" type="button" data-pin="eclipse-recon" aria-label="Pin Eclipse Recon to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">The path of totality from a satellite&rsquo;s point of view: exact timings for any point you target, the western ridge that might hide a low Sun, and the cloud outlook &mdash; good zones and bad, ranked.</p>
             <code class="plate-dates">added 2026-08-10 · changed 2026-08-11</code>
-            <code class="plate-net">network — maps &amp; weather</code>
+            <code class="plate-custody" data-custody="fetch"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>fetch &mdash; AWS terrain, Carto, Open-Meteo, BigDataCloud</code>
           </div>
         </div>
 
@@ -923,6 +1083,51 @@
           <button class="pin" type="button" data-pin="odds-and-ends" aria-label="Pin Odds & Ends to the top"><span class="pin-head" aria-hidden="true"></span></button>
         </li>
       </ul>
+    </section>
+
+    <!-- The key to the mark every plate carries. Five rungs, and the page shows
+         all five even though nothing on the bench climbs past the second: the
+         two above are what the workshop looks like the day a tool keeps
+         something, and printing them now is how the ladder gets built before
+         it is needed rather than around whatever ships first. -->
+    <section class="key">
+
+      <div class="band">
+        <p class="section-label">What leaves your machine</p>
+        <span class="band-rule" aria-hidden="true"></span>
+        <code>5 rungs</code>
+      </div>
+
+      <dl class="key-list">
+
+        <div class="key-row" data-custody="local">
+          <dt><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</dt>
+          <dd>Nothing leaves the page. The tool is the whole of it &mdash; it is fetched once and then runs on your machine, and closing the tab is the end of it.</dd>
+        </div>
+
+        <div class="key-row" data-custody="fetch">
+          <dt><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>fetch</dt>
+          <dd>It asks somebody else for public data &mdash; map tiles, a forecast, a lookup. Nothing you gave it goes out, but the request does, and a request is your address and what you asked for. The card names who is asked; the tool names them again before it asks.</dd>
+        </div>
+
+        <div class="key-row" data-custody="send">
+          <dt><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>send</dt>
+          <dd>Something you gave it &mdash; a file, a picture, a paragraph &mdash; goes out to be worked on and comes back. It is not kept afterwards.</dd>
+        </div>
+
+        <div class="key-row" data-custody="store">
+          <dt><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>store</dt>
+          <dd>Something you gave it is kept on a server and is still there on your next visit. The card says whose server, because a box in my flat and somebody else&rsquo;s platform are not the same answer.</dd>
+        </div>
+
+        <div class="key-row" data-custody="account">
+          <dt><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>account</dt>
+          <dd>Kept, and tied to a name you signed in with. Everything below this rung is anonymous by construction; this one is not, and that is the whole of the difference.</dd>
+        </div>
+
+      </dl>
+
+      <p class="key-note">The bottom two rungs are the whole workshop today: five tools never open a socket, and two read public data and keep nothing. <code>store</code> and <code>account</code> are printed here unused, because a scale written to describe a thing that already exists is a scale bent to fit it.</p>
     </section>
   </main>
 
