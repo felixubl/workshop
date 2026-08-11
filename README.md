@@ -83,8 +83,11 @@ The eclipse mathematics itself runs entirely in your browser.
   drawn from elevation alone — water the palest flat tone, land darkening
   in altitude steps with a key in the corner — the Moon's shadow is printed
   in actual black, and the plates appear only where they mean something —
-  plate 3 is totality, and every score wears one ramp pressed from plate 2
-  through the citron marker to plate 1: cannot see it, gamble, go. It is
+  plate 3 is totality, and every score wears one ramp: plate 1 alone,
+  from a faint tint to full depth, mixed in OKLab so the lightness runs
+  monotonically — the reading survives any colour vision and a greyscale
+  print — with plate 2 reserved for the one state that is not a
+  magnitude: the eclipse cannot be seen there at all. It is
   the second tool that talks to the network (see above), and it works on a
   phone.
 
