@@ -1870,10 +1870,11 @@
      bay dutifully ranks open water first, which is true and useless) but
      the suitability field itself, clipped to the chosen radius and graded
      on the local curve: the best cell within reach is green, the worst
-     red, whatever their absolute scores. Water still scores — a boat is a
-     place to stand — but it prints fainter, because the question is
-     usually about land. Distance is straight-line; the ring says what
-     "reach" meant, and the reader knows their own island. */
+     red, whatever their absolute scores. Water scores like anything else
+     — a boat is a place to stand — and prints at full strength; what
+     keeps the geography readable is the coastline, inked ABOVE the field
+     wherever land meets water. Distance is straight-line; the ring says
+     what "reach" meant, and the reader knows their own island. */
 
   var REACH = { run: 0, aborter: null, base: null };
 
@@ -2040,21 +2041,34 @@
         return rampColor(sHi - sLo < 0.5 ? 50 : (v - sLo) / (sHi - sLo) * 100);
       }
 
+      /* the coastline: every cell edge where land meets water, inked
+         above the field so the geography stays readable while the
+         heatmap itself treats land and water alike */
+      var segs = coastSegs(central, dLat, dLon, baseLat, baseLon, COLS);
+
       /* past ~1200 cells one vector rectangle each stops being drawable —
          a 100 m survey is 31,000 of them — so a big field is printed once
          into a canvas and laid over its own bounds */
-      var layer = central.length > 1200
-        ? cellImage(central, dLat, dLon, localRamp)
-        : L.layerGroup(central.map(function (c) {
-            var water = c.elev !== null && c.elev <= 0.5;
-            return L.rectangle(
-              [[c.lat - dLat / 2, c.lonN - dLon / 2],
-               [c.lat + dLat / 2, c.lonN + dLon / 2]], {
-                pane: 'suit', stroke: false, interactive: false,
-                fillColor: localRamp(c.score),
-                fillOpacity: water ? 0.2 : 0.52
-              });
+      var layer;
+      if (central.length > 1200) {
+        layer = cellImage(central, dLat, dLon, localRamp, segs);
+      } else {
+        var parts = central.map(function (c) {
+          return L.rectangle(
+            [[c.lat - dLat / 2, c.lonN - dLon / 2],
+             [c.lat + dLat / 2, c.lonN + dLon / 2]], {
+              pane: 'suit', stroke: false, interactive: false,
+              fillColor: localRamp(c.score), fillOpacity: 0.52
+            });
+        });
+        if (segs.length) {
+          parts.push(L.polyline(segs, {
+            pane: 'suit', color: P.ink, weight: 1.2, opacity: 0.85,
+            interactive: false
           }));
+        }
+        layer = L.layerGroup(parts);
+      }
       S.layers.reachCells = layer.addTo(map);
 
       status.textContent = central.length + ' cells · sky ' + (res[0] || '—');
@@ -2062,17 +2076,47 @@
       $('reach-lo').textContent = Math.round(sLo);
       $('reach-hi').textContent = Math.round(sHi);
       $('reach-note').textContent = radiusKm + ' km · cells ' +
-        fmtCellKm(stepKm) + ' · water faint';
+        fmtCellKm(stepKm) + ' · coast inked';
       $('reach-legend').hidden = false;
     });
     }
   }
 
+  /* The coast, as cell edges: wherever two known neighbours disagree
+     about being water, the shared edge is a piece of shoreline. Returns
+     line segments in lat/lon, for either renderer to ink. */
+  function coastSegs(central, dLat, dLon, baseLat, baseLon, COLS) {
+    var isWater = function (c) { return c.elev !== null && c.elev <= 0.5; };
+    var known = central.filter(function (c) { return c.elev !== null; });
+    var grid = {};
+    known.forEach(function (c) {
+      var i = Math.round((c.lonN - baseLon) / dLon + (COLS - 1) / 2);
+      var j = Math.round((c.lat - baseLat) / dLat + (COLS - 1) / 2);
+      grid[i + ',' + j] = c;
+    });
+    var segs = [];
+    known.forEach(function (c) {
+      var i = Math.round((c.lonN - baseLon) / dLon + (COLS - 1) / 2);
+      var j = Math.round((c.lat - baseLat) / dLat + (COLS - 1) / 2);
+      var east = grid[(i + 1) + ',' + j];
+      var north = grid[i + ',' + (j + 1)];
+      if (east && isWater(east) !== isWater(c)) {
+        segs.push([[c.lat - dLat / 2, c.lonN + dLon / 2],
+                   [c.lat + dLat / 2, c.lonN + dLon / 2]]);
+      }
+      if (north && isWater(north) !== isWater(c)) {
+        segs.push([[c.lat + dLat / 2, c.lonN - dLon / 2],
+                   [c.lat + dLat / 2, c.lonN + dLon / 2]]);
+      }
+    });
+    return segs;
+  }
+
   /* The big-field printer. Each cell is filled into a canvas at its
      Mercator position — the same projection the vector rectangles sat in,
-     so the two renderers agree — with the water weight baked into the
-     alpha. One image element instead of tens of thousands of paths. */
-  function cellImage(central, dLat, dLon, ramp) {
+     so the two renderers agree — then the coastline is inked on top. One
+     image element instead of tens of thousands of paths. */
+  function cellImage(central, dLat, dLon, ramp, segs) {
     var latT = -90, latB = 90, lonL = 180, lonR = -180;
     central.forEach(function (c) {
       if (c.lat > latT) latT = c.lat;
@@ -2101,12 +2145,27 @@
       var x1 = Math.round((c.lonN + dLon / 2 - lonL) / (lonR - lonL) * W);
       var y0 = Math.round((mT - merc(c.lat + dLat / 2)) / (mT - mB) * H);
       var y1 = Math.round((mT - merc(c.lat - dLat / 2)) / (mT - mB) * H);
-      var water = c.elev !== null && c.elev <= 0.5;
       g.fillStyle = ramp(c.score)
         .replace('rgb(', 'rgba(')
-        .replace(')', water ? ',0.2)' : ',0.52)');
+        .replace(')', ',0.52)');
       g.fillRect(x0, y0, Math.max(1, x1 - x0), Math.max(1, y1 - y0));
     });
+    // the coastline, above the field, in the page's own ink
+    if (segs && segs.length) {
+      var P = palette();
+      g.strokeStyle = P.ink;
+      g.globalAlpha = 0.85;
+      g.lineWidth = 2;
+      g.beginPath();
+      segs.forEach(function (s) {
+        g.moveTo(Math.round((s[0][1] - lonL) / (lonR - lonL) * W),
+                 Math.round((mT - merc(s[0][0])) / (mT - mB) * H));
+        g.lineTo(Math.round((s[1][1] - lonL) / (lonR - lonL) * W),
+                 Math.round((mT - merc(s[1][0])) / (mT - mB) * H));
+      });
+      g.stroke();
+      g.globalAlpha = 1;
+    }
     return L.imageOverlay(cv.toDataURL(), [[latB, lonL], [latT, lonR]],
       { pane: 'suit', interactive: false, className: 'suit-img' });
   }
