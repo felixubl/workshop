@@ -693,8 +693,10 @@
         if (t !== null) {
           togglePlay(false); setTime(t);
           var c = Bessel.centralPointAt(S.ecl, S.T);
-          // fly out far enough that the umbra is actually in frame
+          // fly out far enough that the umbra is actually in frame —
+          // and on a phone, fold the panel so the flight can be seen
           if (c) map.flyTo([c.lat, c.lon], Math.min(map.getZoom(), 5));
+          if (isPhone()) setFolded('intel', true);
         }
       });
     });
@@ -724,6 +726,12 @@
 
     $('dossier').hidden = false;
     $('dossier').classList.remove('folded');
+    S.lastScore = null;
+    Drawer.open();
+    dismissHint(true);   // the gesture has been found; the hand retires
+    // one sheet at a time on a phone: the report rises, the event panel
+    // steps back to its chip so the map stays the page
+    if (isPhone()) setFolded('intel', true);
     $('tgt-name').textContent = '…';
     $('tgt-coords').textContent = fmtLat(lat) + ' ' + fmtLon(lon);
     $('tgt-elev').textContent = 'elev —';
@@ -743,6 +751,7 @@
     Wx.placeName(lat, lon, signal).then(function (nm) {
       if (S.target && S.target.lat === lat) {
         $('tgt-name').textContent = nm || 'unnamed location';
+        updateDossierPeek();
       }
     });
 
@@ -837,6 +846,7 @@
 
   $('dossier-close').addEventListener('click', function () {
     $('dossier').hidden = true;
+    Drawer.reset();
     if (reticle) { map.removeLayer(reticle); reticle = null; }
     S.target = null;
     location.hash = S.ecl.id;
@@ -845,6 +855,8 @@
   map.on('click', function (ev) {
     setTarget(ev.latlng.lat, ((ev.latlng.lng + 540) % 360) - 180,
               { keepView: true });
+    // the drawer that just rose must not bury the very point it reports
+    Drawer.reveal(ev.latlng);
   });
 
   /* ---- local circumstances table ---- */
@@ -1135,7 +1147,8 @@
     var svg = wrap.querySelector('svg');
     var azMin = view.azMin;
     var azSpanTotal = ((prof[prof.length - 1].az - azMin) % 360 + 360) % 360 || 1;
-    wrap.addEventListener('mousemove', function (ev) {
+    var linger = null;
+    function readAt(ev) {
       var r = svg.getBoundingClientRect();
       var fx = (ev.clientX - r.left) / r.width * 336;
       if (fx < 34 || fx > 326) { tip.style.display = 'none'; return; }
@@ -1151,9 +1164,28 @@
         (p && p.ang > 0.2 ? ' · ridge ' + p.distKm.toFixed(0) + ' km' : '');
       tip.style.display = 'block';
       tip.style.left = Math.min(r.width - 130, ev.clientX - r.left + 10) + 'px';
-      tip.style.top = (ev.clientY - r.top - 26) + 'px';
+      // a finger covers the very point it asks about, so its answer
+      // stands clear at the top of the chart instead of under the hand
+      tip.style.top = ev.pointerType === 'touch' ? '4px'
+                    : (ev.clientY - r.top - 26) + 'px';
+    }
+    // pointer, not mouse: a finger drawn along the chart reads the
+    // horizon the same way a hovering cursor does (the CSS grants the
+    // wrap pan-y, so a vertical swipe still scrolls the sheet)
+    wrap.addEventListener('pointerdown', function (ev) {
+      clearTimeout(linger); readAt(ev);
     });
-    wrap.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
+    wrap.addEventListener('pointermove', function (ev) {
+      clearTimeout(linger); readAt(ev);
+    });
+    wrap.addEventListener('pointerup', function (ev) {
+      if (ev.pointerType !== 'mouse') {
+        linger = setTimeout(function () { tip.style.display = 'none'; }, 1500);
+      }
+    });
+    wrap.addEventListener('pointerleave', function (ev) {
+      if (ev.pointerType === 'mouse') tip.style.display = 'none';
+    });
   }
 
   /* ---- weather panel ---- */
@@ -1497,6 +1529,7 @@
     $('verdict-body').innerHTML =
       '<div class="v-hero">' + hero + '</div>' +
       '<div class="v-facts">' + rows.join('') + '</div>';
+    updateDossierPeek(score);
   }
 
   /* ================= recon sweep ================= */
@@ -1627,6 +1660,7 @@
   function suitStart() {
     SUIT.on = true;
     $('suit-btn').setAttribute('aria-pressed', 'true');
+    syncSuitDur();
     // the field paints inside the band, so the band's own dark wash steps
     // back while the field is up and returns when it goes
     if (S.layers.bandPoly) S.layers.bandPoly.setStyle({ fillOpacity: 0.08 });
@@ -1644,6 +1678,7 @@
     $('suit-legend').hidden = true;
     $('suit-grade').hidden = true;
     $('suit-prog').hidden = true;
+    syncSuitDur();
   }
   var suitMoved = debounce(function () { if (SUIT.on) computeSuit(); }, 450);
   $('suit-btn').addEventListener('click', function () {
@@ -2521,16 +2556,336 @@
     }
   });
 
-  /* fold buttons; on a phone the event panel starts folded — the map is
-     the page, and the panel is a drawer you pull open */
+  /* ================= sheets, folding, and the phone =================
+
+     The paper cards learn phone manners here. One question decides which
+     manners apply — the same breakpoint style.css draws by, read live so
+     a rotated tablet changes its answer. */
+
+  var mqPhone = window.matchMedia ? matchMedia('(max-width: 900px)') : null;
+  function isPhone() { return !!(mqPhone && mqPhone.matches); }
+
+  function setFolded(id, folded) {
+    $(id).classList.toggle('folded', folded);
+    var b = $(id).querySelector('.sheet-fold[data-fold]');
+    if (b) b.setAttribute('aria-expanded', String(!folded));
+  }
   document.querySelectorAll('.sheet-fold[data-fold]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      $(b.dataset.fold).classList.toggle('folded');
+    b.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      setFolded(b.dataset.fold, !$(b.dataset.fold).classList.contains('folded'));
     });
   });
-  if (window.matchMedia && matchMedia('(max-width: 900px)').matches) {
-    $('intel').classList.add('folded');
+
+  /* the whole head bar folds its sheet — a strip is a target, a 12px
+     glyph is not. Buttons in the bar keep their own jobs, and on a phone
+     the dossier's head answers to the drawer instead. */
+  document.querySelectorAll('.sheet .sheet-head').forEach(function (head) {
+    head.addEventListener('click', function (ev) {
+      if (ev.target.closest('button')) return;
+      var sheet = head.parentElement;
+      if (sheet.id === 'dossier' && isPhone()) {
+        if (!Drawer.swallowTap()) Drawer.toggle();
+        return;
+      }
+      setFolded(sheet.id, !sheet.classList.contains('folded'));
+    });
+  });
+  /* on a phone the event panel starts folded — the map is the page,
+     and the panel is a chip you tap open */
+  if (isPhone()) setFolded('intel', true);
+
+  /* The search lives where the layout can afford it. On a desktop it is
+     a block of the event panel; on a phone that panel is a folded chip,
+     which made the search invisible — so the same block, input and
+     results and wiring intact, stands in a bar on the map itself, and
+     its placeholder teaches the map's own gesture. */
+  function placeSearch() {
+    var block = document.querySelector('.search');
+    var bar = $('map-search');
+    if (!block || !bar) return;
+    if (isPhone()) {
+      bar.hidden = false;
+      bar.appendChild(block);
+      $('search').placeholder = 'search a place — or tap the map';
+    } else {
+      bar.hidden = true;
+      $('sweep-btn').parentNode.insertBefore(block, $('sweep-btn'));
+      $('search').placeholder = 'place, or 46.62, 13.85';
+    }
   }
+  placeSearch();
+  /* typing is committing to the map: the event panel gives way so the
+     results land on ground, not on paper */
+  $('search').addEventListener('focus', function () {
+    if (isPhone()) setFolded('intel', true);
+  });
+
+  /* the duration switch is a refinement of the wash: on a phone it
+     appears with the field and leaves with it, instead of standing as
+     one more unexplained key on a small screen */
+  function syncSuitDur() {
+    $('suit-dur').hidden = isPhone() && !SUIT.on;
+  }
+  syncSuitDur();
+
+  if (mqPhone) {
+    var onBreak = function () { placeSearch(); syncSuitDur(); };
+    if (mqPhone.addEventListener) mqPhone.addEventListener('change', onBreak);
+    else if (mqPhone.addListener) mqPhone.addListener(onBreak);
+  }
+
+  /* the one-time hand: shown on a phone that has never set a target and
+     did not arrive with one in the link */
+  function dismissHint(remember) {
+    var h = $('tap-hint');
+    if (h) h.hidden = true;
+    if (remember) {
+      try { localStorage.setItem('recon-hint-done', '1'); } catch (e) { /* private mode */ }
+    }
+  }
+  (function () {
+    var seen = false;
+    try { seen = !!localStorage.getItem('recon-hint-done'); } catch (e) { /* private mode */ }
+    if (!isPhone() || seen || location.hash.indexOf('/') !== -1) return;
+    $('tap-hint').hidden = false;
+    $('tap-hint').querySelector('button').addEventListener('click', function () {
+      dismissHint(true);
+    });
+  })();
+
+  /* The dossier as a bottom drawer. Three snaps — peek (just the head
+     bar, wearing the score and the name), half, and full — a grabber to
+     drag between them, a tap on the bar to flip peek/half, a fling to
+     skip. The numbers are read off the live boxes rather than re-derived
+     from the stylesheet, so the safe area and the console's height stay
+     facts instead of assumptions. Desktop keeps the paper card it always
+     had: everything here checks the layout first. */
+  var Drawer = (function () {
+    var el = $('dossier');
+    var head = el.querySelector('.sheet-head');
+    var state = 'half', drag = null, squelch = false;
+
+    function gapBelow() {
+      return $('stage').getBoundingClientRect().bottom -
+             el.getBoundingClientRect().bottom;
+    }
+    function snaps() {
+      var sh = $('stage').clientHeight;
+      var full = Math.max(head.offsetHeight, sh - gapBelow() - 8);
+      return { peek: head.offsetHeight,
+               half: Math.min(full, Math.round(sh * 0.44)),
+               full: full };
+    }
+    function apply(next) {
+      state = next;
+      if (!isPhone() || el.hidden) return;
+      el.style.height = snaps()[state] + 'px';
+      el.classList.toggle('at-peek', state === 'peek');
+    }
+
+    head.addEventListener('pointerdown', function (ev) {
+      if (!isPhone() || ev.target.closest('button')) return;
+      drag = { y0: ev.clientY, h0: el.getBoundingClientRect().height,
+               y: ev.clientY, t: performance.now(), v: 0, moved: false };
+      head.setPointerCapture(ev.pointerId);
+    });
+    head.addEventListener('pointermove', function (ev) {
+      if (!drag) return;
+      if (Math.abs(ev.clientY - drag.y0) > 6) drag.moved = true;
+      if (!drag.moved) return;
+      el.classList.add('dragging');
+      var now = performance.now();
+      if (now > drag.t) {
+        // velocity smoothed over the last few moves, px/ms, + is down
+        drag.v = 0.6 * ((ev.clientY - drag.y) / (now - drag.t)) + 0.4 * drag.v;
+        drag.y = ev.clientY; drag.t = now;
+      }
+      var s = snaps();
+      el.style.height = Math.max(s.peek, Math.min(s.full,
+        drag.h0 - (ev.clientY - drag.y0))) + 'px';
+    });
+    head.addEventListener('pointerup', function () {
+      if (!drag) return;
+      var d = drag; drag = null;
+      el.classList.remove('dragging');
+      if (!d.moved) return;      // a tap: the click event will handle it
+      squelch = true;            // a drag must not also count as the tap
+      var s = snaps();
+      var h = el.getBoundingClientRect().height;
+      // a fling goes one snap in its own direction; a slow release
+      // settles on whichever snap is nearest
+      if (d.v > 0.5)  { apply(h > s.half * 1.2 ? 'half' : 'peek'); return; }
+      if (d.v < -0.5) { apply(h < s.half * 0.8 ? 'half' : 'full'); return; }
+      apply(h < (s.peek + s.half) / 2 ? 'peek' :
+            h < (s.half + s.full) / 2 ? 'half' : 'full');
+    });
+    head.addEventListener('pointercancel', function () {
+      if (!drag) return;
+      drag = null; el.classList.remove('dragging'); apply(state);
+    });
+
+    function toggle() { apply(state === 'peek' ? 'half' : 'peek'); }
+    /* a new target always shows its report: peek rises back to half */
+    function open() {
+      if (!isPhone()) return;
+      apply(state === 'peek' ? 'half' : state);
+    }
+    /* pan the map so the mark stands clear of the drawer reporting on it */
+    function reveal(latlng) {
+      if (!isPhone() || el.hidden) return;
+      var top = $('stage').clientHeight - gapBelow() - snaps()[state];
+      var pt = map.latLngToContainerPoint(latlng);
+      if (pt.y > top - 32 || pt.y < 0) {
+        map.panBy([0, Math.round(pt.y - top / 2)]);
+      }
+    }
+    function reset() {
+      state = 'half';
+      el.classList.remove('at-peek', 'dragging');
+    }
+    /* crossing the breakpoint hands the height back to the stylesheet;
+       entering it clears the desktop fold, which has no drawer meaning */
+    function relayout() {
+      if (!isPhone()) {
+        el.style.height = '';
+        el.classList.remove('at-peek', 'dragging');
+      } else {
+        el.classList.remove('folded');
+        if (!el.hidden) apply(state);
+      }
+    }
+    if (mqPhone) {
+      if (mqPhone.addEventListener) mqPhone.addEventListener('change', relayout);
+      else if (mqPhone.addListener) mqPhone.addListener(relayout);
+    }
+    window.addEventListener('resize', debounce(function () {
+      if (isPhone() && !el.hidden) apply(state);
+    }, 150));
+
+    return { open: open, toggle: toggle, reveal: reveal, reset: reset,
+             swallowTap: function () {
+               var s = squelch; squelch = false; return s;
+             } };
+  })();
+
+  /* the peek line: at the drawer's lowest snap the head bar is the whole
+     report, so it carries the verdict's number and the place's name */
+  function updateDossierPeek(score) {
+    if (score !== undefined) S.lastScore = score;
+    var s = S.lastScore;
+    $('dossier-peek').innerHTML =
+      (s === null || s === undefined ? '<b>…</b>' :
+        '<b style="color:' + rampColor(s) + '">' + Math.round(s) + '</b>') +
+      esc($('tgt-name').textContent || '');
+  }
+
+  /* ---- where am I ----
+     The question a phone in the field actually asks — will I see it from
+     HERE — gets its own key under the zoom keys. One press: locate, fly,
+     assess. The key only exists where the browser can geolocate at all. */
+  if (navigator.geolocation) {
+    var GLYPH_LOCATE = '<svg width="15" height="15" viewBox="0 0 16 16" ' +
+      'fill="none" stroke="currentColor" stroke-width="1.35" aria-hidden="true">' +
+      '<circle cx="8" cy="8" r="4.2"/>' +
+      '<path d="M8 0.8v2.6M8 12.6v2.6M0.8 8h2.6M12.6 8h2.6"/>' +
+      '<circle cx="8" cy="8" r="0.9" fill="currentColor" stroke="none"/></svg>';
+    var LocateCtl = L.Control.extend({
+      options: { position: 'bottomright' },
+      onAdd: function () {
+        var div = L.DomUtil.create('div', 'leaflet-bar locate-ctl');
+        var a = L.DomUtil.create('a', '', div);
+        a.href = '#';
+        a.setAttribute('role', 'button');
+        a.setAttribute('aria-label', 'Assess my location');
+        a.innerHTML = GLYPH_LOCATE;
+        L.DomEvent.on(a, 'click', L.DomEvent.stop);
+        L.DomEvent.on(a, 'click', function () {
+          if (a.classList.contains('locating')) return;
+          a.classList.add('locating');
+          navigator.geolocation.getCurrentPosition(function (pos) {
+            a.classList.remove('locating');
+            goTo(pos.coords.latitude, pos.coords.longitude, 10);
+          }, function () {
+            // denied or dark: the key says no in the danger ink and
+            // recovers — a dialog would be louder than the failure
+            a.classList.remove('locating');
+            a.classList.add('failed');
+            setTimeout(function () { a.classList.remove('failed'); }, 1800);
+          }, { timeout: 10000, maximumAge: 60000 });
+        });
+        return div;
+      }
+    });
+    map.addControl(new LocateCtl());
+  }
+
+  /* ---- long-press tips ----
+     Hover cannot happen on a touch screen, and the tips carry real
+     explanations. A long press on anything tipped speaks the same words
+     in the same dress, and swallows the click that letting go would
+     otherwise fire. */
+  (function () {
+    if (!window.matchMedia || !matchMedia('(hover: none)').matches) return;
+    var tipEl = null, timer = null, on = null, shown = false, x0 = 0, y0 = 0;
+    function hide() {
+      clearTimeout(timer); timer = null;
+      if (tipEl) tipEl.hidden = true;
+    }
+    function show(t) {
+      if (!tipEl) {
+        tipEl = document.createElement('div');
+        tipEl.className = 'tip';
+        tipEl.setAttribute('role', 'tooltip');
+        document.body.appendChild(tipEl);
+      }
+      // the system's own hover tip may be up (a tap can focus); one voice
+      var sys = document.getElementById('preprint-tip');
+      if (sys) sys.hidden = true;
+      tipEl.textContent = t.getAttribute('data-tip');
+      tipEl.hidden = false;
+      shown = true;
+      var a = t.getBoundingClientRect();
+      var r = tipEl.getBoundingClientRect();
+      var above = a.top > r.height + 10;
+      tipEl.style.top = Math.round(above ? a.top - r.height - 7 : a.bottom + 7) + 'px';
+      tipEl.style.left = Math.round(Math.min(
+        Math.max(8, a.left + a.width / 2 - r.width / 2),
+        Math.max(8, innerWidth - r.width - 8))) + 'px';
+    }
+    document.addEventListener('pointerdown', function (ev) {
+      hide(); shown = false;
+      var t = ev.target.closest && ev.target.closest('[data-tip]');
+      if (!t || ev.pointerType === 'mouse') { on = null; return; }
+      on = t; x0 = ev.clientX; y0 = ev.clientY;
+      timer = setTimeout(function () { show(t); }, 450);
+    }, true);
+    document.addEventListener('pointermove', function (ev) {
+      // a finger that moves is dragging or scrolling, not asking
+      if (timer && (Math.abs(ev.clientX - x0) > 12 ||
+                    Math.abs(ev.clientY - y0) > 12)) {
+        clearTimeout(timer); timer = null;
+      }
+    }, true);
+    ['pointerup', 'pointercancel'].forEach(function (type) {
+      document.addEventListener(type, function () {
+        clearTimeout(timer); timer = null;
+        if (shown) {
+          setTimeout(function () { if (tipEl) tipEl.hidden = true; }, 2600);
+        }
+      }, true);
+    });
+    document.addEventListener('click', function (ev) {
+      if (shown && on && on.contains(ev.target)) {
+        ev.preventDefault(); ev.stopPropagation(); shown = false;
+        if (on.blur) on.blur();
+      }
+    }, true);
+    document.addEventListener('contextmenu', function (ev) {
+      if (timer || shown) ev.preventDefault();
+    });
+    addEventListener('scroll', hide, true);
+  })();
 
   /* keyboard */
   document.addEventListener('keydown', function (ev) {

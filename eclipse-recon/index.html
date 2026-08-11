@@ -45,11 +45,23 @@
 <main id="stage">
   <div id="map" aria-label="Eclipse map"></div>
 
+  <!-- the search, standing on the map where a phone can see it: below
+       900px app.js moves the event panel's search block in here, and
+       the placeholder teaches the map's own gesture -->
+  <div id="map-search" hidden></div>
+
+  <!-- the one-time hand: how you scout a site. Dismissed by its key or
+       by the first target, and the browser remembers. -->
+  <div id="tap-hint" hidden>
+    <span>Tap anywhere on the map to scout a site — score, horizon, sky.</span>
+    <button type="button" aria-label="Dismiss">✕</button>
+  </div>
+
   <!-- left: the event -->
   <aside id="intel" class="sheet">
     <div class="sheet-head">
-      <h2>Event</h2>
-      <button class="sheet-fold" type="button" data-fold="intel" aria-label="Collapse panel">▁</button>
+      <h2>Eclipse</h2>
+      <button class="sheet-fold" type="button" data-fold="intel" aria-expanded="true" aria-label="Fold panel"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true"><path d="M3.5 10 8 5.5l4.5 4.5"/></svg></button>
     </div>
     <div class="sheet-body">
       <dl class="stats" id="intel-stats"></dl>
@@ -66,7 +78,8 @@
         <input id="search" class="field" type="search" placeholder="place, or 46.62, 13.85" autocomplete="off" spellcheck="false" aria-label="Search for a place or coordinates">
         <ul id="search-results" hidden></ul>
       </div>
-      <button id="sweep-btn" class="btn-primary" type="button">Survey the centreline</button>
+      <button id="sweep-btn" class="btn-primary" type="button"
+        data-tip="Reads the sky forecast along the whole path of totality and ranks the twelve most promising places">Find the best spots on the path</button>
       <div id="sweep-progress" hidden><i></i><span>survey 0%</span></div>
       <ol id="sweep-list" hidden></ol>
     </div>
@@ -76,8 +89,11 @@
   <aside id="dossier" class="sheet" hidden>
     <div class="sheet-head">
       <h2>Site</h2>
+      <!-- the drawer's peek line: at the lowest snap the head bar is all
+           that shows, so it carries the one number and the name -->
+      <span class="head-peek" id="dossier-peek" aria-hidden="true"></span>
       <div class="head-keys">
-        <button class="sheet-fold" type="button" data-fold="dossier" aria-label="Collapse panel">▁</button>
+        <button class="sheet-fold" type="button" data-fold="dossier" aria-expanded="true" aria-label="Fold panel"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true"><path d="M3.5 10 8 5.5l4.5 4.5"/></svg></button>
         <button class="sheet-fold" type="button" id="dossier-close" aria-label="Close site panel">✕</button>
       </div>
     </div>
@@ -163,7 +179,8 @@
       <option value="1800">×1800</option>
     </select>
     <button id="track" class="btn-ghost" type="button" aria-pressed="false"
-      title="Keep the umbra centred during playback">follow</button>
+      aria-label="Keep the umbra centred during playback"
+      data-tip="Keep the umbra centred during playback"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" aria-hidden="true"><circle cx="8" cy="8" r="4.2"/><path d="M8 0.8v3M8 12.2v3M0.8 8h3M12.2 8h3"/></svg><span class="track-word">follow</span></button>
     <div id="scrub-wrap">
       <div id="scrub-band" aria-hidden="true"></div>
       <input id="scrub" type="range" min="0" max="1000" value="0" step="1" aria-label="Simulation time" data-plain>
@@ -181,7 +198,7 @@
        cell of the visible map instead of one point -->
   <div id="suit-ctl">
     <button id="suit-btn" class="btn-ghost" type="button" aria-pressed="false"
-      data-tip="Suitability along the band, 0–100 on the viridis scale: deep violet = the eclipse cannot be seen there, yellow = everything lines up — a scale legible under every colour vision. Drawn from the band survey — tile averages from afar, ~80 m detail up close — with the live forecast on top. Unsurveyed ground stays unpainted until the crawler reaches it.">suitability</button>
+      data-tip="Suitability along the band, 0–100 on the viridis scale: deep violet = the eclipse cannot be seen there, yellow = everything lines up — a scale legible under every colour vision. Drawn from the band survey — tile averages from afar, ~80 m detail up close — with the live forecast on top. Unsurveyed ground stays unpainted until the crawler reaches it."><i class="ramp-chip" aria-hidden="true"></i>suitability map</button>
     <div id="suit-legend" class="score-legend" hidden>
       <i class="suit-ramp" aria-hidden="true"></i><b id="suit-lo">0</b><b id="suit-hi">100</b>
       <span id="suit-mode"></span>
