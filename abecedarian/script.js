@@ -14,7 +14,6 @@ var field = document.getElementById('word');
 var hint = document.getElementById('hint');
 var empty = document.getElementById('empty');
 var result = document.getElementById('result');
-var tries = document.getElementById('tries');
 
 var distanceEl = document.getElementById('distance');
 var verdictSay = document.getElementById('verdictSay');
@@ -34,13 +33,6 @@ var reread = document.getElementById('reread');
 var readMeta = document.getElementById('readMeta');
 var rereadNote = document.getElementById('rereadNote');
 var seedEl = document.getElementById('seed');
-
-/* Each of these is here to be argued with rather than to fill the row: the two
-   classic abecedarian words, the longest one in English, the cheapest possible
-   repair, two that cost a couple of swaps, a German word to show the folding,
-   and two that cannot be sorted at all — one obviously, one not. */
-var EXAMPLES = ['billowy', 'aegilops', 'tee', 'zebra', 'sphinx', 'claude',
-                'deutsch', 'backgrounds', 'anna', 'knowledge'];
 
 /* Thin spaces every three digits. A twenty-seven-digit number is evidence, not
    reading, but ungrouped it is not even checkable against another copy of
@@ -138,8 +130,13 @@ function drawReread(p) {
   readMeta.textContent = p.word.length === p.order.length
     ? plural(p.word.length, 'letter', 'letters')
     : p.word.length + ' letters, ' + p.order.length + ' different';
+  /* The second sentence only appears for a word that HAS repeats, because for
+     a word without any the root is the word and saying so twice is noise. */
   rereadNote.textContent = 'The place each letter takes under the alphabet above. ' +
-    'They never decrease — which is what it means for the word to be sorted.';
+    'They never decrease — which is what it means for the word to be sorted.' +
+    (p.word.length === p.order.length ? '' :
+      ' The repeats change nothing: every word with the root ' +
+      p.order.toLowerCase() + ' answers the same way.');
 }
 
 function showNothing(message) {
@@ -218,8 +215,13 @@ function showWord(input) {
       (p.distance === 1 ? 'a different pair would serve as well'
                         : 'other pairs would serve as well') + '.';
 
+  /* The root first, because after it nothing else about the word is used. It
+     is printed as a word rather than as a list with arrows between the
+     letters: it IS a string, several real words often share one, and the
+     arrows made it look like a derivation when it is just the word with its
+     repeats taken out. */
   facts.textContent = '';
-  fact(facts, 'forced order', p.order.split('').join(' › '));
+  fact(facts, 'root', p.order.toLowerCase());
   fact(facts, 'adjacent swaps instead', p.kendall + ' of a possible 325');
   fact(facts, 'alphabets that sort it',
        'one in ' + grouped(ABC.factorial(p.order.length)));
@@ -233,17 +235,6 @@ function showWord(input) {
 }
 
 /* ── Wiring ──────────────────────────────────────────────────────────────── */
-
-EXAMPLES.forEach(function (w) {
-  var b = el('button', 'btn-ghost preset', w);
-  b.type = 'button';
-  b.addEventListener('click', function () {
-    field.value = w;
-    run();
-    field.focus();
-  });
-  tries.appendChild(b);
-});
 
 var timer = null;
 function run() {

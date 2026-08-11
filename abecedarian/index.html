@@ -37,15 +37,16 @@
 
   <div class="spine"></div>
 
+  <!-- One field, and nothing beside it. A row of example words lived here and
+       was cut: the whole interface is a word, and a shelf of pre-chosen ones
+       beside it made the page look like it had settings. The words worth
+       trying are in the sentence below, where they are doing an explaining job
+       rather than a decorating one. -->
   <div class="toolbar">
     <div class="group grow">
       <label for="word">Word</label>
       <input class="field word" type="text" id="word" placeholder="billowy" spellcheck="false"
              autocomplete="off" autocapitalize="off" autocorrect="off" maxlength="40">
-    </div>
-    <div class="group">
-      <label id="triesLabel">Try</label>
-      <div class="group tries" role="group" aria-labelledby="triesLabel" id="tries"></div>
     </div>
   </div>
 
@@ -183,12 +184,15 @@
         </p>
       </div>
       <div class="card">
-        <h2>Only the first appearances count</h2>
+        <h2>Only the root counts</h2>
         <p>
           Once a word passes that test, everything about it collapses to one
-          short string: its distinct letters in order of first appearance.
-          <em>bookkeeper</em> and <em>boker</em> pose the identical problem, and
-          length, repeats and doubled letters stop mattering entirely.
+          short string &mdash; its <strong>root</strong>: the distinct letters in
+          order of first appearance. <em>committee</em> has the root
+          <em>comite</em>, and the two pose the identical problem. Length,
+          repeats and doubled letters stop mattering entirely, so
+          <em>garote</em>, <em>garotte</em>, <em>garrote</em> and
+          <em>garrotte</em> are one question asked four ways.
         </p>
         <p>
           Which is also why the count of alphabets that sort a word depends on
