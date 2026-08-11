@@ -124,34 +124,6 @@
           sightline decks toward its azimuth.</p>
         </details>
       </section>
-      <section id="sec-reach">
-        <h3>Within reach <span class="h-status" id="reach-status"></span></h3>
-        <div class="reach-row">
-          <select id="reach-km" aria-label="Travel radius">
-            <option value="10">10 km</option>
-            <option value="25">25 km</option>
-            <option value="50" selected>50 km</option>
-            <option value="100">100 km</option>
-            <option value="200">200 km</option>
-          </select>
-          <select id="reach-grid" aria-label="Cell size"
-            data-tip="Cell size — finer is quadratically more horizon scans, computed on your machine and remembered by this browser. Ground the band crawler has settled arrives precomputed and costs nothing. Caps at 1000 cells across: 100 m holds to 50 km. The finest grids at the largest radii want a desktop.">
-            <option value="" selected>auto</option>
-            <option value="2">2 km</option>
-            <option value="1">1 km</option>
-            <option value="0.5">500 m</option>
-            <option value="0.25">250 m</option>
-            <option value="0.1">100 m</option>
-          </select>
-          <button id="reach-btn" class="btn-primary" type="button"
-            data-tip="Paint the suitability field inside this radius, graded on the local curve: the best within reach wears yellow, the worst deep violet. The coastline prints above the field. Distances are straight-line.">Map the area</button>
-        </div>
-        <div id="reach-legend" class="score-legend" hidden>
-          <i class="suit-ramp" aria-hidden="true"></i><b id="reach-lo">0</b><b id="reach-hi">100</b>
-          <span id="reach-note"></span>
-        </div>
-      </section>
-
       <section id="sec-circ">
         <h3>Local circumstances</h3>
         <div id="circ-body"></div>
@@ -206,7 +178,7 @@
     <button id="suit-grade" class="btn-ghost" type="button" hidden
       data-tip="Anchor the scale: on the band, colours compare everywhere the eclipse goes — a low-Sun island can never leave the violet end. On this view, the best in sight wears yellow and the worst violet, so the differences that matter where you stand become visible. The numbers under the scale stay absolute.">graded on the band</button>
     <button id="suit-dur" class="btn-ghost" type="button" aria-pressed="false"
-      data-tip="Take totality's length out of the score. Any totality is the event: with duration off, the score is purely about seeing it — horizon, air, sky — and re-scores the wash, the reach field and the site panel alike.">duration counts</button>
+      data-tip="Take totality's length out of the score. Any totality is the event: with duration off, the score is purely about seeing it — horizon, air, sky — and re-scores the wash and the site panel alike.">duration counts</button>
     <div id="suit-prog" hidden><i></i></div>
   </div>
 
