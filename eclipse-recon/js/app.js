@@ -728,6 +728,7 @@
     $('dossier').classList.remove('folded');
     S.lastScore = null;
     Drawer.open();
+    dismissHint(true);   // the gesture has been found; the hand retires
     // one sheet at a time on a phone: the report rises, the event panel
     // steps back to its chip so the map stays the page
     if (isPhone()) setFolded('intel', true);
@@ -1659,6 +1660,7 @@
   function suitStart() {
     SUIT.on = true;
     $('suit-btn').setAttribute('aria-pressed', 'true');
+    syncSuitDur();
     // the field paints inside the band, so the band's own dark wash steps
     // back while the field is up and returns when it goes
     if (S.layers.bandPoly) S.layers.bandPoly.setStyle({ fillOpacity: 0.08 });
@@ -1676,6 +1678,7 @@
     $('suit-legend').hidden = true;
     $('suit-grade').hidden = true;
     $('suit-prog').hidden = true;
+    syncSuitDur();
   }
   var suitMoved = debounce(function () { if (SUIT.on) computeSuit(); }, 450);
   $('suit-btn').addEventListener('click', function () {
@@ -2591,6 +2594,65 @@
   /* on a phone the event panel starts folded — the map is the page,
      and the panel is a chip you tap open */
   if (isPhone()) setFolded('intel', true);
+
+  /* The search lives where the layout can afford it. On a desktop it is
+     a block of the event panel; on a phone that panel is a folded chip,
+     which made the search invisible — so the same block, input and
+     results and wiring intact, stands in a bar on the map itself, and
+     its placeholder teaches the map's own gesture. */
+  function placeSearch() {
+    var block = document.querySelector('.search');
+    var bar = $('map-search');
+    if (!block || !bar) return;
+    if (isPhone()) {
+      bar.hidden = false;
+      bar.appendChild(block);
+      $('search').placeholder = 'search a place — or tap the map';
+    } else {
+      bar.hidden = true;
+      $('sweep-btn').parentNode.insertBefore(block, $('sweep-btn'));
+      $('search').placeholder = 'place, or 46.62, 13.85';
+    }
+  }
+  placeSearch();
+  /* typing is committing to the map: the event panel gives way so the
+     results land on ground, not on paper */
+  $('search').addEventListener('focus', function () {
+    if (isPhone()) setFolded('intel', true);
+  });
+
+  /* the duration switch is a refinement of the wash: on a phone it
+     appears with the field and leaves with it, instead of standing as
+     one more unexplained key on a small screen */
+  function syncSuitDur() {
+    $('suit-dur').hidden = isPhone() && !SUIT.on;
+  }
+  syncSuitDur();
+
+  if (mqPhone) {
+    var onBreak = function () { placeSearch(); syncSuitDur(); };
+    if (mqPhone.addEventListener) mqPhone.addEventListener('change', onBreak);
+    else if (mqPhone.addListener) mqPhone.addListener(onBreak);
+  }
+
+  /* the one-time hand: shown on a phone that has never set a target and
+     did not arrive with one in the link */
+  function dismissHint(remember) {
+    var h = $('tap-hint');
+    if (h) h.hidden = true;
+    if (remember) {
+      try { localStorage.setItem('recon-hint-done', '1'); } catch (e) { /* private mode */ }
+    }
+  }
+  (function () {
+    var seen = false;
+    try { seen = !!localStorage.getItem('recon-hint-done'); } catch (e) { /* private mode */ }
+    if (!isPhone() || seen || location.hash.indexOf('/') !== -1) return;
+    $('tap-hint').hidden = false;
+    $('tap-hint').querySelector('button').addEventListener('click', function () {
+      dismissHint(true);
+    });
+  })();
 
   /* The dossier as a bottom drawer. Three snaps — peek (just the head
      bar, wearing the score and the name), half, and full — a grabber to

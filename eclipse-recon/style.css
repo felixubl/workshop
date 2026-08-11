@@ -35,6 +35,15 @@ button { touch-action: manipulation; }
 .sheet-head { user-select: none; -webkit-user-select: none; }
 [data-tip] { -webkit-touch-callout: none; }
 
+/* A switch states itself by filling with ink — the same statement the
+   system's Segmented makes, and the only one a thumb can read at arm's
+   length. Every aria-pressed key on this page speaks it: suitability,
+   the duration switch, follow. */
+.btn-ghost[aria-pressed='true'] {
+  background: var(--pp-edge); border-color: var(--pp-edge);
+  color: var(--pp-paper);
+}
+
 /* compact masthead: the page below needs the room */
 .wrap.tool-head {
   flex: 0 0 auto; width: 100%;
@@ -190,7 +199,11 @@ button { touch-action: manipulation; }
 .sheet h3 small { text-transform: none; font-weight: 400; }
 .sheet code { font-family: var(--pp-font-mono); font-size: 0.85em; }
 
-#intel { top: 12px; left: 12px; width: 300px; max-height: calc(100% - 88px); }
+/* one step under the other sheets: the phone's search bar (z 1100,
+   earlier in the DOM) must drop its results OVER this chip, while the
+   dossier — same 1100, later in the DOM — still rises over the bar */
+#intel { top: 12px; left: 12px; width: 300px; max-height: calc(100% - 88px);
+  z-index: 1090; }
 #dossier { top: 12px; right: 12px; width: 384px; max-height: calc(100% - 88px); }
 
 .stats { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px;
@@ -377,8 +390,6 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
 .suit-img { image-rendering: pixelated; }
 
 #suit-grade, #suit-dur { font-size: 0.62rem; padding: 0.3em 0.7em; }
-#suit-dur[aria-pressed="true"] {
-  background: var(--pp-tint); border-color: var(--pp-edge); }
 
 /* the crawler's progress line in the event panel */
 #survey-row { display: flex; align-items: baseline; gap: 0.5rem;
@@ -410,10 +421,6 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
    straight out of the scrub */
 #console .picker { flex: 0 0 auto; width: 5.4em; }
 #console .picker .select-trigger { min-width: 0; width: 100%; }
-#track[aria-pressed="true"] {
-  background: var(--w-wash-0);
-  box-shadow: inset 0 0 0 1px var(--pp-ink);
-}
 #scrub-wrap { position: relative; flex: 1; height: 30px; }
 #scrub { -webkit-appearance: none; appearance: none;
   position: absolute; inset: 0; width: 100%; margin: 0;
@@ -486,12 +493,21 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
 #suit-btn { background: var(--pp-paper); font-size: 0.72rem;
   letter-spacing: 0.06em; text-transform: uppercase;
   font-family: var(--pp-font-mono); padding: 0.35em 0.7em;
+  display: inline-flex; align-items: center; gap: 0.5em;
   box-shadow: 3px 3px 0 color-mix(in srgb, var(--pp-ink) 14%, transparent); }
+/* the ID above pins a paper face, so ON is restated at the same weight:
+   filled with ink, the one statement every switch here makes */
 #suit-btn[aria-pressed="true"] {
-  box-shadow: inset 0 0 0 1px var(--pp-ink),
-              3px 3px 0 color-mix(in srgb, var(--pp-ink) 14%, transparent);
-  background: var(--w-wash-0);
+  background: var(--pp-edge); border-color: var(--pp-edge);
+  color: var(--pp-paper);
 }
+/* the little ramp says "this key paints the map" before any word does;
+   the same viridis the field itself wears, so the key IS its legend */
+.ramp-chip { width: 22px; height: 8px; flex: none;
+  border: 1px solid color-mix(in srgb, var(--pp-ink) 25%, transparent);
+  background: linear-gradient(90deg,
+    #440154, #482878, #3e4989, #31688e, #26828e,
+    #1f9e89, #35b779, #6ece58, #b5de2b, #fde725); }
 .score-legend { display: flex; align-items: center; gap: 4px;
   font-family: var(--pp-font-mono); font-size: 0.56rem;
   color: var(--pp-faint);
@@ -514,6 +530,50 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
   background: var(--pp-paper); }
 #suit-prog i { display: block; height: 100%; width: 0;
   background: var(--pp-plate-1); transition: width 0.25s; }
+
+/* ---- the search bar on the map (phones) ------------------------------
+   Below 900px app.js lifts the event panel's search block out of the
+   fold and stands it here, full width at the top of the map — the one
+   place a first visit cannot miss it. The drawn magnifier says what the
+   field is before the placeholder loads a word. */
+
+#map-search {
+  position: absolute; z-index: 1100;
+  top: 8px;
+  left: calc(8px + env(safe-area-inset-left, 0px));
+  right: calc(8px + env(safe-area-inset-right, 0px));
+}
+#map-search::before {
+  content: ''; position: absolute; left: 13px; top: 14px;
+  width: 16px; height: 16px; z-index: 6; pointer-events: none;
+  background: var(--pp-faint);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.6'%3E%3Ccircle cx='6.7' cy='6.7' r='4.4'/%3E%3Cpath d='M10.2 10.2 14.3 14.3'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.6'%3E%3Ccircle cx='6.7' cy='6.7' r='4.4'/%3E%3Cpath d='M10.2 10.2 14.3 14.3'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+#map-search .search { margin: 0; }
+#map-search h3 { display: none; }
+#map-search .field { padding-left: 2.2rem;
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--pp-ink) 14%, transparent); }
+#map-search #search-results { position: absolute; left: 0; right: 0;
+  top: 100%; margin-top: 4px; z-index: 7; max-height: 240px;
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--pp-ink) 14%, transparent); }
+
+/* the one-time hand: a slip of paper above the console, gone at the
+   first target or the first ✕, remembered by the browser */
+#tap-hint {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: calc(70px + env(safe-area-inset-bottom, 0px)); z-index: 1000;
+  display: flex; align-items: center; gap: 0.2rem;
+  max-width: calc(100% - 24px);
+  background: var(--pp-paper); border: 1px solid var(--pp-line);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--pp-ink) 14%, transparent);
+  padding: 0.5rem 0.2rem 0.5rem 0.75rem;
+  font-family: var(--pp-font-mono); font-size: 0.7rem; line-height: 1.45;
+  color: var(--pp-muted);
+}
+#tap-hint button { border: none; background: none; color: var(--pp-faint);
+  min-width: 40px; min-height: 34px; font-size: 0.8rem;
+  cursor: var(--pp-cursor-point, pointer); }
 
 /* ---- the elements dialog -------------------------------------------- */
 
@@ -560,8 +620,9 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
      over a map does */
   #stage:has(#dossier:not([hidden])) .leaflet-bottom.leaflet-right {
     margin-bottom: calc(118px + env(safe-area-inset-bottom, 0px)); }
-  #intel { left: calc(8px + env(safe-area-inset-left, 0px)); top: 8px;
-    width: min(300px, 78vw); max-height: 46vh; }
+  /* the chips clear the search bar standing above them */
+  #intel { left: calc(8px + env(safe-area-inset-left, 0px)); top: 58px;
+    width: min(300px, 78vw); max-height: calc(46vh - 50px); }
   #dossier {
     left: calc(8px + env(safe-area-inset-left, 0px));
     right: calc(8px + env(safe-area-inset-right, 0px)); top: auto;
@@ -611,8 +672,8 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
   .ro-unit, #ro-shadow, #ro-vel, #ro-dur { display: none; }
   #map-annot { display: none; }
   /* the suitability switch moves to the top corner, where no bottom sheet
-     can ever bury it */
-  #suit-ctl { top: 8px; right: calc(8px + env(safe-area-inset-right, 0px));
+     can ever bury it — under the search bar like the event chip */
+  #suit-ctl { top: 58px; right: calc(8px + env(safe-area-inset-right, 0px));
     left: auto; bottom: auto; align-items: flex-end; }
 }
 @keyframes drawer-rise {
@@ -655,6 +716,7 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
   #scrub-wrap { flex: 1 1 100%; order: 5; }
   .readouts { margin-left: auto; }
   #dossier { bottom: calc(102px + env(safe-area-inset-bottom, 0px)); }
+  #tap-hint { bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
   .leaflet-bottom.leaflet-right {
     margin-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
   #stage:has(#dossier:not([hidden])) .leaflet-bottom.leaflet-right {
@@ -673,7 +735,7 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
   .back-link svg { width: 15px; height: 15px; }
   .title-row { margin: 0; }
   .tool-title { font-size: 1.1rem; }
-  #intel { max-height: calc(100% - 120px); }
+  #intel { max-height: calc(100% - 170px); }
 }
 
 /* Touch: every control meets the target size, and the hover tips that
