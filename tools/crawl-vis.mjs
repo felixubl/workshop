@@ -363,6 +363,132 @@ for (const key of todo) {
 }
 checkpoint();
 
+/* ---- the overview pyramid ----------------------------------------------
+   So the map can show survey data at least as fine as the screen can
+   draw at ANY zoom, two downsampled levels ride beside the full tiles:
+
+     level A  (native z − 3):  8×8 native tiles in one 128×128 PNG,
+                               16 px per tile — one px ≈ 8×8 survey
+                               cells, ~500-600 m of ground
+     level B  (native z − 6):  built from level A, 64×64 native tiles,
+                               2 px per tile — one px ≈ ~4 km
+
+   RGBA: the value rides in R (=G=B) and COVERAGE rides in alpha — an
+   aggregate must never blur "mean is zero" into "not surveyed yet".
+   Regeneration is incremental: a parent is rebuilt when a child settled
+   this run, or when it is missing while a settled child exists (which
+   is also how the first run after this change backfills everything). */
+const OV = path.join(DATA, 'ov');
+function ovPath(k) {
+  const [z, x, y] = k.split('/');
+  return path.join(OV, z, x, y + '.png');
+}
+function parentOf(k, dz) {
+  const [z, x, y] = k.split('/').map(Number);
+  return (z - dz) + '/' + (x >> dz) + '/' + (y >> dz);
+}
+const isSettled = st => typeof st === 'number' || st === 'f' || st === 'd';
+
+function writeOv(k, gray, alpha) {           // 128×128 each
+  const png = new PNG({ width: 128, height: 128 });
+  for (let i = 0; i < 128 * 128; i++) {
+    png.data[i * 4] = png.data[i * 4 + 1] = png.data[i * 4 + 2] = gray[i];
+    png.data[i * 4 + 3] = alpha[i];
+  }
+  const [z, x] = k.split('/');
+  fs.mkdirSync(path.join(OV, z, x), { recursive: true });
+  fs.writeFileSync(ovPath(k), PNG.sync.write(png));
+}
+
+function buildA(pk) {                        // pk at native z − 3
+  const [pz, px, py] = pk.split('/').map(Number);
+  const gray = new Float64Array(128 * 128);
+  const wsum = new Float64Array(128 * 128);
+  for (let cy = 0; cy < 8; cy++) {
+    for (let cx = 0; cx < 8; cx++) {
+      const ck = (pz + 3) + '/' + ((px << 3) + cx) + '/' + ((py << 3) + cy);
+      const st = man.tiles[ck];
+      if (!isSettled(st)) continue;
+      let child = null;                      // 128×128 gray, or flat 255
+      if (st !== 'f') {
+        try {
+          const [cz2, cx2, cy2] = ck.split('/');
+          child = PNG.sync.read(fs.readFileSync(
+            path.join(DATA, 'vis', cz2, cx2, cy2 + '.png')));
+        } catch (e) { continue; }
+      }
+      for (let oy = 0; oy < 16; oy++) {
+        for (let ox = 0; ox < 16; ox++) {
+          let sum = 0;
+          if (child) {
+            for (let sy = 0; sy < 8; sy++) {
+              for (let sx = 0; sx < 8; sx++) {
+                sum += child.data[((oy * 8 + sy) * 128 + ox * 8 + sx) * 4];
+              }
+            }
+          } else sum = 255 * 64;
+          const o = (cy * 16 + oy) * 128 + cx * 16 + ox;
+          gray[o] = sum / 64;
+          wsum[o] = 1;
+        }
+      }
+    }
+  }
+  const g8 = new Uint8Array(128 * 128), a8 = new Uint8Array(128 * 128);
+  for (let i = 0; i < g8.length; i++) {
+    g8[i] = Math.round(gray[i]);
+    a8[i] = wsum[i] ? 255 : 0;
+  }
+  writeOv(pk, g8, a8);
+}
+
+function buildB(pk) {                        // pk at native z − 6, from A files
+  const [pz, px, py] = pk.split('/').map(Number);
+  const g8 = new Uint8Array(128 * 128), a8 = new Uint8Array(128 * 128);
+  for (let cy = 0; cy < 8; cy++) {
+    for (let cx = 0; cx < 8; cx++) {
+      const ak = (pz + 3) + '/' + ((px << 3) + cx) + '/' + ((py << 3) + cy);
+      let a = null;
+      try { a = PNG.sync.read(fs.readFileSync(ovPath(ak))); } catch (e) { continue; }
+      for (let oy = 0; oy < 16; oy++) {
+        for (let ox = 0; ox < 16; ox++) {
+          let sum = 0, n = 0;
+          for (let sy = 0; sy < 8; sy++) {
+            for (let sx = 0; sx < 8; sx++) {
+              const i = ((oy * 8 + sy) * 128 + ox * 8 + sx) * 4;
+              if (a.data[i + 3] >= 128) { sum += a.data[i]; n++; }
+            }
+          }
+          const o = (cy * 16 + oy) * 128 + cx * 16 + ox;
+          if (n >= 16) { g8[o] = Math.round(sum / n); a8[o] = 255; }
+        }
+      }
+    }
+  }
+  writeOv(pk, g8, a8);
+}
+
+const needA = new Set(), needB = new Set();
+for (const k of settledKeys) {
+  if (isSettled(man.tiles[k])) needA.add(parentOf(k, 3));
+}
+for (const [k, st] of Object.entries(man.tiles)) {
+  if (!isSettled(st)) continue;
+  const pa = parentOf(k, 3);
+  if (!needA.has(pa) && !fs.existsSync(ovPath(pa))) needA.add(pa);
+}
+for (const pa of needA) buildA(pa);
+for (const pa of needA) needB.add(parentOf(pa, 3));
+for (const [k, st] of Object.entries(man.tiles)) {
+  if (!isSettled(st)) continue;
+  const pb = parentOf(k, 6);
+  if (!needB.has(pb) && !fs.existsSync(ovPath(pb))) needB.add(pb);
+}
+for (const pb of needB) buildB(pb);
+if (needA.size || needB.size) {
+  console.log('overviews: ' + needA.size + ' level-A, ' + needB.size + ' level-B rebuilt');
+}
+
 const c = man.counts;
 const settled = c.done + c.flat + c.out;
 const pct = c.total ? Math.round(settled / c.total * 1000) / 10 : 0;

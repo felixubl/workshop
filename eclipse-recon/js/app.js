@@ -1741,42 +1741,78 @@
 
     var wxDone = fetchSuitSky(centralNodes, signal).catch(function () { return null; });
 
-    /* true pixels for any view whose tiles can reasonably be fetched —
-       counted, not guessed. ~600 small PNGs is a Balearics-to-Valencia
-       frame; beyond that a screen pixel is wider than a whole tile and
-       the manifest means ARE the finest thing the zoom can show. */
-    var pxKeys = {};
-    var usePixels = (lonR - lonL) < 8;
-    if (usePixels) {
+    /* pick the data level the screen can actually show: full survey
+       pixels up close, else the overview whose pixels out-resolve the
+       canvas — the finest visible grid at every zoom, from a bounded
+       number of small fetches. Escalate a level if the view would need
+       more tiles than its cap. */
+    var kmPerBlock = (lonR - lonL) / W * 111 *
+                     Math.max(0.2, Math.cos((latT + latB) / 2 * RAD));
+    var LEVEL = kmPerBlock < 0.3 ? 0 : kmPerBlock < 2.4 ? 3 : 6;
+    function levelKeys(dz) {
+      var ks = {};
       for (var r2 = 0; r2 < H; r2 += 2) {
         for (var q2 = 0; q2 < W; q2 += 2) {
-          var st2 = Precomp.statusAt(latOf(r2), lonOf(q2));
-          if (st2 && (typeof st2.st === 'number' || st2.st === 'd')) {
-            pxKeys[st2.key] = 1;
+          var la2 = latOf(r2), lo2 = lonOf(q2);
+          if (dz === 0) {
+            var st2 = Precomp.statusAt(la2, lo2);
+            if (st2 && (typeof st2.st === 'number' || st2.st === 'd')) {
+              ks[st2.key] = 1;
+            }
+          } else {
+            var pk = Precomp.ovKeyAt(la2, lo2, dz);
+            if (pk) ks[pk] = 1;
           }
         }
       }
-      if (Object.keys(pxKeys).length > 620) usePixels = false;
+      return Object.keys(ks);
     }
-    var tilesDone = usePixels ?
-      Precomp.prefetch(Object.keys(pxKeys)) : Promise.resolve();
+    var LEVEL_CAP = { 0: 620, 3: 480, 6: 240 };
+    var levelTiles = levelKeys(LEVEL);
+    while (levelTiles.length > LEVEL_CAP[LEVEL] && LEVEL < 6) {
+      LEVEL += 3;
+      levelTiles = levelKeys(LEVEL);
+    }
+    var tilesDone = LEVEL === 0 ? Precomp.prefetch(levelTiles)
+                                : Precomp.ovPrefetch(levelTiles);
 
     Promise.all([wxDone, tilesDone]).then(function (res) {
       if (dead()) return;
 
       function nodeAt(r3, q3) { return nodes[r3 * (LX + 1) + q3]; }
+      /* at the widest views a thin east-west band can slip BETWEEN
+         lattice rows — every corner reads outside while the survey
+         plainly has data. Those blocks take the nearest central node,
+         memoised per lattice cell. */
+      var nearMemo = {};
+      function nearestNode(lat3, lon3, cellKey) {
+        if (cellKey in nearMemo) return nearMemo[cellKey];
+        var best = null, bd = Infinity;
+        for (var i3 = 0; i3 < centralNodes.length; i3++) {
+          var nd = centralNodes[i3];
+          var dla = nd.lat - lat3, dlo = nd.lonN - lon3;
+          var d3 = dla * dla + dlo * dlo * 0.5;
+          if (d3 < bd) { bd = d3; best = nd; }
+        }
+        nearMemo[cellKey] = best;
+        return best;
+      }
       function visFor(lat3, lon3) {
+        if (LEVEL > 0) {
+          var v3 = Precomp.ovSync(lat3, lon3, LEVEL);
+          if (v3 !== undefined) return v3;   // aggregate, or null = unsettled
+        } else {
+          var s0 = Precomp.statusAt(lat3, lon3);
+          if (s0 && (typeof s0.st === 'number' || s0.st === 'd')) {
+            var v0 = Precomp.visSync(lat3, lon3);
+            if (v0 !== null) return v0;
+          }
+        }
+        // fallback while a fetch is missing: the manifest's tile facts
         var s3 = Precomp.statusAt(lat3, lon3);
         if (!s3) return null;
         if (s3.st === 'f') return 1;
-        if (typeof s3.st === 'number') {
-          if (usePixels) {
-            var v = Precomp.visSync(lat3, lon3);
-            if (v !== null) return v;
-          }
-          return s3.st / 255;
-        }
-        if (s3.st === 'd') return usePixels ? Precomp.visSync(lat3, lon3) : null;
+        if (typeof s3.st === 'number') return s3.st / 255;
         return null;               // pending or outside: never guess
       }
 
@@ -1797,6 +1833,11 @@
         var ay = fy - r0;
         for (var q4 = 0; q4 < W; q4++) {
           var lon4 = lonOf(q4);
+          /* the survey lookup comes FIRST: it is cheap, it is null for
+             most of a wide view, and the exactness budget below must
+             never be spent on blocks that would not paint anyway */
+          var vis4 = visFor(lat4, lon4);
+          if (vis4 === null) continue;
           var fx = (lon4 - lonL) / (lonR - lonL) * LX;
           var q0 = Math.max(0, Math.min(LX - 1, Math.floor(fx)));
           var ax = fx - q0;
@@ -1811,7 +1852,17 @@
             skyNode = ay < 0.5 ? (ax < 0.5 ? n00 : n10)
                                : (ax < 0.5 ? n01 : n11);
           } else if (!n00 && !n10 && !n01 && !n11) {
-            continue;              // fully outside the band
+            if (LEVEL !== 6) continue;   // fine lattices: truly outside
+            skyNode = nearestNode(lat4, lon4, r0 + ',' + q0);
+            if (!skyNode) continue;
+            dur4 = skyNode.dur; alt4 = skyNode.alt;
+          } else if (LEVEL === 6) {
+            /* at the widest views every band block straddles lattice
+               cells — exact judging would blow any budget, and at ~4 km
+               aggregates the nearest node's astronomy is indistinguishable
+               anyway */
+            skyNode = n00 || n10 || n01 || n11;
+            dur4 = skyNode.dur; alt4 = skyNode.alt;
           } else {
             // the band's edge crosses this lattice cell: judge exactly
             if (--edgeBudget < 0) continue;
@@ -1820,8 +1871,6 @@
             dur4 = ae.dur; alt4 = ae.lc.sunAltApparent;
             skyNode = n00 || n10 || n01 || n11;
           }
-          var vis4 = visFor(lat4, lon4);
-          if (vis4 === null) continue;
           scores[r4 * W + q4] = suitabilityOf(dur4, vis4, alt4,
                                               skyNode ? skyNode.sky : null);
           painted++;
