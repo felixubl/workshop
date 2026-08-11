@@ -249,20 +249,20 @@ button { touch-action: manipulation; }
   font-size: 0.6rem; letter-spacing: 0.12em; line-height: 13px;
   text-transform: uppercase; color: var(--pp-faint); }
 
-#sweep-list, #reach-list { list-style: none; margin: 0.5rem 0 0; padding: 0; }
-#sweep-list li, #reach-list li { display: grid;
+#sweep-list { list-style: none; margin: 0.5rem 0 0; padding: 0; }
+#sweep-list li { display: grid;
   grid-template-columns: 1.6em 1fr auto;
   gap: 1px 0.5rem; padding: 0.35rem 0.15rem; align-items: baseline;
   border-bottom: 1px solid var(--pp-hair);
   cursor: var(--pp-cursor-point, pointer); }
-#sweep-list li:hover, #reach-list li:hover { background: var(--w-wash-0); }
-#sweep-list .rk, #reach-list .rk { color: var(--pp-faint);
+#sweep-list li:hover { background: var(--w-wash-0); }
+#sweep-list .rk { color: var(--pp-faint);
   font-family: var(--pp-font-mono); font-size: 0.7rem; }
-#sweep-list .nm, #reach-list .nm { font-size: 0.82rem; overflow: hidden;
+#sweep-list .nm { font-size: 0.82rem; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap; }
-#sweep-list .sc, #reach-list .sc { font-family: var(--pp-font-mono);
+#sweep-list .sc { font-family: var(--pp-font-mono);
   font-weight: 700; font-variant-numeric: tabular-nums; }
-#sweep-list .meta, #reach-list .meta { grid-column: 2 / 4;
+#sweep-list .meta { grid-column: 2 / 4;
   color: var(--pp-faint); font-family: var(--pp-font-mono);
   font-size: 0.66rem; }
 
@@ -379,13 +379,6 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
 .v-facts code:first-of-type { flex: 1; }
 .v-facts .fx { color: var(--pp-faint); text-align: right; min-width: 3.4em; }
 
-.reach-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: stretch; }
-.reach-row select { flex: 0 0 auto; }
-.reach-row .picker { flex: 0 0 auto; width: 5.9em; }
-/* the system floors a select face at 12rem for menus of words; these hold
-   numbers, and a face wider than its wrap paints over the button beside it */
-.reach-row .picker .select-trigger { min-width: 0; width: 100%; }
-.reach-row #reach-btn { flex: 1 1 8em; }
 /* the big-field print: cells are data, so they scale as squares, not blur */
 .suit-img { image-rendering: pixelated; }
 
@@ -512,10 +505,6 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
   font-family: var(--pp-font-mono); font-size: 0.56rem;
   color: var(--pp-faint);
   text-shadow: 0 0 3px var(--pp-paper), 0 0 3px var(--pp-paper); }
-#reach-legend { margin-top: 0.5rem; font-size: 0.66rem; text-shadow: none; }
-#reach-legend b { font-weight: 400; }
-#reach-legend b:first-of-type { order: -1; }
-#reach-note { margin-left: 6px; }
 /* the score scale: viridis, worst to best — the same stops rampColor()
    interpolates in app.js. Data, not chrome: one scale in both modes. */
 .suit-ramp { width: 74px; height: 9px; flex: none;

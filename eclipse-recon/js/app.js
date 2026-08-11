@@ -1388,60 +1388,6 @@
     return { lc: lc, lonN: lonN, minAlt: minAlt, azs: azs, dur: lc.duration };
   }
 
-  function scanVis(c, signal) {
-    /* the band crawler may already know this ground — a precomputed
-       pixel is the same number this scan would make, at zero cost */
-    return Precomp.visAt(c.lat, c.lonN).then(function (v) {
-      if (v !== null) { c.vis = v; return; }
-      return scanVisLocal(c, signal);
-    });
-  }
-
-  function scanVisLocal(c, signal) {
-    var lo = Math.min.apply(null, c.azs), hi = Math.max.apply(null, c.azs);
-    if (hi - lo > 180) { lo = c.lc.sunAz - 12; hi = c.lc.sunAz + 12; }
-    var maxKm = Math.min(120, Math.max(8,
-      5.0 / Math.tan(Math.max(1, c.minAlt) * RAD)));
-    return Terrain.horizonScan(c.lat, c.lonN, {
-      azCenter: (lo + hi) / 2, azSpan: Math.min(60, hi - lo + 8),
-      azStep: 3, maxKm: maxKm, eyeM: 2, signal: signal
-    }).then(function (scan) {
-      var n = 12, seen = 0;
-      for (var i = 0; i <= n; i++) {
-        var tt = c.lc.c2.tTT + (c.lc.c3.tTT - c.lc.c2.tTT) * i / n;
-        var sun = Bessel.sunAltAz(S.ecl, tt, c.lat, c.lonN);
-        var alt = sun.alt + Bessel.refraction(sun.alt);
-        if (alt >= horizonAngleAt(scan.profile, sun.az)) seen++;
-      }
-      c.vis = seen / (n + 1);
-    }).catch(function () {
-      // no elevation data is the sea or a dead tile: an open horizon
-      c.vis = 1;
-    });
-  }
-
-  function pooledTerrain(list, signal, dead, onOne) {
-    return new Promise(function (resolve) {
-      var i = 0, active = 0, done = 0, LIMIT = 4;
-      (function next() {
-        if (dead()) { resolve(); return; }
-        if (i >= list.length && active === 0) { resolve(); return; }
-        while (active < LIMIT && i < list.length) {
-          active++;
-          scanVis(list[i++], signal).then(function () {
-            if (onOne) onOne();
-            active--;
-            /* cached scans resolve in microtasks, which never yield to
-               the renderer: without a real timeout a warm survey of
-               thousands runs as one unbroken task and the page — and
-               its own progress line — freezes until the end */
-            if (++done % 40 === 0) setTimeout(next, 0); else next();
-          });
-        }
-      })();
-    });
-  }
-
   /* Every score on this page wears the same scale: viridis, worst to
      best — deep violet through teal and green to yellow. It is the
      standard scientific ramp for exactly this job: perceptually
@@ -1700,18 +1646,14 @@
     if (SUIT.on) computeSuit();
   });
 
-  /* the duration switch re-scores everything standing: the wash, the
-     reach field if one is painted, and the open dossier */
+  /* the duration switch re-scores everything standing: the wash and
+     the open dossier */
   $('suit-dur').addEventListener('click', function () {
     SCORE.durOff = !SCORE.durOff;
     this.setAttribute('aria-pressed', String(SCORE.durOff));
     this.textContent = SCORE.durOff ? 'visibility only' : 'duration counts';
     if (SUIT.on) computeSuit();
     if (S.target) renderVerdict();
-    if (S.layers.reachCells && REACH.last) {
-      runReach(REACH.last.lat, REACH.last.lon,
-               REACH.last.radiusKm, REACH.last.cellKm);
-    }
   });
 
   function suitProg(f) {
@@ -1965,9 +1907,9 @@
       /* the colour pass. On the band, the ramp is absolute — comparable
          everywhere the eclipse goes, which is why a low-Sun island never
          leaves the middle of it. Graded on this view, the best in sight
-         is green and the worst red — the reach map's local curve, for
-         the wash — and the legend's endpoints turn into the real scores
-         they stand for. */
+         is green and the worst red — a local curve for the ground you
+         are actually choosing between — and the legend's endpoints turn
+         into the real scores they stand for. */
       var sLo = Infinity, sHi = -Infinity;
       var i5;
       if (SUIT.localGrade) {
@@ -1993,7 +1935,7 @@
 
       /* the coast, inked above the field: wherever two blocks that touch
          the wash disagree about being water, the land-side block takes
-         the page's ink — the same rule the reach map draws by */
+         the page's ink */
       var inkC = hexRGB(palette().ink);
       var wmask = new Int8Array(W * H).fill(-2);
       function wAt(i6) {
@@ -2082,316 +2024,6 @@
       return mode;
     });
   }
-
-  /* ================= within reach ================= */
-
-  /* The base-camp question: standing at a hotel, a house, a harbour —
-     where could I go? Not a list of proposed points (a polar grid over a
-     bay dutifully ranks open water first, which is true and useless) but
-     the suitability field itself, clipped to the chosen radius and graded
-     on the local curve: the best cell within reach is green, the worst
-     red, whatever their absolute scores. Water scores like anything else
-     — a boat is a place to stand — and prints at full strength; what
-     keeps the geography readable is the coastline, inked ABOVE the field
-     wherever land meets water. Distance is straight-line; the ring says
-     what "reach" meant, and the reader knows their own island. */
-
-  var REACH = { run: 0, aborter: null, base: null };
-
-  function reachStop() {
-    REACH.run++;
-    if (REACH.aborter) { REACH.aborter.abort(); REACH.aborter = null; }
-    clearRole('reachCells');
-    clearRole('reachRing');
-    $('reach-legend').hidden = true;
-    $('reach-status').textContent = '';
-  }
-
-  $('reach-btn').addEventListener('click', function () {
-    if (!S.target) return;
-    runReach(S.target.lat, S.target.lon, +$('reach-km').value,
-             +$('reach-grid').value || 0);
-  });
-
-  function fmtCellKm(km) {
-    return km < 1 ? Math.round(km * 1000) + ' m'
-                  : (Math.round(km * 10) / 10) + ' km';
-  }
-
-  function runReach(baseLat, baseLon, radiusKm, cellKm) {
-    reachStop();
-    var status = $('reach-status');
-    status.className = 'h-status';
-
-    /* a square grid over the disc; the disc keeps the cells. The reader
-       picks the cell size — finer is quadratically more scans, spent
-       from their own machine, and every scan lands in the persistent
-       cache, so a finer pass after a coarse one only pays for the new
-       points, and where the band crawler has already settled the
-       ground, cells arrive precomputed and cost nothing at all. The cap
-       is the survey's patience, not the maths: 1000 cells across —
-       100 m holds to a 50 km radius. */
-    var COLS = cellKm ? Math.round(2 * radiusKm / cellKm) : 13;
-    if (COLS > 1000) {
-      status.textContent = fmtCellKm(cellKm) + ' cells hold to ' +
-        Math.floor(cellKm * 500) + ' km — shrink the radius';
-      return;
-    }
-    var run = REACH.run;
-    REACH.aborter = typeof AbortController !== 'undefined' ?
-      new AbortController() : null;
-    var signal = REACH.aborter ? REACH.aborter.signal : undefined;
-    var dead = function () { return run !== REACH.run; };
-    REACH.base = { lat: baseLat, lon: baseLon };
-    REACH.last = { lat: baseLat, lon: baseLon,
-                   radiusKm: radiusKm, cellKm: cellKm };
-    var P = palette();
-
-    // the ring of what "reach" means, drawn while the field stands
-    S.layers.reachRing = L.layerGroup([
-      L.circle([baseLat, baseLon], {
-        pane: 'sweep', radius: radiusKm * 1000, color: P.ink, weight: 1,
-        opacity: 0.55, dashArray: '5 5', fillOpacity: 0.02, interactive: false
-      })
-    ]).addTo(map);
-
-    status.textContent = 'sampling';
-    var stepKm = 2 * radiusKm / COLS;
-    var dLat = stepKm / 111;
-    var dLon = stepKm / (111 * Math.max(0.2, Math.cos(baseLat * RAD)));
-    var cells = [];
-    for (var r = 0; r < COLS; r++) {
-      for (var q = 0; q < COLS; q++) {
-        var la = baseLat + (r - (COLS - 1) / 2) * dLat;
-        var lo = baseLon + (q - (COLS - 1) / 2) * dLon;
-        if (Bessel.distKm(baseLat, baseLon, la, lo) > radiusKm + stepKm * 0.2) {
-          continue;
-        }
-        cells.push({ lat: la, lon: lo, central: false, vis: null,
-                     sky: null, elev: null, score: 0 });
-      }
-    }
-
-    /* the astronomy, in slices the paint loop can breathe between:
-       ~90 µs a cell is nothing at 137 cells and three frozen seconds at
-       31,000. Each answer is slimmed to the fields the survey reads —
-       31,000 full dossiers would be real memory on a phone. */
-    var ai = 0;
-    (function astroChunk() {
-      if (dead()) return;
-      var until = Math.min(cells.length, ai + 400);
-      for (; ai < until; ai++) {
-        var c = cells[ai];
-        var a = assessPoint(c.lat, c.lon);
-        if (!a) continue;
-        c.central = true; c.lonN = a.lonN;
-        c.minAlt = a.minAlt; c.azs = a.azs; c.dur = a.dur;
-        c.lc = { c2: { tTT: a.lc.c2.tTT }, c3: { tTT: a.lc.c3.tTT },
-                 dateMax: a.lc.dateMax, sunAz: a.lc.sunAz,
-                 sunAltApparent: a.lc.sunAltApparent };
-        if (a.minAlt >= 30) c.vis = 1;
-      }
-      if (ai < cells.length) {
-        status.textContent = 'geometry ' +
-          Math.round(ai / cells.length * 100) + '%';
-        setTimeout(astroChunk, 0);
-        return;
-      }
-      survey();
-    })();
-
-    function survey() {
-    var central = cells.filter(function (c) { return c.central; });
-
-    if (!central.length) {
-      var near = nearestPathKm(baseLat, baseLon);
-      status.textContent = 'no totality in ' + radiusKm + ' km · centreline ' +
-        Math.round(near.d) + ' km ' + near.dir;
-      return;
-    }
-
-    var wxDone = fetchSuitSky(central, signal).catch(function () { return null; });
-
-    var scans = central.filter(function (c) { return c.vis === null; });
-    var done = 0, lastPc = -1;
-    var terrainDone = pooledTerrain(scans, signal, dead, function () {
-      done++;
-      var pc = Math.round(done / (scans.length || 1) * 100);
-      if (pc !== lastPc) {
-        lastPc = pc;
-        status.textContent = 'scanning ' + pc + '%';
-      }
-    });
-
-    // land or water, for the print weight — same tiles the scans read
-    var elevDone = new Promise(function (resolve) {
-      var i = 0, active = 0, eDone = 0, LIMIT = 6;
-      (function next() {
-        if (dead()) { resolve(); return; }
-        if (i >= central.length && active === 0) { resolve(); return; }
-        while (active < LIMIT && i < central.length) {
-          (function (c) {
-            active++;
-            Terrain.elevationAt(c.lat, c.lonN, 10).then(function (e) {
-              c.elev = e;
-              active--;
-              // cached tiles resolve in microtasks, which never yield to
-              // the renderer — breathe every so often on a big survey
-              if (++eDone % 150 === 0) setTimeout(next, 0); else next();
-            });
-          })(central[i++]);
-        }
-      })();
-    });
-
-    Promise.all([wxDone, terrainDone, elevDone]).then(function (res) {
-      if (dead()) return;
-      central.forEach(function (c) {
-        c.score = c.vis === null ? 0 :
-          suitabilityOf(c.dur, c.vis, c.lc.sunAltApparent, c.sky);
-      });
-
-      /* graded on the local curve: within this ring, the best in reach
-         wears the top of the scale and the worst the bottom, whatever
-         their absolute scores — the legend states the real range */
-      var sLo = Infinity, sHi = -Infinity;
-      central.forEach(function (c) {
-        if (c.score < sLo) sLo = c.score;
-        if (c.score > sHi) sHi = c.score;
-      });
-      function localRamp(v) {
-        return rampColor(sHi - sLo < 0.5 ? 50 : (v - sLo) / (sHi - sLo) * 100);
-      }
-
-      /* the coastline: every cell edge where land meets water, inked
-         above the field so the geography stays readable while the
-         heatmap itself treats land and water alike */
-      var segs = coastSegs(central, dLat, dLon, baseLat, baseLon, COLS);
-
-      /* past ~1200 cells one vector rectangle each stops being drawable —
-         a 100 m survey is 31,000 of them — so a big field is printed once
-         into a canvas and laid over its own bounds */
-      var layer;
-      if (central.length > 1200) {
-        layer = cellImage(central, dLat, dLon, localRamp, segs);
-      } else {
-        var parts = central.map(function (c) {
-          return L.rectangle(
-            [[c.lat - dLat / 2, c.lonN - dLon / 2],
-             [c.lat + dLat / 2, c.lonN + dLon / 2]], {
-              pane: 'suit', stroke: false, interactive: false,
-              fillColor: localRamp(c.score), fillOpacity: 0.52
-            });
-        });
-        if (segs.length) {
-          parts.push(L.polyline(segs, {
-            pane: 'suit', color: P.ink, weight: 1.2, opacity: 0.85,
-            interactive: false
-          }));
-        }
-        layer = L.layerGroup(parts);
-      }
-      S.layers.reachCells = layer.addTo(map);
-
-      status.textContent = central.length + ' cells · sky ' + (res[0] || '—');
-      status.className = 'h-status ok';
-      $('reach-lo').textContent = Math.round(sLo);
-      $('reach-hi').textContent = Math.round(sHi);
-      $('reach-note').textContent = radiusKm + ' km · cells ' +
-        fmtCellKm(stepKm) + ' · coast inked';
-      $('reach-legend').hidden = false;
-    });
-    }
-  }
-
-  /* The coast, as cell edges: wherever two known neighbours disagree
-     about being water, the shared edge is a piece of shoreline. Returns
-     line segments in lat/lon, for either renderer to ink. */
-  function coastSegs(central, dLat, dLon, baseLat, baseLon, COLS) {
-    var isWater = function (c) { return c.elev !== null && c.elev <= 0.5; };
-    var known = central.filter(function (c) { return c.elev !== null; });
-    var grid = {};
-    known.forEach(function (c) {
-      var i = Math.round((c.lonN - baseLon) / dLon + (COLS - 1) / 2);
-      var j = Math.round((c.lat - baseLat) / dLat + (COLS - 1) / 2);
-      grid[i + ',' + j] = c;
-    });
-    var segs = [];
-    known.forEach(function (c) {
-      var i = Math.round((c.lonN - baseLon) / dLon + (COLS - 1) / 2);
-      var j = Math.round((c.lat - baseLat) / dLat + (COLS - 1) / 2);
-      var east = grid[(i + 1) + ',' + j];
-      var north = grid[i + ',' + (j + 1)];
-      if (east && isWater(east) !== isWater(c)) {
-        segs.push([[c.lat - dLat / 2, c.lonN + dLon / 2],
-                   [c.lat + dLat / 2, c.lonN + dLon / 2]]);
-      }
-      if (north && isWater(north) !== isWater(c)) {
-        segs.push([[c.lat + dLat / 2, c.lonN - dLon / 2],
-                   [c.lat + dLat / 2, c.lonN + dLon / 2]]);
-      }
-    });
-    return segs;
-  }
-
-  /* The big-field printer. Each cell is filled into a canvas at its
-     Mercator position — the same projection the vector rectangles sat in,
-     so the two renderers agree — then the coastline is inked on top. One
-     image element instead of tens of thousands of paths. */
-  function cellImage(central, dLat, dLon, ramp, segs) {
-    var latT = -90, latB = 90, lonL = 180, lonR = -180;
-    central.forEach(function (c) {
-      if (c.lat > latT) latT = c.lat;
-      if (c.lat < latB) latB = c.lat;
-      if (c.lonN < lonL) lonL = c.lonN;
-      if (c.lonN > lonR) lonR = c.lonN;
-    });
-    latT += dLat / 2; latB -= dLat / 2; lonL -= dLon / 2; lonR += dLon / 2;
-    function merc(lat) {
-      var s = Math.sin(lat * RAD);
-      return Math.log((1 + s) / (1 - s)) / 2;
-    }
-    var mT = merc(latT), mB = merc(latB);
-    var W = Math.min(4000, Math.max(600,
-      Math.round(8 * (lonR - lonL) / dLon)));
-    var H = Math.max(2, Math.round(W * (mT - mB) / ((lonR - lonL) * RAD)));
-    var cv = document.createElement('canvas');
-    cv.width = W; cv.height = H;
-    var g = cv.getContext('2d');
-    central.forEach(function (c) {
-      /* edges snapped to whole pixels: neighbours compute the shared
-         edge from the same value, so the rounding meets exactly —
-         no antialiased gap, and no overlap to double the alpha into
-         a visible seam grid when the image is blown up */
-      var x0 = Math.round((c.lonN - dLon / 2 - lonL) / (lonR - lonL) * W);
-      var x1 = Math.round((c.lonN + dLon / 2 - lonL) / (lonR - lonL) * W);
-      var y0 = Math.round((mT - merc(c.lat + dLat / 2)) / (mT - mB) * H);
-      var y1 = Math.round((mT - merc(c.lat - dLat / 2)) / (mT - mB) * H);
-      g.fillStyle = ramp(c.score)
-        .replace('rgb(', 'rgba(')
-        .replace(')', ',0.52)');
-      g.fillRect(x0, y0, Math.max(1, x1 - x0), Math.max(1, y1 - y0));
-    });
-    // the coastline, above the field, in the page's own ink
-    if (segs && segs.length) {
-      var P = palette();
-      g.strokeStyle = P.ink;
-      g.globalAlpha = 0.85;
-      g.lineWidth = 2;
-      g.beginPath();
-      segs.forEach(function (s) {
-        g.moveTo(Math.round((s[0][1] - lonL) / (lonR - lonL) * W),
-                 Math.round((mT - merc(s[0][0])) / (mT - mB) * H));
-        g.lineTo(Math.round((s[1][1] - lonL) / (lonR - lonL) * W),
-                 Math.round((mT - merc(s[1][0])) / (mT - mB) * H));
-      });
-      g.stroke();
-      g.globalAlpha = 1;
-    }
-    return L.imageOverlay(cv.toDataURL(), [[latB, lonL], [latT, lonR]],
-      { pane: 'suit', interactive: false, className: 'suit-img' });
-  }
-
 
   /* ================= search ================= */
 
@@ -2502,7 +2134,6 @@
     // teardown
     togglePlay(false);
     suitStop();
-    reachStop();
     Object.keys(S.layers).forEach(clearRole);
     if (reticle) { map.removeLayer(reticle); reticle = null; }
     S.target = null;
