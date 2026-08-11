@@ -65,27 +65,62 @@ var Precomp = (function () {
     return p;
   }
 
+  // a scanned tile's manifest entry is its mean vis as a number 0-255
+  // ('d' from earlier crawler versions means the same, mean unknown)
+  function scanned(st) { return typeof st === 'number' || st === 'd'; }
+
+  function samplePx(data, t, lat, lon) {
+    var fx = (((lon + 180) / 360 * t.n) - t.x) * data.width;
+    var latR = lat * Math.PI / 180;
+    var fy = (((1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / Math.PI) / 2 * t.n) - t.y) * data.height;
+    var px = Math.max(0, Math.min(data.width - 1, Math.floor(fx)));
+    var py = Math.max(0, Math.min(data.height - 1, Math.floor(fy)));
+    return data.data[(py * data.width + px) * 4] / 255;
+  }
+
+  /* Manifest status of the ground under a point, without any fetch. */
+  function statusAt(lat, lon) {
+    if (!M.man || !M.man.tiles) return null;
+    var t = tileOf(lat, lon);
+    var key = t.z + '/' + t.x + '/' + t.y;
+    return { key: key, st: M.man.tiles[key], t: t };
+  }
+
+  /* Warm the decoded-tile cache for a set of keys (the field renderer
+     prefetches its viewport before painting). */
+  function prefetch(keys) {
+    return Promise.all(keys.map(function (k) {
+      return Promise.resolve(image(k));
+    }));
+  }
+
+  /* Synchronous pixel read — only answers from already-decoded tiles;
+     call prefetch first. Null means not decoded or not scanned ground. */
+  function visSync(lat, lon) {
+    var s = statusAt(lat, lon);
+    if (!s) return null;
+    if (s.st === 'f') return 1;
+    if (!scanned(s.st)) return null;
+    var data = M.imgs[s.key];
+    if (!data || typeof data.then === 'function' || !data.data) return null;
+    return samplePx(data, s.t, lat, lon);
+  }
+
   /* The visible fraction at a point, or null when the crawl has not
      settled that ground yet (then the caller scans locally). */
   function visAt(lat, lon) {
-    if (!M.man || !M.man.tiles) return Promise.resolve(null);
-    var t = tileOf(lat, lon);
-    var key = t.z + '/' + t.x + '/' + t.y;
-    var st = M.man.tiles[key];
-    if (st === 'f') { M.hits++; return Promise.resolve(1); }
-    if (st !== 'd') return Promise.resolve(null);
-    return image(key).then(function (data) {
+    var s = statusAt(lat, lon);
+    if (!s) return Promise.resolve(null);
+    if (s.st === 'f') { M.hits++; return Promise.resolve(1); }
+    if (!scanned(s.st)) return Promise.resolve(null);
+    return image(s.key).then(function (data) {
       if (!data) return null;
-      var fx = (((lon + 180) / 360 * t.n) - t.x) * data.width;
-      var latR = lat * Math.PI / 180;
-      var fy = (((1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / Math.PI) / 2 * t.n) - t.y) * data.height;
-      var px = Math.max(0, Math.min(data.width - 1, Math.floor(fx)));
-      var py = Math.max(0, Math.min(data.height - 1, Math.floor(fy)));
       M.hits++;
-      return data.data[(py * data.width + px) * 4] / 255;
+      return samplePx(data, s.t, lat, lon);
     });
   }
 
-  return { load: load, visAt: visAt, progress: progress,
+  return { load: load, visAt: visAt, visSync: visSync, statusAt: statusAt,
+           prefetch: prefetch, progress: progress,
            get hits() { return M.hits; } };
 })();
