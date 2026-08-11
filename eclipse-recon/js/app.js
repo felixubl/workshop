@@ -1596,23 +1596,22 @@
   /* ================= suitability field ================= */
 
   /* The verdict, as a place instead of a point: the dossier's suitability
-     number computed for every cell of a grid over the current view and
-     printed as a wash of plate 1, denser where the number is higher. Same
-     arithmetic (suitabilityOf above), same gates — a cell whose Sun sits
+     number for every block of the current view, at the band survey's own
+     resolution. Same arithmetic (suitabilityOf above), same gates — a Sun
      behind terrain for the whole central phase is 0 however clear the sky,
-     a cell outside the central band is 0, and 0 is not painted at all.
+     outside the central band nothing is painted at all.
 
-     The grid trades exactness for coverage and says so by its coarseness:
-     ~26 × 17 cells, each one judged at its centre. Terrain is the expensive
-     part, so a cell is only scanned when it can matter — a central phase
-     riding higher than 30° cannot be blocked by anything the cell itself
-     would not resolve (that is a 3 km wall within 5 km), and the scan
-     radius shrinks as the Sun climbs, since a ridge must subtend the Sun's
-     own altitude to reach it. Sky comes batched from the weather desk on a
-     coarser subgrid; if the desk is unreachable the wash simply drops that
-     factor and the chip says sky —. */
+     Three ingredients at three cadences. Astronomy is exact on a lattice
+     and interpolated per block — it varies over hundreds of kilometres, a
+     lattice loses nothing. Sky is the weather desk's coarse subgrid,
+     fetched live, so the wash moves with the prognosis. And the horizon
+     factor is the crawled band: tile MEANS straight off the manifest when
+     the view is wide, true ~60-80 m pixels once it narrows enough to
+     fetch its tiles. Ground the crawler has not settled yet is not
+     painted — the field never guesses, and the legend says how much of
+     the band is in. */
 
-  var SUIT = { on: false, run: 0, grid: null, aborter: null, wx: {} };
+  var SUIT = { on: false, run: 0, aborter: null, wx: {} };
 
   function suitStart() {
     SUIT.on = true;
@@ -1633,7 +1632,6 @@
     clearRole('suit');
     $('suit-legend').hidden = true;
     $('suit-prog').hidden = true;
-    SUIT.grid = null;
   }
   var suitMoved = debounce(function () { if (SUIT.on) computeSuit(); }, 450);
   $('suit-btn').addEventListener('click', function () {
@@ -1645,17 +1643,16 @@
     $('suit-prog').querySelector('i').style.width = (f * 100) + '%';
   }
 
-  /* The field is sampled in the band's own frame, not the viewport's: rows
-     across the umbral band (edge to edge, where the duration falls to
-     nothing), columns along the visible stretch of centreline. That keeps
-     the wash continuous at every zoom — a viewport grid at world zoom has
-     cells wider than the band is, and paints noise.
-
-     Each sample is judged exactly like the dossier judges a site: real
-     local circumstances, the terrain gate, the sky. Along-track samples are
-     spent on what the view can see, so zooming in buys resolution. */
-
-  var ALONG = 44, ACROSS = 7;
+  // the ramp as a lookup table, pressed once per render: 26,000 blocks
+  // asking rampColor for a string each would spend the frame on parsing
+  function rampLUT() {
+    var lut = [];
+    for (var s = 0; s <= 100; s++) {
+      var m = rampColor(s).match(/(\d+),\s*(\d+),\s*(\d+)/);
+      lut.push(m ? [+m[1], +m[2], +m[3]] : [128, 128, 128]);
+    }
+    return lut;
+  }
 
   function computeSuit() {
     var run = ++SUIT.run;
@@ -1664,139 +1661,153 @@
       new AbortController() : null;
     var signal = SUIT.aborter ? SUIT.aborter.signal : undefined;
     var dead = function () { return run !== SUIT.run; };
+    suitProg(0.05);
 
-    var path = S.path;
-    var nC = path.center.length;
-    if (!nC) {
-      SUIT.grid = { samples: [], sky: null };
-      renderSuit(); suitProg(1);
+    var size = map.getSize();
+    var b = map.getBounds().pad(0.08);
+    var latT = Math.min(84, b.getNorth()), latB = Math.max(-84, b.getSouth());
+    var lonL = b.getWest(), lonR = b.getEast();
+    if (lonR - lonL > 360) { lonL = -180; lonR = 180; }
+    if (latT <= latB) { suitProg(1); return; }
+
+    // one canvas pixel per ~5 screen px; the overlay scales it back up
+    var W = Math.max(40, Math.min(280, Math.round(size.x / 5)));
+    var H = Math.max(30, Math.min(200, Math.round(size.y / 5)));
+    function merc(lat) {
+      var s = Math.sin(lat * RAD);
+      return Math.log((1 + s) / (1 - s)) / 2;
+    }
+    var mT = merc(latT), mB = merc(latB);
+    function latOf(r) {
+      return Math.atan(Math.sinh(mT - (r + 0.5) / H * (mT - mB))) / RAD;
+    }
+    function lonOf(q) { return lonL + (q + 0.5) / W * (lonR - lonL); }
+
+    // the astronomy lattice: exact where it stands, bilinear in between —
+    // duration and altitude vary over hundreds of km, nothing is lost
+    var LX = 26, LY = 18;
+    var nodes = [];
+    for (var r = 0; r <= LY; r++) {
+      var lat = latB + (latT - latB) * r / LY;
+      for (var q = 0; q <= LX; q++) {
+        var a = assessPoint(lat, lonL + (lonR - lonL) * q / LX);
+        nodes.push(a ? { lat: lat, lonN: a.lonN, dur: a.dur,
+                         alt: a.lc.sunAltApparent,
+                         lc: { dateMax: a.lc.dateMax }, sky: null } : null);
+      }
+    }
+    var centralNodes = nodes.filter(Boolean);
+    if (!centralNodes.length) {
+      clearRole('suit');
+      $('suit-legend').hidden = false;
+      $('suit-mode').textContent = 'no band in view';
+      suitProg(1);
       return;
     }
-    suitProg(0.03);
+    suitProg(0.25);
 
-    // the stretch of centreline the view can see, padded; all of it when
-    // the view sees none (the map is elsewhere — still show the field)
-    var b = map.getBounds().pad(0.25);
-    var idx = [];
-    for (var i = 0; i < nC; i++) {
-      var pt = path.center[i];
-      if (b.contains([pt.lat, pt.lon]) ||
-          b.contains([pt.lat, pt.lon + 360]) ||
-          b.contains([pt.lat, pt.lon - 360])) idx.push(i);
-    }
-    if (!idx.length) idx = path.center.map(function (_, i) { return i; });
-    var step = Math.max(1, Math.floor(idx.length / ALONG));
-    var cols = [];
-    for (i = idx[0]; i <= idx[idx.length - 1]; i += step) cols.push(i);
+    var wxDone = fetchSuitSky(centralNodes, signal).catch(function () { return null; });
 
-    // one cross-line per column, laid square across the local track, its
-    // extents bisected against the same observable-centrality oracle the
-    // band outline uses — identical construction mid-path and through the
-    // graze caps, where the t-parameterised rails collapse
-    function centralAt(lat2, lon2) {
-      var lc2 = Bessel.localCircumstances(S.ecl, lat2, ((lon2 + 540) % 360) - 180, 0);
-      return !!(lc2 && lc2.type !== 'partial' && lc2.c2 && lc2.c3 &&
-                lc2.centralVisible);
-    }
-    var frame = null;
-    function unwrapLon(lon) {
-      if (frame === null) { frame = lon; return lon; }
-      while (lon - frame > 180) lon -= 360;
-      while (lon - frame < -180) lon += 360;
-      frame = (frame * 3 + lon) / 4;
-      return lon;
-    }
-    var colsGeo = [];
-    cols.forEach(function (ci) {
-      var C = path.center[ci];
-      if (!centralAt(C.lat, C.lon)) return;
-      var pv = path.center[Math.max(0, ci - 1)];
-      var nb = path.center[Math.min(nC - 1, ci + 1)];
-      var brg = Bessel.bearing(pv.lat, pv.lon, nb.lat, nb.lon) * 180 / Math.PI;
-      function extent(side) {          // +1 north of track, -1 south
-        var lo = 0, hi = 900;
-        for (var i2 = 0; i2 < 16; i2++) {
-          var mid = (lo + hi) / 2;
-          var p2 = Bessel.destination(C.lat, C.lon, brg - side * 90, mid);
-          if (centralAt(p2.lat, p2.lon)) lo = mid; else hi = mid;
+    // narrow views read true pixels; wide ones read tile means. The
+    // threshold is what can reasonably be fetched, counted not guessed.
+    var pxKeys = {};
+    var usePixels = (lonR - lonL) < 5;
+    if (usePixels) {
+      for (var r2 = 0; r2 < H; r2 += 2) {
+        for (var q2 = 0; q2 < W; q2 += 2) {
+          var st2 = Precomp.statusAt(latOf(r2), lonOf(q2));
+          if (st2 && (typeof st2.st === 'number' || st2.st === 'd')) {
+            pxKeys[st2.key] = 1;
+          }
         }
-        return lo;
       }
-      colsGeo.push({
-        lat: C.lat, lon: unwrapLon(C.lon), brg: brg,
-        dN: extent(1) * 1.03 + 5, dS: extent(-1) * 1.03 + 5
-      });
-    });
-    if (colsGeo.length < 2) {
-      SUIT.grid = { samples: [], sky: null };
-      renderSuit(); suitProg(1);
-      return;
+      if (Object.keys(pxKeys).length > 170) usePixels = false;
     }
-    function railAt(k, f) {
-      var g = colsGeo[Math.max(0, Math.min(colsGeo.length - 1, k))];
-      var d = g.dN - f * (g.dN + g.dS);  // f 0 → north edge, 1 → south edge
-      var p2 = Bessel.destination(g.lat, ((g.lon + 540) % 360) - 180,
-                                  g.brg - 90, d);
-      var L = p2.lon;
-      while (L - g.lon > 180) L -= 360;
-      while (L - g.lon < -180) L += 360;
-      return [p2.lat, L];
-    }
-    function railMid(k, f) {
-      var a = railAt(k, f), c = railAt(k + 1, f);
-      return [(a[0] + c[0]) / 2, (a[1] + c[1]) / 2];
-    }
+    var tilesDone = usePixels ?
+      Precomp.prefetch(Object.keys(pxKeys)) : Promise.resolve();
 
-    // the samples, with their quad corners
-    var samples = [];
-    for (var k = 0; k < colsGeo.length; k++) {
-      for (var j = 0; j < ACROSS; j++) {
-        var f = (j + 0.5) / ACROSS;
-        var at = railAt(k, f);
-        var f0 = j / ACROSS, f1 = (j + 1) / ACROSS;
-        samples.push({
-          lat: at[0], lon: at[1],
-          quad: [railMid(k - 1, f0), railMid(k - 1, f1),
-                 railMid(k, f1), railMid(k, f0)],
-          central: false, dur: 0, vis: null, sky: null, score: 0
-        });
-      }
-    }
-
-    // 1 · astronomy, cheap and exact
-    samples.forEach(function (c) {
-      var a = assessPoint(c.lat, c.lon);
-      if (!a) return;
-      c.central = true; c.lc = a.lc; c.lonN = a.lonN;
-      c.minAlt = a.minAlt; c.azs = a.azs; c.dur = a.dur;
-      if (a.minAlt >= 30) c.vis = 1;   // nothing at sample scale blocks 30°
-    });
-    var central = samples.filter(function (c) { return c.central; });
-    if (!central.length) {
-      SUIT.grid = { samples: samples, sky: null };
-      renderSuit(); suitProg(1);
-      return;
-    }
-
-    // 2 · sky, batched on a coarse subgrid and shared by nearest sample
-    var wxDone = fetchSuitSky(central, signal).catch(function () { return null; });
-
-    // 3 · terrain, pooled, only where it can matter
-    var scans = central.filter(function (c) { return c.vis === null; });
-    var done = 0;
-    var terrainDone = pooledTerrain(scans, signal, dead, function () {
-      done++;
-      suitProg(0.1 + 0.8 * done / (scans.length || 1));
-    });
-
-    Promise.all([wxDone, terrainDone]).then(function (res) {
+    Promise.all([wxDone, tilesDone]).then(function (res) {
       if (dead()) return;
-      samples.forEach(function (c) {
-        if (!c.central || c.vis === null) return;
-        c.score = suitabilityOf(c.dur, c.vis, c.lc.sunAltApparent, c.sky);
-      });
-      SUIT.grid = { samples: samples, sky: res[0] };
-      renderSuit();
+
+      function nodeAt(r3, q3) { return nodes[r3 * (LX + 1) + q3]; }
+      function visFor(lat3, lon3) {
+        var s3 = Precomp.statusAt(lat3, lon3);
+        if (!s3) return null;
+        if (s3.st === 'f') return 1;
+        if (typeof s3.st === 'number') {
+          if (usePixels) {
+            var v = Precomp.visSync(lat3, lon3);
+            if (v !== null) return v;
+          }
+          return s3.st / 255;
+        }
+        if (s3.st === 'd') return usePixels ? Precomp.visSync(lat3, lon3) : null;
+        return null;               // pending or outside: never guess
+      }
+
+      var cv = document.createElement('canvas');
+      cv.width = W; cv.height = H;
+      var g = cv.getContext('2d');
+      var id = g.createImageData(W, H);
+      var lut = rampLUT();
+      var painted = 0, edgeBudget = 8000;
+
+      for (var r4 = 0; r4 < H; r4++) {
+        var lat4 = latOf(r4);
+        var fy = (lat4 - latB) / (latT - latB) * LY;
+        var r0 = Math.max(0, Math.min(LY - 1, Math.floor(fy)));
+        var ay = fy - r0;
+        for (var q4 = 0; q4 < W; q4++) {
+          var lon4 = lonOf(q4);
+          var fx = (lon4 - lonL) / (lonR - lonL) * LX;
+          var q0 = Math.max(0, Math.min(LX - 1, Math.floor(fx)));
+          var ax = fx - q0;
+          var n00 = nodeAt(r0, q0), n10 = nodeAt(r0, q0 + 1),
+              n01 = nodeAt(r0 + 1, q0), n11 = nodeAt(r0 + 1, q0 + 1);
+          var dur4, alt4, skyNode;
+          if (n00 && n10 && n01 && n11) {
+            dur4 = (n00.dur * (1 - ax) + n10.dur * ax) * (1 - ay) +
+                   (n01.dur * (1 - ax) + n11.dur * ax) * ay;
+            alt4 = (n00.alt * (1 - ax) + n10.alt * ax) * (1 - ay) +
+                   (n01.alt * (1 - ax) + n11.alt * ax) * ay;
+            skyNode = ay < 0.5 ? (ax < 0.5 ? n00 : n10)
+                               : (ax < 0.5 ? n01 : n11);
+          } else if (!n00 && !n10 && !n01 && !n11) {
+            continue;              // fully outside the band
+          } else {
+            // the band's edge crosses this lattice cell: judge exactly
+            if (--edgeBudget < 0) continue;
+            var ae = assessPoint(lat4, lon4);
+            if (!ae) continue;
+            dur4 = ae.dur; alt4 = ae.lc.sunAltApparent;
+            skyNode = n00 || n10 || n01 || n11;
+          }
+          var vis4 = visFor(lat4, lon4);
+          if (vis4 === null) continue;
+          var score = suitabilityOf(dur4, vis4, alt4,
+                                    skyNode ? skyNode.sky : null);
+          var c4 = lut[Math.max(0, Math.min(100, Math.round(score)))];
+          var o4 = (r4 * W + q4) * 4;
+          id.data[o4] = c4[0]; id.data[o4 + 1] = c4[1];
+          id.data[o4 + 2] = c4[2]; id.data[o4 + 3] = 115;
+          painted++;
+        }
+      }
+      g.putImageData(id, 0, 0);
+
+      clearRole('suit');
+      if (painted) {
+        S.layers.suit = L.imageOverlay(cv.toDataURL(),
+          [[latB, lonL], [latT, lonR]],
+          { pane: 'suit', interactive: false, className: 'suit-img' }
+        ).addTo(map);
+      }
+      var prog = Precomp.progress();
+      var pct = prog ? Math.round((prog.done + prog.flat + prog.out) /
+                                  prog.total * 100) : null;
+      $('suit-legend').hidden = false;
+      $('suit-mode').textContent = 'sky · ' + (res[0] || '—') +
+        (pct !== null && pct < 100 ? ' · surveyed ' + pct + '%' : '');
       suitProg(1);
     });
   }
@@ -1840,29 +1851,6 @@
     });
   }
 
-  /* Painted as one quad per sample in the band's own frame, in the score
-     ramp: red where the eclipse cannot be seen (a blocked horizon inside
-     the band is information, not blankness), through citron, to plate-1
-     green where everything lines up. Outside the band, nothing. */
-  function renderSuit() {
-    clearRole('suit');
-    var g = SUIT.grid;
-    if (!g) return;
-    var quads = [];
-    g.samples.forEach(function (c) {
-      if (!c.central || c.vis === null) return;
-      quads.push(L.polygon(c.quad, {
-        pane: 'suit', stroke: false, interactive: false,
-        fillColor: rampColor(c.score), fillOpacity: 0.45
-      }));
-    });
-    if (quads.length) S.layers.suit = L.layerGroup(quads).addTo(map);
-    $('suit-legend').hidden = false;
-    $('suit-mode').textContent = 'sky · ' + (g.sky || '—');
-  }
-
-
-  /* ================= within reach ================= */
   /* ================= within reach ================= */
 
   /* The base-camp question: standing at a hotel, a house, a harbour —
@@ -2390,7 +2378,7 @@
       if (S.target.wx) renderWeather();
       renderVerdict();
     }
-    if (SUIT.grid) renderSuit();
+    if (SUIT.on) computeSuit();   // the ramp's inks changed with the mode
   }
   new MutationObserver(applyMode).observe(document.documentElement,
     { attributes: true, attributeFilter: ['data-mode'] });

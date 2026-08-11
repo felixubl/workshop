@@ -207,6 +207,23 @@ let queue = fs.existsSync(queueFile)
   ? JSON.parse(fs.readFileSync(queueFile, 'utf8'))
   : null;
 
+/* A scanned tile's manifest entry is its MEAN vis (0-255) rather than a
+   bare 'd': the map's wide-view suitability wash reads the mean straight
+   off the manifest, no PNG fetch, and the pixel detail waits under the
+   same key for closer zooms. Entries written as 'd' by earlier crawler
+   versions are healed here from their own PNGs — idempotent, cheap. */
+for (const [key, st] of Object.entries(man.tiles)) {
+  if (st !== 'd') continue;
+  const [z, x, y] = key.split('/');
+  const f = path.join(DATA, 'vis', z, x, y + '.png');
+  try {
+    const p = PNG.sync.read(fs.readFileSync(f));
+    let sum = 0;
+    for (let i = 0; i < p.width * p.height; i++) sum += p.data[i * 4];
+    man.tiles[key] = Math.round(sum / (p.width * p.height));
+  } catch (e) { /* missing file: leave it, the queue will re-earn it */ }
+}
+
 function save() {
   fs.writeFileSync(manFile, JSON.stringify(man));
   fs.writeFileSync(queueFile, JSON.stringify(queue));
@@ -298,6 +315,7 @@ function crawlTile(key) {
   const b = tileBounds(z, x, y);
   const png = new PNG({ width: CELL, height: CELL, colorType: 0, inputColorType: 0, inputHasAlpha: false });
   const buf = Buffer.alloc(CELL * CELL);
+  let sum = 0;
   for (let r = 0; r < CELL; r++) {
     const lat = b.lat1 + (b.lat0 - b.lat1) * (r + 0.5) / CELL;   // top row first
     for (let q = 0; q < CELL; q++) {
@@ -305,13 +323,16 @@ function crawlTile(key) {
       const a = assessPoint(lat, lon);
       let v = 0;
       if (a) v = a.minAlt >= 30 ? 1 : visOf({ ...a, lat, lonN: a.lonN });
-      buf[r * CELL + q] = Math.round(v * 255);
+      const byte = Math.round(v * 255);
+      buf[r * CELL + q] = byte;
+      sum += byte;
     }
   }
   png.data = buf;
   const dir = path.join(DATA, 'vis', String(z), String(x));
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, y + '.png'), PNG.sync.write(png, { colorType: 0, inputColorType: 0 }));
+  return Math.round(sum / (CELL * CELL));
 }
 
 /* ---- run ---- */
@@ -334,8 +355,7 @@ for (const key of todo) {
   }
   // hard ground: the real work — leave slack for the write and the commit
   if (Date.now() > DEADLINE - 90 * 1000) break;
-  crawlTile(key);
-  man.tiles[key] = 'd';
+  man.tiles[key] = crawlTile(key);
   man.counts.done++;
   settledKeys.add(key);
   didDense++; didTiles++;
