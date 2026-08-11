@@ -65,15 +65,17 @@ The eclipse mathematics itself runs entirely in your browser.
   is kept in the browser (IndexedDB) — the horizon is surveyed fact and
   never expires — so finer passes and return visits only pay for ground
   not yet surveyed. Forecasts are never stored that way. Behind it runs
-  the repo's one piece of automation: a scheduled GitHub Action
+  the repo's one piece of automation: a GitHub Action
   ([`tools/crawl-vis.mjs`](tools/crawl-vis.mjs)) crawls the entire band
-  at the same resolution with no hurry — ocean and high-Sun tiles
-  resolve instantly, mountainous ground gets truly scanned — commits its
-  progress into [`eclipse-recon/data/`](eclipse-recon/data/), and Pages
-  serves the finished tiles to everyone; the Event panel shows how far
-  it has got, and every visitor's fine maps reuse what it has settled.
-  The site still runs no server: the crawler is a build step that never
-  finishes, and the browser math and the crawler math are the same
+  at the same resolution, hour after hour, back to back, until every
+  square has its value — ocean and high-Sun tiles resolve instantly,
+  mountainous ground gets truly scanned — committing progress into
+  [`eclipse-recon/data/`](eclipse-recon/data/) as it goes, which Pages
+  serves to everyone; the Event panel shows how far it has got, and
+  every visitor's fine maps reuse what it has settled. When the queue
+  empties the workflow switches its own schedule off: the crawl is a
+  finite data build, not a resident service. The site still runs no
+  server, and the browser math and the crawler math are the same
   formulas line for line. Nothing is per-eclipse in the code: a
   catalogue record is elements and a date, everything else is derived, and
   any other eclipse loads by pasting the Polynomial Besselian Elements
