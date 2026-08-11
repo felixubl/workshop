@@ -1681,8 +1681,17 @@
     syncSuitDur();
   }
   var suitMoved = debounce(function () { if (SUIT.on) computeSuit(); }, 450);
+  /* the wash defaults ON — it is the tool's opening statement — and the
+     key stores each deliberate flip, so a reader who switched it off
+     stays in charge of their own map across eclipses and visits */
+  function suitWanted() {
+    try { return (localStorage.getItem('recon-suit-on') || '1') === '1'; }
+    catch (e) { return true; }
+  }
   $('suit-btn').addEventListener('click', function () {
     if (SUIT.on) suitStop(); else suitStart();
+    try { localStorage.setItem('recon-suit-on', SUIT.on ? '1' : '0'); }
+    catch (e) { /* private mode forgets; the default returns */ }
   });
   $('suit-grade').addEventListener('click', function () {
     SUIT.localGrade = !SUIT.localGrade;
@@ -2513,6 +2522,9 @@
     buildStatic();
     homeView(S.path, S.gt);
     location.hash = ecl.id;
+    // the teardown above switched the wash off with everything else;
+    // it comes back by default, unless the reader has said otherwise
+    if (suitWanted()) suitStart();
 
     if (targetSpec) {
       setTarget(targetSpec[0], targetSpec[1]);
