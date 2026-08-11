@@ -94,7 +94,10 @@ its card goes from a queue row to solid stock with a cast once it's built.
 A card carries the tool's name, one sentence of what it is for, and two dates
 in small print — the day the tool first landed and the day it last changed,
 read out of git history by `tools/stamp-dates` rather than written by hand —
-plus a pin that drives it to the front of the grid.
+plus a pin that drives it to the front of the grid. The tools that talk to
+the network carry a small plate-3 `network` mark under the dates; an
+unmarked card runs entirely on your machine. "Everything is local" is a
+per-tool promise, checked card by card, not a site-wide vow.
 
 ## Stack
 
@@ -186,7 +189,8 @@ names it declares must not change.
    bench with the tool's register class (`reg-N`) and `data-tool`, holding a
    `.plate.plate-live` — the name in an `h3` wrapped in `a.plate-open`, the
    pin, and one `.plate-say` sentence. Remove the tool's queue row if it had
-   one, and update both tally counts.
+   one, and update both tally counts. If the tool talks to the network, add
+   a `code.plate-net` mark under the dates saying so, tersely.
 6. Commit, then run `tools/stamp-dates` and commit what it rewrites: it reads
    git history and presses two dates onto every card — the day the tool first
    landed, the day it last changed — and that script is the only thing that

@@ -84,7 +84,14 @@ var Terrain = (function () {
       var img = new Image();
       img.crossOrigin = 'anonymous';
       var done = false;
-      var finish = function (data) { if (!done) { done = true; resolve(data); } };
+      var finish = function (data) {
+        if (done) return;
+        done = true;
+        // a failed load is a moment, not a fact: drop it from the cache
+        // so the next asker retries instead of inheriting the hiccup
+        if (data === null) cache.delete(key);
+        resolve(data);
+      };
       img.onload = function () {
         try {
           var c = document.createElement('canvas');
