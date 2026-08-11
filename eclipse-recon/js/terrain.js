@@ -287,6 +287,9 @@ var Terrain = (function () {
   return {
     elevationAt: elevationAt,
     horizonScan: horizonScan,
+    /* one terrarium tile as ImageData (null on failure), promise-cached —
+       the suitability wash reads these to ink the coastline above itself */
+    tile: fetchTile,
     cacheSize: function () { return cache.size; }
   };
 })();
