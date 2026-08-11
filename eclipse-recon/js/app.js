@@ -1313,10 +1313,14 @@
      band, fully behind terrain is 0 whatever the weather says. A null
      sky (service unreachable) drops the factor rather than the score,
      and the display says which. */
+  /* The one score switch: with duration off, any totality is the event
+     and the score is purely about SEEING it — horizon, air, sky. */
+  var SCORE = { durOff: false };
+
   function scoreFactors(dur, visFrac, altApp, sky) {
     var durN = S.gt.maxDuration > 0 ? Math.min(1, dur / S.gt.maxDuration) : 0;
     return {
-      dur: Math.sqrt(durN),
+      dur: SCORE.durOff ? null : Math.sqrt(durN),
       vis: visFrac * visFrac,
       air: Math.sqrt(Math.max(0, Math.min(1, altApp / 8))),
       sky: sky === null ? null :
@@ -1326,7 +1330,8 @@
   }
   function suitabilityOf(dur, visFrac, altApp, sky) {
     var f = scoreFactors(dur, visFrac, altApp, sky);
-    var s = 100 * f.dur * f.vis * f.air * (f.sky === null ? 1 : f.sky);
+    var s = 100 * (f.dur === null ? 1 : f.dur) * f.vis * f.air *
+            (f.sky === null ? 1 : f.sky);
     return Math.max(0, Math.min(100, s));
   }
 
@@ -1405,78 +1410,29 @@
     });
   }
 
-  /* Every score on this page wears the same colour, and the colour does
-     two different jobs, told apart on purpose. Zero is a STATE — the
-     eclipse cannot be seen there at all — and wears plate 2 flat, so
-     "hopeless" never blends into "barely". Everything above zero is a
-     MAGNITUDE and wears one hue: plate 1, from a faint tint to full
-     depth, interpolated in OKLab so the lightness runs monotonically.
-     One hue means the ramp survives every kind of colour vision and a
-     greyscale print — the reading is carried by lightness, not by a
-     red-against-green judgement — and a continuous ramp means fine
-     differences stay visible instead of snapping to three inks. The
-     faint end leans toward the paper of the current mode, so in dark
-     mode the ramp runs dim-to-bright instead of pale-to-deep. */
+  /* Every score on this page wears the same scale: viridis, worst to
+     best — deep violet through teal and green to yellow. It is the
+     standard scientific ramp for exactly this job: perceptually
+     uniform, monotone in lightness (so a greyscale print keeps the
+     ordering), and legible under every form of colour vision — its
+     safety never leans on telling red from green. It is deliberately
+     NOT built from the page's plates: the field is data, not chrome,
+     and the same scale serves both modes. */
+  var VIRIDIS = ['#440154', '#482878', '#3e4989', '#31688e', '#26828e',
+                 '#1f9e89', '#35b779', '#6ece58', '#b5de2b', '#fde725'];
   function hexRGB(h) {
     var m = h.replace(/\s/g, '').match(/^#(..)(..)(..)$/);
     return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)]
              : [128, 128, 128];
   }
-  function rgbOK(c) {          // sRGB 0-255 -> OKLab
-    function lin(v) {
-      v /= 255;
-      return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-    }
-    var r = lin(c[0]), g = lin(c[1]), b = lin(c[2]);
-    var l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
-    var m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
-    var s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
-    return [0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
-            1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
-            0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s];
-  }
-  function okRGB(o) {          // OKLab -> sRGB 0-255, clamped
-    var l = o[0] + 0.3963377774 * o[1] + 0.2158037573 * o[2];
-    var m = o[0] - 0.1055613458 * o[1] - 0.0638541728 * o[2];
-    var s = o[0] - 0.0894841775 * o[1] - 1.291485548 * o[2];
-    l = l * l * l; m = m * m * m; s = s * s * s;
-    function out(v) {
-      v = v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
-      return Math.max(0, Math.min(255, Math.round(v * 255)));
-    }
-    return [out(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
-            out(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
-            out(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s)];
-  }
-  function okMix(a, b, f) {
-    return [a[0] + (b[0] - a[0]) * f,
-            a[1] + (b[1] - a[1]) * f,
-            a[2] + (b[2] - a[2]) * f];
-  }
   function rampColor(score) {
-    var P = palette();
-    if (score <= 0) {
-      var d = hexRGB(P.dangerFill);
-      return 'rgb(' + d.join(',') + ')';
-    }
-    var green = rgbOK(hexRGB(P.okFill));
-    var paper = rgbOK(hexRGB(cssVar('--pp-paper', '#fbfbf9')));
-    var lightMode = paper[0] > 0.5;
-    /* the strong end steps past the pure plate, away from the paper;
-       the fractions are mode-tuned so the ramp passes the ordinal
-       checks — faint end ≥ 2:1 on the light surface, visible lightness
-       gaps at the bright end of the dark ramp */
-    var away = lightMode ? rgbOK([14, 22, 18]) : rgbOK([240, 255, 246]);
-    var faint = okMix(green, paper, lightMode ? 0.32 : 0.62);
-    var deep = okMix(green, away, lightMode ? 0.5 : 0.68);
-    /* the waypoint where the ramp crosses the pure plate sits where it
-       keeps the lightness advancing evenly — the faint side is short in
-       light mode and long in dark, so the waypoint moves with the mode */
-    var wp = lightMode ? 0.3 : 0.55;
-    var t = Math.min(100, score) / 100;
-    var o = t < wp ? okMix(faint, green, t / wp)
-                   : okMix(green, deep, (t - wp) / (1 - wp));
-    return 'rgb(' + okRGB(o).join(',') + ')';
+    var t = Math.max(0, Math.min(100, score)) / 100 * (VIRIDIS.length - 1);
+    var i = Math.min(VIRIDIS.length - 2, Math.floor(t));
+    var f = t - i;
+    var a = hexRGB(VIRIDIS[i]), b = hexRGB(VIRIDIS[i + 1]);
+    return 'rgb(' + a.map(function (v, k) {
+      return Math.round(v + (b[k] - v) * f);
+    }).join(',') + ')';
   }
 
   function renderVerdict() {
@@ -1700,6 +1656,20 @@
     if (SUIT.on) computeSuit();
   });
 
+  /* the duration switch re-scores everything standing: the wash, the
+     reach field if one is painted, and the open dossier */
+  $('suit-dur').addEventListener('click', function () {
+    SCORE.durOff = !SCORE.durOff;
+    this.setAttribute('aria-pressed', String(SCORE.durOff));
+    this.textContent = SCORE.durOff ? 'visibility only' : 'duration counts';
+    if (SUIT.on) computeSuit();
+    if (S.target) renderVerdict();
+    if (S.layers.reachCells && REACH.last) {
+      runReach(REACH.last.lat, REACH.last.lon,
+               REACH.last.radiusKm, REACH.last.cellKm);
+    }
+  });
+
   function suitProg(f) {
     $('suit-prog').hidden = f >= 1;
     $('suit-prog').querySelector('i').style.width = (f * 100) + '%';
@@ -1869,7 +1839,7 @@
       if (SUIT.localGrade) {
         for (i5 = 0; i5 < scores.length; i5++) {
           var sv = scores[i5];
-          if (sv <= 0) continue;   // zeros are a state, not the range
+          if (sv < 0) continue;
           if (sv < sLo) sLo = sv;
           if (sv > sHi) sHi = sv;
         }
@@ -1879,9 +1849,7 @@
       for (i5 = 0; i5 < scores.length; i5++) {
         var s5 = scores[i5];
         if (s5 < 0) continue;
-        // zero keeps the status ink under either grading
-        var v5 = s5 <= 0 ? 0 :
-                 localSpan ? Math.max(1, (s5 - sLo) / (sHi - sLo) * 100) :
+        var v5 = localSpan ? (s5 - sLo) / (sHi - sLo) * 100 :
                  (SUIT.localGrade ? 50 : s5);
         var c4 = lut[Math.max(0, Math.min(100, Math.round(v5)))];
         var o4 = i5 * 4;
@@ -2011,6 +1979,8 @@
     var signal = REACH.aborter ? REACH.aborter.signal : undefined;
     var dead = function () { return run !== REACH.run; };
     REACH.base = { lat: baseLat, lon: baseLon };
+    REACH.last = { lat: baseLat, lon: baseLon,
+                   radiusKm: radiusKm, cellKm: cellKm };
     var P = palette();
 
     // the ring of what "reach" means, drawn while the field stands
@@ -2118,23 +2088,15 @@
       });
 
       /* graded on the local curve: within this ring, the best in reach
-         wears the deepest green and the faintest possible spot the
-         palest — zeros stay the status ink and sit outside the range.
-         The numbers behind the colours stay absolute, and the legend
-         states the range. */
+         wears the top of the scale and the worst the bottom, whatever
+         their absolute scores — the legend states the real range */
       var sLo = Infinity, sHi = -Infinity;
       central.forEach(function (c) {
-        if (c.score <= 0) return;
         if (c.score < sLo) sLo = c.score;
         if (c.score > sHi) sHi = c.score;
       });
-      if (sLo === Infinity) { sLo = 0; sHi = 0; }
       function localRamp(v) {
-        // zero stays the status ink — a blocked cell must never be
-        // promoted to "faintly possible" by the local curve
-        if (v <= 0) return rampColor(0);
-        var m = sHi - sLo < 0.5 ? 50 : (v - sLo) / (sHi - sLo) * 100;
-        return rampColor(Math.max(1, m));
+        return rampColor(sHi - sLo < 0.5 ? 50 : (v - sLo) / (sHi - sLo) * 100);
       }
 
       /* the coastline: every cell edge where land meets water, inked
