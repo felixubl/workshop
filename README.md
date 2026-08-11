@@ -71,6 +71,16 @@ The eclipse mathematics itself runs entirely in your browser.
   Ask for as many as you want and it deals that many, no two alike, seeded so
   the same set comes back. The PDF is one card per page and is written here,
   byte by byte, with no library involved.
+- [Abecedarian Distance](abecedarian/) — *billowy* and *almost* already run in
+  alphabetical order; nearly every other word would too, under some other
+  alphabet. This finds the nearest such alphabet and counts the letter swaps it
+  took to get there — the minimum Cayley distance over all 26! orderings, which
+  is a claim the tool cannot demonstrate at 26 letters and so
+  [proves at five and six](tools/verify/abecedarian.html), where every word can
+  be checked against every permutation by brute force. Some words — *anna*,
+  *knowledge* — have no distance at all, and the page says which letter left and
+  came back. The engine is a separate file from the page and runs under node too,
+  off the same assertions.
 - [Eclipse Recon](eclipse-recon/) — an ops-console view of a solar
   eclipse: the path computed from Besselian elements in the browser, an
   animated umbra you can scrub through time, and a dossier for any point

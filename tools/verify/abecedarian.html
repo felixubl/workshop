@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>verify — abecedarian distance</title>
+<!-- The engine, and the assertions that hold it to its claims. Both are the
+     tool's own files rather than copies: a check that has drifted from the
+     thing it checks is worse than no check, and the only way to guarantee it
+     cannot drift is to load the same bytes the page loads.
+
+     The same file runs under node — `node abecedarian/selftest.js` — off one
+     set of assertions. This page exists because the tool links to it: the
+     distance is a MINIMUM over 26! alphabets, which is a claim a reader is
+     entitled to see checked rather than asserted, and asking them to install
+     node first would be asking them to take it on trust after all. -->
+<script src="/abecedarian/abc.js"></script>
+<script src="/abecedarian/selftest.js"></script>
+</head>
+<body style="margin:0;font:13px ui-monospace,monospace">
+<pre id="out">running…</pre>
+
+<script>
+var out = document.getElementById('out');
+var lines = [];
+
+/* Printed as they arrive rather than in one block at the end. The exhaustive
+   pass over ABCDEF is fifty-six thousand words against seven hundred and
+   twenty alphabets apiece, and a page that says "running…" for a second with
+   no idea whether it is working is a page you reload. */
+function draw() { out.textContent = lines.join('\n'); }
+
+setTimeout(function () {
+  var t0 = Date.now();
+  var res = ABCTest.run(function (r) {
+    lines.push((r.pass ? 'PASS  ' : 'FAIL  ') + r.name + (r.detail ? '  ::  ' + r.detail : ''));
+    draw();
+  });
+  var failed = res.filter(function (r) { return !r.pass; }).length;
+  lines.push('');
+  lines.push((res.length - failed) + ' pass, ' + failed + ' fail, ' +
+             ((Date.now() - t0) / 1000).toFixed(1) + 's');
+  draw();
+}, 0);
+</script>
+</body>
+</html>

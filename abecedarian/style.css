@@ -1,0 +1,290 @@
+/* Abecedarian Distance — only what is particular to this page.
+
+   Everything structural is base.css: the toolbar, the sheets, the result bars,
+   the cards, the buttons. What is here is the strip of twenty-six squares,
+   which nothing else on the site needs, and the handful of sizes around it. */
+
+/* The word field is the whole interface, so it is the one control allowed to
+   be large. Mono, because the letters are being read as letters — as a
+   sequence to be taken apart — and not as a word to be read for meaning. */
+.group.grow {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+.field.word {
+  width: 100%;
+  font-family: var(--pp-font-mono);
+  font-size: 1.05rem;
+  letter-spacing: 0.06em;
+}
+.tries {
+  flex-wrap: wrap;
+}
+
+/* The sheets carry no padding of their own — base.css gives them an edge and a
+   ground and stops, so that a table can run to the border. Everything here is
+   prose or figures inside the box, so each one gets a body. */
+.sheet-body {
+  padding: 1rem 1.15rem;
+}
+
+/* The headline figure, at the display face. Words and not a bare numeral:
+   "3 swaps" is the answer, "3" is a number the reader has to caption. */
+.count-big {
+  margin: 0;
+  font-family: var(--pp-font-display);
+  font-weight: var(--pp-weight-head);
+  font-size: clamp(1.5rem, 4.4vw, 2.1rem);
+  letter-spacing: var(--pp-track-head);
+  line-height: 1.1;
+  text-wrap: balance;
+}
+/* Zero is the good answer and no distance is no answer, and neither is a
+   failure, so neither takes the plate .hint owns. Zero goes quiet by being
+   ordinary ink; the refusal steps back to faint, which is where this site puts
+   a state rather than a result. */
+.count-big.is-none {
+  color: var(--pp-faint);
+}
+.verdict-say {
+  margin: 0.6rem 0 0;
+  max-width: 62ch;
+  font-size: 0.94rem;
+  line-height: 1.55;
+  color: var(--pp-muted);
+  text-wrap: pretty;
+}
+/* The word quoted back with its two guilty letters in ink and everything
+   between them faint, so the eye jumps the gap the way the letter did. Set as
+   the machine's face, because at this point the word is being read as a
+   sequence rather than as a word. */
+.verdict-say .quote {
+  font-family: var(--pp-font-mono);
+  letter-spacing: 0.08em;
+  color: var(--pp-faint);
+  white-space: nowrap;
+}
+.verdict-say .quote b {
+  color: var(--pp-ink);
+}
+
+/* Four short facts under the verdict. Two columns of term and value on a wide
+   screen, stacked below — the same shape the key on the index uses, for the
+   same reason: a term and its value are one row, not two paragraphs. */
+.facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.3rem 0.9rem;
+  margin: 1rem 0 0;
+  padding-top: 0.9rem;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+.facts dt {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+}
+.facts dd {
+  margin: 0;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-mono);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-ink);
+  overflow-wrap: anywhere;
+}
+
+/* ── The strip ─────────────────────────────────────────────────────────────
+   Twenty-six squares in position order, wrapping rather than scrolling: an
+   alphabet read in two rows of thirteen on a phone is still an alphabet, and
+   one that runs off the side of the screen is a puzzle. auto-fit rather than a
+   fixed thirteen, so the break lands wherever the column actually ends. */
+.strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(2.05rem, 1fr));
+  gap: 0.3rem;
+}
+.cell {
+  display: grid;
+  justify-items: center;
+  gap: 0.05rem;
+  padding: 0.3rem 0.1rem 0.25rem;
+  border: var(--pp-rule-line) solid transparent;
+  border-radius: var(--pp-radius-sm);
+  font-family: var(--pp-font-mono);
+  line-height: 1;
+}
+/* The letter that normally has this square, struck through, above the one that
+   has it now. Only printed where the two differ; elsewhere the line is a
+   non-breaking space, which holds every square the same height without
+   printing anything. A square that says nothing is a square nothing happened
+   to, and that is most of them. */
+/* The strike belongs to the moved squares alone. On an unchanged square this
+   line holds a space, purely to keep every square the same height — and a
+   strike drawn through a space is a dash, which is how twenty-two squares that
+   nothing happened to came to look annotated. */
+.cell-was {
+  font-size: var(--pp-size-label);
+  color: var(--pp-faint);
+}
+.cell.is-moved .cell-was {
+  text-decoration: line-through;
+  text-decoration-thickness: var(--pp-rule-hairline);
+}
+.cell-now {
+  font-size: 1rem;
+  color: var(--pp-muted);
+}
+.cell-at {
+  font-size: 0.6rem;
+  color: var(--pp-faint);
+  opacity: 0.65;
+}
+/* Two marks, and they stack: a square can hold a letter that moved, a letter
+   the word uses, or both. Moved is the fainter claim and takes ink weight
+   alone; a letter of the word takes the structural edge, because those
+   twenty-six squares exist to be read for the six or seven that matter. */
+.cell.is-moved .cell-now {
+  color: var(--pp-ink);
+}
+.cell.is-word {
+  border-color: var(--pp-edge);
+  border-width: var(--pp-rule-structure);
+  padding: calc(0.3rem - 1px) 0 calc(0.25rem - 1px);
+}
+.cell.is-word .cell-now {
+  color: var(--pp-ink);
+  font-weight: 700;
+}
+
+/* ── The swaps ─────────────────────────────────────────────────────────────
+   A numbered list, because they are applied in order, and the number is the
+   step rather than a bullet. */
+.swaps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  counter-reset: swap;
+}
+.swap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.swap::before {
+  counter-increment: swap;
+  content: counter(swap);
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  color: var(--pp-faint);
+}
+.swap-pair {
+  padding: 0.2rem 0.45rem;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-sm);
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-mono);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+/* The no-swaps line is not step zero of a sequence, it is the absence of the
+   sequence, so it takes neither the counter nor the box — it is a different
+   class rather than a .swap with the parts turned off. */
+.swap-none {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-mono);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+}
+
+/* ── The word, re-read ─────────────────────────────────────────────────────
+   Each letter over the place it now occupies. The numbers only ever go up,
+   and that is the proof, so they are set as figures under the letters rather
+   than described in a sentence. */
+.reread {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.glyph {
+  display: grid;
+  justify-items: center;
+  gap: 0.1rem;
+  min-width: 1.8rem;
+  padding: 0.3rem 0.25rem;
+  border-bottom: var(--pp-rule-line) solid var(--pp-line);
+  font-family: var(--pp-font-mono);
+  line-height: 1;
+}
+.glyph-l {
+  font-size: 1rem;
+  color: var(--pp-ink);
+}
+.glyph-n {
+  font-size: 0.68rem;
+  color: var(--pp-faint);
+}
+
+/* The seed. Evidence rather than reading: twenty-seven digits nobody takes in
+   at a glance, wrapping anywhere rather than forcing the sheet sideways. */
+.seed {
+  margin: 0;
+  font-family: var(--pp-font-mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-ink);
+  overflow-wrap: anywhere;
+}
+
+/* ── Two columns where two columns fit ─────────────────────────────────── */
+.two {
+  display: grid;
+  gap: var(--pp-space-4);
+}
+@media (min-width: 780px) {
+  .two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+section[data-when],
+#result > div,
+#result > section {
+  margin-bottom: var(--pp-space-4);
+}
+#result > div:last-child {
+  margin-bottom: 0;
+}
+
+.notes {
+  margin-top: clamp(2rem, 5vw, 3rem);
+}
+.notes .card h2 {
+  margin: 0 0 0.5rem;
+  font-family: var(--pp-font-display);
+  font-weight: var(--pp-weight-head);
+  font-size: 1rem;
+  letter-spacing: var(--pp-track-head);
+}
+.notes .card p {
+  margin: 0 0 0.6rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--pp-muted);
+  text-wrap: pretty;
+}
+.notes .card p:last-child {
+  margin-bottom: 0;
+}
+/* No tracking on inline code here, unlike every other mono run on the site.
+   Tracking adds its space AFTER the last character too, and "k!" quoted inside
+   a sentence came out as "k !" — a gap that reads as a typo in prose and as
+   nothing at all in a label. */
+.notes .card code {
+  font-family: var(--pp-font-mono);
+  font-size: 0.92em;
+}

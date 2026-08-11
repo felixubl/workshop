@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abecedarian Distance — Felix' Workshop</title>
+<meta name="description" content="billowy and almost are already in alphabetical order. Every other word would be, under some other alphabet — this finds the nearest one and counts the letter swaps it took to get there.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
+<script src="../assets/preprint/js/mode.js"></script>
+<script src="../assets/preprint/js/pullcord.js" defer></script>
+<link rel="stylesheet" href="../assets/preprint/styles.css">
+<link rel="stylesheet" href="../assets/preprint/core.css">
+<link rel="stylesheet" href="../assets/preprint/controls.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <button class="pullcord" type="button" data-pullcord aria-label="Pull the string to switch colour mode"><span class="pullcord__cord" aria-hidden="true"></span><span class="pullcord__bead" aria-hidden="true"></span></button>
+  <header>
+    <div>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <div class="title-row">
+        <h1 class="tool-title">Abecedarian Distance</h1>
+        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
+          <span data-share-label>copy link</span>
+        </button>
+        <button class="share-btn pin-btn" type="button" data-pin="abecedarian" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="spine"></div>
+
+  <div class="toolbar">
+    <div class="group grow">
+      <label for="word">Word</label>
+      <input class="field word" type="text" id="word" placeholder="billowy" spellcheck="false"
+             autocomplete="off" autocapitalize="off" autocorrect="off" maxlength="40">
+    </div>
+    <div class="group">
+      <label id="triesLabel">Try</label>
+      <div class="group tries" role="group" aria-labelledby="triesLabel" id="tries"></div>
+    </div>
+  </div>
+
+  <p class="hint" id="hint" hidden></p>
+
+  <!-- The empty state carries the definition, because this tool cannot be
+       understood from its own controls the way a PDF merger can. One field and
+       a number would be a riddle. -->
+  <div class="card prompt" id="empty">
+    A word is <strong>abecedarian</strong> when its letters already run in
+    alphabetical order — <em>billowy</em>, <em>almost</em>, <em>aegilops</em>.
+    Nearly no word is. But nearly every word would be, if the alphabet ran in
+    some other order: <em>zebra</em> needs only Z moved to the front and A to
+    the back. So the question stops being yes or no and becomes
+    <strong>how far</strong> — the fewest pairs of letters you would have to
+    swap in the alphabet itself before the word comes out sorted.
+  </div>
+
+  <section id="result" hidden>
+
+    <div class="result-bar">
+      <p class="section-label">The distance</p>
+      <code class="meta" id="verdictMeta"></code>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-body">
+        <p class="count-big" id="distance">—</p>
+        <p class="verdict-say" id="verdictSay"></p>
+        <dl class="facts" id="facts"></dl>
+      </div>
+    </div>
+
+    <div data-when="sortable">
+      <div class="result-bar">
+        <p class="section-label">The nearest alphabet</p>
+        <code class="meta" id="alphaMeta"></code>
+      </div>
+
+      <div class="sheet">
+        <!-- The strip is the centrepiece: twenty-six squares, each holding the
+             letter that lives there under the new order, and above it in small
+             type the letter that normally would, wherever the two differ. -->
+        <div class="sheet-body">
+          <div class="strip" id="strip" role="list" aria-label="The nearest alphabet, position by position"></div>
+        </div>
+      </div>
+      <p class="sheet-note" id="stripKey"></p>
+    </div>
+
+    <div class="two" data-when="sortable">
+      <section>
+        <div class="result-bar">
+          <p class="section-label">The swaps</p>
+          <code class="meta" id="swapMeta"></code>
+        </div>
+        <div class="sheet">
+          <div class="sheet-body">
+            <ol class="swaps" id="swaps"></ol>
+          </div>
+        </div>
+        <p class="sheet-note" id="swapNote"></p>
+      </section>
+
+      <section>
+        <div class="result-bar">
+          <p class="section-label">The word, re-read</p>
+          <code class="meta" id="readMeta"></code>
+        </div>
+        <div class="sheet">
+          <div class="sheet-body">
+            <div class="reread" id="reread"></div>
+          </div>
+        </div>
+        <p class="sheet-note" id="rereadNote"></p>
+      </section>
+    </div>
+
+    <div data-when="sortable">
+      <div class="result-bar">
+        <p class="section-label">Which alphabet this is</p>
+        <code class="meta">of 26! = 403,291,461,126,605,635,584,000,000</code>
+      </div>
+      <div class="sheet">
+        <div class="sheet-body">
+          <p class="seed" id="seed"></p>
+        </div>
+      </div>
+      <p class="sheet-note">
+        Every one of the 26! orderings has a number: its place in the list of
+        them, sorted the way a dictionary sorts. Ordinary A&ndash;Z is 0. The
+        conversion is the Lehmer code, and it runs both ways, so this number
+        names that alphabet exactly and nothing else.
+      </p>
+    </div>
+  </section>
+
+  <!-- The reasoning, at the foot. A number this abstract is worth as much as
+       its definition, and a reader who wants to argue with it should be able
+       to find out what it actually claims without reading the source. -->
+  <section class="notes">
+    <div class="result-bar">
+      <p class="section-label">What the number means</p>
+    </div>
+    <div class="two">
+      <div class="card">
+        <h2>Swaps, not shifts</h2>
+        <p>
+          The distance counts swaps of <em>any</em> two letters in the alphabet
+          &mdash; the Cayley distance, which is 26 minus the number of cycles
+          the reordering falls into. The worst possible is 25.
+        </p>
+        <p>
+          Counting swaps of <em>neighbouring</em> letters instead gives a
+          different number (Kendall tau, worst case 325), and the two disagree
+          loudly. Rotating the alphabet by one, <code>BCD&hellip;ZA</code>,
+          scores the maximum 25 on the first and a mild 25 out of 325 on the
+          second. One asks how tangled the alphabet is; the other how far it
+          has been carried. Both are printed above.
+        </p>
+      </div>
+      <div class="card">
+        <h2>Words that no alphabet can sort</h2>
+        <p>
+          <em>anna</em> has no distance at all. Under any single ordering every
+          copy of a letter has to sit together, and A here leaves and comes
+          back &mdash; a&hellip;n&hellip;n&hellip;a. No permutation of the
+          alphabet can fix that, so the answer is not a large number but no
+          number.
+        </p>
+        <p>
+          The test is exactly that: a word can be sorted by some alphabet if and
+          only if no letter appears in two separate blocks. <em>tee</em> and
+          <em>aabb</em> are fine; <em>abab</em> and <em>knowledge</em> are not.
+        </p>
+      </div>
+      <div class="card">
+        <h2>Only the first appearances count</h2>
+        <p>
+          Once a word passes that test, everything about it collapses to one
+          short string: its distinct letters in order of first appearance.
+          <em>bookkeeper</em> and <em>boker</em> pose the identical problem, and
+          length, repeats and doubled letters stop mattering entirely.
+        </p>
+        <p>
+          Which is also why the count of alphabets that sort a word depends on
+          nothing but how many different letters it uses: one in
+          <code>k!</code> of them, for a word of <code>k</code> distinct
+          letters.
+        </p>
+      </div>
+      <div class="card">
+        <h2>Why the obvious method is wrong</h2>
+        <p>
+          The tempting shortcut is to reorder the word's own letters among their
+          own alphabetical places and count that. It overcharges, because the
+          letters the word never uses are parking spaces.
+        </p>
+        <p>
+          For a word needing B before C before A, shuffling in place gives
+          <code>BCADE</code> &mdash; a three-way rotation, two swaps. Parking A
+          on D's square instead gives <code>DBCAE</code>: one swap, and D was
+          doing nothing anyway. The search here checks the parking spaces, and
+          <a href="../tools/verify/abecedarian.html">is checked against brute
+          force</a> on every word over a five- and six-letter alphabet.
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+<script src="abc.js"></script>
+<script src="script.js"></script>
+<script src="../assets/preprint/js/controls.js"></script>
+<script src="../assets/share.js"></script>
+<script src="../assets/favourites.js"></script>
+</body>
+</html>
