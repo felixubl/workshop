@@ -14,7 +14,6 @@ var field = document.getElementById('word');
 var hint = document.getElementById('hint');
 var empty = document.getElementById('empty');
 var result = document.getElementById('result');
-var tries = document.getElementById('tries');
 
 var distanceEl = document.getElementById('distance');
 var verdictSay = document.getElementById('verdictSay');
@@ -34,15 +33,6 @@ var reread = document.getElementById('reread');
 var readMeta = document.getElementById('readMeta');
 var rereadNote = document.getElementById('rereadNote');
 var seedEl = document.getElementById('seed');
-
-/* Each of these is here to be argued with rather than to fill the row: the
-   classic abecedarian word, the longest one in English, the cheapest possible
-   repair, two that cost a couple of swaps, a German word to show the folding,
-   one whose repeats collapse to a much shorter root, the dearest ordinary word
-   found in a 370,000-word list, and two that cannot be sorted at all — one
-   obviously, one not. */
-var EXAMPLES = ['billowy', 'aegilops', 'tee', 'zebra', 'sphinx', 'claude',
-                'deutsch', 'committee', 'backgrounds', 'anna', 'knowledge'];
 
 /* Thin spaces every three digits. A twenty-seven-digit number is evidence, not
    reading, but ungrouped it is not even checkable against another copy of
@@ -245,17 +235,6 @@ function showWord(input) {
 }
 
 /* ── Wiring ──────────────────────────────────────────────────────────────── */
-
-EXAMPLES.forEach(function (w) {
-  var b = el('button', 'btn-ghost preset', w);
-  b.type = 'button';
-  b.addEventListener('click', function () {
-    field.value = w;
-    run();
-    field.focus();
-  });
-  tries.appendChild(b);
-});
 
 var timer = null;
 function run() {

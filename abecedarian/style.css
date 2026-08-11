@@ -17,9 +17,6 @@
   font-size: 1.05rem;
   letter-spacing: 0.06em;
 }
-.tries {
-  flex-wrap: wrap;
-}
 
 /* The sheets carry no padding of their own — base.css gives them an edge and a
    ground and stops, so that a table can run to the border. Everything here is
