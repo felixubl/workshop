@@ -53,6 +53,10 @@
     </div>
     <div class="sheet-body">
       <dl class="stats" id="intel-stats"></dl>
+      <div id="survey-row" hidden
+        data-tip="The workshop's own crawler pre-surveys the band's horizons at ~80 m, a few tiles at a time with no hurry, and everyone's fine maps reuse what it has settled. The percentage is band ground settled; the count is tiles that needed real scanning.">
+        <span>100 m survey</span><b id="survey-pc">—</b><code id="survey-n"></code>
+      </div>
       <div class="tl-global">
         <h3>Timeline <small>UT</small></h3>
         <div id="tl-rows"></div>
@@ -113,7 +117,7 @@
             <option value="200">200 km</option>
           </select>
           <select id="reach-grid" aria-label="Cell size"
-            data-tip="Cell size — finer is quadratically more horizon scans, computed on your machine and remembered by this browser, so re-runs and finer passes only pay for ground not yet surveyed. Caps at 200 cells across: 100 m holds to 10 km, 250 m to 25 km, and so on.">
+            data-tip="Cell size — finer is quadratically more horizon scans, computed on your machine and remembered by this browser. Ground the band crawler has settled arrives precomputed and costs nothing. Caps at 1000 cells across: 100 m holds to 50 km. The finest grids at the largest radii want a desktop.">
             <option value="" selected>auto</option>
             <option value="2">2 km</option>
             <option value="1">1 km</option>
@@ -209,6 +213,7 @@
 <script src="js/bessel.js"></script>
 <script src="js/terrain.js"></script>
 <script src="js/weather.js"></script>
+<script src="js/precomp.js"></script>
 <script src="js/app.js"></script>
 <script src="../assets/preprint/js/controls.js"></script>
 <script src="../assets/share.js"></script>

@@ -27,9 +27,14 @@ INDEX = ROOT / "index.html"
 
 
 def git_dates(tool):
-    """(first-added, last-changed) as %Y-%m-%d, or None without history."""
+    """(first-added, last-changed) as %Y-%m-%d, or None without history.
+
+    A tool's data/ folder is excluded: the band crawler commits into
+    eclipse-recon/data on a schedule, and a machine topping up its own
+    tables is not the tool changing."""
     log = subprocess.run(
-        ["git", "log", "--format=%as", "--", f"{tool}/"],
+        ["git", "log", "--format=%as", "--",
+         f"{tool}/", f":(exclude){tool}/data"],
         cwd=ROOT, capture_output=True, text=True, check=True,
     ).stdout.split()
     if not log:
