@@ -1,15 +1,43 @@
 # Felix' Workshop
 
 A small collection of self-serve browser tools, hosted at
-[workshop.fubl.org](https://workshop.fubl.org). No accounts, no build step, no
-server: every tool runs entirely client-side, and the whole thing is open
-source so that claim is checkable rather than just asserted.
+[workshop.fubl.org](https://workshop.fubl.org). No accounts and no build step:
+the site is a folder of static files, and the whole thing is open source, so
+what any one tool does is checkable rather than merely asserted.
 
-Two tools talk to the network, and in both the traffic is the subject of the
-tool rather than an exception to the rule. The Network Inspector can look your
+Most of them run entirely in your browser. Not all of them will. Rather than a
+site-wide vow that one tool could falsify — and rather than the older
+arrangement, where the reassuring case was the *absence* of a mark — every card
+on the index says what leaves your machine, on a five-rung ladder printed on
+all of them:
+
+| rung | what it means |
+|---|---|
+| `local` | Nothing leaves the page. It is fetched once and then runs on your machine. |
+| `fetch` | It asks somebody else for public data. Nothing you gave it goes out, but the request does, and a request is your address and what you asked for. |
+| `send` | Something you gave it goes out to be worked on and comes back. It is not kept. |
+| `store` | Something you gave it is kept on a server. The card says whose. |
+| `account` | Kept, and tied to a name you signed in with. |
+
+The ladder is printed in ink and never in a plate, because the plates are the
+index's *category* vocabulary — the cast on a card, the square in front of a
+queued name — and a second colour code on the same object would make both
+harder to trust. Invasiveness is measured in ink coverage instead: five small
+squares driven in from the left, and a word that darkens as the rung rises.
+The key at the foot of the index defines all five.
+
+Nothing on the bench is above `fetch` today — five tools never open a socket,
+and two read public data and keep nothing. `store` and `account` are printed
+unused because the tools that will need them (Convex, Supabase, or something
+self-hosted on a VPS) are planned, and a scale written to describe what already
+exists is a scale bent to fit it.
+
+The two tools on `fetch` both make their traffic the subject rather than an
+aside, and each names who it is about to talk to on its own page, before
+anything is sent. The Network Inspector can look your
 IP address up with a third party, ask a STUN server what it sees, and probe
-your local range — all behind buttons, nothing sent on load, and the page says
-who it is about to talk to before you press anything. Eclipse Recon is a map
+your local range — all behind buttons, with nothing sent on load at all.
+Eclipse Recon is a map
 of the world with live weather on it, which cannot exist without a network:
 it fetches elevation tiles (Mapzen/AWS) for both the base map and the horizon
 scans, map labels (Carto/OSM) and forecasts (Open-Meteo), plus a keyless
@@ -100,10 +128,13 @@ its card goes from a queue row to solid stock with a cast once it's built.
 A card carries the tool's name, one sentence of what it is for, and two dates
 in small print — the day the tool first landed and the day it last changed,
 read out of git history by `tools/stamp-dates` rather than written by hand —
-plus a pin that drives it to the front of the grid. The tools that talk to
-the network carry a small plate-3 `network` mark under the dates; an
-unmarked card runs entirely on your machine. "Everything is local" is a
-per-tool promise, checked card by card, not a site-wide vow.
+plus a pin that drives it to the front of the grid. Under the dates it carries
+its rung on the ladder above: `<code class="plate-custody" data-custody="…">`,
+holding a five-square meter and the rung's word, then an em dash and whatever
+is specific to that tool — the hosts it asks, whose server keeps the file. A
+`local` card names nothing because there is nothing to name. One attribute
+sets both the filled-square count and the ink, and the key at the foot of the
+page reads the same attribute, so a card and the key cannot drift apart.
 
 ## Stack
 
@@ -195,9 +226,15 @@ names it declares must not change.
    bench with the tool's register class (`reg-N`) and `data-tool`, holding a
    `.plate.plate-live` — the name in an `h3` wrapped in `a.plate-open`, the
    pin, and one `.plate-say` sentence. Remove the tool's queue row if it had
-   one, and update both tally counts. If the tool talks to the network, add
-   a `code.plate-net` mark under the dates saying so, tersely.
-6. Commit, then run `tools/stamp-dates` and commit what it rewrites: it reads
+   one, and update both tally counts.
+6. Give the card its rung. Copy a `code.plate-custody` from any existing card,
+   set `data-custody` to the highest rung the tool actually reaches — a tool
+   that keeps one thing on a server is `store` even if everything else it does
+   is local — and say tersely what is specific to it after the dash. The five
+   `<i>` squares are always five; the attribute decides how many are filled.
+   If the rung is above `fetch`, the tool's own page has to say the same thing
+   in its own words, in more of them, before anything is sent or kept.
+7. Commit, then run `tools/stamp-dates` and commit what it rewrites: it reads
    git history and presses two dates onto every card — the day the tool first
    landed, the day it last changed — and that script is the only thing that
    writes those lines. Run it again after any later change to a tool.
