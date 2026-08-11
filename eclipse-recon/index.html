@@ -49,7 +49,7 @@
   <aside id="intel" class="sheet">
     <div class="sheet-head">
       <h2>Event</h2>
-      <button class="sheet-fold" type="button" data-fold="intel" aria-label="Collapse panel">▁</button>
+      <button class="sheet-fold" type="button" data-fold="intel" aria-expanded="true" aria-label="Fold panel"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true"><path d="M3.5 10 8 5.5l4.5 4.5"/></svg></button>
     </div>
     <div class="sheet-body">
       <dl class="stats" id="intel-stats"></dl>
@@ -76,8 +76,11 @@
   <aside id="dossier" class="sheet" hidden>
     <div class="sheet-head">
       <h2>Site</h2>
+      <!-- the drawer's peek line: at the lowest snap the head bar is all
+           that shows, so it carries the one number and the name -->
+      <span class="head-peek" id="dossier-peek" aria-hidden="true"></span>
       <div class="head-keys">
-        <button class="sheet-fold" type="button" data-fold="dossier" aria-label="Collapse panel">▁</button>
+        <button class="sheet-fold" type="button" data-fold="dossier" aria-expanded="true" aria-label="Fold panel"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true"><path d="M3.5 10 8 5.5l4.5 4.5"/></svg></button>
         <button class="sheet-fold" type="button" id="dossier-close" aria-label="Close site panel">✕</button>
       </div>
     </div>
@@ -163,7 +166,8 @@
       <option value="1800">×1800</option>
     </select>
     <button id="track" class="btn-ghost" type="button" aria-pressed="false"
-      title="Keep the umbra centred during playback">follow</button>
+      aria-label="Keep the umbra centred during playback"
+      data-tip="Keep the umbra centred during playback"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" aria-hidden="true"><circle cx="8" cy="8" r="4.2"/><path d="M8 0.8v3M8 12.2v3M0.8 8h3M12.2 8h3"/></svg><span class="track-word">follow</span></button>
     <div id="scrub-wrap">
       <div id="scrub-band" aria-hidden="true"></div>
       <input id="scrub" type="range" min="0" max="1000" value="0" step="1" aria-label="Simulation time" data-plain>
