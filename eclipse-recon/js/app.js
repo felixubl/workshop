@@ -1670,9 +1670,10 @@
     if (lonR - lonL > 360) { lonL = -180; lonR = 180; }
     if (latT <= latB) { suitProg(1); return; }
 
-    // one canvas pixel per ~5 screen px; the overlay scales it back up
-    var W = Math.max(40, Math.min(280, Math.round(size.x / 5)));
-    var H = Math.max(30, Math.min(200, Math.round(size.y / 5)));
+    // one canvas pixel per ~2 screen px: fine enough that the survey's
+    // own pixels render as crisp squares wherever the zoom can show them
+    var W = Math.max(40, Math.min(800, Math.round(size.x / 2)));
+    var H = Math.max(30, Math.min(560, Math.round(size.y / 2)));
     function merc(lat) {
       var s = Math.sin(lat * RAD);
       return Math.log((1 + s) / (1 - s)) / 2;
@@ -1708,10 +1709,12 @@
 
     var wxDone = fetchSuitSky(centralNodes, signal).catch(function () { return null; });
 
-    // narrow views read true pixels; wide ones read tile means. The
-    // threshold is what can reasonably be fetched, counted not guessed.
+    /* true pixels for any view whose tiles can reasonably be fetched —
+       counted, not guessed. ~600 small PNGs is a Balearics-to-Valencia
+       frame; beyond that a screen pixel is wider than a whole tile and
+       the manifest means ARE the finest thing the zoom can show. */
     var pxKeys = {};
-    var usePixels = (lonR - lonL) < 5;
+    var usePixels = (lonR - lonL) < 8;
     if (usePixels) {
       for (var r2 = 0; r2 < H; r2 += 2) {
         for (var q2 = 0; q2 < W; q2 += 2) {
@@ -1721,7 +1724,7 @@
           }
         }
       }
-      if (Object.keys(pxKeys).length > 170) usePixels = false;
+      if (Object.keys(pxKeys).length > 620) usePixels = false;
     }
     var tilesDone = usePixels ?
       Precomp.prefetch(Object.keys(pxKeys)) : Promise.resolve();
@@ -1750,7 +1753,7 @@
       var g = cv.getContext('2d');
       var id = g.createImageData(W, H);
       var lut = rampLUT();
-      var painted = 0, edgeBudget = 8000;
+      var painted = 0, edgeBudget = 12000;
 
       for (var r4 = 0; r4 < H; r4++) {
         var lat4 = latOf(r4);
