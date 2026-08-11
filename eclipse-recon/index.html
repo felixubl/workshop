@@ -181,9 +181,11 @@
     <button id="suit-btn" class="btn-ghost" type="button" aria-pressed="false"
       data-tip="Suitability along the band, 0–100: red = the eclipse cannot be seen there, green = everything lines up. Drawn from the band survey — tile averages from afar, ~80 m detail up close — with the live forecast on top. Unsurveyed ground stays unpainted until the crawler reaches it.">suitability</button>
     <div id="suit-legend" class="score-legend" hidden>
-      <i class="suit-ramp" aria-hidden="true"></i><b>0</b><b>100</b>
+      <i class="suit-ramp" aria-hidden="true"></i><b id="suit-lo">0</b><b id="suit-hi">100</b>
       <span id="suit-mode"></span>
     </div>
+    <button id="suit-grade" class="btn-ghost" type="button" hidden
+      data-tip="Anchor the ramp: on the band, colours compare everywhere the eclipse goes — a low-Sun island can never leave the middle. On this view, the best in sight is green and the worst red, so the differences that matter where you stand become visible. The numbers under the ramp stay absolute.">graded on the band</button>
     <div id="suit-prog" hidden><i></i></div>
   </div>
 

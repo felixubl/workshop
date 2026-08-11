@@ -325,6 +325,8 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
 /* the big-field print: cells are data, so they scale as squares, not blur */
 .suit-img { image-rendering: pixelated; }
 
+#suit-grade { font-size: 0.62rem; padding: 0.3em 0.7em; }
+
 /* the crawler's progress line in the event panel */
 #survey-row { display: flex; align-items: baseline; gap: 0.5rem;
   margin-top: 0.55rem; font-size: 0.8rem; }
