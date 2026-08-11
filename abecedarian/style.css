@@ -257,31 +257,3 @@ section[data-when],
   margin-bottom: 0;
 }
 
-.notes {
-  margin-top: clamp(2rem, 5vw, 3rem);
-}
-.notes .card h2 {
-  margin: 0 0 0.5rem;
-  font-family: var(--pp-font-display);
-  font-weight: var(--pp-weight-head);
-  font-size: 1rem;
-  letter-spacing: var(--pp-track-head);
-}
-.notes .card p {
-  margin: 0 0 0.6rem;
-  font-size: 0.88rem;
-  line-height: 1.55;
-  color: var(--pp-muted);
-  text-wrap: pretty;
-}
-.notes .card p:last-child {
-  margin-bottom: 0;
-}
-/* No tracking on inline code here, unlike every other mono run on the site.
-   Tracking adds its space AFTER the last character too, and "k!" quoted inside
-   a sentence came out as "k !" — a gap that reads as a typo in prose and as
-   nothing at all in a label. */
-.notes .card code {
-  font-family: var(--pp-font-mono);
-  font-size: 0.92em;
-}
