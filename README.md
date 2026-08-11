@@ -83,11 +83,12 @@ The eclipse mathematics itself runs entirely in your browser.
   drawn from elevation alone — water the palest flat tone, land darkening
   in altitude steps with a key in the corner — the Moon's shadow is printed
   in actual black, and the plates appear only where they mean something —
-  plate 3 is totality, and every score wears one ramp: plate 1 alone,
-  from a faint tint to full depth, mixed in OKLab so the lightness runs
-  monotonically — the reading survives any colour vision and a greyscale
-  print — with plate 2 reserved for the one state that is not a
-  magnitude: the eclipse cannot be seen there at all. It is
+  plate 3 is totality, and every score wears one scale: viridis, worst
+  to best — the standard scientific ramp, perceptually uniform and
+  legible under every form of colour vision, deliberately not pressed
+  from the site's own plates because the field is data, not chrome. A
+  switch takes totality's duration out of the score, leaving it purely
+  about seeing. It is
   the second tool that talks to the network (see above), and it works on a
   phone.
 

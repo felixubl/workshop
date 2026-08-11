@@ -102,8 +102,10 @@
           with the certain factors. The sky is a forecast, so its middle
           is softened — but under 20 it falls quadratically, and a certain
           storm is 0. Duration counts gently: half the maximum is still
-          most of the show. For a Sun under 20° the sky number is the
-          worse of overhead and the sightline decks toward its azimuth.</p>
+          most of the show — and the key by the suitability switch takes
+          it out entirely, leaving the score purely about seeing. For a
+          Sun under 20° the sky number is the worse of overhead and the
+          sightline decks toward its azimuth.</p>
         </details>
       </section>
       <section id="sec-reach">
@@ -126,7 +128,7 @@
             <option value="0.1">100 m</option>
           </select>
           <button id="reach-btn" class="btn-primary" type="button"
-            data-tip="Paint the suitability field inside this radius, graded on the local curve: the best within reach wears the deepest green, the faintest possible spot the palest — red is only where the eclipse cannot be seen at all. The coastline prints above the field. Distances are straight-line.">Map the area</button>
+            data-tip="Paint the suitability field inside this radius, graded on the local curve: the best within reach wears yellow, the worst deep violet. The coastline prints above the field. Distances are straight-line.">Map the area</button>
         </div>
         <div id="reach-legend" class="score-legend" hidden>
           <i class="suit-ramp" aria-hidden="true"></i><b id="reach-lo">0</b><b id="reach-hi">100</b>
@@ -179,13 +181,15 @@
        cell of the visible map instead of one point -->
   <div id="suit-ctl">
     <button id="suit-btn" class="btn-ghost" type="button" aria-pressed="false"
-      data-tip="Suitability along the band, 0–100: the deeper the green, the better the site — one hue, so the reading survives any colour vision. Red is the zero state: the eclipse cannot be seen there at all. Drawn from the band survey — tile averages from afar, ~80 m detail up close — with the live forecast on top. Unsurveyed ground stays unpainted until the crawler reaches it.">suitability</button>
+      data-tip="Suitability along the band, 0–100 on the viridis scale: deep violet = the eclipse cannot be seen there, yellow = everything lines up — a scale legible under every colour vision. Drawn from the band survey — tile averages from afar, ~80 m detail up close — with the live forecast on top. Unsurveyed ground stays unpainted until the crawler reaches it.">suitability</button>
     <div id="suit-legend" class="score-legend" hidden>
       <i class="suit-ramp" aria-hidden="true"></i><b id="suit-lo">0</b><b id="suit-hi">100</b>
       <span id="suit-mode"></span>
     </div>
     <button id="suit-grade" class="btn-ghost" type="button" hidden
-      data-tip="Anchor the ramp: on the band, colours compare everywhere the eclipse goes — a low-Sun island can never leave the shallows. On this view, the best in sight wears the deepest green and the faintest the palest, so the differences that matter where you stand become visible. Red stays reserved for cannot-see-it. The numbers under the ramp stay absolute.">graded on the band</button>
+      data-tip="Anchor the scale: on the band, colours compare everywhere the eclipse goes — a low-Sun island can never leave the violet end. On this view, the best in sight wears yellow and the worst violet, so the differences that matter where you stand become visible. The numbers under the scale stay absolute.">graded on the band</button>
+    <button id="suit-dur" class="btn-ghost" type="button" aria-pressed="false"
+      data-tip="Take totality's length out of the score. Any totality is the event: with duration off, the score is purely about seeing it — horizon, air, sky — and re-scores the wash, the reach field and the site panel alike.">duration counts</button>
     <div id="suit-prog" hidden><i></i></div>
   </div>
 
