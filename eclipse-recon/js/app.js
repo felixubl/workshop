@@ -1776,7 +1776,48 @@
     var tilesDone = LEVEL === 0 ? Precomp.prefetch(levelTiles)
                                 : Precomp.ovPrefetch(levelTiles);
 
-    Promise.all([wxDone, tilesDone]).then(function (res) {
+    /* the coastline rides ABOVE the wash: terrarium tiles at the canvas's
+       own resolution — a view is never more than ~20 of them — give a
+       land/water answer per block, and the boundary is inked after the
+       colours so the geography stays readable under the field */
+    var CZ = Math.max(1, Math.min(11, Math.ceil(Math.log2(
+      Math.max(1, W / (lonR - lonL) * 360 / 256)))));
+    var cn = 1 << CZ;
+    function coastY(lat) {
+      return (1 - merc(Math.max(-85, Math.min(85, lat))) / Math.PI) / 2 * cn;
+    }
+    var coastTiles = {};
+    var coastDone = (function () {
+      var x0 = Math.floor((lonL + 180) / 360 * cn);
+      var x1 = Math.floor((lonR + 180) / 360 * cn);
+      var y0 = Math.max(0, Math.floor(coastY(latT)));
+      var y1 = Math.min(cn - 1, Math.floor(coastY(latB)));
+      var jobs = [];
+      for (var ty = y0; ty <= y1; ty++) {
+        for (var tx = x0; tx <= x1; tx++) {
+          (function (tx2, ty2) {
+            jobs.push(Terrain.tile(CZ, ((tx2 % cn) + cn) % cn, ty2)
+              .then(function (d) { coastTiles[tx2 + '/' + ty2] = d; }));
+          })(tx, ty);
+        }
+      }
+      return Promise.all(jobs);
+    })();
+    function waterAt(lat3, lon3) {         // 1 water, 0 land, -1 unknown
+      var xf = (lon3 + 180) / 360 * cn;
+      var yf = coastY(lat3);
+      var td = coastTiles[Math.floor(xf) + '/' + Math.floor(yf)];
+      if (!td) return -1;
+      var px = Math.min(255, Math.floor((xf - Math.floor(xf)) * 256));
+      var py = Math.min(255, Math.floor((yf - Math.floor(yf)) * 256));
+      var i3 = (py * 256 + px) * 4;
+      // raw terrarium: bathymetry goes negative, so sea is h <= 0
+      return (td.data[i3] * 256 + td.data[i3 + 1] + td.data[i3 + 2] / 256 -
+              32768) <= 0 ? 1 : 0;
+    }
+
+    Promise.all([wxDone, tilesDone, coastDone]).then(function (resAll) {
+      var res = resAll;
       if (dead()) return;
 
       function nodeAt(r3, q3) { return nodes[r3 * (LX + 1) + q3]; }
@@ -1904,6 +1945,36 @@
         var o4 = i5 * 4;
         id.data[o4] = c4[0]; id.data[o4 + 1] = c4[1];
         id.data[o4 + 2] = c4[2]; id.data[o4 + 3] = 115;
+      }
+
+      /* the coast, inked above the field: wherever two blocks that touch
+         the wash disagree about being water, the land-side block takes
+         the page's ink — the same rule the reach map draws by */
+      var inkC = hexRGB(palette().ink);
+      var wmask = new Int8Array(W * H).fill(-2);
+      function wAt(i6) {
+        if (wmask[i6] === -2) {
+          wmask[i6] = waterAt(latOf((i6 / W) | 0), lonOf(i6 % W));
+        }
+        return wmask[i6];
+      }
+      for (var r6 = 0; r6 < H; r6++) {
+        for (var q6 = 0; q6 < W; q6++) {
+          var i7 = r6 * W + q6;
+          var here = scores[i7] >= 0;
+          var nbs = [q6 + 1 < W ? i7 + 1 : -1, r6 + 1 < H ? i7 + W : -1];
+          for (var b7 = 0; b7 < 2; b7++) {
+            var j7 = nbs[b7];
+            if (j7 < 0 || (!here && scores[j7] < 0)) continue;
+            var wa = wAt(i7), wb = wAt(j7);
+            if (wa < 0 || wb < 0 || wa === wb) continue;
+            var landI = wa === 0 ? i7 : j7;
+            id.data[landI * 4] = inkC[0];
+            id.data[landI * 4 + 1] = inkC[1];
+            id.data[landI * 4 + 2] = inkC[2];
+            id.data[landI * 4 + 3] = 235;
+          }
+        }
       }
       g.putImageData(id, 0, 0);
       $('suit-lo').textContent = SUIT.localGrade && painted ?
