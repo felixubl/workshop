@@ -1,0 +1,57 @@
+# The band crawler's clock. GitHub Actions is the workshop's only backend:
+# every few hours this walks a slice of the eclipse band — precomputing the
+# horizon-visibility raster the suitability score needs — commits what it
+# settled, and Pages serves the result to everyone as static files. The
+# crawler (tools/crawl-vis.mjs) is resumable and budget-bound, so each run
+# bites off what fits and leaves the queue for the next one. No hurry.
+#
+# Note: GitHub pauses scheduled workflows after ~60 days without repo
+# activity from a user; any human push revives the schedule.
+name: crawl-vis
+on:
+  schedule:
+    - cron: '43 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: 'crawl budget in minutes'
+        default: '50'
+      near:
+        description: 'lat,lon to prioritise (optional)'
+        default: ''
+permissions:
+  contents: write
+concurrency:
+  group: crawl-vis
+  cancel-in-progress: false
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # the DEM cache carries fetched elevation tiles between runs, so the
+      # crawler stops re-downloading ground it has already read
+      - uses: actions/cache@v4
+        with:
+          path: .dem-cache
+          key: dem-cache-v1-${{ github.run_id }}
+          restore-keys: dem-cache-v1-
+      - run: npm install --no-save --no-package-lock pngjs@7
+      - name: crawl
+        run: >
+          node tools/crawl-vis.mjs
+          --minutes ${{ github.event.inputs.minutes || 50 }}
+          ${{ github.event.inputs.near && format('--near {0}', github.event.inputs.near) || '' }}
+      - name: commit what settled
+        run: |
+          git config user.name 'band-crawler'
+          git config user.email 'noreply@github.com'
+          git add eclipse-recon/data
+          if git diff --cached --quiet; then echo 'nothing settled'; exit 0; fi
+          git commit -F .crawl-summary.txt
+          git pull --rebase origin main
+          git push origin main

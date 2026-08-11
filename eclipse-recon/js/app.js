@@ -639,6 +639,21 @@
 
   /* ================= mission intel panel ================= */
 
+  /* How far the band crawler has got with this eclipse. The row only
+     exists while there is a survey to report; a pasted eclipse, or one
+     the crawler has not started, shows nothing. */
+  function updateSurveyRow() {
+    var el = $('survey-row');
+    var c = Precomp.progress();
+    if (!c) { el.hidden = true; return; }
+    var settled = (c.done || 0) + (c.flat || 0) + (c.out || 0);
+    el.hidden = false;
+    $('survey-pc').textContent =
+      (Math.round(settled / c.total * 1000) / 10) + '%';
+    $('survey-n').textContent =
+      (c.done || 0).toLocaleString() + ' tiles scanned';
+  }
+
   function buildIntel() {
     var g = S.gt;
     var pathKm = 0;
@@ -659,6 +674,7 @@
     $('intel-stats').innerHTML = stats.map(function (s) {
       return '<dt>' + s[0] + '</dt><dd>' + esc(s[1]) + '</dd>';
     }).join('');
+    updateSurveyRow();
     var rows = [
       ['P1', g.p1Date], ['U1', g.u1Date], ['MAX', g.dateGE],
       ['U4', g.u4Date], ['P4', g.p4Date]
@@ -1336,6 +1352,15 @@
   }
 
   function scanVis(c, signal) {
+    /* the band crawler may already know this ground — a precomputed
+       pixel is the same number this scan would make, at zero cost */
+    return Precomp.visAt(c.lat, c.lonN).then(function (v) {
+      if (v !== null) { c.vis = v; return; }
+      return scanVisLocal(c, signal);
+    });
+  }
+
+  function scanVisLocal(c, signal) {
     var lo = Math.min.apply(null, c.azs), hi = Math.max.apply(null, c.azs);
     if (hi - lo > 180) { lo = c.lc.sunAz - 12; hi = c.lc.sunAz + 12; }
     var maxKm = Math.min(120, Math.max(8,
@@ -1881,13 +1906,14 @@
        picks the cell size — finer is quadratically more scans, spent
        from their own machine, and every scan lands in the persistent
        cache, so a finer pass after a coarse one only pays for the new
-       points. The cap is the survey's patience, not the maths: 200
-       cells across, which makes each cell size good for one decade of
-       radius — 100 m to 10 km, 250 m to 25 km, and so on up. */
+       points, and where the band crawler has already settled the
+       ground, cells arrive precomputed and cost nothing at all. The cap
+       is the survey's patience, not the maths: 1000 cells across —
+       100 m holds to a 50 km radius. */
     var COLS = cellKm ? Math.round(2 * radiusKm / cellKm) : 13;
-    if (COLS > 200) {
+    if (COLS > 1000) {
       status.textContent = fmtCellKm(cellKm) + ' cells hold to ' +
-        Math.floor(cellKm * 100) + ' km — shrink the radius';
+        Math.floor(cellKm * 500) + ' km — shrink the radius';
       return;
     }
     var run = REACH.run;
@@ -2060,7 +2086,7 @@
       return Math.log((1 + s) / (1 - s)) / 2;
     }
     var mT = merc(latT), mB = merc(latB);
-    var W = Math.min(1600, Math.max(600,
+    var W = Math.min(4000, Math.max(600,
       Math.round(8 * (lonR - lonL) / dLon)));
     var H = Math.max(2, Math.round(W * (mT - mB) / ((lonR - lonL) * RAD)));
     var cv = document.createElement('canvas');
@@ -2206,6 +2232,10 @@
     S.gt = meta.gt;
     S.path = Bessel.centralPath(ecl, 45);
     S.type = refineType(ecl, S.path, meta.type);
+    // the pre-surveyed band, if the crawler has been over this eclipse
+    Precomp.load(ecl.id).then(function () {
+      if (S.ecl === ecl) updateSurveyRow();
+    });
     buildIntel();
     buildTimeline();
     buildStatic();

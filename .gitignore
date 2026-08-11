@@ -9,3 +9,11 @@ DECISIONS.md
 # being present. `tools/sync-preprint` re-copies it, and `tools/push` in the
 # system does every consumer at once.
 .DS_Store
+
+# The band crawler's working files: fetched elevation tiles (cached across
+# Actions runs by actions/cache, not by git), the npm install it needs, and
+# the one-line summary it writes for its own commit message. What the
+# crawler PUBLISHES — eclipse-recon/data/ — is committed, on purpose.
+.dem-cache/
+node_modules/
+.crawl-summary.txt
