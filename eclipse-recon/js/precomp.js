@@ -58,7 +58,9 @@ var Precomp = (function () {
     }).then(function (data) {
       M.imgs[key] = data;
       M.order.push(key);
-      if (M.order.length > 240) delete M.imgs[M.order.shift()];
+      // room for a whole wide-view prefetch (~600 tiles) plus slack;
+      // a decoded tile is 64 KB, so the ceiling is ~45 MB
+      if (M.order.length > 700) delete M.imgs[M.order.shift()];
       return data;
     });
     M.imgs[key] = p;
