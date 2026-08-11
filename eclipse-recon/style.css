@@ -447,10 +447,24 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
 #reach-legend b { font-weight: 400; }
 #reach-legend b:first-of-type { order: -1; }
 #reach-note { margin-left: 6px; }
+/* the score ramp: a plate-2 notch for the zero state (cannot be seen at
+   all), then one hue — plate 1 from a paper-leaning tint to full depth,
+   mixed in OKLab so the lightness runs monotonically. The fractions and
+   the waypoint mirror rampColor() in app.js, mode for mode, so legend
+   and field agree; both pass the ordinal ramp checks. */
 .suit-ramp { width: 74px; height: 9px; flex: none;
   border: 1px solid color-mix(in srgb, var(--pp-ink) 25%, transparent);
-  background: linear-gradient(90deg, var(--pp-plate-2), var(--w-mark-fill),
-    var(--pp-plate-1)); }
+  background: linear-gradient(90deg,
+    var(--pp-plate-2) 0 7%,
+    color-mix(in oklab, var(--pp-plate-1), var(--pp-paper) 32%) 9%,
+    var(--pp-plate-1) 36%,
+    color-mix(in oklab, var(--pp-plate-1), #0e1612 50%) 100%); }
+[data-mode="dark"] .suit-ramp {
+  background: linear-gradient(90deg,
+    var(--pp-plate-2) 0 7%,
+    color-mix(in oklab, var(--pp-plate-1), var(--pp-paper) 62%) 9%,
+    var(--pp-plate-1) 59%,
+    color-mix(in oklab, var(--pp-plate-1), #f0fff6 68%) 100%); }
 .score-legend b { font-weight: 400; }
 #suit-legend b:first-of-type { order: -1; }
 #suit-mode { margin-left: 4px; }
