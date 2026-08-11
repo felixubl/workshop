@@ -18,8 +18,8 @@ on:
   workflow_dispatch:
     inputs:
       minutes:
-        description: 'crawl budget in minutes (keep under 60)'
-        default: '52'
+        description: 'crawl budget in minutes (keep under 50)'
+        default: '42'
       near:
         description: 'lat,lon to prioritise (optional)'
         default: ''
@@ -32,7 +32,7 @@ concurrency:
 jobs:
   crawl:
     runs-on: ubuntu-latest
-    timeout-minutes: 70
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -49,7 +49,7 @@ jobs:
       - name: crawl
         run: >
           node tools/crawl-vis.mjs
-          --minutes ${{ github.event.inputs.minutes || 52 }}
+          --minutes ${{ github.event.inputs.minutes || 42 }}
           ${{ github.event.inputs.near && format('--near {0}', github.event.inputs.near) || '' }}
       - name: commit what settled
         run: |
