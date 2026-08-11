@@ -1611,7 +1611,7 @@
      painted — the field never guesses, and the legend says how much of
      the band is in. */
 
-  var SUIT = { on: false, run: 0, aborter: null, wx: {} };
+  var SUIT = { on: false, run: 0, aborter: null, wx: {}, localGrade: false };
 
   function suitStart() {
     SUIT.on = true;
@@ -1631,11 +1631,18 @@
     map.off('moveend', suitMoved);
     clearRole('suit');
     $('suit-legend').hidden = true;
+    $('suit-grade').hidden = true;
     $('suit-prog').hidden = true;
   }
   var suitMoved = debounce(function () { if (SUIT.on) computeSuit(); }, 450);
   $('suit-btn').addEventListener('click', function () {
     if (SUIT.on) suitStop(); else suitStart();
+  });
+  $('suit-grade').addEventListener('click', function () {
+    SUIT.localGrade = !SUIT.localGrade;
+    this.textContent = SUIT.localGrade ? 'graded on this view'
+                                       : 'graded on the band';
+    if (SUIT.on) computeSuit();
   });
 
   function suitProg(f) {
@@ -1754,6 +1761,9 @@
       var id = g.createImageData(W, H);
       var lut = rampLUT();
       var painted = 0, edgeBudget = 12000;
+      // scores held for a second pass, so "graded on this view" can
+      // stretch what is actually in sight over the whole ramp
+      var scores = new Float32Array(W * H).fill(-1);
 
       for (var r4 = 0; r4 < H; r4++) {
         var lat4 = latOf(r4);
@@ -1787,16 +1797,44 @@
           }
           var vis4 = visFor(lat4, lon4);
           if (vis4 === null) continue;
-          var score = suitabilityOf(dur4, vis4, alt4,
-                                    skyNode ? skyNode.sky : null);
-          var c4 = lut[Math.max(0, Math.min(100, Math.round(score)))];
-          var o4 = (r4 * W + q4) * 4;
-          id.data[o4] = c4[0]; id.data[o4 + 1] = c4[1];
-          id.data[o4 + 2] = c4[2]; id.data[o4 + 3] = 115;
+          scores[r4 * W + q4] = suitabilityOf(dur4, vis4, alt4,
+                                              skyNode ? skyNode.sky : null);
           painted++;
         }
       }
+
+      /* the colour pass. On the band, the ramp is absolute — comparable
+         everywhere the eclipse goes, which is why a low-Sun island never
+         leaves the middle of it. Graded on this view, the best in sight
+         is green and the worst red — the reach map's local curve, for
+         the wash — and the legend's endpoints turn into the real scores
+         they stand for. */
+      var sLo = Infinity, sHi = -Infinity;
+      var i5;
+      if (SUIT.localGrade) {
+        for (i5 = 0; i5 < scores.length; i5++) {
+          var sv = scores[i5];
+          if (sv < 0) continue;
+          if (sv < sLo) sLo = sv;
+          if (sv > sHi) sHi = sv;
+        }
+      }
+      var localSpan = SUIT.localGrade && sHi - sLo >= 0.5;
+      for (i5 = 0; i5 < scores.length; i5++) {
+        var s5 = scores[i5];
+        if (s5 < 0) continue;
+        var v5 = localSpan ? (s5 - sLo) / (sHi - sLo) * 100 :
+                 (SUIT.localGrade ? 50 : s5);
+        var c4 = lut[Math.max(0, Math.min(100, Math.round(v5)))];
+        var o4 = i5 * 4;
+        id.data[o4] = c4[0]; id.data[o4 + 1] = c4[1];
+        id.data[o4 + 2] = c4[2]; id.data[o4 + 3] = 115;
+      }
       g.putImageData(id, 0, 0);
+      $('suit-lo').textContent = SUIT.localGrade && painted ?
+        Math.round(Math.min(sLo, sHi)) : 0;
+      $('suit-hi').textContent = SUIT.localGrade && painted ?
+        Math.round(sHi) : 100;
 
       clearRole('suit');
       if (painted) {
@@ -1809,6 +1847,7 @@
       var pct = prog ? Math.round((prog.done + prog.flat + prog.out) /
                                   prog.total * 100) : null;
       $('suit-legend').hidden = false;
+      $('suit-grade').hidden = false;
       $('suit-mode').textContent = 'sky · ' + (res[0] || '—') +
         (pct !== null && pct < 100 ? ' · surveyed ' + pct + '%' : '');
       suitProg(1);
