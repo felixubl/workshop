@@ -28,13 +28,12 @@
   var UNDER = -SUN_DEG;     // an altitude at which no part of the Sun is up:
                             // its centre one radius below the horizon
   var FRAME = 150;          // half the drawing's side, so it holds ±2.9 radii
-  var PREVIEW_MS = 15000;   // how long the whole eclipse takes when played
   var STORE = 'eclipse-countdown-at';
   var RECON_STORE = 'recon-eclipses';   // eclipses pasted into Eclipse Recon
 
   var ui = {};
   ['place', 'find', 'here', 'whereForm', 'hint', 'alts', 'altsRow', 'empty',
-   'report', 'whereCap', 'disc', 'discState', 'discNote', 'play', 'playLabel',
+   'report', 'whereCap', 'disc', 'discState', 'discNote',
    'clockLabel', 'clockTime', 'clockAt', 'stats', 'phaseRows', 'phaseZone',
    'note', 'later', 'laterList',
    'horizon', 'hzStatus', 'hzBody', 'hzAsk', 'hzGo'].forEach(function (id) {
@@ -47,8 +46,7 @@
     ecl: null,       // the eclipse being counted down to
     circ: null,      // its local circumstances there
     targets: [],     // the moments the clock counts to
-    stateWord: '',   // last word the disc said, so aria only changes with it
-    preview: null    // {started, segs} while the eclipse is being played
+    stateWord: ''    // last word the disc said, so aria only changes with it
   };
   var scene = {};    // the drawing's parts, made once and then moved
 
@@ -106,6 +104,7 @@
       // from north through east, then turned so that the zenith is up
       theta: (Math.atan2(s.u, s.v) * DEG - Bessel.parallactic(ecl, t, state.at.lat, state.at.lon)) * RAD,
       alt: alt.alt + Bessel.refraction(alt.alt),
+      az: alt.az,                        // which way to look, for the skyline
       central: s.m < Math.abs(s.L2),
       annular: s.L2 > 0
     };
@@ -143,10 +142,15 @@
         (SUN_PX + 16) + '"/>' + rays + '</g>',
       '<circle class="sun" cx="0" cy="0" r="' + SUN_PX + '"/>',
       '<g class="moon-cut" id="ec-cut"><circle class="moon-body" id="ec-body" cx="0" cy="0" r="0"/></g>',
+      /* The ground. Flat until the skyline has been read, and the real
+         profile afterwards: the same three parts either way — an opaque
+         mask that takes away whatever is behind the ground, the hatching
+         that says "this is ground", and the edge itself. As a path rather
+         than a rect so the terrain can have a shape. */
       '<g class="ground is-off" id="ec-ground">',
-        '<rect class="erase" id="ec-erase" x="-150" y="0" width="300" height="300"/>',
-        '<rect id="ec-hatchband" x="-150" y="0" width="300" height="300" fill="url(#ec-hatch)"/>',
-        '<line id="ec-rule" class="horizon" x1="-150" y1="0" x2="150" y2="0"/>',
+        '<path class="erase" id="ec-erase" d=""/>',
+        '<path id="ec-hatchband" d="" fill="url(#ec-hatch)"/>',
+        '<path id="ec-rule" class="horizon" d="" fill="none"/>',
       '</g>',
       // Both drawn over the ground, because they are notes about where things
       // are rather than things you could see: the Sun once it has set, and the
@@ -196,19 +200,60 @@
     // ground goes out with it.
     ui.disc.classList.toggle('is-night', totality);
 
-    // The horizon, at true scale, which is why it only turns up when the Sun
-    // is within about a degree of it — and that is exactly when it matters.
-    var y = f.alt / SUN_DEG * SUN_PX;
-    show(scene['ec-ground'], y < FRAME);
-    show(scene['ec-ghost'], f.alt < UNDER);  // set: the disc is a note now
-    if (y < FRAME) {
-      var top = Math.max(-FRAME, y);
-      scene['ec-erase'].setAttribute('y', top);
-      scene['ec-hatchband'].setAttribute('y', top);
-      scene['ec-rule'].setAttribute('y1', y);
-      scene['ec-rule'].setAttribute('y2', y);
-      show(scene['ec-rule'], y > -FRAME);
+    /* The horizon, at true scale, which is why it only turns up when the Sun
+       is within about a degree of it — and that is exactly when it matters.
+       Once the skyline has been read it is the real one, sampled across the
+       degree and a half of sky this frame holds; until then it is flat, as
+       an unread horizon honestly is. */
+    var edge = groundEdge(f);
+    var lowest = edge.reduce(function (m, p) { return Math.min(m, p[1]); }, FRAME);
+    show(scene['ec-ground'], lowest < FRAME);
+    // Set, or standing behind a ridge: either way the Sun is a note about
+    // where it is rather than a thing anyone can see.
+    show(scene['ec-ghost'], f.alt < UNDER || behindGround(f));
+    if (lowest < FRAME) {
+      var line = edge.map(function (p, i) {
+        return (i ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1);
+      }).join('');
+      var fill = line + 'L' + FRAME + ',' + FRAME + 'L' + (-FRAME) + ',' + FRAME + 'Z';
+      scene['ec-erase'].setAttribute('d', fill);
+      scene['ec-hatchband'].setAttribute('d', fill);
+      scene['ec-rule'].setAttribute('d', line);
+      show(scene['ec-rule'], lowest > -FRAME);
     }
+  }
+
+  /* Is the ground in front of the Sun at this moment? Only answerable once
+     the skyline has been read; an unread horizon hides nothing. */
+  function behindGround(f) {
+    if (!hz.scan || hz.key !== hzKey() || !isFinite(f.az)) return false;
+    return f.alt < hzAngleAt(hz.scan.profile, f.az);
+  }
+
+  /* The ground's edge across the frame, in drawing units. With a scan in
+     hand this is the terrain profile either side of the Sun's own azimuth,
+     read at the frame's true angular width; without one it is a level line
+     at the astronomical horizon. Either way the Sun's altitude sets where
+     it sits, so the drawing and the clock cannot drift apart. */
+  function groundEdge(f) {
+    // the Sun sits at the centre, so a thing at altitude a is this far down
+    function yOf(a) { return (f.alt - a) / SUN_DEG * SUN_PX; }
+    if (!hz.scan || hz.key !== hzKey() || !isFinite(f.az)) {
+      return [[-FRAME, yOf(0)], [FRAME, yOf(0)]];
+    }
+    var prof = hz.scan.profile;
+    var halfDeg = FRAME / SUN_PX * SUN_DEG;      // half the frame, in degrees
+    var out = [];
+    for (var i = 0; i <= 48; i++) {
+      var dx = -halfDeg + (2 * halfDeg) * i / 48;
+      /* Facing a direction with the zenith up, your right hand points a
+         quarter turn further round the compass — so azimuth increases to
+         the right of the frame. The Sun's own azimuth is the middle. */
+      var ang = hzAngleAt(prof, f.az + dx);
+      out.push([dx / halfDeg * FRAME,
+                Math.max(-FRAME * 3, Math.min(FRAME * 3, yOf(ang)))]);
+    }
+    return out;
   }
 
   /* ================= words for a state ================= */
@@ -422,20 +467,6 @@
   function tick(now) {
     if (!state.circ) return;
 
-    if (state.preview) {
-      var through = (now - state.preview.started) / PREVIEW_MS;
-      if (through >= 1) { stopPreview(); return; }
-      var step = previewAt(state.preview, through);
-      var pf = frameAt(state.ecl, step.at);
-      paint(pf);
-      sayState(pf);
-      ui.clockLabel.textContent = 'preview, running at ×' + step.rate;
-      ui.clockTime.textContent = clockOf(new Date(step.at), state.at.tz);
-      ui.clockAt.textContent = 'the whole eclipse in 15 seconds, slowed through the middle';
-      markRow(step.at);
-      return;
-    }
-
     var t = Date.now();
     var f = frameAt(state.ecl, t);
     paint(f);
@@ -483,62 +514,11 @@
   function loop(now) {
     window.requestAnimationFrame(loop);
     if (!state.circ) return;
-    // live, the page has nothing to say between seconds; in preview it has
-    // something to say on every frame.
+    // the page has nothing to say between seconds
     var second = Math.floor(Date.now() / 1000);
-    if (!state.preview && second === lastSecond) return;
+    if (second === lastSecond) return;
     lastSecond = second;
     tick(now);
-  }
-
-  /* ================= preview ================= */
-
-  /* The eclipse, played through in fifteen seconds — but not at one speed.
-     An hour of partial phases either side of a minute of totality, run
-     linearly, would spend a tenth of a second on the only part anybody came
-     for. So the preview runs in three stretches, and gives the middle of the
-     thing a third of the time to itself. The rate is printed as it goes,
-     which is what makes the slowdown a stated fact rather than a trick. */
-  function startPreview() {
-    if (!state.circ) return;
-    var c = state.circ;
-    var start = (c.c1 ? c.c1.date : c.dateMax).getTime() - 45000;
-    var end = (c.c4 ? c.c4.date : c.dateMax).getTime() + 45000;
-    var midFrom = (c.c2 ? c.c2.date.getTime() - 20000 : c.dateMax.getTime() - 90000);
-    var midTo = (c.c3 ? c.c3.date.getTime() + 20000 : c.dateMax.getTime() + 90000);
-    midFrom = Math.max(start, Math.min(midFrom, end));
-    midTo = Math.min(end, Math.max(midTo, midFrom));
-    state.preview = {
-      started: window.performance.now(),
-      segs: [[start, midFrom, 0.38], [midFrom, midTo, 0.30], [midTo, end, 0.32]]
-    };
-    ui.play.classList.add('is-on');
-    ui.playLabel.textContent = 'Stop';
-  }
-
-  /* Where the preview has got to: the simulated moment, and how fast it is
-     running there. */
-  function previewAt(pv, through) {
-    var acc = 0;
-    for (var i = 0; i < pv.segs.length; i++) {
-      var seg = pv.segs[i];
-      if (through <= acc + seg[2] || i === pv.segs.length - 1) {
-        var p = Math.min(1, (through - acc) / seg[2]);
-        return {
-          at: seg[0] + p * (seg[1] - seg[0]),
-          rate: Math.round((seg[1] - seg[0]) / (seg[2] * PREVIEW_MS))
-        };
-      }
-      acc += seg[2];
-    }
-  }
-
-  function stopPreview(quiet) {
-    state.preview = null;
-    ui.play.classList.remove('is-on');
-    ui.playLabel.textContent = 'Preview it';
-    lastSecond = -1;
-    if (!quiet) tick(window.performance.now());
   }
 
   /* ================= the horizon ================= */
@@ -649,7 +629,10 @@
     Terrain.horizonScan(state.at.lat, state.at.lon, {
       azCenter: (lo + hi) / 2,
       azSpan: Math.max(20, Math.min(90, hi - lo + 8)),
-      azStep: 1,
+      // finer than Recon's degree: the Sun's own frame is a degree and a
+      // half across, and a skyline sampled every degree inside it is a
+      // straight line pretending to be terrain
+      azStep: 0.25,
       maxKm: maxKm,
       onProgress: function (f) {
         ui.hzStatus.textContent = 'reading the ground ' + Math.round(f * 100) + '%';
@@ -828,6 +811,10 @@
         ' from this exact spot. ';
     }
 
+    // the disc has a real skyline to stand on now
+    lastSecond = -1;
+    tick(window.performance.now());
+
     ui.hzStatus.textContent = Terrain.cacheSize() + ' tiles read';
     ui.hzBody.innerHTML = '<figure class="hz-wrap">' + svg.join('') +
       '<figcaption class="sheet-note">' + word + featWord + ' Elevation from ' +
@@ -891,7 +878,6 @@
       if (rows[i].circ && rows[i].circ.visible) { pick = i; break; }
     }
     ui.whereCap.textContent = coordWord(state.at.lat, state.at.lon);
-    stopPreview(true);
     if (pick < 0) { resetHorizon(); renderNothing(rows); return; }
     renderReport(pick, rows);
     // the skyline belongs to a place and an eclipse; either changing voids it,
@@ -1015,9 +1001,6 @@
     lookUp(q);
   });
   ui.here.addEventListener('click', askTheBrowser);
-  ui.play.addEventListener('click', function () {
-    if (state.preview) stopPreview(); else startPreview();
-  });
   ui.hzGo.addEventListener('click', scanHorizon);
 
   restore();
