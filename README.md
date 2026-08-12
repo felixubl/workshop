@@ -52,14 +52,15 @@ the eclipse tools.
 
 ## Tools
 
-The homepage sorts them the way a workshop sorts tools: by the kind of work,
-not by what is finished. Five areas, and each one keeps both — the tools that
-exist, and the gaps on its own wall. Sorting by state instead answered "how far
-along is this site", which is a question nobody arrives holding.
+The homepage groups them by domain, not by what is finished, and each area
+carries both the tools that exist and the ones still on its list. Sorting by
+state instead answered "how far along is this site", which is a question nobody
+arrives holding.
 
-### At the light table
+### Media
 
-Anything whose output is looked at or listened to.
+Raster and vector images, type, colour, and the audio and video files beside
+them.
 
 - [Pixel Art SVG Drawer](draw-svg/) — draw pixel art on a grid-snapped canvas,
   start from a classic sprite size or type your own, export exactly what you
@@ -72,9 +73,11 @@ Anything whose output is looked at or listened to.
 
 Still on the list: image, SVG, font, colour, audio and video toolkits.
 
-### At the press
+### Documents
 
-Anything that ends up a document or a printed sheet.
+Tools whose output is a document or a printed sheet. The bingo generator is
+filed here rather than under computation: the arithmetic is the method, the
+artefact is the deliverable.
 
 - [PDF Toolkit](pdf-toolkit/) — merge, split, extract, reorder, delete and
   turn PDF pages, with every page shown as a real preview you can drag. The
@@ -89,10 +92,10 @@ Anything that ends up a document or a printed sheet.
 
 Still on the list: QR codes and barcodes, text and document utilities, email tools.
 
-### At the workbench
+### Data & Computation
 
-Numbers, letters, tables and files — work whose output is a figure or another
-file rather than something to look at.
+Numbers, text as data, tables, archives and code — work whose output is a
+figure or another file rather than a rendering.
 
 - [Random Number Generator](random-numbers/) — draw from eleven distributions in
   up to ten dimensions, seeded and reproducible, with summary statistics and
@@ -112,11 +115,12 @@ file rather than something to look at.
 Still on the list: CSV and spreadsheet toolkit, developer tools, archive and file tools,
 calendar and date tools.
 
-### Out in the field
+### Geospatial & Networks
 
-The tools that look outward rather than at a file you brought — at the ground,
-the sky and the wire. Every rung above `local` on the page is here, which is not
-a coincidence: a tool that reports on the world has to reach it.
+Tools that measure something outside the browser rather than a file the reader
+supplied: terrain, sky, and the connection itself. Every rung above `local` on
+the page is in this area, which follows from the definition — a tool that
+reports on an external system has to query it.
 
 - [Eclipse Recon](eclipse-recon/) — an ops-console view of a solar
   eclipse: the path computed from Besselian elements in the browser, an
@@ -215,18 +219,19 @@ a coincidence: a tool that reports on the world has to reach it.
 
 Still on the list: geospatial tools.
 
-### In the drawer
+### General
 
-The general drawer, and every shop has one. What goes in it is not united by a
-use case — it is united by not having a bench, which is a real category and the
-only honest place to keep the jobs that are one job each.
+Tools that share no domain with the others. Not a residue category apologising
+for itself: "belongs to no other category" is a category, and it is where a job
+that is one job belongs.
 
 Still on the list: odds and ends — webpage to PDF, an invoice photo to structured CSV, a slider
 comparing two image versions, a signature photo to a transparent PNG, a
 passport-photo sheet at exact print dimensions.
 
-Each new tool lands in its own top-level folder, inside the area it belongs to,
-and its card goes from a queue row to solid stock with a cast once it's built.
+Each new tool lands in its own top-level folder, inside the area for its
+domain, and its card goes from a queue row to solid stock with a cast once it's
+built.
 The area carries the register (`reg-N`), so a tool's ink is wherever the tool is
 standing and the two cannot disagree; the area's band prints that ink as the
 same small square a queued name wears, which is why the index needs no legend
@@ -310,7 +315,7 @@ button toggles its tool in a list held in `localStorage` under
 `workshop-pinned`, and pinned tools sort to the front of the index. The script
 only sets a class; the sorting is two CSS rules, because a pinned tool now has
 to clear two levels — it comes to the front of its own area, and its area comes
-to the front of the page, or it would sit at the top of a bench the reader
+to the front of the page, or it would sit at the top of a category the reader
 still has to scroll to find. The index and the tool pages read the same list, so
 pinning from inside a tool moves its card too.
 
@@ -338,13 +343,13 @@ names it declares must not change.
    child of `.wrap`, not inside it — it hangs from the top of the page, and
    `<header>` starts below the shell's padding.
 5. Add a card for it to the root [index.html](index.html), inside the
-   `section.area` whose bench the tool belongs to — the area carries the
-   register class, so the card does not. A `div` in that area's `.plates` with
-   `data-tool`, holding a `.plate.plate-live` — the name in an `h3` wrapped in
+   `section.area` for the tool's domain — the area carries the register class,
+   so the card does not. A `div` in that area's `.plates` with `data-tool`,
+   holding a `.plate.plate-live` — the name in an `h3` wrapped in
    `a.plate-open`, the pin, and one `.plate-say` sentence. Remove the tool's
    queue row if that area had one, and update that area's counts and the
-   shop-floor line. If no existing area fits, the drawer does; a sixth area is
-   a decision about the shop, not about the tool.
+   inventory line. If no existing area fits, `General` does; a sixth area is a
+   decision about the taxonomy, not about the tool.
 6. Give the card its rung. Copy a `code.plate-custody` from any existing card
    and set `data-custody` to the highest rung the tool actually reaches — a
    tool that keeps one thing on a server is `store` even if everything else it

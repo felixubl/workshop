@@ -307,7 +307,7 @@
      pinned — the page's own header ending up below the first bench. -2 puts it
      out of that race for good: it is not in the running order, it is the line
      the running order is printed under. */
-  .band-shop {
+  .band-inventory {
     order: -2;
     margin-bottom: 0;
   }
@@ -337,10 +337,15 @@
      tool that exists in one heap and every tool that does not in another,
      which answers "how far along is this site" and nothing else. A reader
      arrives holding a job, not a question about progress. So the heap is cut
-     by the work instead: pictures at the light table, print at the press,
-     numbers and letters at the workbench, the world outside in the field, and
-     one drawer for what fits no bench — which is the shape a real shop takes,
-     down to the drawer.
+     by domain instead: Media, Documents, Data & Computation, Geospatial &
+     Networks, and General for what belongs to none of them.
+
+     The names are domain terms and not metaphors. An earlier pass labelled
+     these areas by where the work would happen in a physical shop — the light
+     table, the press, the bench. It read well and classified badly: a reader
+     scanning for a PDF tool should not have to translate a figure of speech
+     first, and "the press" is a guess about what the category holds where
+     "Documents" is a statement of it.
 
      The plates do not share a baseline. Two columns, the right one dropped a
      step, and each plate only as tall as its own sentence needs. Nothing is
@@ -360,9 +365,9 @@
      area holding it, a tool's register is wherever the tool is standing, and
      the two cannot disagree.
 
-     Plate 2 is what you look at, plate 1 is what gets printed, plate 3 is
-     numbers and letters, and the line is for the two areas that are not a
-     bench: what happens outside the machine, and the drawer. */
+     Plate 2 is Media, plate 1 is Documents, plate 3 is Data & Computation, and
+     the line carries the two areas that are not a domain of the reader's own
+     files: Geospatial & Networks, and General. */
   .reg-1 { --w-card-ink: var(--pp-plate-1); }
   .reg-2 { --w-card-ink: var(--pp-plate-2); }
   .reg-3 { --w-card-ink: var(--pp-plate-3); }
@@ -441,7 +446,7 @@
   .plates > :nth-child(3) .plate { transform: rotate(calc(var(--w-tilt-card) * -0.8)); }
   .plates > :nth-child(4) .plate { transform: rotate(calc(var(--w-tilt-card) * 1.15)); }
   /* An area holds three plates at most, so those four angles became two or
-     three, dealt in the same order at every station down the page — a hand
+     three, dealt in the same order in every area down the page — a hand
      that repeats is a press, which is the one thing the tilt exists not to be.
      Every other area turns its pair the other way. Same token, two more
      multipliers, and no area sits directly under another laid out alike. */
@@ -590,9 +595,9 @@
 
   /* ── The queue ─────────────────────────────────────────────────────────────
      Fifteen intentions, and a list of intentions should look like a list. They
-     are split across the areas now — each bench keeps its own gaps, under the
-     tools it already has, which is where a shop keeps a list of what it is
-     missing.
+     are split across the areas now, each under the tools of its own domain, so
+     a category states what it holds and what it is still missing in one
+     place.
 
      They were fifteen dashed boxes over fifteen category washes, which made the
      single largest field of colour on the page out of the information that
@@ -769,8 +774,9 @@
   }
   /* A pinned tool comes to the front of its own area, and its area comes to
      the front of the page — two rules, because with the bench broken into five
-     the first one alone would leave a pinned tool at the top of a station the
-     reader still has to scroll to find, which is most of the pin's job undone.
+     areas the first one alone would leave a pinned tool at the top of a
+     category the reader still has to scroll to find, which is most of the
+     pin's job undone.
      Together they put it back where it was: first thing under the masthead.
 
      Order rather than a move in the DOM, so the angle a plate was dealt stays
@@ -905,11 +911,11 @@
 
   <main>
 
-    <!-- The shop's own line. It is not an area — no register square — and it
-         carries the one figure worth a pen plus the pin count, which is a fact
-         about the whole page rather than about any one bench. -->
-    <div class="band band-shop">
-      <p class="section-label">The shop floor</p>
+    <!-- The whole page's totals. It is not an area — no register square — and
+         it carries the one figure worth a pen plus the pin count, both facts
+         about the page rather than about any one category. -->
+    <div class="band band-inventory">
+      <p class="section-label">Inventory</p>
       <span class="band-rule" aria-hidden="true"></span>
       <code><span data-pin-count></span><span class="mk mk--citron">9 built</span> · 15 planned</code>
     </div>
@@ -921,14 +927,14 @@
          queue row still keeps its own brief as a comment, for the same reason a
          row is not where a paragraph belongs. -->
 
-    <!-- ── At the light table ────────────────────────────────────────────────
-         Anything whose output is looked at or listened to: pixels, vectors, colour,
-         type, and the media files beside them. -->
+    <!-- ── Media ─────────────────────────────────────────────────────────────
+         Raster and vector images, type, colour, and the audio and video files
+         beside them. -->
     <section class="area reg-2">
 
       <div class="band">
         <span class="band-mark" aria-hidden="true"></span>
-        <p class="section-label">At the light table</p>
+        <p class="section-label">Media</p>
         <span class="band-rule" aria-hidden="true"></span>
         <code>2 built · 6 planned</code>
       </div>
@@ -1033,15 +1039,16 @@
       </ul>
     </section>
 
-    <!-- ── At the press ──────────────────────────────────────────────────────
-         Anything that ends up a document or a printed sheet. The bingo cards moved
-         here from the file bench: what that tool makes is paper, and the
-         arithmetic behind it is not what a reader looks for it under. -->
+    <!-- ── Documents ─────────────────────────────────────────────────────────
+         Tools whose output is a document or a printed sheet. The bingo generator
+         is filed here rather than under computation: the arithmetic is the
+         method, the artefact is the deliverable, and a reader looks for it
+         under the artefact. -->
     <section class="area reg-1">
 
       <div class="band">
         <span class="band-mark" aria-hidden="true"></span>
-        <p class="section-label">At the press</p>
+        <p class="section-label">Documents</p>
         <span class="band-rule" aria-hidden="true"></span>
         <code>2 built · 3 planned</code>
       </div>
@@ -1099,14 +1106,14 @@
       </ul>
     </section>
 
-    <!-- ── At the workbench ──────────────────────────────────────────────────
-         Numbers, letters, tables and files: work whose output is a figure or
-         another file rather than something to look at. -->
+    <!-- ── Data & Computation ────────────────────────────────────────────────
+         Numbers, text as data, tables, archives and code — work whose output is
+         a figure or another file rather than a rendering. -->
     <section class="area reg-3">
 
       <div class="band">
         <span class="band-mark" aria-hidden="true"></span>
-        <p class="section-label">At the workbench</p>
+        <p class="section-label">Data &amp; Computation</p>
         <span class="band-rule" aria-hidden="true"></span>
         <code>2 built · 4 planned</code>
       </div>
@@ -1170,16 +1177,17 @@
       </ul>
     </section>
 
-    <!-- ── Out in the field ──────────────────────────────────────────────────
-         The tools that look outward instead of at a file you brought: at the
-         ground, the sky and the wire. It is no accident that this is where
-         every rung above `local` on the page is — a tool that reports on the
-         world has to reach it. -->
+    <!-- ── Geospatial & Networks ─────────────────────────────────────────────
+         Tools that measure something outside the browser rather than a file the
+         reader supplied: terrain, sky, and the connection itself. Every rung
+         above `local` on the page is in this area, which follows from the
+         definition — a tool that reports on an external system has to query
+         it. -->
     <section class="area reg-0">
 
       <div class="band">
         <span class="band-mark" aria-hidden="true"></span>
-        <p class="section-label">Out in the field</p>
+        <p class="section-label">Geospatial &amp; Networks</p>
         <span class="band-rule" aria-hidden="true"></span>
         <code>3 built · 1 planned</code>
       </div>
@@ -1228,16 +1236,15 @@
       </ul>
     </section>
 
-    <!-- ── In the drawer ─────────────────────────────────────────────────────
-         The general drawer, and every shop has one. What goes in it is not united
-         by a use case — it is united by not having a bench, which is a real
-         category and the only honest place to keep the jobs that are one job
-         each. -->
+    <!-- ── General ───────────────────────────────────────────────────────────
+         Tools that share no domain with the others. This is not a residue
+         category apologising for itself: "belongs to no other category" is a
+         category, and it is where a job that is one job belongs. -->
     <section class="area reg-0">
 
       <div class="band">
         <span class="band-mark" aria-hidden="true"></span>
-        <p class="section-label">In the drawer</p>
+        <p class="section-label">General</p>
         <span class="band-rule" aria-hidden="true"></span>
         <code>1 planned</code>
       </div>
@@ -1263,7 +1270,7 @@
     <section class="key">
 
       <div class="band">
-        <p class="section-label">What leaves your machine</p>
+        <p class="section-label">Data custody</p>
         <span class="band-rule" aria-hidden="true"></span>
         <code>5 rungs</code>
       </div>
@@ -1297,7 +1304,7 @@
 
       </dl>
 
-      <p class="key-note">The bottom two rungs are the whole workshop today: six tools never open a socket, and three read public data and keep nothing &mdash; all three of those out in the field, where a tool that reports on the world has to reach it. <code>store</code> and <code>account</code> are printed here unused, because a scale written to describe a thing that already exists is a scale bent to fit it.</p>
+      <p class="key-note">The bottom two rungs are the whole workshop today: six tools never open a socket, and three read public data and keep nothing &mdash; all three under Geospatial &amp; Networks, where a tool that reports on an external system has to query it. <code>store</code> and <code>account</code> are printed here unused, because a scale written to describe a thing that already exists is a scale bent to fit it.</p>
     </section>
   </main>
 
