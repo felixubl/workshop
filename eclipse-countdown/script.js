@@ -190,9 +190,13 @@
     var edge = groundEdge(f);
     var lowest = edge.reduce(function (m, p) { return Math.min(m, p[1]); }, FRAME);
     show(scene['ec-ground'], lowest < FRAME);
-    // Set, or standing behind a ridge: either way the Sun is a note about
-    // where it is rather than a thing anyone can see.
-    show(scene['ec-ghost'], f.alt < UNDER || behindGround(f));
+    /* Set, standing behind a ridge, or covered: in all three the Sun is a
+       note about where it is rather than a thing anyone can see, and the
+       dotted rim says so. Through totality it earns its keep twice over —
+       the Moon crosses the whole Sun in three pixels there, and a black
+       disc sliding over a black disc shows none of it, so the fixed rim is
+       what makes the movement legible. */
+    show(scene['ec-ghost'], f.alt < UNDER || behindGround(f) || totality);
     if (lowest < FRAME) {
       var line = edge.map(function (p, i) {
         return (i ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1);
