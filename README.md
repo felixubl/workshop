@@ -138,8 +138,10 @@ the eclipse tools.
   smaller question: from where I am, when is the next one and what will it look
   like? A clock counts down to the next phase — first contact, totality, last
   contact — beside a drawing of the Sun for the moment on the clock: zenith up,
-  the Moon at its true separation and position angle, the shadow cut to the
-  Sun's face, the corona drawn during totality, and the horizon at true scale,
+  the Moon at its true separation and position angle, and the whole thing
+  printed as two plates and their overprint — plate 2 is Sun nobody is
+  covering, plate 3 is Moon standing off the Sun's face, and the dark third
+  colour where they land on the same paper is exactly the bite, the corona drawn during totality, and the horizon at true scale,
   so a Sun that sets mid-eclipse is drawn setting. Under it, every phase with
   its local time, its time in UT and the Sun's altitude. A preview plays the
   whole eclipse in 15 seconds, easing continuously into the middle and out

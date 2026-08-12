@@ -115,11 +115,6 @@
   /* ================= the drawing ================= */
 
   function buildScene() {
-    /* The Moon is drawn in black and cut to the Sun's face, so it is only ever
-       there where it is actually taking light away: a bite during the partial
-       phases, a disc inside the ring during an annular one. Totality is the
-       one case where the cut comes off — then the silhouette is the Moon's
-       own, a little larger than the Sun, covering it completely. */
     ui.disc.innerHTML = [
       '<defs>',
         '<clipPath id="ec-face"><circle cx="0" cy="0" r="' + SUN_PX + '"/></clipPath>',
@@ -128,7 +123,18 @@
         '</pattern>',
       '</defs>',
       '<rect class="sky" x="-150" y="-150" width="300" height="300"/>',
+      /* Two plates and their overprint, which is the whole drawing. The Sun
+         is printed in plate 2 and the Moon in plate 3, both solid; where
+         they land on the same paper the ink is the product of the two, as
+         it would be off a press. So the three regions name themselves —
+         plate 2 is Sun nobody is covering, plate 3 is Moon standing off the
+         Sun's face, the dark overprint is exactly the bite — and no
+         cleverness is needed to see which is which. It reads the same at
+         second contact as at first: when the overprint has eaten the whole
+         Sun, what is left around it is a ring of plate 3, and that ring
+         changing thickness IS the Moon moving. */
       '<circle class="sun" cx="0" cy="0" r="' + SUN_PX + '"/>',
+      '<circle class="moon-off" id="ec-off" cx="0" cy="0" r="0"/>',
       '<g class="moon-cut" id="ec-cut"><circle class="moon-body" id="ec-body" cx="0" cy="0" r="0"/></g>',
       /* The ground. Flat until the skyline has been read, and the real
          profile afterwards: the same three parts either way — an opaque
@@ -140,18 +146,16 @@
         '<path id="ec-hatchband" d="" fill="url(#ec-hatch)"/>',
         '<path id="ec-rule" class="horizon" d="" fill="none"/>',
       '</g>',
-      // Both drawn over the ground, because they are notes about where things
-      // are rather than things you could see: the Sun once it has set, and the
-      // Moon while it is still off the Sun's face.
+      // Drawn over the ground because it is a note about where a thing is
+      // rather than a thing you could see: the Sun once the ground has it.
       '<circle class="ghost is-off" id="ec-ghost" cx="0" cy="0" r="' + SUN_PX + '"/>',
-      '<circle class="moon-edge is-off" id="ec-edge" cx="0" cy="0" r="0"/>',
       '<g class="up-mark" aria-hidden="true">',
         '<path d="M-133 -120 v-15 m0 0 -4 5 m4 -5 4 5"/>',
         '<text x="-126" y="-121">zenith</text>',
       '</g>'
     ].join('');
 
-    ['ec-cut', 'ec-body', 'ec-edge', 'ec-ghost', 'ec-ground',
+    ['ec-cut', 'ec-body', 'ec-off', 'ec-ghost', 'ec-ground',
      'ec-erase', 'ec-hatchband', 'ec-rule'].forEach(function (id) {
       scene[id] = ui.disc.querySelector('#' + id);
     });
@@ -162,7 +166,7 @@
   function paint(f) {
     if (!f) {                       // nowhere near the day: the Sun, plain
       scene['ec-body'].setAttribute('r', 0);
-      show(scene['ec-edge'], false);
+      scene['ec-off'].setAttribute('r', 0);
       show(scene['ec-ghost'], false);
       show(scene['ec-ground'], false);
       return;
@@ -174,13 +178,11 @@
     var mr = f.ratio * SUN_PX;
     var totality = f.central && !f.annular;
 
-    ['ec-body', 'ec-edge'].forEach(function (id) {
+    ['ec-body', 'ec-off'].forEach(function (id) {
       scene[id].setAttribute('cx', mx.toFixed(2));
       scene[id].setAttribute('cy', my.toFixed(2));
       scene[id].setAttribute('r', mr.toFixed(2));
     });
-    scene['ec-cut'].classList.toggle('is-free', totality);
-    show(scene['ec-edge'], r - mr < FRAME * 1.42);
 
     /* The horizon, at true scale, which is why it only turns up when the Sun
        is within about a degree of it — and that is exactly when it matters.
@@ -190,13 +192,9 @@
     var edge = groundEdge(f);
     var lowest = edge.reduce(function (m, p) { return Math.min(m, p[1]); }, FRAME);
     show(scene['ec-ground'], lowest < FRAME);
-    /* Set, standing behind a ridge, or covered: in all three the Sun is a
-       note about where it is rather than a thing anyone can see, and the
-       dotted rim says so. Through totality it earns its keep twice over —
-       the Moon crosses the whole Sun in three pixels there, and a black
-       disc sliding over a black disc shows none of it, so the fixed rim is
-       what makes the movement legible. */
-    show(scene['ec-ghost'], f.alt < UNDER || behindGround(f) || totality);
+    // Set, or standing behind a ridge: the ground is the one thing that can
+    // hide the Sun without the drawing showing why, so it says so.
+    show(scene['ec-ghost'], f.alt < UNDER || behindGround(f));
     if (lowest < FRAME) {
       var line = edge.map(function (p, i) {
         return (i ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1);
