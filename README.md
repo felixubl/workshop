@@ -141,8 +141,13 @@ the eclipse tools.
   the Moon at its true separation and position angle, and the whole thing
   printed as two plates and their overprint — plate 2 is Sun nobody is
   covering, plate 3 is Moon standing off the Sun's face, and the dark third
-  colour where they land on the same paper is exactly the bite, the corona drawn during totality, and the horizon at true scale,
-  so a Sun that sets mid-eclipse is drawn setting. Under it, every phase with
+  colour where they land on the same paper is exactly the bite — with the
+  horizon at true scale, so a Sun that sets mid-eclipse is drawn setting.
+  Beside it, the same instant seen from outside: the Moon, the shadow cone it
+  casts, the Earth it lands on and a dot for the reader standing under it, all
+  read off the same Besselian elements and moving with the clock, so the bite
+  in the disc above and the cone in the diagram are one shadow drawn from both
+  ends. Under it, every phase with
   its local time, its time in UT and the Sun's altitude. A preview plays the
   whole eclipse in 15 seconds, easing continuously into the middle and out
   again — a rate that changes in steps reads as a fault rather than as a

@@ -37,7 +37,8 @@
    'report', 'whereCap', 'disc', 'discState', 'discNote', 'play', 'playLabel',
    'clockLabel', 'clockTime', 'clockAt', 'stats', 'phaseRows', 'phaseZone',
    'note', 'later', 'laterList',
-   'horizon', 'hzStatus', 'hzBody', 'hzAsk', 'hzGo'].forEach(function (id) {
+   'horizon', 'hzStatus', 'hzBody', 'hzAsk', 'hzGo',
+   'sys', 'sysCap'].forEach(function (id) {
     ui[id] = document.getElementById(id);
   });
 
@@ -238,6 +239,129 @@
                 Math.max(-FRAME * 3, Math.min(FRAME * 3, yOf(ang)))]);
     }
     return out;
+  }
+
+
+  /* ================= the system, seen from outside =================
+
+     The same instant the disc draws, from a place nobody stands: the Moon,
+     its shadow, and the Earth the shadow lands on. Nothing here is
+     decoration — every distance is read off the elements.
+
+     What is true in the picture. The Earth's radius is the unit. The Moon
+     sits where BOTH cones have the Moon's own radius, which the elements
+     agree on to about a tenth of a percent — it is one body seen two ways,
+     and the agreement is the check that the drawing is the geometry rather
+     than a sketch of it. The cone edges are the real cones: the penumbra
+     opening to l1 at the fundamental plane, the umbra closing to a point at
+     l2/tan f2. Where that point falls is the whole story — past the Earth's
+     surface and somebody sees totality, short of it and the same eclipse is
+     annular. The axis sits its true distance off the Earth's centre, so the
+     shadow crosses high or low exactly as it will on the day.
+
+     What is not. Along-axis distance is compressed, and the caption says by
+     how much: the Moon is 57 Earth radii away and the Earth is one radius
+     across, so a true side view is a hair 23 times longer than it is tall.
+     Heights stay true — the cone's taper is therefore exaggerated by the
+     same factor as the compression, which is the one lie, and it is the lie
+     that makes the taper visible at all. The Sun is not drawn: it is 400
+     times further again, off to the left, and an arrow says so. */
+
+  var MOON_R = 0.2725076;      // Moon radius, in Earth radii
+  var SYS = { w: 340, h: 128, cx: 246, cy: 64, re: 30 };
+
+  function paintSystem(at) {
+    if (!ui.sys) return;
+    var ecl = state.ecl;
+    if (!ecl) { ui.sys.innerHTML = ''; ui.sysCap.textContent = ''; return; }
+    var day = Date.UTC(ecl.date[0], ecl.date[1] - 1, ecl.date[2]);
+    var t = (at - day) / 3600000 + ecl.deltaT / 3600;
+    if (!isFinite(t) || Math.abs(t - ecl.t0) > 5) return;
+    var el = Bessel.elements(ecl, t);
+
+    // how far the axis passes from the Earth's centre, and the Moon's own
+    // distance — the penumbral solution, the umbral one agreeing with it
+    var off = Math.hypot(el.x, el.y);
+    var zMoon = (el.l1 - MOON_R) / ecl.tanF1;
+    var zTip = el.l2 / ecl.tanF2;          // where the umbral cone closes
+    var zoom = (SYS.cx - 46) / (zMoon * SYS.re);   // the along-axis squeeze
+
+    function X(z) { return SYS.cx - z * SYS.re * zoom; }
+    function Y(v) { return SYS.cy - v * SYS.re; }
+    var axisY = Y(off);
+    // cone half-width at a distance z along the axis, in Earth radii
+    function pen(z) { return el.l1 - z * ecl.tanF1; }
+    function umb(z) { return el.l2 - z * ecl.tanF2; }
+
+    var far = zMoon * 1.02, near = -3.2;   // the frame, in axis units
+    var g = [];
+    // the Sun's direction: it is 400 times the Moon's distance further out
+    g.push('<g class="sys-ray">' +
+      [-0.55, 0, 0.55].map(function (k) {
+        var y = axisY + k * SYS.re * 1.6;
+        return '<line x1="6" y1="' + y.toFixed(1) + '" x2="26" y2="' +
+               y.toFixed(1) + '"/>';
+      }).join('') +
+      '<path d="M26 ' + axisY.toFixed(1) + ' l-5 -3 v6z"/></g>');
+    g.push('<text class="sys-tag" x="6" y="' + (axisY + 26).toFixed(1) +
+           '">sunlight</text>');
+
+    // the penumbra, as the pair of edges it is
+    [1, -1].forEach(function (sgn) {
+      g.push('<line class="sys-pen" x1="' + X(zMoon).toFixed(1) + '" y1="' +
+        (axisY - sgn * MOON_R * SYS.re).toFixed(1) + '" x2="' + X(near).toFixed(1) +
+        '" y2="' + (axisY - sgn * pen(near) * SYS.re).toFixed(1) + '"/>');
+    });
+    // the umbra: solid to its point, then opening again beyond it
+    g.push('<path class="sys-umb" d="M' + X(zMoon).toFixed(1) + ',' +
+      (axisY - MOON_R * SYS.re).toFixed(1) + 'L' + X(zTip).toFixed(1) + ',' +
+      axisY.toFixed(1) + 'L' + X(zMoon).toFixed(1) + ',' +
+      (axisY + MOON_R * SYS.re).toFixed(1) + 'Z"/>');
+    if (zTip > near) {                      // the antumbra, where there is one
+      [1, -1].forEach(function (sgn) {
+        g.push('<line class="sys-anti" x1="' + X(zTip).toFixed(1) + '" y1="' +
+          axisY.toFixed(1) + '" x2="' + X(near).toFixed(1) + '" y2="' +
+          (axisY + sgn * Math.abs(umb(near)) * SYS.re).toFixed(1) + '"/>');
+      });
+    }
+    // the axis itself, and the two bodies
+    g.push('<line class="sys-axis" x1="' + X(far).toFixed(1) + '" y1="' +
+      axisY.toFixed(1) + '" x2="' + X(near).toFixed(1) + '" y2="' +
+      axisY.toFixed(1) + '"/>');
+    g.push('<circle class="sys-earth" cx="' + SYS.cx + '" cy="' + SYS.cy +
+      '" r="' + SYS.re + '"/>');
+    g.push('<circle class="sys-moon" cx="' + X(zMoon).toFixed(1) + '" cy="' +
+      axisY.toFixed(1) + '" r="' + (MOON_R * SYS.re).toFixed(1) + '"/>');
+
+    /* The reader, on the Earth, in the plane the drawing is a slice of: the
+       observer's own fundamental-frame coordinates, projected onto the line
+       from the Earth's centre to the axis. */
+    if (state.geo && off > 1e-6) {
+      var sit = Bessel.situation(ecl, t, state.geo, state.at.lon);
+      var v = (sit.ob.xi * el.x + sit.ob.eta * el.y) / off;
+      g.push('<circle class="sys-you" cx="' + X(sit.ob.zeta).toFixed(1) +
+        '" cy="' + Y(v).toFixed(1) + '" r="2.6"/>');
+    }
+    g.push('<text class="sys-tag" x="' + X(zMoon).toFixed(1) + '" y="' +
+      (axisY - MOON_R * SYS.re - 6).toFixed(1) + '" text-anchor="middle">Moon</text>');
+    g.push('<text class="sys-tag" x="' + SYS.cx + '" y="' +
+      (SYS.cy + SYS.re + 14) + '" text-anchor="middle">Earth</text>');
+    ui.sys.innerHTML = g.join('');
+
+    // the caption states the one distortion, and what the cone is doing
+    var tipKm = Math.round(zTip * 6378.137);
+    ui.sysCap.innerHTML = 'The Moon is ' +
+      Math.round(zMoon * 6378.137).toLocaleString() + ' km away here, and its ' +
+      'shadow closes to a point ' + Math.abs(tipKm).toLocaleString() + ' km ' +
+      (tipKm < 0 ? 'past the Earth’s centre — which is why the tip lands on the ' +
+        'ground as a spot a few tens of kilometres wide, and why totality is ' +
+        'counted in minutes.' : 'short of the Earth’s centre, so the ground ' +
+        'meets the cone beyond its point: the Moon cannot quite cover the Sun, ' +
+        'and a ring is left.') +
+      ' Heights are true and the Earth’s radius is the unit; distance along ' +
+      'the axis is squeezed ' + Math.round(1 / zoom) + '×, so the cone’s taper ' +
+      'is exaggerated by the same amount. The Sun is 400 Moon-distances further ' +
+      'left again.';
   }
 
   /* ================= words for a state ================= */
@@ -457,6 +581,7 @@
       var step = previewAt(state.preview, through);
       var pf = frameAt(state.ecl, step.at);
       paint(pf);
+      paintSystem(step.at);
       sayState(pf);
       ui.clockLabel.textContent = 'preview, running at ×' + step.rate;
       ui.clockTime.textContent = clockOf(new Date(step.at), state.at.tz);
@@ -468,6 +593,7 @@
     var t = Date.now();
     var f = frameAt(state.ecl, t);
     paint(f);
+    paintSystem(t);
     sayState(f);
     markRow(t);
 
