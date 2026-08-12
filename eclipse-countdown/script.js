@@ -36,7 +36,8 @@
   ['place', 'find', 'here', 'whereForm', 'hint', 'alts', 'altsRow', 'empty',
    'report', 'whereCap', 'disc', 'discState', 'discNote', 'play', 'playLabel',
    'clockLabel', 'clockTime', 'clockAt', 'stats', 'phaseRows', 'phaseZone',
-   'note', 'later', 'laterList'].forEach(function (id) {
+   'note', 'later', 'laterList',
+   'horizon', 'hzStatus', 'hzBody', 'hzAsk', 'hzGo'].forEach(function (id) {
     ui[id] = document.getElementById(id);
   });
 
@@ -540,6 +541,314 @@
     if (!quiet) tick(window.performance.now());
   }
 
+  /* ================= the horizon ================= */
+
+  /* Recon asks the terrain a wide question and draws a wide picture of it.
+     Here the question is narrower and so is the frame: only the strip of sky
+     this eclipse crosses, printed upright, because a Sun near setting moves
+     mostly downward and a tall frame is where that reads. The axes are
+     therefore NOT at the same scale — degrees are marked on both so the
+     stretch is stated rather than implied. */
+
+  var hz = { scan: null, key: null, busy: false };
+
+  function hzKey() {
+    return state.at && state.ecl
+      ? state.at.lat.toFixed(4) + ',' + state.at.lon.toFixed(4) + '|' + state.ecl.id
+      : null;
+  }
+
+  /* The window the figure is about. Not the whole eclipse: two and a half
+     hours of partial phases drawn end to end put the minute of totality
+     inside a single pixel, and that minute is the entire question. So the
+     frame is the quarter hour either side of the central phase — the
+     approach, the event, the exit — or, when there is no central phase,
+     the half hour either side of maximum. */
+  function hzWindow() {
+    var c = state.circ;
+    var pad = 12 / 60;                          // hours
+    var lo, hi, tight;
+    if (c.c2 && c.c3) {
+      lo = c.c2.tTT - pad; hi = c.c3.tTT + pad; tight = true;
+    } else {
+      lo = c.tMax - 0.5; hi = c.tMax + 0.5; tight = false;
+    }
+    if (c.c1) lo = Math.max(lo, c.c1.tTT);
+    if (c.c4) hi = Math.min(hi, c.c4.tTT);
+    if (hi <= lo) { lo = c.tMax - 0.25; hi = c.tMax + 0.25; }
+    return { lo: lo, hi: hi, tight: tight };
+  }
+
+  /* The Sun through that window, evenly, plus a dense pass across the
+     central phase so totality is drawn as a run and not as a dot. */
+  function hzTrack() {
+    var c = state.circ, ecl = state.ecl;
+    var w = hzWindow();
+    var ts = [];
+    for (var i = 0; i <= 72; i++) ts.push(w.lo + (w.hi - w.lo) * i / 72);
+    if (c.c2 && c.c3) {
+      for (var j = 0; j <= 36; j++) {
+        ts.push(c.c2.tTT + (c.c3.tTT - c.c2.tTT) * j / 36);
+      }
+    }
+    ts.sort(function (a, b) { return a - b; });
+    return ts.map(function (tt) {
+      var sun = Bessel.sunAltAz(ecl, tt, state.at.lat, state.at.lon);
+      return {
+        tt: tt,
+        az: sun.az,
+        alt: sun.alt + Bessel.refraction(sun.alt),
+        total: !!(c.c2 && c.c3 && tt >= c.c2.tTT && tt <= c.c3.tTT)
+      };
+    });
+  }
+
+  /* What the profile is made of at an azimuth — how far away the thing that
+     sets the skyline is, and how high. A block from 40 km out is a mountain
+     range; a block from 150 m out is the DEM reading the roof across the
+     street, and the reader deserves to know which one they are looking at. */
+  function hzFeatureAt(prof, az) {
+    var best = null, bd = Infinity;
+    prof.forEach(function (p) {
+      var d = Math.abs(((p.az - az + 540) % 360) - 180);
+      if (d < bd) { bd = d; best = p; }
+    });
+    return best;
+  }
+
+  // the profile's own angle at an azimuth, linear between samples
+  function hzAngleAt(prof, az) {
+    var n = prof.length;
+    if (!n) return -0.6;
+    var a0 = prof[0].az;
+    var rel = ((az - a0) % 360 + 360) % 360;
+    var step = ((prof[n - 1].az - a0) % 360 + 360) % 360 / (n - 1 || 1);
+    var idx = step > 0 ? rel / step : 0;
+    if (idx <= 0) return prof[0].ang;
+    if (idx >= n - 1) return prof[n - 1].ang;
+    var i0 = Math.floor(idx), f = idx - i0;
+    return prof[i0].ang * (1 - f) + prof[i0 + 1].ang * f;
+  }
+
+  function scanHorizon() {
+    if (hz.busy || !state.circ || !state.at) return;
+    var key = hzKey();
+    var track = hzTrack();
+    var azs = track.map(function (p) { return p.az; });
+    var lo = Math.min.apply(null, azs), hi = Math.max.apply(null, azs);
+    if (hi - lo > 180) { lo = state.circ.sunAz - 20; hi = state.circ.sunAz + 20; }
+    var lowest = Math.min.apply(null, track.map(function (p) { return p.alt; }));
+    // a low Sun needs a long look: a ridge 60 km out still reaches 5° when the
+    // Sun is at 5°, and nothing beyond 120 km survives the Earth's curve
+    var maxKm = Math.min(120, Math.max(10,
+      5 / Math.tan(Math.max(1, lowest) * RAD)));
+
+    hz.busy = true;
+    ui.hzGo.disabled = true;
+    ui.hzStatus.textContent = 'reading the ground…';
+    Terrain.horizonScan(state.at.lat, state.at.lon, {
+      azCenter: (lo + hi) / 2,
+      azSpan: Math.max(20, Math.min(90, hi - lo + 8)),
+      azStep: 1,
+      maxKm: maxKm,
+      onProgress: function (f) {
+        ui.hzStatus.textContent = 'reading the ground ' + Math.round(f * 100) + '%';
+      }
+    }).then(function (scan) {
+      if (hzKey() !== key) return;              // the reader moved meanwhile
+      hz.scan = scan; hz.key = key;
+      drawHorizon();
+    }).catch(function () {
+      ui.hzStatus.textContent = 'no elevation data';
+      ui.hzBody.innerHTML = '<p class="sheet-note">The elevation tiles could ' +
+        'not be reached, so the skyline is unknown here.</p>';
+    }).then(function () {
+      hz.busy = false;
+      ui.hzGo.disabled = false;
+    });
+  }
+
+  function drawHorizon() {
+    if (!hz.scan || hz.key !== hzKey()) return;
+    var prof = hz.scan.profile;
+    var track = hzTrack();
+    var c = state.circ;
+
+    /* The window: the track, padded by three degrees, and no wider than it
+       has to be. This is the whole difference from Recon's chart — there the
+       frame is the scan, here it is the eclipse. */
+    var azMin = prof[0].az;
+    function rel(az) {
+      var r = ((az - azMin) % 360 + 360) % 360;
+      return r > 270 ? r - 360 : r;             // keep the window signed and small
+    }
+    var rels = track.map(function (p) { return rel(p.az); });
+    var azLo = Math.min.apply(null, rels) - 3;
+    var azHi = Math.max.apply(null, rels) + 3;
+    if (azHi - azLo < 10) {                     // a stationary Sun still gets air
+      var mid = (azLo + azHi) / 2;
+      azLo = mid - 5; azHi = mid + 5;
+    }
+    var alts = track.map(function (p) { return p.alt; });
+    var altHi = Math.max.apply(null, alts) + 2;
+    var altLo = Math.min(-1.2, Math.min.apply(null, alts) - 1.2);
+    // the terrain inside the window sets the ceiling too: a ridge that towers
+    // over the Sun is the answer, so it must be in the picture
+    prof.forEach(function (p) {
+      var r = rel(p.az);
+      if (r >= azLo && r <= azHi && p.ang > altHi - 2) {
+        altHi = Math.min(p.ang + 2, altHi + 14);
+      }
+    });
+
+    var W = 232, H = 340, mL = 32, mR = 12, mT = 14, mB = 30;
+    var plotW = W - mL - mR, plotH = H - mT - mB;
+    function X(az) {
+      var r = Math.max(azLo, Math.min(azHi, rel(az)));
+      return mL + (r - azLo) / (azHi - azLo) * plotW;
+    }
+    function Y(a) {
+      var v = Math.max(altLo, Math.min(altHi, a));
+      return mT + (altHi - v) / (altHi - altLo) * plotH;
+    }
+
+    var svg = ['<svg viewBox="0 0 ' + W + ' ' + H + '" class="hz-fig" role="img" ' +
+      'aria-label="The Sun’s path through the eclipse against the skyline in that direction">'];
+
+    // altitude gridlines, stepped to whatever the window turned out to be
+    var span = altHi - altLo;
+    var gStep = span > 40 ? 10 : span > 18 ? 5 : span > 8 ? 2 : 1;
+    for (var g = Math.ceil(altLo / gStep) * gStep; g <= altHi; g += gStep) {
+      var yg = Y(g);
+      svg.push('<line class="hz-grid" x1="' + mL + '" x2="' + (W - mR) +
+        '" y1="' + yg.toFixed(1) + '" y2="' + yg.toFixed(1) + '"/>');
+      svg.push('<text class="hz-tick" x="' + (mL - 5) + '" y="' + (yg + 3.4).toFixed(1) +
+        '" text-anchor="end">' + g + '°</text>');
+    }
+    // the horizon itself, where the ground would be if it were flat and far
+    svg.push('<line class="hz-zero" x1="' + mL + '" x2="' + (W - mR) +
+      '" y1="' + Y(0).toFixed(1) + '" y2="' + Y(0).toFixed(1) + '"/>');
+
+    // the skyline, filled down to the frame's floor
+    var d = '', started = false;
+    prof.forEach(function (p) {
+      var r = rel(p.az);
+      if (r < azLo - 2 || r > azHi + 2) return;
+      d += (started ? 'L' : 'M') + X(p.az).toFixed(1) + ',' + Y(p.ang).toFixed(1);
+      started = true;
+    });
+    if (started) {
+      d += 'L' + (W - mR) + ',' + (H - mB) + 'L' + mL + ',' + (H - mB) + 'Z';
+      svg.push('<path class="hz-ground" d="' + d + '"/>');
+    }
+
+    // the Sun's path: thin while partial, thick through totality, dashed and
+    // in plate 2 wherever the ground is in the way
+    for (var i = 1; i < track.length; i++) {
+      var a = track[i - 1], b = track[i];
+      var blocked = b.alt < hzAngleAt(prof, b.az);
+      svg.push('<line class="hz-run' + (b.total ? ' is-total' : '') +
+        (blocked ? ' is-blocked' : '') + '" x1="' + X(a.az).toFixed(1) +
+        '" y1="' + Y(a.alt).toFixed(1) + '" x2="' + X(b.az).toFixed(1) +
+        '" y2="' + Y(b.alt).toFixed(1) + '"/>');
+    }
+
+    // the Sun at maximum, at its true angular size on both axes — which is
+    // why it is an ellipse: the frame stretches height against width
+    var rx = SUN_DEG / (azHi - azLo) * plotW;
+    var ry = SUN_DEG / (altHi - altLo) * plotH;
+    svg.push('<ellipse class="hz-sun" cx="' + X(c.sunAz).toFixed(1) + '" cy="' +
+      Y(c.sunAltApparent).toFixed(1) + '" rx="' + Math.max(2, rx).toFixed(1) +
+      '" ry="' + Math.max(2, ry).toFixed(1) + '"/>');
+
+    /* Contact marks, dropped to the axis so they cannot sit on the track —
+       and only the ones the crop actually contains: a C1 an hour outside the
+       frame, clamped to its edge, would be a label pointing at nothing. */
+    var w = hzWindow();
+    var marks = [['C1', c.c1], ['C2', c.c2], ['C3', c.c3], ['C4', c.c4]]
+      .filter(function (m) {
+        return m[1] && m[1].tTT >= w.lo - 1e-9 && m[1].tTT <= w.hi + 1e-9;
+      });
+    var lastX = -99;
+    marks.forEach(function (m) {
+      var x = X(m[1].az);
+      if (x - lastX < 16) x = lastX + 16;       // C2 and C3 crowd on a short totality
+      if (x > W - mR) return;
+      lastX = x;
+      svg.push('<line class="hz-ctick" x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) +
+        '" y1="' + (H - mB) + '" y2="' + (H - mB + 4) + '"/>');
+      svg.push('<text class="hz-clabel" x="' + x.toFixed(1) + '" y="' + (H - mB + 14) +
+        '" text-anchor="middle">' + m[0] + '</text>');
+    });
+    // the compass reading under the frame, so the strip is locatable in the sky
+    svg.push('<text class="hz-axis" x="' + (mL + plotW / 2).toFixed(1) + '" y="' +
+      (H - 2) + '" text-anchor="middle">' +
+      Math.round(c.sunAz) + '° ' + compass(c.sunAz) + ' at maximum</text>');
+    // and the stretch of time the frame covers, so the crop is stated
+    svg.push('<text class="hz-axis" x="' + (W - mR) + '" y="' + (mT - 4) +
+      '" text-anchor="end">' +
+      clockOf(Bessel.toDate(state.ecl, track[0].tt), state.at.tz) + '–' +
+      clockOf(Bessel.toDate(state.ecl, track[track.length - 1].tt), state.at.tz) +
+      '</text>');
+    svg.push('</svg>');
+
+    /* The verdict in one line: what the ground does to the part that counts —
+       totality if there is any, otherwise the stretch the frame holds. */
+    var care = track.filter(function (p) { return p.total; });
+    if (!care.length) care = track;
+    var seen = care.filter(function (p) { return p.alt >= hzAngleAt(prof, p.az); });
+    var frac = care.length ? seen.length / care.length : 0;
+    var what = care[0].total ? (state.circ.type === 'annular' ? 'annularity' : 'totality')
+                             : 'the hour around maximum';
+    // the tightest moment, and what the ground is made of there
+    var tightest = care[0], margin = Infinity;
+    care.forEach(function (p) {
+      var m = p.alt - hzAngleAt(prof, p.az);
+      if (m < margin) { margin = m; tightest = p; }
+    });
+    var feat = hzFeatureAt(prof, tightest.az);
+    var featWord = feat ? (feat.distKm < 1
+      ? 'The skyline there is only ' + Math.round(feat.distKm * 1000) +
+        ' m away and ' + Math.round(feat.elevM - hz.scan.siteElev) +
+        ' m higher — at that range one tile pixel is worth about a degree, ' +
+        'so treat it as “something is close by”, not as a measurement.'
+      : 'The skyline there is ' + (feat.distKm < 10 ? feat.distKm.toFixed(1)
+        : Math.round(feat.distKm)) + ' km away, ' + Math.round(feat.elevM) +
+        ' m above sea level.') : '';
+
+    var word;
+    if (frac >= 0.999) {
+      word = 'The skyline is clear: ' + what + ' happens ' + margin.toFixed(1) +
+        '° above the ground at its closest. ';
+    } else if (frac <= 0.001) {
+      word = 'The ground hides ' + what + ' entirely from this exact spot — ' +
+        'higher ground, or a few streets over, may not. ';
+    } else {
+      word = 'The ground hides ' + Math.round((1 - frac) * 100) + '% of ' + what +
+        ' from this exact spot. ';
+    }
+
+    ui.hzStatus.textContent = Terrain.cacheSize() + ' tiles read';
+    ui.hzBody.innerHTML = '<figure class="hz-wrap">' + svg.join('') +
+      '<figcaption class="sheet-note">' + word + featWord + ' Elevation from ' +
+      '<a href="https://registry.opendata.aws/terrain-tiles/">AWS terrain tiles</a>, ' +
+      'about 30–90 m across on the ground and read as a surface, so a dense ' +
+      'city reads its own rooftops. Height is stretched against width — read ' +
+      'the degrees on both edges.</figcaption></figure>';
+  }
+
+  /* A new place or a new eclipse retires the old skyline rather than showing
+     it against the wrong sky. */
+  function resetHorizon() {
+    hz.scan = null; hz.key = null;
+    if (!ui.horizon) return;
+    ui.hzStatus.textContent = '';
+    ui.hzBody.innerHTML = '';
+    ui.hzBody.appendChild(ui.hzAsk);
+    ui.hzBody.appendChild(ui.hzGo);
+    ui.hzGo.disabled = false;
+  }
+
   /* ================= where the reader is ================= */
 
   /* A pair of coordinates, if that is what was typed. Degrees only, either
@@ -583,8 +892,11 @@
     }
     ui.whereCap.textContent = coordWord(state.at.lat, state.at.lon);
     stopPreview(true);
-    if (pick < 0) { renderNothing(rows); return; }
+    if (pick < 0) { resetHorizon(); renderNothing(rows); return; }
     renderReport(pick, rows);
+    // the skyline belongs to a place and an eclipse; either changing voids it,
+    // and a scan already in hand for this pair is simply redrawn
+    if (hz.scan && hz.key === hzKey()) drawHorizon(); else resetHorizon();
     tick(window.performance.now());
   }
 
@@ -706,6 +1018,7 @@
   ui.play.addEventListener('click', function () {
     if (state.preview) stopPreview(); else startPreview();
   });
+  ui.hzGo.addEventListener('click', scanHorizon);
 
   restore();
   window.requestAnimationFrame(loop);

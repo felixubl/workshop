@@ -42,11 +42,12 @@ of the world with live weather on it, which cannot exist without a network:
 it fetches elevation tiles (Mapzen/AWS) for both the base map and the horizon
 scans, map labels (Carto/OSM) and forecasts (Open-Meteo), plus a keyless
 reverse geocoder for place names, and credits every one of them on screen.
-The third makes one request and only on demand: Eclipse Countdown sends a typed
-place name to Open-Meteo's keyless geocoder to turn it into coordinates, on the
-button press and never on load. Type coordinates instead and it opens no socket
-at all. The eclipse mathematics itself runs in your browser in both of the
-eclipse tools.
+The third asks for two things and only on demand: Eclipse Countdown sends a
+typed place name to Open-Meteo's keyless geocoder to turn it into coordinates,
+and reads AWS terrain tiles when you press the horizon check — each on its own
+button and never on load. Type coordinates and skip the horizon and it opens no
+socket at all. The eclipse mathematics itself runs in your browser in both of
+the eclipse tools.
 
 ## Tools
 
@@ -142,14 +143,25 @@ eclipse tools.
   so a Sun that sets mid-eclipse is drawn setting. Under it, every phase with
   its local time, its time in UT and the Sun's altitude. A preview plays the
   whole eclipse in 15 seconds, slowed through the middle and printing the rate
-  it is running at. It holds no eclipse data and no eclipse arithmetic of its
-  own: the catalogue and the engine are Recon's two files
+  it is running at. A horizon check borrows Recon's terrain reader and asks it
+  a much narrower question — the skyline in the strip of sky the eclipse
+  actually crosses — and prints the answer upright: the quarter hour either
+  side of totality, tall, with the ground filled in and the Sun's path drawn
+  across it, dashed and in plate 2 wherever the ground takes it. It says what
+  the skyline is made of as well as how high it stands, because a block from
+  40 km out is a mountain range and a block from 150 m out is the elevation
+  model reading the roof across the street. It holds no eclipse data and no
+  eclipse arithmetic of its own: the catalogue, the engine and the terrain
+  reader are Recon's files
   ([`eclipse-recon/js/eclipses.js`](eclipse-recon/js/eclipses.js),
-  [`eclipse-recon/js/bessel.js`](eclipse-recon/js/bessel.js)), loaded from the
-  folder next door rather than copied, so the two tools cannot disagree about
-  when the Moon arrives — and an eclipse pasted into Recon appears here too. It
-  sits on `fetch` for one reason, turning a typed place name into coordinates;
-  type the coordinates yourself and it opens no socket at all.
+  [`eclipse-recon/js/bessel.js`](eclipse-recon/js/bessel.js),
+  [`eclipse-recon/js/terrain.js`](eclipse-recon/js/terrain.js)), loaded from
+  the folder next door rather than copied, so the two tools cannot disagree
+  about when the Moon arrives or what stands in the way — and an eclipse pasted
+  into Recon appears here too. It sits on `fetch` for two reasons, each behind
+  its own button: turning a typed place name into coordinates, and reading the
+  ground around you. Type the coordinates and skip the horizon and it opens no
+  socket at all.
 
 The homepage ([index.html](index.html)) also lists a long line-up of
 "coming soon" tool categories: PDF, image, SVG, QR/barcode, audio, video,

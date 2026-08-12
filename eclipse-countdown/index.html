@@ -57,9 +57,11 @@
 
   <p class="sheet-note" id="placeNote">
     Place names are resolved by <a href="https://open-meteo.com/en/docs/geocoding-api">Open-Meteo's
-    keyless geocoder</a>, the only request this tool makes, and only when you
-    press the button. Coordinates are parsed here and sent nowhere. The eclipse
-    calculations run in your browser either way.
+    keyless geocoder</a>, and only when you press the button. Coordinates are
+    parsed here and sent nowhere. The one other request is the horizon check
+    further down, which reads elevation tiles from
+    <a href="https://registry.opendata.aws/terrain-tiles/">AWS terrain</a> on
+    its own press. The eclipse calculations run in your browser either way.
   </p>
 
   <p class="hint" id="hint" hidden></p>
@@ -105,6 +107,28 @@
       </div>
     </div>
 
+    <!-- The horizon: Recon's terrain question, asked only about the piece of
+         sky this eclipse actually crosses, and printed upright — a track that
+         mostly climbs or falls wants a tall frame, not a wide one. -->
+    <section class="horizon" id="horizon">
+      <div class="sheet-cap">
+        <code>the horizon there</code>
+        <code class="meta" id="hzStatus"></code>
+      </div>
+      <div class="hz-body" id="hzBody">
+        <p class="sheet-note hz-ask" id="hzAsk">
+          A low Sun is only as visible as the skyline lets it be. This reads
+          the ground around you from the elevation tiles and draws what the
+          Sun does against it — the one part of this tool that fetches
+          anything besides a place name, so it waits for your press.
+        </p>
+        <button class="btn-ghost" type="button" id="hzGo">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M1.5 12.5h13M2.5 12.5 6 6l2.5 3.5L11 4.5l3 8"></path></svg>
+          Check the horizon
+        </button>
+      </div>
+    </section>
+
     <div class="sheet phases">
       <div class="sheet-cap">
         <code id="phaseCap">running order</code>
@@ -141,6 +165,7 @@
      countdown and the map can never disagree about when the Moon arrives. -->
 <script src="../eclipse-recon/js/eclipses.js"></script>
 <script src="../eclipse-recon/js/bessel.js"></script>
+<script src="../eclipse-recon/js/terrain.js"></script>
 <script src="script.js"></script>
 <script src="../assets/preprint/js/controls.js"></script>
 <script src="../assets/share.js"></script>
