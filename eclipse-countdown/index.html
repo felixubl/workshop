@@ -75,7 +75,8 @@
     Enter a place or a pair of coordinates. This finds the next solar eclipse
     visible from there, counts down to its next phase, and lists the times of
     all of them. The disc shows the Sun as it will look from that spot, drawn
-    with the zenith up for the moment on the clock.
+    with the zenith up for the moment on the clock, and beside it the same
+    moment from outside: the Moon, its shadow, and where that shadow falls.
   </div>
 
   <section id="report" hidden>
@@ -106,6 +107,15 @@
         <dl class="stats" id="stats"></dl>
       </div>
     </div>
+
+    <!-- The same instant from outside: Moon, cone, Earth, and the reader on
+         it. Everything in it is read off the Besselian elements, so it moves
+         with the clock and with the preview. -->
+    <figure class="system">
+      <svg id="sys" class="sys" viewBox="0 0 340 128" role="img"
+        aria-label="The Moon's shadow cone reaching the Earth, seen from the side"></svg>
+      <figcaption class="sheet-note" id="sysCap"></figcaption>
+    </figure>
 
     <!-- The horizon: Recon's terrain question, asked only about the piece of
          sky this eclipse actually crosses, and printed upright — a track that

@@ -142,13 +142,6 @@
   --ec-pen: var(--pp-faint);
   --ec-rule: var(--pp-line);
   --ec-edge: var(--pp-edge);
-  /* plate 2 x plate 3, multiplied channel by channel: #ed0a3f over #0066ff */
-  --ec-overprint: #00043f;
-}
-[data-mode="dark"] .disc {
-  /* the same product of the mode's own plates (#ff4d68 x #6a9dff), taken a
-     shade denser so it clears 3:1 against both of them on a dark ground */
-  --ec-overprint: #50244e;
 }
 .disc .sky,
 .disc .erase {
@@ -425,4 +418,72 @@
 @media (max-width: 560px) {
   .hz-wrap { gap: 0.7rem; }
   .hz-fig { width: 100%; max-width: 300px; height: auto; aspect-ratio: 232 / 340; }
+}
+
+/* The overprint: plate 2 x plate 3, multiplied channel by channel. Declared
+   on the page rather than on the disc because two figures now print with it —
+   the bite on the disc, and the shadow in the system view, which are the same
+   thing seen from two places. */
+body {
+  --ec-overprint: #00043f;                    /* #ed0a3f over #0066ff */
+}
+[data-mode="dark"] body {
+  /* the product of the mode's own plates (#ff4d68 x #6a9dff), a shade denser
+     so it clears 3:1 against both of them on a dark ground */
+  --ec-overprint: #50244e;
+}
+
+/* ---- the system, seen from outside ------------------------------------
+   One vocabulary with the disc, so the two figures are the same eclipse and
+   not two drawings of it: sunlight in plate 2, the Moon in plate 3, and the
+   shadow in the overprint of the two — which on the disc is exactly the bite
+   the Moon takes out of the Sun, because it is the same shadow seen from the
+   other end. The reader takes plate 1, the one ink neither body wears.
+   Nothing here is translucent; the penumbra is a pair of edges rather than a
+   wash, which is also what it honestly is. */
+
+.system {
+  margin: 1.6rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.8rem 1.4rem;
+}
+.sys {
+  flex: none;
+  width: 340px;
+  max-width: 100%;
+  height: auto;
+  background: var(--pp-surface);
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-md);
+}
+.system figcaption {
+  flex: 1 1 18rem;
+  max-width: 46ch;
+  margin: 0;
+}
+
+.sys-ray line { stroke: var(--pp-plate-2); stroke-width: 1.2; }
+.sys-ray path { fill: var(--pp-plate-2); }
+/* the penumbra is where the Sun is only partly hidden: a boundary, drawn */
+.sys-pen { stroke: var(--pp-faint); stroke-width: 1; stroke-dasharray: 3 2.5; }
+/* the umbra is the shadow itself, so it is the one solid mass */
+.sys-umb { fill: var(--ec-overprint); }
+.sys-anti { stroke: var(--ec-overprint); stroke-width: 1; stroke-dasharray: 2 2; }
+.sys-axis { stroke: var(--pp-hair); stroke-width: 0.8; }
+.sys-earth {
+  fill: none;
+  stroke: var(--pp-edge);
+  stroke-width: 1.6;
+}
+.sys-moon { fill: var(--pp-plate-3); stroke: var(--pp-surface); stroke-width: 0.8; }
+/* the reader takes the one plate the disc does not use, so nothing else in
+   either figure can be mistaken for them */
+.sys-you { fill: var(--pp-plate-1); stroke: var(--pp-surface); stroke-width: 1; }
+.sys-tag {
+  font-family: var(--pp-font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.04em;
+  fill: var(--pp-faint);
 }
