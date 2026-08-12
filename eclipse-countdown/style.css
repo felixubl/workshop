@@ -1,0 +1,369 @@
+/* Tool-specific layout only — faces, buttons, fields, the toolbar band, the
+   sheet and its table all come from ../assets/base.css over the vendored
+   system. What this file draws is the two things this tool invents: the disc,
+   and the clock beside it.
+
+   The disc is drawn in CSS rather than in the script on purpose. Everything in
+   it is a token, so pulling the cord repaints the sky, the plate and the
+   hatching at the same moment as the page around it — the drawing is not a
+   picture pasted onto PREPRINT, it is set in it. */
+
+.field.place {
+  width: min(320px, 58vw);
+  font-family: var(--pp-font-mono);
+  font-size: 0.86rem;
+}
+
+/* "Looking that up…" is not a complaint, and .hint is a plate-2 line. */
+.hint.is-quiet {
+  color: var(--pp-faint);
+}
+
+/* The geocoder rarely returns one obvious answer to a place name — a dozen
+   towns share most names — so the runners-up stay on the page as an offer
+   rather than being thrown away. */
+.alts {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.75rem;
+  margin: -0.6rem 0 1.35rem;
+}
+.alts-label {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-label);
+  text-transform: uppercase;
+  color: var(--pp-faint);
+}
+.alts-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.btn-ghost.alt {
+  padding: 0.22rem 0.55rem;
+  font-size: 0.76rem;
+}
+
+.card.prompt {
+  font-size: 0.94rem;
+  line-height: 1.62;
+  color: var(--pp-muted);
+  margin-bottom: 1.75rem;
+}
+.card.prompt strong,
+.card.prompt code {
+  font-family: var(--pp-font-mono);
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--pp-ink);
+}
+
+/* The note under the toolbar says where a place name goes; the report starts a
+   new movement under it and needs the air to say so. */
+#report {
+  margin-top: 2rem;
+}
+
+.where-cap {
+  font-family: var(--pp-font-mono);
+  font-size: 0.76rem;
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+}
+
+/* ── The stage ──────────────────────────────────────────────────────────────
+   The picture and the number are one sentence — that is the Sun, and this is
+   how long until it changes — so they sit side by side and neither scrolls
+   away from the other. Below the measure where the disc would be a stamp they
+   stack, disc first: it is the thing worth looking at. */
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+  gap: 1.6rem 2.25rem;
+  align-items: start;
+  margin-bottom: 1.75rem;
+}
+@media (max-width: 760px) {
+  .stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.disc-wrap {
+  margin: 0;
+}
+.disc {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: var(--pp-rule-line) solid var(--pp-line);
+}
+.disc-cap {
+  margin-top: 0.7rem;
+}
+.disc-state {
+  margin: 0;
+  font-family: var(--pp-font-mono);
+  font-size: 0.94rem;
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-ink);
+}
+.disc-note {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--pp-faint);
+}
+.btn-ghost.play {
+  margin-top: 0.7rem;
+  padding: 0.28rem 0.6rem;
+  font-size: 0.78rem;
+}
+.btn-ghost.play.is-on {
+  border-color: var(--pp-plate-3);
+  color: var(--pp-plate-3-text);
+}
+
+/* ── The drawing ────────────────────────────────────────────────────────────
+   Sky, plate, ink, hatch. The Sun takes plate 2 at full strength because it is
+   printed rather than lit, and the Moon is the ink over it: black on a light
+   sheet, black on a dark one. That is one of the two values here that do not
+   follow the mode, for the same reason Recon prints the umbra in actual black
+   — a shadow that turns pale in dark mode is no longer a shadow.
+
+   The other is totality. The four pens the drawing uses are named here so that
+   the moment the sky actually goes out, the whole frame can be repainted by
+   swapping them: below, .is-night pins a black ground and a pale pen in either
+   mode, because at that moment the drawing has stopped following the page's
+   paper and is showing a sky that is genuinely dark. It is the same deviation
+   draw-svg declares for its artwork ground, and it lasts about a minute. */
+.disc {
+  --ec-sky: var(--pp-sunk);
+  --ec-pen: var(--pp-faint);
+  --ec-rule: var(--pp-line);
+  --ec-edge: var(--pp-edge);
+}
+.disc.is-night {
+  --ec-sky: #0b0b0a;
+  --ec-pen: #d9d7cd;
+  --ec-rule: rgba(239, 238, 232, 0.28);
+  --ec-edge: #efeee8;
+}
+
+.disc .sky,
+.disc .erase {
+  fill: var(--ec-sky);
+}
+.disc .sun {
+  fill: var(--pp-plate-2);
+}
+.disc .moon-body {
+  fill: #0b0b0a;
+  stroke: var(--ec-rule);
+  stroke-width: 1;
+}
+.disc .moon-cut {
+  clip-path: url(#ec-face);
+}
+.disc .moon-cut.is-free {
+  clip-path: none;
+}
+
+/* Two circles that are notes rather than sights: where the Moon is while it is
+   still off the Sun's face, and where the Sun is once the ground is in front
+   of it. Dotted, because the system fixes dotted as provisional — and a circle
+   drawn around something you cannot see is exactly that. */
+.disc .moon-edge,
+.disc .ghost {
+  fill: none;
+  stroke: var(--ec-rule);
+  stroke-width: 1;
+  stroke-dasharray: 1 5;
+  stroke-linecap: round;
+}
+.disc .ghost {
+  stroke: var(--pp-plate-2);
+  stroke-dasharray: 2 5;
+  opacity: 0.85;
+}
+
+.disc .corona line {
+  stroke: var(--ec-pen);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+.disc .cor-glow {
+  fill: var(--ec-pen);
+  opacity: 0.13;
+}
+
+.disc .hatch {
+  stroke: var(--ec-rule);
+  stroke-width: 1;
+}
+.disc .horizon {
+  stroke: var(--ec-edge);
+  stroke-width: 2;
+}
+
+.disc .up-mark path {
+  fill: none;
+  stroke: var(--ec-pen);
+  stroke-width: 1.2;
+}
+.disc .up-mark text {
+  font-family: var(--pp-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  fill: var(--ec-pen);
+}
+
+.disc .is-off {
+  display: none;
+}
+
+/* ── The clock ──────────────────────────────────────────────────────────────
+   The one number the tool exists to print, so it is set at display size in the
+   machine's own face: it is a reading off a clock, not a headline. */
+.clock-label {
+  margin: 0;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-label);
+  text-transform: uppercase;
+  color: var(--pp-faint);
+}
+.clock-time {
+  margin: 0.2rem 0 0;
+  font-family: var(--pp-font-mono);
+  font-size: clamp(1.9rem, 6.5vw, 2.9rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--pp-ink);
+  overflow-wrap: anywhere;
+}
+.clock-at {
+  margin: 0.35rem 0 0;
+  font-family: var(--pp-font-mono);
+  font-size: 0.78rem;
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-muted);
+}
+
+/* The four or five facts a reader checks after the number: what kind of
+   eclipse it is there, how deep, how long, how high the Sun will be. */
+.stats {
+  margin: 1.25rem 0 0;
+  border-top: var(--pp-rule-line) solid var(--pp-line);
+}
+.stats > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.42rem 0;
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+.stats dt {
+  font-size: 0.88rem;
+  color: var(--pp-muted);
+}
+.stats dd {
+  margin: 0;
+  font-family: var(--pp-font-mono);
+  font-size: 0.86rem;
+  letter-spacing: var(--w-track-mono);
+  text-align: right;
+  color: var(--pp-ink);
+}
+
+/* ── The running order ──────────────────────────────────────────────────────
+   A table of times is a table: the sheet's own tracks, with the phase names
+   set in the reading face because they are words rather than figures. */
+/* Four columns is the narrowest this table can honestly be — a phase, when it
+   happens where you are, when it happens in UT, and how high the Sun is — so
+   the sheet's sideways-scroll threshold comes down to where all four still fit
+   a phone rather than leaving the last one off the edge. */
+.phases {
+  --w-sheet-min: 336px;
+}
+.phases table {
+  table-layout: auto;
+}
+.phases tbody th {
+  padding: 0.45rem 0.8rem;
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+  font-family: var(--pp-font-body);
+  font-size: 0.92rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--pp-ink);
+}
+.phases tbody th small {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--pp-faint);
+}
+.phases td.t {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.phases td.meta {
+  color: var(--pp-faint);
+}
+.phases td.is-under {
+  color: var(--pp-plate-2-text);
+}
+.phases tbody tr:last-child th {
+  border-bottom: 0;
+}
+
+/* The next thing to happen, marked the way a reader marks a printed timetable:
+   a swipe of the pen through the line, not a coloured row. */
+.phases tr.is-next th,
+.phases tr.is-next td {
+  background: var(--pp-marker-citron);
+}
+
+/* ── What else is on file ───────────────────────────────────────────────────
+   The catalogue is small and honest about it: the rest of it is listed rather
+   than hidden, so "the next one" can be read as "the next one I know of". */
+.later {
+  margin-top: 1.75rem;
+}
+.later-list {
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: var(--pp-rule-line) solid var(--pp-line);
+  max-width: 46rem;
+}
+.later-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  padding: 0.42rem 0;
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+.later-list code {
+  font-family: var(--pp-font-mono);
+  font-size: 0.82rem;
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-ink);
+}
+.later-list span {
+  font-size: 0.86rem;
+  color: var(--pp-muted);
+}
+
+.colophon {
+  max-width: 66ch;
+  margin-top: 2.5rem;
+}

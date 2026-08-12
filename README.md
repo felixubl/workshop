@@ -26,15 +26,15 @@ harder to trust. Invasiveness is measured in ink coverage instead: five small
 squares driven in from the left, and a word that darkens as the rung rises.
 The key at the foot of the index defines all five.
 
-Nothing on the bench is above `fetch` today — five tools never open a socket,
-and two read public data and keep nothing. `store` and `account` are printed
+Nothing on the bench is above `fetch` today — six tools never open a socket,
+and three read public data and keep nothing. `store` and `account` are printed
 unused because the tools that will need them (Convex, Supabase, or something
 self-hosted on a VPS) are planned, and a scale written to describe what already
 exists is a scale bent to fit it.
 
-The two tools on `fetch` both make their traffic the subject rather than an
-aside, and each names who it is about to talk to on its own page, before
-anything is sent. The Network Inspector can look your
+Each of the three on `fetch` names who it is about to talk to on its own page,
+before anything is sent, and in two of them the traffic is the subject rather
+than an aside. The Network Inspector can look your
 IP address up with a third party, ask a STUN server what it sees, and probe
 your local range — all behind buttons, with nothing sent on load at all.
 Eclipse Recon is a map
@@ -42,7 +42,11 @@ of the world with live weather on it, which cannot exist without a network:
 it fetches elevation tiles (Mapzen/AWS) for both the base map and the horizon
 scans, map labels (Carto/OSM) and forecasts (Open-Meteo), plus a keyless
 reverse geocoder for place names, and credits every one of them on screen.
-The eclipse mathematics itself runs entirely in your browser.
+The third makes one request and only on demand: Eclipse Countdown sends a typed
+place name to Open-Meteo's keyless geocoder to turn it into coordinates, on the
+button press and never on load. Type coordinates instead and it opens no socket
+at all. The eclipse mathematics itself runs in your browser in both of the
+eclipse tools.
 
 ## Tools
 
@@ -129,6 +133,23 @@ The eclipse mathematics itself runs entirely in your browser.
   about seeing. It is
   the second tool that talks to the network (see above), and it works on a
   phone.
+- [Eclipse Countdown](eclipse-countdown/) — the same arithmetic, asked the
+  smaller question: from where I am, when is the next one and what will it look
+  like? A clock counts down to the next phase — first contact, totality, last
+  contact — beside a drawing of the Sun for the moment on the clock: zenith up,
+  the Moon at its true separation and position angle, the shadow cut to the
+  Sun's face, the corona drawn during totality, and the horizon at true scale,
+  so a Sun that sets mid-eclipse is drawn setting. Under it, every phase with
+  its local time, its time in UT and the Sun's altitude. A preview plays the
+  whole eclipse in 15 seconds, slowed through the middle and printing the rate
+  it is running at. It holds no eclipse data and no eclipse arithmetic of its
+  own: the catalogue and the engine are Recon's two files
+  ([`eclipse-recon/js/eclipses.js`](eclipse-recon/js/eclipses.js),
+  [`eclipse-recon/js/bessel.js`](eclipse-recon/js/bessel.js)), loaded from the
+  folder next door rather than copied, so the two tools cannot disagree about
+  when the Moon arrives — and an eclipse pasted into Recon appears here too. It
+  sits on `fetch` for one reason, turning a typed place name into coordinates;
+  type the coordinates yourself and it opens no socket at all.
 
 The homepage ([index.html](index.html)) also lists a long line-up of
 "coming soon" tool categories: PDF, image, SVG, QR/barcode, audio, video,
