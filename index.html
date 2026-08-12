@@ -241,10 +241,17 @@
     margin: 0 auto;
     padding: clamp(1.75rem, 4vw, 2.75rem) var(--pp-gutter) clamp(2.5rem, 6vw, 4rem);
     display: grid;
-    /* Two sections now rather than one grid, so the gap between them is the
-       gap between the work and the intentions. One step of the space scale
-       above the gap inside either of them, which is the only thing separating
-       them: same rhythm, further apart. */
+    /* One section per area of the shop, then the key. The gap between them is
+       the gap between one kind of work and the next: one step of the space
+       scale above the gap inside any of them, which is the only thing
+       separating them — same rhythm, further apart.
+
+       It used to be two sections, built and planned, which is how a changelog
+       is organised and not how a workshop is. A joiner does not keep a bench
+       for the tools they own and a second bench for the ones they mean to buy;
+       they keep a bench per kind of work, and the gaps on the wall are part of
+       it. So the areas are the sections now, and within one, what exists is a
+       plate and what is intended is a row. */
     gap: clamp(2rem, 5vw, 3.25rem);
     align-content: start;
   }
@@ -255,10 +262,13 @@
      to start where the label stops and stop where the count starts, which a
      border-bottom on the whole row cannot do.
 
-     The four-ink bar moved down here to the queue, where the register colours
-     actually are. It is the only key those squares get and it explains
-     nothing, on purpose: a category word on every one of fifteen rows is
-     fifteen words doing the work one colour does. */
+     An area band opens with its own register printed as the same 7px square a
+     queue row prints in front of its name. That square is the key the four
+     inks used to need a legend for: a bar of four swatches sat at the top of
+     the queue explaining a vocabulary nothing on the page had named. Now the
+     name is right beside the ink, once per area, and the legend is gone. The
+     one mark on this page that still earns a key is the custody ladder, and
+     that key is a section of its own at the foot. */
   .band {
     display: flex;
     align-items: center;
@@ -281,18 +291,26 @@
     color: var(--pp-faint);
     white-space: nowrap;
   }
-  .ink-bar {
-    display: flex;
-    gap: 2px;
-  }
-  .ink-bar i {
-    width: 22px;
+  .band-mark {
+    width: 7px;
     height: 7px;
+    flex: none;
+    background: var(--w-card-ink);
   }
-  .ink-bar i:nth-child(1) { background: var(--pp-plate-1); }
-  .ink-bar i:nth-child(2) { background: var(--pp-plate-2); }
-  .ink-bar i:nth-child(3) { background: var(--pp-plate-3); }
-  .ink-bar i:nth-child(4) { background: var(--pp-line); }
+  /* The shop's own line, above the areas: what the whole page adds up to. It
+     carries no register square, because it is not an area — the absence of the
+     mark is what says so.
+
+     The order is the one thing here that is not decoration. A pinned area takes
+     order -1 to climb the page, and this line is a grid item of the same
+     container, so at the default 0 it was overtaken by whatever the reader
+     pinned — the page's own header ending up below the first bench. -2 puts it
+     out of that race for good: it is not in the running order, it is the line
+     the running order is printed under. */
+  .band-shop {
+    order: -2;
+    margin-bottom: 0;
+  }
 
   /* The count of built tools is the one thing on this page worth a pen, so it
      takes one. This is the annotated half of "printed first, then annotated",
@@ -305,36 +323,46 @@
     padding: 0.08em 0.3em;
   }
 
-  /* ── The bench ─────────────────────────────────────────────────────────────
-     The four tools that exist.
+  /* ── The areas ─────────────────────────────────────────────────────────────
+     Five stations, each holding one kind of work: the tools that exist as
+     plates, the ones still intended as rows underneath them.
 
-     What changed, and why. All nineteen used to be the same 44px row, so a
+     What changed, and why. All the cards used to be the same 44px row, so a
      built tool and a queued one differed by a border weight and a wash and
-     nothing else. The page read as a list of nineteen equals when four of them
-     are the entire point of the site — a hierarchy problem, which law 00 says
-     is never fixed by adding another exception.
+     nothing else — a hierarchy problem, which law 00 says is never fixed by
+     adding another exception. Size became the hierarchy, and the plate carries
+     the sentence saying what the tool is FOR.
 
-     So size is the hierarchy now, and the plate carries the sentence saying
-     what the tool is FOR. That sentence is not new: it has been sitting in an
-     HTML comment beside each card since the cards were compressed, because
-     there was nowhere on a 44px row to put it. There is now.
+     What changed after that is where a card stands. Sorting by state put every
+     tool that exists in one heap and every tool that does not in another,
+     which answers "how far along is this site" and nothing else. A reader
+     arrives holding a job, not a question about progress. So the heap is cut
+     by the work instead: pictures at the light table, print at the press,
+     numbers and letters at the workbench, the world outside in the field, and
+     one drawer for what fits no bench — which is the shape a real shop takes,
+     down to the drawer.
 
      The plates do not share a baseline. Two columns, the right one dropped a
-     step, and each plate only as tall as its own sentence needs. That is the
-     whole of the hand-set reading — nothing is scattered and nothing is
-     random, the grid has simply stopped insisting that four different things
-     are the same size. */
-  /* The register, and it is one vocabulary for both sections. A queue row
-     prints it as the 7px square in front of its name; a plate prints it as the
-     ink its cast is struck in. Same four values, same meaning, two sizes —
-     which is the only reason a reader can look at a pink cast and a pink square
-     and know they are the same claim.
+     step, and each plate only as tall as its own sentence needs. Nothing is
+     scattered and nothing is random; the grid has simply stopped insisting
+     that different things are the same size. */
+  /* The register, and it is one vocabulary across an area. A queue row prints
+     it as the 7px square in front of its name, the band prints the same square
+     in front of the area's name, and a plate prints it as the ink its cast is
+     struck in. Same values, same meaning, three sizes — which is the only
+     reason a reader can look at a pink cast and a pink square and know they
+     are the same claim.
 
-     Plate 2 is media and what you look at, plate 1 is documents and data,
-     plate 3 is developer and file work, and the line is for the things that
-     belong to no group. Two of the four built tools land on plate 2 because
-     two of them really are image tools, and giving one of them another ink to
-     make the row look varied would be the mark lying about what it means. */
+     It is declared on the AREA now rather than on each of twenty-four cards.
+     That is not a tidying: it is the mark finally being true. The ink was a
+     category and the card was where it was written, so a card could carry an
+     ink its neighbours did not and nothing on the page would flinch. With the
+     area holding it, a tool's register is wherever the tool is standing, and
+     the two cannot disagree.
+
+     Plate 2 is what you look at, plate 1 is what gets printed, plate 3 is
+     numbers and letters, and the line is for the two areas that are not a
+     bench: what happens outside the machine, and the drawer. */
   .reg-1 { --w-card-ink: var(--pp-plate-1); }
   .reg-2 { --w-card-ink: var(--pp-plate-2); }
   .reg-3 { --w-card-ink: var(--pp-plate-3); }
@@ -348,9 +376,14 @@
   @media (min-width: 700px) {
     .plates {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      /* The air the scrawl hangs in. It is absolutely positioned and
-         contributes no height of its own, which is the point of the part and
-         also means the room for it has to be made here. */
+    }
+    /* The air the scrawl hangs in. It is absolutely positioned and contributes
+       no height of its own, which is the point of the part and also means the
+       room for it has to be made here — in the one area that carries it, not
+       above every grid on the page. :first-of-type is DOM order and stays with
+       that area even when a pinned tool sends another one to the top, which is
+       correct: the annotation and its air travel together. */
+    .area:first-of-type .plates {
       margin-top: 2rem;
     }
     /* The drop is one step of the space scale, not a hand-picked offset. It is
@@ -382,17 +415,16 @@
      This is a declared token and not a law 04 breach — four live tools all
      carry it, and "the second time a violation appears, it stops being one".
 
-     It takes each plate's own register rather than plate 2 for all four. The
+     It takes its area's register rather than plate 2 for all of them. The
      old comment here argued the opposite: that the cast declares the STATE
      "built and open", and a cast also carrying the category would be one mark
      saying two things. That argument came from the nineteen-card grid, where a
      built tool and a queued one stood side by side and the cast was the only
-     thing telling them apart. It does not survive the bench and the queue —
-     being on the bench at all is now what says built, and no queued thing has a
-     plate to cast. The state is carried by the section, so the ink is free to
-     carry the category, which is the same register the queue rows already print
-     in front of their names. One vocabulary across both sections rather than
-     two. */
+     thing telling them apart. Nothing sorts by state any more: being a plate
+     at all is what says built, and no queued thing has a plate to cast. So the
+     ink is free to carry the area, which is the same register the rows below
+     it and the band above it both print as a square. One vocabulary per area
+     rather than one per card. */
   .plate-live {
     box-shadow: 5px 5px 0 var(--w-card-ink);
     transition: box-shadow var(--pp-dur-state) var(--pp-ease-out);
@@ -408,6 +440,13 @@
   .plates > :nth-child(2) .plate { transform: rotate(calc(var(--w-tilt-card) * -1.1)); }
   .plates > :nth-child(3) .plate { transform: rotate(calc(var(--w-tilt-card) * -0.8)); }
   .plates > :nth-child(4) .plate { transform: rotate(calc(var(--w-tilt-card) * 1.15)); }
+  /* An area holds three plates at most, so those four angles became two or
+     three, dealt in the same order at every station down the page — a hand
+     that repeats is a press, which is the one thing the tilt exists not to be.
+     Every other area turns its pair the other way. Same token, two more
+     multipliers, and no area sits directly under another laid out alike. */
+  .area:nth-of-type(even) .plates > :nth-child(1) .plate { transform: rotate(calc(var(--w-tilt-card) * -0.85)); }
+  .area:nth-of-type(even) .plates > :nth-child(2) .plate { transform: rotate(calc(var(--w-tilt-card) * 1.05)); }
 
   /* The name is the link, and it throws a covering layer over the whole plate
      so the entire box is the target. The pin sits above that layer, which is
@@ -550,7 +589,10 @@
   }
 
   /* ── The queue ─────────────────────────────────────────────────────────────
-     Fifteen intentions, and a list of intentions should look like a list.
+     Fifteen intentions, and a list of intentions should look like a list. They
+     are split across the areas now — each bench keeps its own gaps, under the
+     tools it already has, which is where a shop keeps a list of what it is
+     missing.
 
      They were fifteen dashed boxes over fifteen category washes, which made the
      single largest field of colour on the page out of the information that
@@ -568,6 +610,13 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
     gap: 0 var(--pp-space-4);
+  }
+  /* Under the plates of the same area. No rule between the two: the difference
+     between a plate and a row is already the loudest thing in the area, and a
+     line drawn across to announce it would be the page explaining its own
+     typography. */
+  .plates + .queue-list {
+    margin-top: var(--pp-space-5);
   }
   .q {
     display: flex;
@@ -611,9 +660,18 @@
      under the same rules.
 
      Last on the page on purpose. A key belongs where a colophon belongs, and
-     the cards are legible without it — `local` and `fetch — Open-Meteo` say
-     enough on their own, and a reader who wants the exact ladder is a reader
-     who will look for it. */
+     the ladder is readable from the marks alone: five squares, some filled,
+     and one word. A reader who wants to know what the word promises is a
+     reader who will look for it, once, at the foot.
+
+     This is now the ONLY place on the page where a rung is explained. A card
+     used to finish its rating with a clause — `fetch — AWS terrain, Carto,
+     Open-Meteo, BigDataCloud` — which is a different sentence per tool, of a
+     different length, saying a different amount, so no two cards could be
+     read against each other and the mark stopped being a scale. A rating
+     compares or it is not a rating. The hosts did not go missing: they are on
+     the tool's own page, in full, named before anything is sent, which is
+     where a reader is standing when the answer matters. */
   .key-list {
     display: grid;
     gap: 0.6rem;
@@ -709,9 +767,20 @@
   .pin:active {
     transform: var(--w-press);
   }
-  /* A pinned tool comes to the front of its own section. Order rather than a
-     move in the DOM, so the angle a plate was dealt stays with it. */
+  /* A pinned tool comes to the front of its own area, and its area comes to
+     the front of the page — two rules, because with the bench broken into five
+     the first one alone would leave a pinned tool at the top of a station the
+     reader still has to scroll to find, which is most of the pin's job undone.
+     Together they put it back where it was: first thing under the masthead.
+
+     Order rather than a move in the DOM, so the angle a plate was dealt stays
+     with it, and so main's own grid does the work — an area is a grid item and
+     takes `order` exactly as a plate does. The key is a grid item too and has
+     no order of its own, so it stays at the foot where it belongs. */
   .is-pinned {
+    order: -1;
+  }
+  .area:has(.is-pinned) {
     order: -1;
   }
 
@@ -777,7 +846,7 @@
      someone already using it is clutter. And `order` moves a pinned plate to
      the front, which pushes this one down a row — where the 2rem of air it
      hangs in does not exist, and it would sit over the plate above. */
-  .bench:has(.is-pinned) .scrawl {
+  main:has(.is-pinned) .scrawl {
     display: none;
   }
 
@@ -836,22 +905,37 @@
 
   <main>
 
-    <!-- The bench: what is built. The sentence on each plate is the same copy
-         that was kept as an HTML comment beside each card while the cards were
-         one line tall, cut to what fits a plate. The full versions are still in
-         git history rather than duplicated here. -->
-    <section class="bench">
+    <!-- The shop's own line. It is not an area — no register square — and it
+         carries the one figure worth a pen plus the pin count, which is a fact
+         about the whole page rather than about any one bench. -->
+    <div class="band band-shop">
+      <p class="section-label">The shop floor</p>
+      <span class="band-rule" aria-hidden="true"></span>
+      <code><span data-pin-count></span><span class="mk mk--citron">9 built</span> · 15 planned</code>
+    </div>
+
+    <!-- The areas. Each one holds the tools for a kind of work: what exists as
+         a plate, what is still intended as a row underneath. The sentence on
+         each plate is the same copy that was kept as an HTML comment beside the
+         card while the cards were one line tall, cut to what fits a plate; each
+         queue row still keeps its own brief as a comment, for the same reason a
+         row is not where a paragraph belongs. -->
+
+    <!-- ── At the light table ────────────────────────────────────────────────
+         Anything whose output is looked at or listened to: pixels, vectors, colour,
+         type, and the media files beside them. -->
+    <section class="area reg-2">
 
       <div class="band">
-        <p class="section-label">On the bench</p>
+        <span class="band-mark" aria-hidden="true"></span>
+        <p class="section-label">At the light table</p>
         <span class="band-rule" aria-hidden="true"></span>
-        <code><span data-pin-count></span><span class="mk mk--citron">9 built</span></code>
+        <code>2 built · 6 planned</code>
       </div>
-
 
       <div class="plates">
 
-        <div class="reg-2" data-tool="draw-svg">
+        <div data-tool="draw-svg">
           <!-- Points at this plate's pin. aria-hidden and not a label: the
                control it annotates already carries its own accessible name, and
                a reader on a screen reader gets that name rather than a
@@ -878,103 +962,20 @@
             <button class="pin" type="button" data-pin="draw-svg" aria-label="Pin Pixel Art SVG Drawer to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">Draw on a grid-snapped canvas, from an 8&times;8 sprite up to a full Game Boy screen, and export exactly what you drew as a real SVG.</p>
             <code class="plate-dates">added 2026-07-23 · changed 2026-07-29</code>
-            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local &mdash; nothing leaves this page</code>
+            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</code>
           </div>
         </div>
 
-        <div class="reg-3" data-tool="random-numbers">
-          <div class="plate plate-live">
-            <a class="plate-open" href="random-numbers/"><h3>Random Number Generator</h3></a>
-            <button class="pin" type="button" data-pin="random-numbers" aria-label="Pin Random Number Generator to the top"><span class="pin-head" aria-hidden="true"></span></button>
-            <p class="plate-say">Eleven distributions in up to ten dimensions. Every run prints the seed it used, so any set of numbers can be drawn again.</p>
-            <code class="plate-dates">added 2026-07-27 · changed 2026-07-29</code>
-            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local &mdash; nothing leaves this page</code>
-          </div>
-        </div>
-
-        <div class="reg-2" data-tool="metadata-cleaner">
+        <div data-tool="metadata-cleaner">
           <div class="plate plate-live">
             <a class="plate-open" href="metadata-cleaner/"><h3>Image Metadata Cleaner</h3></a>
             <button class="pin" type="button" data-pin="metadata-cleaner" aria-label="Pin Image Metadata Cleaner to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">See what a photo carries besides the photo &mdash; GPS, serial numbers, timestamps, the caption someone left in it &mdash; and choose field by field what to strip. The pixels are never re-encoded.</p>
             <code class="plate-dates">added 2026-07-27 · changed 2026-07-29</code>
-            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local &mdash; nothing leaves this page</code>
+            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</code>
           </div>
         </div>
 
-        <div class="reg-0" data-tool="network-inspector">
-          <div class="plate plate-live">
-            <a class="plate-open" href="network-inspector/"><h3>Network Inspector</h3></a>
-            <button class="pin" type="button" data-pin="network-inspector" aria-label="Pin Network Inspector to the top"><span class="pin-head" aria-hidden="true"></span></button>
-            <p class="plate-say">Everything your browser hands over before you touch anything, the requests it is making right now, and what a single lookup adds. The parts that send something are buttons you press.</p>
-            <code class="plate-dates">added 2026-08-04</code>
-            <code class="plate-custody" data-custody="fetch"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>fetch &mdash; ipwho.is, ipify, a STUN server &middot; on your press</code>
-          </div>
-        </div>
-
-        <div class="reg-1" data-tool="pdf-toolkit">
-          <div class="plate plate-live">
-            <a class="plate-open" href="pdf-toolkit/"><h3>PDF Toolkit</h3></a>
-            <button class="pin" type="button" data-pin="pdf-toolkit" aria-label="Pin PDF Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
-            <p class="plate-say">Merge, split, extract, reorder and turn pages, every one a real preview you can pick up. The PDF engine underneath is written from scratch, with no library involved.</p>
-            <code class="plate-dates">added 2026-07-27 · changed 2026-07-29</code>
-            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local &mdash; nothing leaves this page</code>
-          </div>
-        </div>
-
-        <div class="reg-3" data-tool="bingo-cards">
-          <div class="plate plate-live">
-            <a class="plate-open" href="bingo-cards/"><h3>Bingo Card Generator</h3></a>
-            <button class="pin" type="button" data-pin="bingo-cards" aria-label="Pin Bingo Card Generator to the top"><span class="pin-head" aria-hidden="true"></span></button>
-            <p class="plate-say">Type the squares and it counts every card that list can make &mdash; exactly, however many digits that takes. Ask for as many as you want and it prints them, one to a page.</p>
-            <code class="plate-dates">added 2026-08-09</code>
-            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local &mdash; nothing leaves this page</code>
-          </div>
-        </div>
-
-        <div class="reg-1" data-tool="eclipse-recon">
-          <div class="plate plate-live">
-            <a class="plate-open" href="eclipse-recon/"><h3>Eclipse Recon</h3></a>
-            <button class="pin" type="button" data-pin="eclipse-recon" aria-label="Pin Eclipse Recon to the top"><span class="pin-head" aria-hidden="true"></span></button>
-            <p class="plate-say">The path of totality from a satellite&rsquo;s point of view: exact timings for any point you target, the western ridge that might hide a low Sun, and the cloud outlook &mdash; good zones and bad, ranked.</p>
-            <code class="plate-dates">added 2026-08-10 · changed 2026-08-12</code>
-            <code class="plate-custody" data-custody="fetch"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>fetch &mdash; AWS terrain, Carto, Open-Meteo, BigDataCloud</code>
-          </div>
-        </div>
-
-        <div class="reg-1" data-tool="abecedarian">
-          <div class="plate plate-live">
-            <a class="plate-open" href="abecedarian/"><h3>Abecedarian Distance</h3></a>
-            <button class="pin" type="button" data-pin="abecedarian" aria-label="Pin Abecedarian Distance to the top"><span class="pin-head" aria-hidden="true"></span></button>
-            <p class="plate-say"><em>billowy</em> and <em>almost</em> are already in alphabetical order. Nearly every other word would be too, under some other alphabet &mdash; this finds the nearest one and counts the letters you had to swap to get there.</p>
-            <code class="plate-dates">added 2026-08-11</code>
-            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local &mdash; nothing leaves this page</code>
-          </div>
-        </div>
-
-        <div class="reg-2" data-tool="eclipse-countdown">
-          <div class="plate plate-live">
-            <a class="plate-open" href="eclipse-countdown/"><h3>Eclipse Countdown</h3></a>
-            <button class="pin" type="button" data-pin="eclipse-countdown" aria-label="Pin Eclipse Countdown to the top"><span class="pin-head" aria-hidden="true"></span></button>
-            <p class="plate-say">Counts down to the next solar eclipse visible from a location you enter, draws the Sun as it will look from there and the Moon's shadow reaching the Earth from outside, and lists the time of every phase.</p>
-            <code class="plate-dates">added 2026-08-12</code>
-            <code class="plate-custody" data-custody="fetch"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>fetch &mdash; Open-Meteo geocoding, AWS terrain &middot; on your press</code>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- The queue. Each row keeps the description it always had as a comment,
-         because that copy is the brief for building the thing and a row is not
-         where it belongs. -->
-    <section class="queue">
-
-      <div class="band">
-        <p class="section-label">In the queue</p>
-        <span class="band-rule" aria-hidden="true"></span>
-        <span class="ink-bar" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-        <code>15 planned</code>
       </div>
 
       <ul class="queue-list">
@@ -983,7 +984,7 @@
         social-media sizes from one source image. Also home to the pixel randomizer:
         every color gets swapped for a new, unrelated random one, consistently, so
         identical pixels always match but neighbors can end up worlds apart. -->
-        <li class="q reg-2" data-tool="image-toolkit">
+        <li class="q" data-tool="image-toolkit">
           <span class="q-name">Image Toolkit</span>
           <button class="pin" type="button" data-pin="image-toolkit" aria-label="Pin Image Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
         </li>
@@ -993,24 +994,31 @@
         strokes and text to paths, normalize the viewBox, and build sprites from a folder
         of icons. The flagship: &quot;Fix my SVG,&quot; which auto-resolves clipping,
         missing viewBoxes, and oversized canvases in one pass. -->
-        <li class="q reg-2" data-tool="svg-toolkit">
+        <li class="q" data-tool="svg-toolkit">
           <span class="q-name">SVG Toolkit</span>
           <button class="pin" type="button" data-pin="svg-toolkit" aria-label="Pin SVG Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
         </li>
 
-        <!-- Generate QR codes styled to match this site instead of plain black squares, still
-        verified to scan cleanly, plus Wi-Fi, contact-card, and calendar-event QR codes,
-        barcode generation and reading, and batch generation from a CSV for print-ready
-        label sheets. -->
-        <li class="q reg-2" data-tool="qr-code-and-barcodes">
-          <span class="q-name">QR Code &amp; Barcodes</span>
-          <button class="pin" type="button" data-pin="qr-code-and-barcodes" aria-label="Pin QR Code & Barcodes to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        <!-- Convert TTF/OTF to WOFF2, preview every glyph, detect missing characters, subset
+        a font down to the characters you actually use, and generate a ready-to-paste
+        @font-face block. -->
+        <li class="q" data-tool="font-tools">
+          <span class="q-name">Font Tools</span>
+          <button class="pin" type="button" data-pin="font-tools" aria-label="Pin Font Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
+
+        <!-- Convert between HEX/RGB/HSL/OKLCH, check and auto-repair contrast, extract a
+        palette from an image, build tint/shade scales, and preview a palette under
+        different types of color-vision deficiency. -->
+        <li class="q" data-tool="color-and-design-tools">
+          <span class="q-name">Color &amp; Design Tools</span>
+          <button class="pin" type="button" data-pin="color-and-design-tools" aria-label="Pin Color & Design Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
         </li>
 
         <!-- Convert between MP3/WAV/M4A/OGG, trim, join, and normalize volume, remove
         silence, extract audio from video, and compress to a target file size. Also
         generates waveform images and strips audio metadata. -->
-        <li class="q reg-2" data-tool="audio-toolkit">
+        <li class="q" data-tool="audio-toolkit">
           <span class="q-name">Audio Toolkit</span>
           <button class="pin" type="button" data-pin="audio-toolkit" aria-label="Pin Audio Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
         </li>
@@ -1018,24 +1026,120 @@
         <!-- Trim without re-encoding, strip audio, extract a frame, convert to and from GIF,
         compress to a target size, and fix aspect ratio or orientation. Plus subtitle
         conversion and timing shifts, and loop/boomerang clip generation. -->
-        <li class="q reg-2" data-tool="video-toolkit">
+        <li class="q" data-tool="video-toolkit">
           <span class="q-name">Video Toolkit</span>
           <button class="pin" type="button" data-pin="video-toolkit" aria-label="Pin Video Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ── At the press ──────────────────────────────────────────────────────
+         Anything that ends up a document or a printed sheet. The bingo cards moved
+         here from the file bench: what that tool makes is paper, and the
+         arithmetic behind it is not what a reader looks for it under. -->
+    <section class="area reg-1">
+
+      <div class="band">
+        <span class="band-mark" aria-hidden="true"></span>
+        <p class="section-label">At the press</p>
+        <span class="band-rule" aria-hidden="true"></span>
+        <code>2 built · 3 planned</code>
+      </div>
+
+      <div class="plates">
+
+        <div data-tool="pdf-toolkit">
+          <div class="plate plate-live">
+            <a class="plate-open" href="pdf-toolkit/"><h3>PDF Toolkit</h3></a>
+            <button class="pin" type="button" data-pin="pdf-toolkit" aria-label="Pin PDF Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
+            <p class="plate-say">Merge, split, extract, reorder and turn pages, every one a real preview you can pick up. The PDF engine underneath is written from scratch, with no library involved.</p>
+            <code class="plate-dates">added 2026-07-27 · changed 2026-07-29</code>
+            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</code>
+          </div>
+        </div>
+
+        <div data-tool="bingo-cards">
+          <div class="plate plate-live">
+            <a class="plate-open" href="bingo-cards/"><h3>Bingo Card Generator</h3></a>
+            <button class="pin" type="button" data-pin="bingo-cards" aria-label="Pin Bingo Card Generator to the top"><span class="pin-head" aria-hidden="true"></span></button>
+            <p class="plate-say">Type the squares and it counts every card that list can make &mdash; exactly, however many digits that takes. Ask for as many as you want and it prints them, one to a page.</p>
+            <code class="plate-dates">added 2026-08-09</code>
+            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</code>
+          </div>
+        </div>
+
+      </div>
+
+      <ul class="queue-list">
+        <!-- Generate QR codes styled to match this site instead of plain black squares, still
+        verified to scan cleanly, plus Wi-Fi, contact-card, and calendar-event QR codes,
+        barcode generation and reading, and batch generation from a CSV for print-ready
+        label sheets. -->
+        <li class="q" data-tool="qr-code-and-barcodes">
+          <span class="q-name">QR Code &amp; Barcodes</span>
+          <button class="pin" type="button" data-pin="qr-code-and-barcodes" aria-label="Pin QR Code & Barcodes to the top"><span class="pin-head" aria-hidden="true"></span></button>
         </li>
 
         <!-- Clean up pasted text: dedupe and sort lines, fix smart quotes and invisible
         Unicode characters, diff two files, and convert between Markdown, HTML, and plain
         text. Also formats and minifies JSON, YAML, CSS, and SQL, and counts tokens for
         common AI models. -->
-        <li class="q reg-1" data-tool="text-and-document-utilities">
+        <li class="q" data-tool="text-and-document-utilities">
           <span class="q-name">Text &amp; Document Utilities</span>
           <button class="pin" type="button" data-pin="text-and-document-utilities" aria-label="Pin Text & Document Utilities to the top"><span class="pin-head" aria-hidden="true"></span></button>
         </li>
 
+        <!-- View EML files and their attachments, inspect headers with a plain-language
+        SPF/DKIM/DMARC explanation, preview HTML emails at different widths, and strip
+        tracking pixels from saved HTML. -->
+        <li class="q" data-tool="email-tools">
+          <span class="q-name">Email Tools</span>
+          <button class="pin" type="button" data-pin="email-tools" aria-label="Pin Email Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ── At the workbench ──────────────────────────────────────────────────
+         Numbers, letters, tables and files: work whose output is a figure or
+         another file rather than something to look at. -->
+    <section class="area reg-3">
+
+      <div class="band">
+        <span class="band-mark" aria-hidden="true"></span>
+        <p class="section-label">At the workbench</p>
+        <span class="band-rule" aria-hidden="true"></span>
+        <code>2 built · 4 planned</code>
+      </div>
+
+      <div class="plates">
+
+        <div data-tool="random-numbers">
+          <div class="plate plate-live">
+            <a class="plate-open" href="random-numbers/"><h3>Random Number Generator</h3></a>
+            <button class="pin" type="button" data-pin="random-numbers" aria-label="Pin Random Number Generator to the top"><span class="pin-head" aria-hidden="true"></span></button>
+            <p class="plate-say">Eleven distributions in up to ten dimensions. Every run prints the seed it used, so any set of numbers can be drawn again.</p>
+            <code class="plate-dates">added 2026-07-27 · changed 2026-07-29</code>
+            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</code>
+          </div>
+        </div>
+
+        <div data-tool="abecedarian">
+          <div class="plate plate-live">
+            <a class="plate-open" href="abecedarian/"><h3>Abecedarian Distance</h3></a>
+            <button class="pin" type="button" data-pin="abecedarian" aria-label="Pin Abecedarian Distance to the top"><span class="pin-head" aria-hidden="true"></span></button>
+            <p class="plate-say"><em>billowy</em> and <em>almost</em> are already in alphabetical order. Nearly every other word would be too, under some other alphabet &mdash; this finds the nearest one and counts the letters you had to swap to get there.</p>
+            <code class="plate-dates">added 2026-08-11</code>
+            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</code>
+          </div>
+        </div>
+
+      </div>
+
+      <ul class="queue-list">
         <!-- &quot;Fix this CSV&quot; detects encoding, delimiter, and broken rows
         automatically, plus merge, split, dedupe, and diff CSV files, convert to and from
         XLSX and JSON, reshape wide/long data, and pull a random sample of rows. -->
-        <li class="q reg-1" data-tool="csv-and-spreadsheet-toolkit">
+        <li class="q" data-tool="csv-and-spreadsheet-toolkit">
           <span class="q-name">CSV &amp; Spreadsheet Toolkit</span>
           <button class="pin" type="button" data-pin="csv-and-spreadsheet-toolkit" aria-label="Pin CSV & Spreadsheet Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
         </li>
@@ -1044,72 +1148,118 @@
         tester, cron explainer, and converters for cURL, TypeScript types, and Zod
         schemas &mdash; the everyday grab-bag of things a browser tab full of separate
         sites usually handles. -->
-        <li class="q reg-3" data-tool="developer-tools">
+        <li class="q" data-tool="developer-tools">
           <span class="q-name">Developer Tools</span>
           <button class="pin" type="button" data-pin="developer-tools" aria-label="Pin Developer Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
-
-        <!-- Convert TTF/OTF to WOFF2, preview every glyph, detect missing characters, subset
-        a font down to the characters you actually use, and generate a ready-to-paste
-        @font-face block. -->
-        <li class="q reg-2" data-tool="font-tools">
-          <span class="q-name">Font Tools</span>
-          <button class="pin" type="button" data-pin="font-tools" aria-label="Pin Font Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
-
-        <!-- Convert between HEX/RGB/HSL/OKLCH, check and auto-repair contrast, extract a
-        palette from an image, build tint/shade scales, and preview a palette under
-        different types of color-vision deficiency. -->
-        <li class="q reg-2" data-tool="color-and-design-tools">
-          <span class="q-name">Color &amp; Design Tools</span>
-          <button class="pin" type="button" data-pin="color-and-design-tools" aria-label="Pin Color & Design Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
         </li>
 
         <!-- Zip and unzip files entirely in-browser, strip macOS junk files from an archive,
         find duplicates by hash, generate and verify checksums, and sanitize or bulk-
         rename a folder of filenames. -->
-        <li class="q reg-3" data-tool="archive-and-file-tools">
+        <li class="q" data-tool="archive-and-file-tools">
           <span class="q-name">Archive &amp; File Tools</span>
           <button class="pin" type="button" data-pin="archive-and-file-tools" aria-label="Pin Archive & File Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
         </li>
 
-        <!-- Convert between GPX, KML, and GeoJSON, extract or remove GPS data from photos,
-        calculate distances, and simplify or merge GPX tracks. -->
-        <li class="q reg-3" data-tool="geospatial-tools">
-          <span class="q-name">Geospatial Tools</span>
-          <button class="pin" type="button" data-pin="geospatial-tools" aria-label="Pin Geospatial Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
-
         <!-- View and convert ICS files, merge calendars, shift event times, fix timezone
         mistakes, and generate a recurring-event ICS from a plain-language rule. -->
-        <li class="q reg-1" data-tool="calendar-and-date-tools">
+        <li class="q" data-tool="calendar-and-date-tools">
           <span class="q-name">Calendar &amp; Date Tools</span>
           <button class="pin" type="button" data-pin="calendar-and-date-tools" aria-label="Pin Calendar & Date Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
         </li>
+      </ul>
+    </section>
 
-        <!-- View EML files and their attachments, inspect headers with a plain-language
-        SPF/DKIM/DMARC explanation, preview HTML emails at different widths, and strip
-        tracking pixels from saved HTML. -->
-        <li class="q reg-1" data-tool="email-tools">
-          <span class="q-name">Email Tools</span>
-          <button class="pin" type="button" data-pin="email-tools" aria-label="Pin Email Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
+    <!-- ── Out in the field ──────────────────────────────────────────────────
+         The tools that look outward instead of at a file you brought: at the
+         ground, the sky and the wire. It is no accident that this is where
+         every rung above `local` on the page is — a tool that reports on the
+         world has to reach it. -->
+    <section class="area reg-0">
+
+      <div class="band">
+        <span class="band-mark" aria-hidden="true"></span>
+        <p class="section-label">Out in the field</p>
+        <span class="band-rule" aria-hidden="true"></span>
+        <code>3 built · 1 planned</code>
+      </div>
+
+      <div class="plates">
+
+        <div data-tool="eclipse-recon">
+          <div class="plate plate-live">
+            <a class="plate-open" href="eclipse-recon/"><h3>Eclipse Recon</h3></a>
+            <button class="pin" type="button" data-pin="eclipse-recon" aria-label="Pin Eclipse Recon to the top"><span class="pin-head" aria-hidden="true"></span></button>
+            <p class="plate-say">The path of totality from a satellite&rsquo;s point of view: exact timings for any point you target, the western ridge that might hide a low Sun, and the cloud outlook &mdash; good zones and bad, ranked.</p>
+            <code class="plate-dates">added 2026-08-10 · changed 2026-08-12</code>
+            <code class="plate-custody" data-custody="fetch"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>fetch</code>
+          </div>
+        </div>
+
+        <div data-tool="eclipse-countdown">
+          <div class="plate plate-live">
+            <a class="plate-open" href="eclipse-countdown/"><h3>Eclipse Countdown</h3></a>
+            <button class="pin" type="button" data-pin="eclipse-countdown" aria-label="Pin Eclipse Countdown to the top"><span class="pin-head" aria-hidden="true"></span></button>
+            <p class="plate-say">Counts down to the next solar eclipse visible from a location you enter, draws the Sun as it will look from there and the Moon's shadow reaching the Earth from outside, and lists the time of every phase.</p>
+            <code class="plate-dates">added 2026-08-12</code>
+            <code class="plate-custody" data-custody="fetch"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>fetch</code>
+          </div>
+        </div>
+
+        <div data-tool="network-inspector">
+          <div class="plate plate-live">
+            <a class="plate-open" href="network-inspector/"><h3>Network Inspector</h3></a>
+            <button class="pin" type="button" data-pin="network-inspector" aria-label="Pin Network Inspector to the top"><span class="pin-head" aria-hidden="true"></span></button>
+            <p class="plate-say">Everything your browser hands over before you touch anything, the requests it is making right now, and what a single lookup adds. The parts that send something are buttons you press.</p>
+            <code class="plate-dates">added 2026-08-04</code>
+            <code class="plate-custody" data-custody="fetch"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>fetch</code>
+          </div>
+        </div>
+
+      </div>
+
+      <ul class="queue-list">
+        <!-- Convert between GPX, KML, and GeoJSON, extract or remove GPS data from photos,
+        calculate distances, and simplify or merge GPX tracks. -->
+        <li class="q" data-tool="geospatial-tools">
+          <span class="q-name">Geospatial Tools</span>
+          <button class="pin" type="button" data-pin="geospatial-tools" aria-label="Pin Geospatial Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
         </li>
+      </ul>
+    </section>
 
+    <!-- ── In the drawer ─────────────────────────────────────────────────────
+         The general drawer, and every shop has one. What goes in it is not united
+         by a use case — it is united by not having a bench, which is a real
+         category and the only honest place to keep the jobs that are one job
+         each. -->
+    <section class="area reg-0">
+
+      <div class="band">
+        <span class="band-mark" aria-hidden="true"></span>
+        <p class="section-label">In the drawer</p>
+        <span class="band-rule" aria-hidden="true"></span>
+        <code>1 planned</code>
+      </div>
+
+      <ul class="queue-list">
         <!-- The stuff that doesn't fit a category: webpage-to-PDF, an invoice photo to
         structured CSV, a slider to compare two image versions, a signature photo to a
         transparent PNG/SVG, and a passport-photo sheet at exact print dimensions. -->
-        <li class="q reg-0" data-tool="odds-and-ends">
+        <li class="q" data-tool="odds-and-ends">
           <span class="q-name">Odds &amp; Ends</span>
           <button class="pin" type="button" data-pin="odds-and-ends" aria-label="Pin Odds & Ends to the top"><span class="pin-head" aria-hidden="true"></span></button>
         </li>
       </ul>
     </section>
 
-    <!-- The key to the mark every plate carries. Five rungs, and the page shows
-         all five even though nothing on the bench climbs past the second: the
-         two above are what the workshop looks like the day a tool keeps
-         something, and printing them now is how the ladder gets built before
-         it is needed rather than around whatever ships first. -->
+    <!-- The key to the mark every plate carries, and the only place a rung is
+         spelled out — a card carries the rating and stops there. Five rungs,
+         and the page shows all five even though nothing in the shop climbs
+         past the second: the two above are what the workshop looks like the
+         day a tool keeps something, and printing them now is how the ladder
+         gets built before it is needed rather than around whatever ships
+         first. -->
     <section class="key">
 
       <div class="band">
@@ -1127,7 +1277,7 @@
 
         <div class="key-row" data-custody="fetch">
           <dt><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>fetch</dt>
-          <dd>It asks somebody else for public data &mdash; map tiles, a forecast, a lookup. Nothing you gave it goes out, but the request does, and a request is your address and what you asked for. The card names who is asked; the tool names them again before it asks.</dd>
+          <dd>It asks somebody else for public data &mdash; map tiles, a forecast, a lookup. Nothing you gave it goes out, but the request does, and a request is your address and what you asked for. The tool names who it is about to ask, on its own page, before it asks.</dd>
         </div>
 
         <div class="key-row" data-custody="send">
@@ -1137,7 +1287,7 @@
 
         <div class="key-row" data-custody="store">
           <dt><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>store</dt>
-          <dd>Something you gave it is kept on a server and is still there on your next visit. The card says whose server, because a box in my flat and somebody else&rsquo;s platform are not the same answer.</dd>
+          <dd>Something you gave it is kept on a server and is still there on your next visit. The tool says whose server, because a box in my flat and somebody else&rsquo;s platform are not the same answer.</dd>
         </div>
 
         <div class="key-row" data-custody="account">
@@ -1147,7 +1297,7 @@
 
       </dl>
 
-      <p class="key-note">The bottom two rungs are the whole workshop today: five tools never open a socket, and two read public data and keep nothing. <code>store</code> and <code>account</code> are printed here unused, because a scale written to describe a thing that already exists is a scale bent to fit it.</p>
+      <p class="key-note">The bottom two rungs are the whole workshop today: six tools never open a socket, and three read public data and keep nothing &mdash; all three of those out in the field, where a tool that reports on the world has to reach it. <code>store</code> and <code>account</code> are printed here unused, because a scale written to describe a thing that already exists is a scale bent to fit it.</p>
     </section>
   </main>
 

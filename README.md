@@ -16,7 +16,7 @@ all of them:
 | `local` | Nothing leaves the page. It is fetched once and then runs on your machine. |
 | `fetch` | It asks somebody else for public data. Nothing you gave it goes out, but the request does, and a request is your address and what you asked for. |
 | `send` | Something you gave it goes out to be worked on and comes back. It is not kept. |
-| `store` | Something you gave it is kept on a server. The card says whose. |
+| `store` | Something you gave it is kept on a server. The tool says whose. |
 | `account` | Kept, and tied to a name you signed in with. |
 
 The ladder is printed in ink and never in a plate, because the plates are the
@@ -24,7 +24,8 @@ index's *category* vocabulary — the cast on a card, the square in front of a
 queued name — and a second colour code on the same object would make both
 harder to trust. Invasiveness is measured in ink coverage instead: five small
 squares driven in from the left, and a word that darkens as the rung rises.
-The key at the foot of the index defines all five.
+The key at the foot of the index defines all five, and it is the only place
+one is spelled out: a card carries the rating and stops there.
 
 Nothing on the bench is above `fetch` today — six tools never open a socket,
 and three read public data and keep nothing. `store` and `account` are printed
@@ -51,31 +52,52 @@ the eclipse tools.
 
 ## Tools
 
+The homepage sorts them the way a workshop sorts tools: by the kind of work,
+not by what is finished. Five areas, and each one keeps both — the tools that
+exist, and the gaps on its own wall. Sorting by state instead answered "how far
+along is this site", which is a question nobody arrives holding.
+
+### At the light table
+
+Anything whose output is looked at or listened to.
+
 - [Pixel Art SVG Drawer](draw-svg/) — draw pixel art on a grid-snapped canvas,
   start from a classic sprite size or type your own, export exactly what you
   drew as a real SVG file.
-- [Random Number Generator](random-numbers/) — draw from eleven distributions in
-  up to ten dimensions, seeded and reproducible, with summary statistics and
-  CSV/JSON export.
-- [PDF Toolkit](pdf-toolkit/) — merge, split, extract, reorder, delete and
-  turn PDF pages, with every page shown as a real preview you can drag. The
-  PDF engine underneath is written from scratch: no library parses, renders
-  or writes anything here.
-- [Network Inspector](network-inspector/) — see what your browser gives away to
-  every site before you touch anything, from your keyboard layout and installed
-  voices to a fingerprint of the machine, watch the page's own requests broken
-  into DNS, TCP, TLS and wait time, measure the line, then opt in to an IP
-  lookup, a WebRTC probe, a scan of the ports your own computer is listening on,
-  and a sweep of the network around it.
+
 - [Image Metadata Cleaner](metadata-cleaner/) — read every field a JPEG, PNG or
   WebP is carrying (EXIF, GPS, XMP, IPTC, colour profile, embedded thumbnail),
   see what each one gives away, and choose field by field what to strip. Batch
   or single file, and lossless: the pixels are never re-encoded.
+
+Still on the list: image, SVG, font, colour, audio and video toolkits.
+
+### At the press
+
+Anything that ends up a document or a printed sheet.
+
+- [PDF Toolkit](pdf-toolkit/) — merge, split, extract, reorder, delete and
+  turn PDF pages, with every page shown as a real preview you can drag. The
+  PDF engine underneath is written from scratch: no library parses, renders
+  or writes anything here.
+
 - [Bingo Card Generator](bingo-cards/) — type the squares, and it counts every
   distinct card that list can make, exactly, however many digits that takes.
   Ask for as many as you want and it deals that many, no two alike, seeded so
   the same set comes back. The PDF is one card per page and is written here,
   byte by byte, with no library involved.
+
+Still on the list: QR codes and barcodes, text and document utilities, email tools.
+
+### At the workbench
+
+Numbers, letters, tables and files — work whose output is a figure or another
+file rather than something to look at.
+
+- [Random Number Generator](random-numbers/) — draw from eleven distributions in
+  up to ten dimensions, seeded and reproducible, with summary statistics and
+  CSV/JSON export.
+
 - [Abecedarian Distance](abecedarian/) — *billowy* and *almost* already run in
   alphabetical order; nearly every other word would too, under some other
   alphabet. This finds the nearest such alphabet and counts the letter swaps it
@@ -86,6 +108,16 @@ the eclipse tools.
   *knowledge* — have no distance at all, and the page says which letter left and
   came back. The engine is a separate file from the page and runs under node too,
   off the same assertions.
+
+Still on the list: CSV and spreadsheet toolkit, developer tools, archive and file tools,
+calendar and date tools.
+
+### Out in the field
+
+The tools that look outward rather than at a file you brought — at the ground,
+the sky and the wire. Every rung above `local` on the page is here, which is not
+a coincidence: a tool that reports on the world has to reach it.
+
 - [Eclipse Recon](eclipse-recon/) — an ops-console view of a solar
   eclipse: the path computed from Besselian elements in the browser, an
   animated umbra you can scrub through time, and a dossier for any point
@@ -134,6 +166,7 @@ the eclipse tools.
   about seeing. It is
   the second tool that talks to the network (see above), and it works on a
   phone.
+
 - [Eclipse Countdown](eclipse-countdown/) — the same arithmetic, asked the
   smaller question: from where I am, when is the next one and what will it look
   like? A clock counts down to the next phase — first contact, totality, last
@@ -173,21 +206,47 @@ the eclipse tools.
   ground around you. Type the coordinates and skip the horizon and it opens no
   socket at all.
 
-The homepage ([index.html](index.html)) also lists a long line-up of
-"coming soon" tool categories: PDF, image, SVG, QR/barcode, audio, video,
-text/document, CSV/spreadsheet, developer, font, color, archive, geospatial,
-calendar, email, and more. Each new tool lands in its own top-level folder, and
-its card goes from a queue row to solid stock with a cast once it's built.
-A card carries the tool's name, one sentence of what it is for, and two dates
+- [Network Inspector](network-inspector/) — see what your browser gives away to
+  every site before you touch anything, from your keyboard layout and installed
+  voices to a fingerprint of the machine, watch the page's own requests broken
+  into DNS, TCP, TLS and wait time, measure the line, then opt in to an IP
+  lookup, a WebRTC probe, a scan of the ports your own computer is listening on,
+  and a sweep of the network around it.
+
+Still on the list: geospatial tools.
+
+### In the drawer
+
+The general drawer, and every shop has one. What goes in it is not united by a
+use case — it is united by not having a bench, which is a real category and the
+only honest place to keep the jobs that are one job each.
+
+Still on the list: odds and ends — webpage to PDF, an invoice photo to structured CSV, a slider
+comparing two image versions, a signature photo to a transparent PNG, a
+passport-photo sheet at exact print dimensions.
+
+Each new tool lands in its own top-level folder, inside the area it belongs to,
+and its card goes from a queue row to solid stock with a cast once it's built.
+The area carries the register (`reg-N`), so a tool's ink is wherever the tool is
+standing and the two cannot disagree; the area's band prints that ink as the
+same small square a queued name wears, which is why the index needs no legend
+for it.
+
+A card carries the tool's name, one sentence of what it is for, two dates
 in small print — the day the tool first landed and the day it last changed,
 read out of git history by `tools/stamp-dates` rather than written by hand —
-plus a pin that drives it to the front of the grid. Under the dates it carries
-its rung on the ladder above: `<code class="plate-custody" data-custody="…">`,
-holding a five-square meter and the rung's word, then an em dash and whatever
-is specific to that tool — the hosts it asks, whose server keeps the file. A
-`local` card names nothing because there is nothing to name. One attribute
-sets both the filled-square count and the ink, and the key at the foot of the
-page reads the same attribute, so a card and the key cannot drift apart.
+a pin that drives it and its area to the front, and its rung on the ladder
+above: `<code class="plate-custody" data-custody="…">`, holding a five-square
+meter and the rung's word. That is the whole of it. The card used to finish
+that line with an em dash and a clause naming the hosts — `fetch — AWS terrain,
+Carto, Open-Meteo, BigDataCloud` — a different sentence per tool, of a
+different length, saying a different amount, so no two cards could be read
+against each other and the mark stopped being a scale. A rating compares or it
+is not a rating. The hosts are on the tool's own page, in full, named before
+anything is sent, which is where a reader is standing when the answer matters.
+One attribute sets both the filled-square count and the ink, and the key at the
+foot of the page reads the same attribute, so a card and the key cannot drift
+apart.
 
 ## Stack
 
@@ -248,9 +307,12 @@ Two scripts are the workshop's own.
 tool page carries beside its title, which copies that tool's own address.
 [`assets/favourites.js`](assets/favourites.js) backs the pin: any `[data-pin]`
 button toggles its tool in a list held in `localStorage` under
-`workshop-pinned`, and pinned tools sort to the front of the index. The index
-and the tool pages read the same list, so pinning from inside a tool moves its
-card too.
+`workshop-pinned`, and pinned tools sort to the front of the index. The script
+only sets a class; the sorting is two CSS rules, because a pinned tool now has
+to clear two levels — it comes to the front of its own area, and its area comes
+to the front of the page, or it would sit at the top of a bench the reader
+still has to scroll to find. The index and the tool pages read the same list, so
+pinning from inside a tool moves its card too.
 
 The one vendored file the workshop rewrites is
 [`assets/preprint/tokens/fonts.css`](assets/preprint/tokens/fonts.css), which
@@ -275,18 +337,23 @@ names it declares must not change.
    key off the folder name. The `.pullcord` goes above the header as the first
    child of `.wrap`, not inside it — it hangs from the top of the page, and
    `<header>` starts below the shell's padding.
-5. Add a card for it to the root [index.html](index.html): a `div` on the
-   bench with the tool's register class (`reg-N`) and `data-tool`, holding a
-   `.plate.plate-live` — the name in an `h3` wrapped in `a.plate-open`, the
-   pin, and one `.plate-say` sentence. Remove the tool's queue row if it had
-   one, and update both tally counts.
-6. Give the card its rung. Copy a `code.plate-custody` from any existing card,
-   set `data-custody` to the highest rung the tool actually reaches — a tool
-   that keeps one thing on a server is `store` even if everything else it does
-   is local — and say tersely what is specific to it after the dash. The five
-   `<i>` squares are always five; the attribute decides how many are filled.
-   If the rung is above `fetch`, the tool's own page has to say the same thing
-   in its own words, in more of them, before anything is sent or kept.
+5. Add a card for it to the root [index.html](index.html), inside the
+   `section.area` whose bench the tool belongs to — the area carries the
+   register class, so the card does not. A `div` in that area's `.plates` with
+   `data-tool`, holding a `.plate.plate-live` — the name in an `h3` wrapped in
+   `a.plate-open`, the pin, and one `.plate-say` sentence. Remove the tool's
+   queue row if that area had one, and update that area's counts and the
+   shop-floor line. If no existing area fits, the drawer does; a sixth area is
+   a decision about the shop, not about the tool.
+6. Give the card its rung. Copy a `code.plate-custody` from any existing card
+   and set `data-custody` to the highest rung the tool actually reaches — a
+   tool that keeps one thing on a server is `store` even if everything else it
+   does is local. The word and the meter are the whole of the line: nothing
+   about hosts, conditions or what is kept goes on the card, because a rating
+   that varies in length per tool stops comparing. The five `<i>` squares are
+   always five; the attribute decides how many are filled. Anything above
+   `local` has to be named on the tool's own page, in its own words, before
+   anything is sent or kept.
 7. Commit, then run `tools/stamp-dates` and commit what it rewrites: it reads
    git history and presses two dates onto every card — the day the tool first
    landed, the day it last changed — and that script is the only thing that
