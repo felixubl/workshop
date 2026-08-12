@@ -142,6 +142,13 @@
   --ec-pen: var(--pp-faint);
   --ec-rule: var(--pp-line);
   --ec-edge: var(--pp-edge);
+  /* plate 2 x plate 3, multiplied channel by channel: #ed0a3f over #0066ff */
+  --ec-overprint: #00043f;
+}
+[data-mode="dark"] .disc {
+  /* the same product of the mode's own plates (#ff4d68 x #6a9dff), taken a
+     shade denser so it clears 3:1 against both of them on a dark ground */
+  --ec-overprint: #50244e;
 }
 .disc .sky,
 .disc .erase {
@@ -150,16 +157,20 @@
 .disc .sun {
   fill: var(--pp-plate-2);
 }
+/* The Moon, printed twice: the whole disc in plate 3, then the part of it
+   that lands on the Sun's face again in the overprint — the product of the
+   two inks, as a press would lay them. Three flat regions, no translucency
+   and no blend mode, so what the reader sees is exactly what is drawn:
+   plate 2 is uncovered Sun, plate 3 is Moon off the Sun's face, the dark
+   third colour is the bite. */
+.disc .moon-off {
+  fill: var(--pp-plate-3);
+}
 .disc .moon-body {
-  fill: #0b0b0a;
-  stroke: var(--ec-rule);
-  stroke-width: 1;
+  fill: var(--ec-overprint);
 }
 .disc .moon-cut {
   clip-path: url(#ec-face);
-}
-.disc .moon-cut.is-free {
-  clip-path: none;
 }
 
 /* Two circles that are notes rather than sights: where the Moon is while it is
