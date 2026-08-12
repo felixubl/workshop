@@ -142,8 +142,9 @@ the eclipse tools.
   Sun's face, the corona drawn during totality, and the horizon at true scale,
   so a Sun that sets mid-eclipse is drawn setting. Under it, every phase with
   its local time, its time in UT and the Sun's altitude. A preview plays the
-  whole eclipse in 15 seconds, slowed through the middle and printing the rate
-  it is running at. A horizon check borrows Recon's terrain reader and asks it
+  whole eclipse in 15 seconds, easing continuously into the middle and out
+  again — a rate that changes in steps reads as a fault rather than as a
+  slowdown — and printing the rate it is running at. A horizon check borrows Recon's terrain reader and asks it
   a much narrower question — the skyline in the strip of sky the eclipse
   actually crosses — and prints the answer upright: the quarter hour either
   side of totality, tall, with the ground filled in and the Sun's path drawn
