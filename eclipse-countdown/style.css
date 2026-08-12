@@ -116,6 +116,16 @@
   line-height: 1.5;
   color: var(--pp-faint);
 }
+.btn-ghost.play {
+  margin-top: 0.7rem;
+  padding: 0.28rem 0.6rem;
+  font-size: 0.78rem;
+}
+.btn-ghost.play.is-on {
+  border-color: var(--pp-plate-3);
+  color: var(--pp-plate-3-text);
+}
+
 /* ── The drawing ────────────────────────────────────────────────────────────
    Sky, plate, ink, hatch. The Sun takes plate 2 at full strength because it is
    printed rather than lit, and the Moon is the ink over it: black on a light
@@ -123,25 +133,16 @@
    follow the mode, for the same reason Recon prints the umbra in actual black
    — a shadow that turns pale in dark mode is no longer a shadow.
 
-   The other is totality. The four pens the drawing uses are named here so that
-   the moment the sky actually goes out, the whole frame can be repainted by
-   swapping them: below, .is-night pins a black ground and a pale pen in either
-   mode, because at that moment the drawing has stopped following the page's
-   paper and is showing a sky that is genuinely dark. It is the same deviation
-   draw-svg declares for its artwork ground, and it lasts about a minute. */
+   The four pens the drawing uses are named here rather than written into each
+   rule, so the frame is restyled in one place and both colour modes follow the
+   page's own paper. Totality darkens no longer: the drawing states the geometry
+   and lets the words beside it say what the sky is doing. */
 .disc {
   --ec-sky: var(--pp-sunk);
   --ec-pen: var(--pp-faint);
   --ec-rule: var(--pp-line);
   --ec-edge: var(--pp-edge);
 }
-.disc.is-night {
-  --ec-sky: #0b0b0a;
-  --ec-pen: #d9d7cd;
-  --ec-rule: rgba(239, 238, 232, 0.28);
-  --ec-edge: #efeee8;
-}
-
 .disc .sky,
 .disc .erase {
   fill: var(--ec-sky);
@@ -177,17 +178,6 @@
   stroke: var(--pp-plate-2);
   stroke-dasharray: 2 5;
   opacity: 0.85;
-}
-
-.disc .corona line {
-  stroke: var(--ec-pen);
-  stroke-width: 1.1;
-  stroke-linecap: round;
-  opacity: 0.55;
-}
-.disc .cor-glow {
-  fill: var(--ec-pen);
-  opacity: 0.13;
 }
 
 .disc .hatch {

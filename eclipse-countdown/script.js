@@ -21,6 +21,7 @@
   var RAD = Math.PI / 180;
   var DEG = 180 / Math.PI;
 
+  var PREVIEW_MS = 15000;   // how long the whole eclipse takes when played
   var SUN_PX = 52;          // the Sun's radius in the drawing
   var SUN_DEG = 0.2666;     // and in the sky — the mean apparent radius, which
                             // varies by under 2% over the year and is only
@@ -33,7 +34,7 @@
 
   var ui = {};
   ['place', 'find', 'here', 'whereForm', 'hint', 'alts', 'altsRow', 'empty',
-   'report', 'whereCap', 'disc', 'discState', 'discNote',
+   'report', 'whereCap', 'disc', 'discState', 'discNote', 'play', 'playLabel',
    'clockLabel', 'clockTime', 'clockAt', 'stats', 'phaseRows', 'phaseZone',
    'note', 'later', 'laterList',
    'horizon', 'hzStatus', 'hzBody', 'hzAsk', 'hzGo'].forEach(function (id) {
@@ -46,7 +47,8 @@
     ecl: null,       // the eclipse being counted down to
     circ: null,      // its local circumstances there
     targets: [],     // the moments the clock counts to
-    stateWord: ''    // last word the disc said, so aria only changes with it
+    stateWord: '',   // last word the disc said, so aria only changes with it
+    preview: null    // {started, segs} while the eclipse is being played
   };
   var scene = {};    // the drawing's parts, made once and then moved
 
@@ -113,23 +115,11 @@
   /* ================= the drawing ================= */
 
   function buildScene() {
-    var rays = '';
-    for (var i = 0; i < 56; i++) {
-      // a corona is not a circle. The rays are a fixed pattern rather than a
-      // random one: the same eclipse should look the same on every visit.
-      var a = i * (360 / 56);
-      var len = 13 + 30 * Math.abs(Math.sin(i * 1.7)) * (0.55 + 0.45 * Math.abs(Math.cos(i * 0.6)));
-      var x1 = Math.sin(a * RAD) * (SUN_PX + 1), y1 = -Math.cos(a * RAD) * (SUN_PX + 1);
-      var x2 = Math.sin(a * RAD) * (SUN_PX + len), y2 = -Math.cos(a * RAD) * (SUN_PX + len);
-      rays += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) +
-              '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/>';
-    }
-
     /* The Moon is drawn in black and cut to the Sun's face, so it is only ever
        there where it is actually taking light away: a bite during the partial
        phases, a disc inside the ring during an annular one. Totality is the
        one case where the cut comes off — then the silhouette is the Moon's
-       own, a little larger than the Sun, standing in front of the corona. */
+       own, a little larger than the Sun, covering it completely. */
     ui.disc.innerHTML = [
       '<defs>',
         '<clipPath id="ec-face"><circle cx="0" cy="0" r="' + SUN_PX + '"/></clipPath>',
@@ -138,8 +128,6 @@
         '</pattern>',
       '</defs>',
       '<rect class="sky" x="-150" y="-150" width="300" height="300"/>',
-      '<g class="corona is-off" id="ec-corona"><circle class="cor-glow" cx="0" cy="0" r="' +
-        (SUN_PX + 16) + '"/>' + rays + '</g>',
       '<circle class="sun" cx="0" cy="0" r="' + SUN_PX + '"/>',
       '<g class="moon-cut" id="ec-cut"><circle class="moon-body" id="ec-body" cx="0" cy="0" r="0"/></g>',
       /* The ground. Flat until the skyline has been read, and the real
@@ -163,7 +151,7 @@
       '</g>'
     ].join('');
 
-    ['ec-corona', 'ec-cut', 'ec-body', 'ec-edge', 'ec-ghost', 'ec-ground',
+    ['ec-cut', 'ec-body', 'ec-edge', 'ec-ghost', 'ec-ground',
      'ec-erase', 'ec-hatchband', 'ec-rule'].forEach(function (id) {
       scene[id] = ui.disc.querySelector('#' + id);
     });
@@ -174,11 +162,9 @@
   function paint(f) {
     if (!f) {                       // nowhere near the day: the Sun, plain
       scene['ec-body'].setAttribute('r', 0);
-      show(scene['ec-corona'], false);
       show(scene['ec-edge'], false);
       show(scene['ec-ghost'], false);
       show(scene['ec-ground'], false);
-      ui.disc.classList.remove('is-night');
       return;
     }
 
@@ -194,11 +180,7 @@
       scene[id].setAttribute('r', mr.toFixed(2));
     });
     scene['ec-cut'].classList.toggle('is-free', totality);
-    show(scene['ec-corona'], totality);
     show(scene['ec-edge'], r - mr < FRAME * 1.42);
-    // Totality is the one moment the sky itself changes, so the drawing's own
-    // ground goes out with it.
-    ui.disc.classList.toggle('is-night', totality);
 
     /* The horizon, at true scale, which is why it only turns up when the Sun
        is within about a degree of it — and that is exactly when it matters.
@@ -467,6 +449,20 @@
   function tick(now) {
     if (!state.circ) return;
 
+    if (state.preview) {
+      var through = (now - state.preview.started) / PREVIEW_MS;
+      if (through >= 1) { stopPreview(); return; }
+      var step = previewAt(state.preview, through);
+      var pf = frameAt(state.ecl, step.at);
+      paint(pf);
+      sayState(pf);
+      ui.clockLabel.textContent = 'preview, running at ×' + step.rate;
+      ui.clockTime.textContent = clockOf(new Date(step.at), state.at.tz);
+      ui.clockAt.textContent = 'the whole eclipse in 15 seconds, slowed through the middle';
+      markRow(step.at);
+      return;
+    }
+
     var t = Date.now();
     var f = frameAt(state.ecl, t);
     paint(f);
@@ -514,11 +510,62 @@
   function loop(now) {
     window.requestAnimationFrame(loop);
     if (!state.circ) return;
-    // the page has nothing to say between seconds
+    // live, the page has nothing to say between seconds; in preview it has
+    // something to say on every frame.
     var second = Math.floor(Date.now() / 1000);
-    if (second === lastSecond) return;
+    if (!state.preview && second === lastSecond) return;
     lastSecond = second;
     tick(now);
+  }
+
+  /* ================= preview ================= */
+
+  /* The eclipse, played through in fifteen seconds — but not at one speed.
+     An hour of partial phases either side of a minute of totality, run
+     linearly, would spend a tenth of a second on the only part anybody came
+     for. So the preview runs in three stretches, and gives the middle of the
+     thing a third of the time to itself. The rate is printed as it goes,
+     which is what makes the slowdown a stated fact rather than a trick. */
+  function startPreview() {
+    if (!state.circ) return;
+    var c = state.circ;
+    var start = (c.c1 ? c.c1.date : c.dateMax).getTime() - 45000;
+    var end = (c.c4 ? c.c4.date : c.dateMax).getTime() + 45000;
+    var midFrom = (c.c2 ? c.c2.date.getTime() - 20000 : c.dateMax.getTime() - 90000);
+    var midTo = (c.c3 ? c.c3.date.getTime() + 20000 : c.dateMax.getTime() + 90000);
+    midFrom = Math.max(start, Math.min(midFrom, end));
+    midTo = Math.min(end, Math.max(midTo, midFrom));
+    state.preview = {
+      started: window.performance.now(),
+      segs: [[start, midFrom, 0.38], [midFrom, midTo, 0.30], [midTo, end, 0.32]]
+    };
+    ui.play.classList.add('is-on');
+    ui.playLabel.textContent = 'Stop';
+  }
+
+  /* Where the preview has got to: the simulated moment, and how fast it is
+     running there. */
+  function previewAt(pv, through) {
+    var acc = 0;
+    for (var i = 0; i < pv.segs.length; i++) {
+      var seg = pv.segs[i];
+      if (through <= acc + seg[2] || i === pv.segs.length - 1) {
+        var p = Math.min(1, (through - acc) / seg[2]);
+        return {
+          at: seg[0] + p * (seg[1] - seg[0]),
+          rate: Math.round((seg[1] - seg[0]) / (seg[2] * PREVIEW_MS))
+        };
+      }
+      acc += seg[2];
+    }
+  }
+
+  function stopPreview(quiet) {
+    state.preview = null;
+    ui.play.classList.remove('is-on');
+    ui.playLabel.textContent = 'Preview it';
+    lastSecond = -1;
+    if (!quiet) tick(window.performance.now());
   }
 
   /* ================= the horizon ================= */
@@ -878,6 +925,7 @@
       if (rows[i].circ && rows[i].circ.visible) { pick = i; break; }
     }
     ui.whereCap.textContent = coordWord(state.at.lat, state.at.lon);
+    stopPreview(true);
     if (pick < 0) { resetHorizon(); renderNothing(rows); return; }
     renderReport(pick, rows);
     // the skyline belongs to a place and an eclipse; either changing voids it,
@@ -1001,6 +1049,9 @@
     lookUp(q);
   });
   ui.here.addEventListener('click', askTheBrowser);
+  ui.play.addEventListener('click', function () {
+    if (state.preview) stopPreview(); else startPreview();
+  });
   ui.hzGo.addEventListener('click', scanHorizon);
 
   restore();
