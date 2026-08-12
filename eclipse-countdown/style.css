@@ -367,3 +367,71 @@
   max-width: 66ch;
   margin-top: 2.5rem;
 }
+
+/* ---- the horizon ------------------------------------------------------
+   Recon's terrain question, asked only about the strip of sky this eclipse
+   crosses and printed upright. The figure is SVG drawn by the script but
+   inked here, so both colour modes are one stylesheet's business and the
+   pull cord restyles it with the page. */
+
+.horizon {
+  margin-top: 1.6rem;
+}
+.hz-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding-top: 0.7rem;
+}
+.hz-ask {
+  margin: 0;
+  max-width: 60ch;
+}
+.hz-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.9rem 1.4rem;
+  margin: 0;
+}
+/* The frame is taller than wide on purpose and does not stretch to the
+   column: a portrait figure blown up to 900px would put four degrees of sky
+   across a foot of screen. */
+.hz-fig {
+  flex: none;
+  width: 232px;
+  height: 340px;
+  background: var(--pp-surface);
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-md);
+}
+.hz-wrap figcaption {
+  flex: 1 1 16rem;
+  max-width: 44ch;
+  margin: 0;
+}
+
+.hz-grid { stroke: var(--pp-hair); stroke-width: 0.6; }
+.hz-zero { stroke: var(--pp-faint); stroke-width: 0.7; stroke-dasharray: 2 3; }
+.hz-tick, .hz-clabel, .hz-axis {
+  font-family: var(--pp-font-mono);
+  fill: var(--pp-faint);
+}
+.hz-tick { font-size: 10px; }
+.hz-clabel { font-size: 9px; letter-spacing: 0.04em; }
+.hz-axis { font-size: 9px; letter-spacing: var(--w-track-label, 0.06em); }
+.hz-ctick { stroke: var(--pp-faint); stroke-width: 0.8; }
+/* the ground is ink, the one solid mass in the frame */
+.hz-ground { fill: var(--pp-ink); fill-opacity: 0.85; }
+/* the Sun's path: partial thin and quiet, totality thick in plate 3, and
+   whatever the ground takes away dashed in plate 2 */
+.hz-run { stroke: var(--pp-faint); stroke-width: 2; }
+.hz-run.is-total { stroke: var(--pp-plate-3); stroke-width: 3.5; }
+.hz-run.is-blocked { stroke: var(--pp-plate-2); stroke-dasharray: 3 2; }
+.hz-sun { fill: none; stroke: var(--pp-ink); stroke-width: 1.4; }
+
+@media (max-width: 560px) {
+  .hz-wrap { gap: 0.7rem; }
+  .hz-fig { width: 100%; max-width: 300px; height: auto; aspect-ratio: 232 / 340; }
+}
