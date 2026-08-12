@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Eclipse Countdown — Felix' Workshop</title>
-<meta name="description" content="Type where you are and watch the clock run down to the next solar eclipse there: the Sun drawn as it will look in your sky, the time to the next phase, and the times of all of them.">
+<meta name="description" content="Enter a location and count down to the next solar eclipse visible there: the Sun drawn as it will look in that sky, the time to the next phase, and the times of all of them.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <script src="../assets/preprint/js/pullcord.js" defer></script>
@@ -48,7 +48,7 @@
       </button>
     </div>
     <div class="group">
-      <button class="btn-ghost" type="button" id="here" data-tip="Ask the browser where you are. It asks you first, and the answer stays on this page.">
+      <button class="btn-ghost" type="button" id="here" data-tip="Ask the browser for your position. It will ask your permission, and the answer stays on this page.">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2"></path><path d="M8 4.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z"></path></svg>
         Use my position
       </button>
@@ -56,32 +56,29 @@
   </form>
 
   <p class="sheet-note" id="placeNote">
-    A place name is looked up with <a href="https://open-meteo.com/en/docs/geocoding-api">Open-Meteo's
-    keyless geocoder</a> — the only thing this tool sends anywhere, and only when
-    you press the button. Coordinates are read here and go nowhere. The eclipse
-    arithmetic runs entirely in your browser, either way.
+    Place names are resolved by <a href="https://open-meteo.com/en/docs/geocoding-api">Open-Meteo's
+    keyless geocoder</a>, the only request this tool makes, and only when you
+    press the button. Coordinates are parsed here and sent nowhere. The eclipse
+    calculations run in your browser either way.
   </p>
 
   <p class="hint" id="hint" hidden></p>
 
   <div id="alts" class="alts" hidden>
-    <span class="alts-label">Or did you mean</span>
+    <span class="alts-label">Other matches</span>
     <div class="alts-row" id="altsRow"></div>
   </div>
 
   <div class="card prompt" id="empty">
-    Say where you are and this counts down to the next solar eclipse there.
-    The disc is the Sun as your sky will have it, zenith up — the Moon coming
-    in from the west, the bite growing, the sky going out if you are standing
-    in the shadow's path — and beside it is the time to the next thing that
-    happens, and the whole running order. Nothing here is a guess about the
-    weather: it is where the Moon will be, which has been known for a long
-    time.
+    Enter a place or a pair of coordinates. This finds the next solar eclipse
+    visible from there, counts down to its next phase, and lists the times of
+    all of them. The disc shows the Sun as it will look from that spot, drawn
+    with the zenith up for the moment on the clock.
   </div>
 
   <section id="report" hidden>
     <div class="result-bar">
-      <p class="section-label">The next eclipse there</p>
+      <p class="section-label">Next eclipse here</p>
       <div class="group">
         <code class="where-cap" id="whereCap"></code>
       </div>
@@ -93,7 +90,7 @@
         <figcaption class="disc-cap">
           <p class="disc-state" id="discState">—</p>
           <p class="disc-note" id="discNote"></p>
-          <button class="btn-ghost play" type="button" id="play" data-tip="Run the whole eclipse past in a few seconds, then hand the disc back to the clock">
+          <button class="btn-ghost play" type="button" id="play" data-tip="Play the whole eclipse in 15 seconds, then return the disc to live time">
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z"></path></svg>
             <span id="playLabel">Preview it</span>
           </button>
@@ -125,18 +122,17 @@
     <p class="sheet-note" id="note"></p>
 
     <section class="later" id="later" hidden>
-      <p class="section-label">Also on file for there</p>
+      <p class="section-label">Also on file</p>
       <ul class="later-list" id="laterList"></ul>
     </section>
   </section>
 
   <p class="sheet-note colophon">
-    The elements, the arithmetic and the catalogue are
-    <a href="../eclipse-recon/">Eclipse Recon's</a>, which is the same tool with
-    the map, the terrain and the cloud outlook attached. Contact times are
-    computed for a smooth-limbed Moon at sea level, so the last seconds at the
-    very edge of the shadow's path are worth a few seconds of doubt; an eclipse
-    pasted into Recon from its NASA page shows up here too.
+    The elements, the calculations and the catalogue come from
+    <a href="../eclipse-recon/">Eclipse Recon</a>, which adds the map, the
+    terrain and the cloud forecast. Contact times assume a smooth lunar limb at
+    sea level, so times at the very edge of the path can be a few seconds out.
+    An eclipse pasted into Recon from its NASA page appears here too.
   </p>
 </div>
 

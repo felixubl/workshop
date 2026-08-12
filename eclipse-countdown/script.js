@@ -215,21 +215,18 @@
   function stateOf(f) {
     if (!f || f.mag <= 0) {
       return f && f.alt < UNDER
-        ? { word: 'below the horizon', note: 'the Sun is down, and whole' }
-        : { word: 'the Sun, whole', note: 'the Moon has not reached it' };
+        ? { word: 'below the horizon', note: 'the Sun is down' }
+        : { word: 'not started', note: 'the Sun is whole' };
     }
     var pc = f.cover * 100;
     var covered = (pc < 1 ? pc.toFixed(1) : Math.round(pc)) + '% covered';
+    var mag = 'magnitude ' + f.mag.toFixed(2);
     if (f.alt < UNDER) {
-      return { word: 'below the horizon',
-               note: 'it is ' + covered + ' where it is, which is under your feet' };
+      return { word: 'below the horizon', note: covered + ', out of sight' };
     }
-    if (f.central && f.annular) return { word: 'ANNULAR', note: 'a ring of Sun around the Moon' };
-    if (f.central) return { word: 'TOTALITY', note: 'the corona is out, and so are the stars' };
-    var note = pc > 90 ? 'deep, and the light has gone strange'
-      : pc > 40 ? 'a clear bite, but the day looks normal'
-      : 'a nick out of the edge — you would not notice without a filter';
-    return { word: covered, note: note };
+    if (f.central && f.annular) return { word: 'ANNULAR', note: mag };
+    if (f.central) return { word: 'TOTALITY', note: mag };
+    return { word: covered, note: mag };
   }
 
   /* ================= formatting ================= */
@@ -313,22 +310,22 @@
   function targetsFor(circ) {
     var out = [];
     var ring = circ.type === 'annular';
-    if (circ.c1) out.push({ at: circ.c1.date, label: 'until the Moon touches the Sun' });
-    if (circ.c2) out.push({ at: circ.c2.date, label: ring ? 'until the ring closes' : 'until totality' });
-    else out.push({ at: circ.dateMax, label: 'until the deepest moment' });
-    if (circ.c3) out.push({ at: circ.c3.date, label: ring ? 'of the ring left' : 'of totality left' });
-    if (circ.c4) out.push({ at: circ.c4.date, label: 'until the Moon lets go' });
+    if (circ.c1) out.push({ at: circ.c1.date, label: 'until first contact' });
+    if (circ.c2) out.push({ at: circ.c2.date, label: ring ? 'until annularity' : 'until totality' });
+    else out.push({ at: circ.dateMax, label: 'until maximum' });
+    if (circ.c3) out.push({ at: circ.c3.date, label: ring ? 'of annularity left' : 'of totality left' });
+    if (circ.c4) out.push({ at: circ.c4.date, label: 'until last contact' });
     return out;
   }
 
   function phasesFor(circ) {
     var ring = circ.type === 'annular';
     var out = [];
-    if (circ.c1) out.push({ name: 'First contact', say: 'the bite begins', c: circ.c1 });
-    if (circ.c2) out.push({ name: ring ? 'Ring closes' : 'Totality begins', say: 'second contact', c: circ.c2 });
-    out.push({ name: 'Maximum', say: 'the deepest moment', c: { date: circ.dateMax, alt: circ.sunAlt } });
-    if (circ.c3) out.push({ name: ring ? 'Ring opens' : 'Totality ends', say: 'third contact', c: circ.c3 });
-    if (circ.c4) out.push({ name: 'Last contact', say: 'the Sun is whole again', c: circ.c4 });
+    if (circ.c1) out.push({ name: 'First contact', say: 'C1', c: circ.c1 });
+    if (circ.c2) out.push({ name: ring ? 'Annularity begins' : 'Totality begins', say: 'C2', c: circ.c2 });
+    out.push({ name: 'Maximum', say: 'greatest phase', c: { date: circ.dateMax, alt: circ.sunAlt } });
+    if (circ.c3) out.push({ name: ring ? 'Annularity ends' : 'Totality ends', say: 'C3', c: circ.c3 });
+    if (circ.c4) out.push({ name: 'Last contact', say: 'C4', c: circ.c4 });
     return out;
   }
 
@@ -343,11 +340,11 @@
 
     var ring = circ.type === 'annular';
     var stats = [
-      ['Here it is', TYPE_WORD[circ.type]],
-      ['At its deepest', Math.round(circ.obscuration * 100) + '% of the Sun'],
-      [ring ? 'Ring lasts' : 'Totality lasts', circ.duration ? lasting(circ.duration) : '—'],
-      ['Sun then', sunWord(circ.sunAltApparent, circ.sunAz)],
-      ['The date', dayOf(circ.dateMax, state.at.tz)]
+      ['Type', TYPE_WORD[circ.type]],
+      ['Maximum obscuration', Math.round(circ.obscuration * 100) + '%'],
+      [ring ? 'Annularity lasts' : 'Totality lasts', circ.duration ? lasting(circ.duration) : '—'],
+      ['Sun at maximum', sunWord(circ.sunAltApparent, circ.sunAz)],
+      ['Date', dayOf(circ.dateMax, state.at.tz)]
     ];
     if (!circ.duration) stats.splice(2, 1);
     ui.stats.innerHTML = stats.map(function (s) {
@@ -367,28 +364,24 @@
 
     var notes = [];
     if (circ.type === 'partial') {
-      notes.push('The shadow’s full cone misses this spot, so the Sun never goes ' +
-        'out here: it is a bite, at most ' + Math.round(circ.obscuration * 100) + '% deep.');
+      notes.push('The Moon’s full shadow misses this spot: the Sun is never completely ' +
+        'covered here, at most ' + Math.round(circ.obscuration * 100) + '%.');
     }
     if (circ.sunAltApparent < 8 && circ.sunAltApparent > UNDER) {
       notes.push('The Sun is ' + (circ.sunAltApparent < 0.5 ? 'on the horizon'
-        : 'only ' + Math.round(circ.sunAltApparent) + '° up') + ' at maximum, about ' +
-        compass(circ.sunAz) + ' — a low ridge or a tall building is enough to hide the ' +
-        'whole thing, so the horizon that way is worth checking first.');
+        : 'only ' + Math.round(circ.sunAltApparent) + '° up') + ' at maximum, towards ' +
+        compass(circ.sunAz) + '. Check that horizon for buildings or terrain.');
     }
     if (circ.c4 && circ.c4.alt + Bessel.refraction(circ.c4.alt) < UNDER) {
-      notes.push('The Sun sets before the eclipse is over, so the last phases happen ' +
-        'below your horizon.');
+      notes.push('The Sun sets before the eclipse ends: the last phases are below the horizon.');
     }
     if (circ.c1 && circ.c1.alt + Bessel.refraction(circ.c1.alt) < UNDER) {
-      notes.push('The Sun rises with the eclipse already under way — the first phases ' +
-        'happen below your horizon.');
+      notes.push('The Sun rises with the eclipse already under way: the first phases are ' +
+        'below the horizon.');
     }
     notes.push(circ.type === 'total'
-      ? 'Totality itself is the one part safe to look at without a filter, and only ' +
-        'for exactly as long as it lasts; every other second of this needs one.'
-      : 'None of this is safe to look at without a proper solar filter. A Sun with a ' +
-        'bite out of it is as bright as any other Sun.');
+      ? 'Only totality is safe to view without a solar filter, and only while it lasts.'
+      : 'A partially eclipsed Sun needs a solar filter at all times.');
     ui.note.innerHTML = notes.join(' ');
 
     var later = rows.filter(function (r, i) { return i !== pickIndex; });
@@ -396,8 +389,8 @@
     ui.laterList.innerHTML = later.map(function (r) {
       var when = dayOf(new Date(Date.UTC(r.ecl.date[0], r.ecl.date[1] - 1, r.ecl.date[2])), 'UTC');
       var what;
-      if (!r.circ) what = 'does not reach there';
-      else if (!r.circ.visible) what = TYPE_WORD[r.circ.type].toLowerCase() + ', but below the horizon there';
+      if (!r.circ) what = 'not visible here';
+      else if (!r.circ.visible) what = TYPE_WORD[r.circ.type].toLowerCase() + ', below the horizon here';
       else what = TYPE_WORD[r.circ.type].toLowerCase() + ', ' +
         Math.round(r.circ.obscuration * 100) + '% covered' +
         (r.circ.duration ? ' for ' + lasting(r.circ.duration) : '');
@@ -409,11 +402,11 @@
     state.ecl = null; state.circ = null; state.targets = [];
     ui.report.hidden = true;
     ui.empty.hidden = false;
-    ui.empty.innerHTML = 'None of the eclipses on file reach ' +
-      '<strong>' + escapeHtml(state.at.name) + '</strong> with the Sun above the horizon. ' +
-      'The catalogue holds ' + rows.length + ' still to come — ' +
+    ui.empty.innerHTML = 'No eclipse on file is visible from ' +
+      '<strong>' + escapeHtml(state.at.name) + '</strong>. The catalogue holds ' +
+      rows.length + ' still to come (' +
       rows.map(function (r) { return '<code>' + r.ecl.id + '</code>'; }).join(', ') +
-      ' — and any other eclipse can be added by pasting its Besselian elements ' +
+      '). More can be added by pasting the Besselian elements from a NASA page ' +
       'into <a href="../eclipse-recon/">Eclipse Recon</a>, which this tool reads.';
   }
 
@@ -437,7 +430,7 @@
       sayState(pf);
       ui.clockLabel.textContent = 'preview, running at ×' + step.rate;
       ui.clockTime.textContent = clockOf(new Date(step.at), state.at.tz);
-      ui.clockAt.textContent = 'the whole eclipse in fifteen seconds, slowed through the middle';
+      ui.clockAt.textContent = 'the whole eclipse in 15 seconds, slowed through the middle';
       markRow(step.at);
       return;
     }
@@ -453,9 +446,9 @@
       if (state.targets[i].at.getTime() > t) { next = state.targets[i]; break; }
     }
     if (!next) {                    // done here — the next one is somebody else's
-      ui.clockLabel.textContent = 'and that was that';
-      ui.clockTime.textContent = 'over';
-      ui.clockAt.textContent = 'looking for the next one…';
+      ui.clockLabel.textContent = 'this eclipse is over';
+      ui.clockTime.textContent = '—';
+      ui.clockAt.textContent = 'checking for the next one…';
       window.setTimeout(locate, 4000);
       state.circ = null;
       return;
@@ -472,7 +465,7 @@
     state.stateWord = s.word;
     ui.discState.textContent = s.word;
     ui.discNote.textContent = s.note;
-    ui.disc.setAttribute('aria-label', 'The Sun as it appears from there: ' + s.word);
+    ui.disc.setAttribute('aria-label', 'The Sun seen from this location: ' + s.word);
   }
 
   /* Which line of the running order is happening, or is about to. */
@@ -643,8 +636,8 @@
     }).then(function (data) {
       var list = (data && data.results) || [];
       if (!list.length) {
-        say('No place called “' + query + '”. Try a bigger town nearby, or ' +
-            'type coordinates as latitude, longitude.', true);
+        say('No match for “' + query + '”. Try a larger town nearby, or type ' +
+            'coordinates as latitude, longitude.', true);
         ui.alts.hidden = true;
         return;
       }
@@ -653,8 +646,8 @@
       setPlace({ lat: list[0].latitude, lon: list[0].longitude,
                  name: nameOf(list[0]), tz: list[0].timezone || null });
     }).catch(function (err) {
-      say('The place lookup did not come back (' + err.message + '). Coordinates ' +
-          'typed as latitude, longitude still work, and need no network.', true);
+      say('Place lookup failed (' + err.message + '). Coordinates typed as ' +
+          'latitude, longitude work without a network.', true);
     }).then(function () {
       ui.find.disabled = false;
     });
@@ -662,10 +655,10 @@
 
   function askTheBrowser() {
     if (!navigator.geolocation) {
-      say('This browser will not say where it is. Type a place or coordinates instead.', true);
+      say('This browser cannot report a position. Type a place or coordinates instead.', true);
       return;
     }
-    say('Waiting for the browser to place you…');
+    say('Asking the browser for your position…');
     navigator.geolocation.getCurrentPosition(function (pos) {
       say('');
       ui.alts.hidden = true;
@@ -676,8 +669,8 @@
       });
     }, function (err) {
       say(err.code === 1
-        ? 'The browser was told not to share your position. Type a place instead.'
-        : 'The browser could not work out where you are. Type a place instead.', true);
+        ? 'Location permission was denied. Type a place instead.'
+        : 'The browser could not determine your position. Type a place instead.', true);
     }, { timeout: 15000, maximumAge: 600000 });
   }
 
@@ -706,7 +699,7 @@
   ui.whereForm.addEventListener('submit', function (e) {
     e.preventDefault();
     var q = ui.place.value.trim();
-    if (!q) { say('Type a place, or a pair of coordinates.', true); return; }
+    if (!q) { say('Type a place name or a pair of coordinates.', true); return; }
     lookUp(q);
   });
   ui.here.addEventListener('click', askTheBrowser);
