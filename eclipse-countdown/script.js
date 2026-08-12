@@ -525,43 +525,78 @@
   /* ================= preview ================= */
 
   /* The eclipse, played through in fifteen seconds — but not at one speed.
-     An hour of partial phases either side of a minute of totality, run
-     linearly, would spend a tenth of a second on the only part anybody came
-     for. So the preview runs in three stretches, and gives the middle of the
-     thing a third of the time to itself. The rate is printed as it goes,
-     which is what makes the slowdown a stated fact rather than a trick. */
+     Run linearly, an hour of partial phases either side of a minute of
+     totality would spend a tenth of a second on the only part anybody came
+     for. Run in three stretches at three fixed rates, as this did, the rate
+     JUMPS twice: the Moon tears across, parks for four and a half seconds
+     over three pixels of travel, then tears off again. Both readings of the
+     eclipse are wrong, and the second one reads as a fault in the page.
+
+     So the rate is a smooth function of where the eclipse has got to —
+     fastest at the ends, slowest through the middle, with no step anywhere
+     and no dead stop. The curve is smoothstep, flat where it starts, so the
+     pace eases out of totality rather than popping out of it; and it
+     reaches full speed at KNEE rather than at the very end, so the outer
+     half runs at one steady pace instead of accelerating into first and
+     last contact. The mapping is built once as a table of eclipse-time
+     against preview-progress and read back by interpolation; the rate is
+     printed as it goes, which is what makes the slowdown a stated fact
+     rather than a trick. */
+  var PREVIEW_STEPS = 240;
+  var PREVIEW_FAST = 16;        // how many times the middle's pace the ends run at
+  var PREVIEW_KNEE = 0.45;      // how far out full speed is reached
+
   function startPreview() {
     if (!state.circ) return;
     var c = state.circ;
     var start = (c.c1 ? c.c1.date : c.dateMax).getTime() - 45000;
     var end = (c.c4 ? c.c4.date : c.dateMax).getTime() + 45000;
-    var midFrom = (c.c2 ? c.c2.date.getTime() - 20000 : c.dateMax.getTime() - 90000);
-    var midTo = (c.c3 ? c.c3.date.getTime() + 20000 : c.dateMax.getTime() + 90000);
-    midFrom = Math.max(start, Math.min(midFrom, end));
-    midTo = Math.min(end, Math.max(midTo, midFrom));
-    state.preview = {
-      started: window.performance.now(),
-      segs: [[start, midFrom, 0.38], [midFrom, midTo, 0.30], [midTo, end, 0.32]]
-    };
+    var mid = Math.max(start, Math.min(c.dateMax.getTime(), end));
+
+    /* Each half is normalised on its own, so a Sun that rises mid-eclipse —
+       one contact missing, the halves lopsided — still slows on the middle
+       rather than somewhere off to one side. */
+    function nx(t) {
+      return t < mid ? (mid - t) / Math.max(1, mid - start)
+                     : (t - mid) / Math.max(1, end - mid);
+    }
+    function pace(t) {
+      var a = Math.min(1, Math.abs(nx(t)) / PREVIEW_KNEE);
+      return 1 + (PREVIEW_FAST - 1) * (a * a * (3 - 2 * a));
+    }
+    // cumulative playback progress against eclipse time, normalised at the end
+    var ts = [], cum = [0], acc = 0;
+    var step = (end - start) / PREVIEW_STEPS;
+    for (var i = 0; i <= PREVIEW_STEPS; i++) {
+      var t = start + step * i;
+      ts.push(t);
+      if (i) { acc += step / pace(t - step / 2); cum.push(acc); }
+    }
+    for (var j = 0; j <= PREVIEW_STEPS; j++) cum[j] /= acc || 1;
+
+    state.preview = { started: window.performance.now(), ts: ts, cum: cum };
     ui.play.classList.add('is-on');
     ui.playLabel.textContent = 'Stop';
   }
 
   /* Where the preview has got to: the simulated moment, and how fast it is
-     running there. */
+     running there. The rate is read off the same table, so what is printed
+     is what is actually happening rather than a nominal figure. */
   function previewAt(pv, through) {
-    var acc = 0;
-    for (var i = 0; i < pv.segs.length; i++) {
-      var seg = pv.segs[i];
-      if (through <= acc + seg[2] || i === pv.segs.length - 1) {
-        var p = Math.min(1, (through - acc) / seg[2]);
-        return {
-          at: seg[0] + p * (seg[1] - seg[0]),
-          rate: Math.round((seg[1] - seg[0]) / (seg[2] * PREVIEW_MS))
-        };
-      }
-      acc += seg[2];
+    var u = Math.max(0, Math.min(1, through));
+    var lo = 0, hi = pv.cum.length - 1;
+    while (hi - lo > 1) {                  // the table is sorted; bisect it
+      var m = (lo + hi) >> 1;
+      if (pv.cum[m] <= u) lo = m; else hi = m;
     }
+    var band = pv.cum[hi] - pv.cum[lo];
+    var f = band > 0 ? (u - pv.cum[lo]) / band : 0;
+    var at = pv.ts[lo] + (pv.ts[hi] - pv.ts[lo]) * f;
+    var rate = band > 0 ? (pv.ts[hi] - pv.ts[lo]) / (band * PREVIEW_MS) : 0;
+    // two significant figures: a rate printed to the unit would flicker on
+    // every frame, and nobody is reading the ones column of ×1237
+    var mag = Math.pow(10, Math.max(0, String(Math.round(rate)).length - 2));
+    return { at: at, rate: Math.round(rate / mag) * mag };
   }
 
   function stopPreview(quiet) {
