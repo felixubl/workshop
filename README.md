@@ -141,16 +141,16 @@ the eclipse tools.
   the Moon at its true separation and position angle, the shadow cut to the
   Sun's face, the corona drawn during totality, and the horizon at true scale,
   so a Sun that sets mid-eclipse is drawn setting. Under it, every phase with
-  its local time, its time in UT and the Sun's altitude. A preview plays the
-  whole eclipse in 15 seconds, slowed through the middle and printing the rate
-  it is running at. A horizon check borrows Recon's terrain reader and asks it
+  its local time, its time in UT and the Sun's altitude. A horizon check borrows Recon's terrain reader and asks it
   a much narrower question — the skyline in the strip of sky the eclipse
   actually crosses — and prints the answer upright: the quarter hour either
   side of totality, tall, with the ground filled in and the Sun's path drawn
   across it, dashed and in plate 2 wherever the ground takes it. It says what
   the skyline is made of as well as how high it stands, because a block from
   40 km out is a mountain range and a block from 150 m out is the elevation
-  model reading the roof across the street. It holds no eclipse data and no
+  model reading the roof across the street. Once it has been read, that same
+  skyline is what the Sun sets behind in the drawing above — the real ridge
+  line at true scale, in place of the flat horizon an unread one gets. It holds no eclipse data and no
   eclipse arithmetic of its own: the catalogue, the engine and the terrain
   reader are Recon's files
   ([`eclipse-recon/js/eclipses.js`](eclipse-recon/js/eclipses.js),
