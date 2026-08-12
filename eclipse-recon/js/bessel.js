@@ -97,6 +97,19 @@ var Bessel = (function () {
     return { alt: alt, az: ((az % 360) + 360) % 360 };
   }
 
+  /* Parallactic angle: the position angle of the zenith as seen at the Sun,
+     degrees east of north. The eclipse geometry comes out in the celestial
+     frame, where north is up; a drawing of the Sun as an eye actually sees it
+     wants the zenith up instead, and this is the rotation between the two. */
+  function parallactic(ecl, t, lat, lonDeg) {
+    var el = elements(ecl, t);
+    var H = el.mu + (lonDeg - ROT * ecl.deltaT) * RAD;
+    var phi = lat * RAD;
+    return Math.atan2(Math.sin(H),
+                      Math.tan(phi) * Math.cos(el.d) -
+                      Math.sin(el.d) * Math.cos(H)) * DEG;
+  }
+
   /* Saemundsson refraction, degrees, for a geometric altitude in degrees. */
   function refraction(altDeg) {
     if (altDeg < -1.5) return 0;
@@ -688,8 +701,12 @@ var Bessel = (function () {
 
   return {
     elements: elements,
+    geocentric: geocentric,
+    situation: situation,
+    obscuration: obscuration,
     localCircumstances: localCircumstances,
     sunAltAz: sunAltAz,
+    parallactic: parallactic,
     refraction: refraction,
     greatestT: greatestT,
     centralPointAt: centralPointAt,

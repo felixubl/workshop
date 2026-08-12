@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eclipse Countdown — Felix' Workshop</title>
+<meta name="description" content="Type where you are and watch the clock run down to the next solar eclipse there: the Sun drawn as it will look in your sky, the time to the next phase, and the times of all of them.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
+<script src="../assets/preprint/js/mode.js"></script>
+<script src="../assets/preprint/js/pullcord.js" defer></script>
+<link rel="stylesheet" href="../assets/preprint/styles.css">
+<link rel="stylesheet" href="../assets/preprint/core.css">
+<link rel="stylesheet" href="../assets/preprint/controls.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <button class="pullcord" type="button" data-pullcord aria-label="Pull the string to switch colour mode"><span class="pullcord__cord" aria-hidden="true"></span><span class="pullcord__bead" aria-hidden="true"></span></button>
+  <header>
+    <div>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <div class="title-row">
+        <h1 class="tool-title">Eclipse Countdown</h1>
+        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
+          <span data-share-label>copy link</span>
+        </button>
+        <button class="share-btn pin-btn" type="button" data-pin="eclipse-countdown" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="spine"></div>
+
+  <form class="toolbar" id="whereForm" autocomplete="off">
+    <div class="group">
+      <label for="place">Where you are</label>
+      <input class="field place" type="search" id="place" placeholder="Reykjavík, or 39.47, -0.38"
+        spellcheck="false" aria-describedby="placeNote">
+      <button class="btn-primary" type="submit" id="find">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M7.25 2.5a4.75 4.75 0 1 0 0 9.5 4.75 4.75 0 0 0 0-9.5z"></path><path d="m10.8 10.8 2.7 2.7"></path></svg>
+        Look it up
+      </button>
+    </div>
+    <div class="group">
+      <button class="btn-ghost" type="button" id="here" data-tip="Ask the browser where you are. It asks you first, and the answer stays on this page.">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2"></path><path d="M8 4.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z"></path></svg>
+        Use my position
+      </button>
+    </div>
+  </form>
+
+  <p class="sheet-note" id="placeNote">
+    A place name is looked up with <a href="https://open-meteo.com/en/docs/geocoding-api">Open-Meteo's
+    keyless geocoder</a> — the only thing this tool sends anywhere, and only when
+    you press the button. Coordinates are read here and go nowhere. The eclipse
+    arithmetic runs entirely in your browser, either way.
+  </p>
+
+  <p class="hint" id="hint" hidden></p>
+
+  <div id="alts" class="alts" hidden>
+    <span class="alts-label">Or did you mean</span>
+    <div class="alts-row" id="altsRow"></div>
+  </div>
+
+  <div class="card prompt" id="empty">
+    Say where you are and this counts down to the next solar eclipse there.
+    The disc is the Sun as your sky will have it, zenith up — the Moon coming
+    in from the west, the bite growing, the sky going out if you are standing
+    in the shadow's path — and beside it is the time to the next thing that
+    happens, and the whole running order. Nothing here is a guess about the
+    weather: it is where the Moon will be, which has been known for a long
+    time.
+  </div>
+
+  <section id="report" hidden>
+    <div class="result-bar">
+      <p class="section-label">The next eclipse there</p>
+      <div class="group">
+        <code class="where-cap" id="whereCap"></code>
+      </div>
+    </div>
+
+    <div class="stage">
+      <figure class="disc-wrap">
+        <svg id="disc" class="disc" viewBox="-150 -150 300 300" role="img" aria-label="The Sun, uneclipsed"></svg>
+        <figcaption class="disc-cap">
+          <p class="disc-state" id="discState">—</p>
+          <p class="disc-note" id="discNote"></p>
+          <button class="btn-ghost play" type="button" id="play" data-tip="Run the whole eclipse past in a few seconds, then hand the disc back to the clock">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z"></path></svg>
+            <span id="playLabel">Preview it</span>
+          </button>
+        </figcaption>
+      </figure>
+
+      <div class="clock">
+        <p class="clock-label" id="clockLabel">until first contact</p>
+        <p class="clock-time" id="clockTime">—</p>
+        <p class="clock-at" id="clockAt"></p>
+        <dl class="stats" id="stats"></dl>
+      </div>
+    </div>
+
+    <div class="sheet phases">
+      <div class="sheet-cap">
+        <code id="phaseCap">running order</code>
+        <code class="meta" id="phaseZone"></code>
+      </div>
+      <div class="sheet-scroll">
+        <table>
+          <thead>
+            <tr><th scope="col">Phase</th><th scope="col">Time</th><th scope="col">UT</th><th scope="col">Sun</th></tr>
+          </thead>
+          <tbody id="phaseRows"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="sheet-note" id="note"></p>
+
+    <section class="later" id="later" hidden>
+      <p class="section-label">Also on file for there</p>
+      <ul class="later-list" id="laterList"></ul>
+    </section>
+  </section>
+
+  <p class="sheet-note colophon">
+    The elements, the arithmetic and the catalogue are
+    <a href="../eclipse-recon/">Eclipse Recon's</a>, which is the same tool with
+    the map, the terrain and the cloud outlook attached. Contact times are
+    computed for a smooth-limbed Moon at sea level, so the last seconds at the
+    very edge of the shadow's path are worth a few seconds of doubt; an eclipse
+    pasted into Recon from its NASA page shows up here too.
+  </p>
+</div>
+
+<!-- The engine and the catalogue are Eclipse Recon's, borrowed rather than
+     copied: one set of Besselian elements and one reduction of them, so the
+     countdown and the map can never disagree about when the Moon arrives. -->
+<script src="../eclipse-recon/js/eclipses.js"></script>
+<script src="../eclipse-recon/js/bessel.js"></script>
+<script src="script.js"></script>
+<script src="../assets/preprint/js/controls.js"></script>
+<script src="../assets/share.js"></script>
+<script src="../assets/favourites.js"></script>
+</body>
+</html>

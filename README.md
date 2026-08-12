@@ -5,6 +5,7 @@ A small collection of self-serve browser tools, hosted at
 the site is a folder of static files, and the whole thing is open source, so
 what any one tool does is checkable rather than merely asserted.
 
+<<<<<<< HEAD
 Most of them run entirely in your browser. Not all of them will. Rather than a
 site-wide vow that one tool could falsify — and rather than the older
 arrangement, where the reassuring case was the *absence* of a mark — every card
@@ -26,15 +27,15 @@ harder to trust. Invasiveness is measured in ink coverage instead: five small
 squares driven in from the left, and a word that darkens as the rung rises.
 The key at the foot of the index defines all five.
 
-Nothing on the bench is above `fetch` today — five tools never open a socket,
-and two read public data and keep nothing. `store` and `account` are printed
+Nothing on the bench is above `fetch` today — six tools never open a socket,
+and three read public data and keep nothing. `store` and `account` are printed
 unused because the tools that will need them (Convex, Supabase, or something
 self-hosted on a VPS) are planned, and a scale written to describe what already
 exists is a scale bent to fit it.
 
-The two tools on `fetch` both make their traffic the subject rather than an
-aside, and each names who it is about to talk to on its own page, before
-anything is sent. The Network Inspector can look your
+Each of the three on `fetch` names who it is about to talk to on its own page,
+before anything is sent, and in two of them the traffic is the subject rather
+than an aside. The Network Inspector can look your
 IP address up with a third party, ask a STUN server what it sees, and probe
 your local range — all behind buttons, with nothing sent on load at all.
 Eclipse Recon is a map
@@ -42,7 +43,11 @@ of the world with live weather on it, which cannot exist without a network:
 it fetches elevation tiles (Mapzen/AWS) for both the base map and the horizon
 scans, map labels (Carto/OSM) and forecasts (Open-Meteo), plus a keyless
 reverse geocoder for place names, and credits every one of them on screen.
-The eclipse mathematics itself runs entirely in your browser.
+The third asks for one thing and only when asked: Eclipse Countdown sends a
+typed place name to Open-Meteo's keyless geocoder to turn it into coordinates,
+on the button press and never on load — and a reader who types coordinates
+instead opens no socket at all. The eclipse mathematics itself runs entirely
+in your browser, in both of the eclipse tools.
 
 ## Tools
 
@@ -129,6 +134,28 @@ The eclipse mathematics itself runs entirely in your browser.
   about seeing. It is
   the second tool that talks to the network (see above), and it works on a
   phone.
+- [Eclipse Countdown](eclipse-countdown/) — the same arithmetic asked the
+  smallest useful question: you are here, when is the next one, and what will
+  it look like? A clock runs down to the next thing that happens — first
+  contact, totality, the end of it — beside a drawing of the Sun as that sky
+  will actually have it: zenith up, the Moon coming in from the west at the
+  true separation and position angle for the second on the clock, the bite
+  cut to the Sun's face, the corona out and the frame gone black for the
+  minute totality lasts, and the horizon drawn at true scale so a Sun that
+  sets mid-eclipse is seen to set. Under it, every phase with its local time,
+  its time in UT and how high the Sun will be, and the next line marked the
+  way you would mark a timetable. A preview plays the whole thing in fifteen
+  seconds, slowing through the middle so the minute worth watching is not one
+  frame, and saying what rate it is running at while it does. It owns no
+  eclipse data and no eclipse arithmetic: the catalogue and the engine are
+  Recon's two files ([`eclipse-recon/js/eclipses.js`](eclipse-recon/js/eclipses.js),
+  [`eclipse-recon/js/bessel.js`](eclipse-recon/js/bessel.js)), loaded across
+  from the folder next door rather than copied into this one, so the two
+  tools cannot drift apart on when the Moon arrives — and an eclipse pasted
+  into Recon from its NASA page turns up here too. It sits on `fetch` for one
+  reason — a typed place name has to be turned into coordinates by somebody
+  who knows where places are — and type the coordinates yourself and it never
+  opens a socket at all.
 
 The homepage ([index.html](index.html)) also lists a long line-up of
 "coming soon" tool categories: PDF, image, SVG, QR/barcode, audio, video,
