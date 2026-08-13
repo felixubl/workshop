@@ -29,17 +29,11 @@ window.onerror = function (m, s, l) { ok('uncaught ' + m + ' @' + l, false); };
 
 function everyEl(d) { return Array.prototype.slice.call(d.querySelectorAll('*')); }
 
-/* Every style rule a page carries, the workshop's own layers only.
- *
- * The DOM checks below can only see what is on screen, and a tool's real state
- * is behind an interaction: the metadata cleaner keeps its whole work section
- * hidden until a file is dropped, so five type sizes under the floor and a
- * second 6px rule sat inside a green harness for as long as they existed. A
- * rule is wrong whether or not anything is currently matching it, so these two
- * read the stylesheets instead and do not care what is rendered.
- *
- * The vendored tree is skipped on purpose: it is the system's, this file has no
- * standing to fail it, and conformance.js already checks what it is for. */
+/* Every style rule a page carries, the workshop's own layers only. The DOM
+   checks below see only what is on screen, and a tool's real state is often
+   behind an interaction, so these read the stylesheets instead. A rule is
+   wrong whether or not anything currently matches it. The vendored tree is
+   skipped: it belongs to the system, and conformance.js already checks it. */
 function ownRules(d) {
   var out = [];
   Array.prototype.slice.call(d.styleSheets).forEach(function (sheet) {
@@ -49,12 +43,10 @@ function ownRules(d) {
     try { rules = sheet.cssRules; } catch (e) { return; }   // cross-origin
     (function walk(list) {
       Array.prototype.slice.call(list).forEach(function (r) {
-        /* Collect first, then descend, and never treat the two as exclusive.
-           Chrome gives every CSSStyleRule a .cssRules now, empty unless the
-           rule has nested CSS in it — so an `if (r.cssRules) return walk(…)`
-           written the obvious way recurses into nothing for every rule on the
-           page and collects none of them. That returned an empty list, and an
-           empty list passes every check below without reading a thing. */
+        /* Collect first, then descend; the two are not exclusive. Chrome gives
+           every CSSStyleRule a .cssRules, empty unless the rule contains
+           nested CSS, so an early return on r.cssRules collects nothing and
+           the empty list passes every check below. */
         if (r.style) out.push({ sel: r.selectorText || '', style: r.style, href: href });
         if (r.cssRules && r.cssRules.length) walk(r.cssRules);   // @media, @supports, nesting
       });
@@ -93,18 +85,12 @@ function run() {
   ok('display face Hepta Slab really loaded', loaded(hd, hw, "'Hepta Slab'"));
   ok('body face Zilla Slab really loaded', loaded(hd, hw, "'Zilla Slab'"));
   /* Cousine is metrically compatible with Courier New, so measuring it against
-     the generic monospace proves nothing. Ask the font loader instead. */
+     generic monospace proves nothing. Ask the font loader instead. */
   ok('mono face Cousine really loaded', hd.fonts.check("12px 'Cousine'"));
 
-  /* Body copy is Zilla Slab and NOT mono. The brief calls the old
-     mono-as-body-text the one real change to the reading experience.
-
-     Built rather than found. This used to read the font off a card's
-     description, and cards were cut down to their names, so there is no prose
-     anywhere on these pages to measure and the check had been asserting only
-     that its own fallback branch ran. The rule is about what body copy is set
-     in, not about whether any body copy happens to exist today, so a paragraph
-     is made inside a card, measured, and removed. */
+  /* Body copy is Zilla Slab, not mono. Built rather than found: there is no
+     prose left on these pages to measure, so this asserts what body copy is
+     set in when it exists. */
   var host = hd.querySelector('.tool-card') || hd.body;
   var probe = hd.createElement('p');
   probe.textContent = 'The quick brown fox';
@@ -120,10 +106,9 @@ function run() {
     var round = everyEl(p.d).filter(function (el) {
       var r = p.w.getComputedStyle(el).borderRadius;
       if (!/9999px|50%/.test(r)) return false;
-      /* A tag may be a pill. A CONTROL may not, whatever it is called — pill
-         belongs to labels and nothing else, and a thing you can press is not a
-         label. Testing the class name alone is how .seed-tag, a <button> with
-         a click handler, passed this check by being named after a tag. */
+      /* A tag may be a pill; a control may not, whatever it is named. Testing
+         the class name alone let .seed-tag, a button with a click handler,
+         pass by being named after a tag. */
       if (el.tagName === 'BUTTON' || el.tagName === 'A' || el.tagName === 'INPUT' ||
           el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') return true;
       return !/\b(tag|badge|pill|badge-live|badge-soon)\b/.test(el.className || '');
@@ -170,11 +155,8 @@ function run() {
 
   /* ── the same two rules, read off the stylesheets ──────────────────────── */
   /* First, that there is anything to read. The two checks below both pass on
-     an empty rule list, so without this they report a clean sheet when what
-     they actually did was fail to open one. That is not hypothetical: the walk
-     in ownRules() collected nothing on its first outing and every check went
-     green. A check that cannot fail is worse than no check, because it is
-     reported as evidence. */
+     an empty rule list, so without this they report a clean sheet when they in
+     fact failed to open one. */
   pages.forEach(function (p) {
     var n = ownRules(p.d).length;
     ok('[' + p.n + '] the stylesheets are readable at all', n > 20, n + ' rules read');
@@ -230,10 +212,9 @@ function run() {
     });
 
   /* ── the mark, and the pointers ────────────────────────────────────────── */
-  /* The workshop does not draw the system's three-plate mark. Its wordmark is
-     the mark: a stroked W in plate ink, with four nails pinning the signboard.
-     Asserted as it is, not as the system's default, because this is a licensed
-     variant and the harness should defend the variant it actually has. */
+  /* The workshop does not draw the system's three-plate mark; its wordmark is
+     the mark, a stroked W in plate ink with four corner nails. Asserted as it
+     is rather than as the system default, because this is a licensed variant. */
   var wm = hd.querySelector('.wordmark');
   ok('the wordmark is the workshop\'s mark', !!wm);
   if (wm) {
@@ -245,9 +226,9 @@ function run() {
        wm.querySelectorAll('.nails i').length + ' nails');
   }
 
-  /* Drawn pointers: the brief wires arrow on the body and point on anything
-     clickable. A class-level `cursor: pointer` silently outranks that wiring,
-     which is the trap fubl.org documents at length, so assert the token won. */
+  /* Drawn pointers: arrow on the body, point on anything clickable. A class-
+     level cursor: pointer silently outranks that wiring, so assert the token
+     won. */
   var clickable = hd.querySelector('a[href], button');
   if (clickable) {
     var c = hw.getComputedStyle(clickable).cursor;

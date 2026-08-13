@@ -1,25 +1,12 @@
 #!/usr/bin/env node
 /* The band crawler. Walks an eclipse's umbral band tile by tile and
-   precomputes, for every ~60-80 m pixel, the fraction of totality the
-   local horizon lets through — the one factor of the suitability score
-   that is both expensive (a terrain scan per point) and eternal (a ridge
-   does not change). Results land in eclipse-recon/data/<eclipse>/ as
-   tiny grayscale PNGs plus a manifest, which GitHub Pages serves as
-   static files: computed once, readable by everyone, no server.
-
-   The mathematics here MIRRORS the client exactly — assessPoint and
-   scanVis in js/app.js, horizonScan in js/terrain.js — so a crawled
-   pixel is byte-for-byte what the visitor's browser would have computed.
-   Change one and you must change the other.
-
-       tools/crawl-vis.mjs [--minutes N] [--ecl 2026-08-12]
-                           [--near lat,lon] [--max-tiles N]
-
-   Ocean tiles (no land within scan reach) and high-sun tiles (Sun over
-   30° through totality everywhere) resolve to "flat" — vis = 1 — without
-   a single scan; tiles with no totality at all are marked outside. Only
-   mountainous land under a low Sun costs real work, which is the point:
-   that is exactly where the answer is interesting. */
+   precomputes, for every 60-80 m pixel, the fraction of totality the local
+   horizon allows. This is the one factor of the suitability score that is both
+   expensive to compute (a terrain scan per point) and permanent (terrain does
+   not change). Output goes to eclipse-recon/data/<eclipse>/ as grayscale PNGs
+   plus a manifest, served by GitHub Pages. Run by .github/workflows/crawl-
+   vis.yml on a schedule with a time budget; it commits what it settled and
+   disables the schedule when the queue is empty. */
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -57,8 +44,8 @@ fs.mkdirSync(path.join(DATA, 'vis'), { recursive: true });
 fs.mkdirSync(DEM_CACHE, { recursive: true });
 const DEADLINE = Date.now() + MINUTES * 60 * 1000;
 
-/* ---- mercator tiling; the z rule keeps a pixel at 60-80 m at any
-   latitude, and the client (js/precomp.js) applies the same rule ---- */
+/* Mercator tiling. The z rule keeps a pixel at 60-80 m at any latitude; the
+   client applies the same rule in js/precomp.js. */
 const zFor = lat => { const a = Math.abs(lat); return a < 52 ? 12 : a < 68 ? 11 : 10; };
 function tileOf(lat, lon) {
   const z = zFor(lat), n = 1 << z;
@@ -207,11 +194,11 @@ let queue = fs.existsSync(queueFile)
   ? JSON.parse(fs.readFileSync(queueFile, 'utf8'))
   : null;
 
-/* A scanned tile's manifest entry is its MEAN vis (0-255) rather than a
-   bare 'd': the map's wide-view suitability wash reads the mean straight
-   off the manifest, no PNG fetch, and the pixel detail waits under the
-   same key for closer zooms. Entries written as 'd' by earlier crawler
-   versions are healed here from their own PNGs — idempotent, cheap. */
+/* A scanned tile's manifest entry is its mean visibility (0-255) rather than a
+   bare 'd'. The wide-view suitability wash reads the mean straight from the
+   manifest without fetching a PNG, and the pixel detail stays under the same
+   key for closer zooms. Entries written as 'd' by earlier versions are rebuilt
+   here from their own PNGs. */
 for (const [key, st] of Object.entries(man.tiles)) {
   if (st !== 'd') continue;
   const [z, x, y] = key.split('/');
@@ -229,7 +216,7 @@ function save() {
   fs.writeFileSync(queueFile, JSON.stringify(queue));
 }
 
-/* ---- bootstrap: enumerate every tile the band touches, in path order ---- */
+/* Bootstrap: enumerate every tile the band touches, in path order. */
 if (!queue) {
   console.log('bootstrap: enumerating band tiles for ' + ECL_ID);
   const cp = Bessel.centralPath(ecl, 45);
@@ -262,8 +249,8 @@ if (!queue) {
   console.log('bootstrap: ' + list.length + ' tiles queued');
 }
 
-/* --near reorders the queue around a point, for testing and for biting
-   into the interesting ground first when asked */
+/* --near reorders the queue around a point, for testing and for covering
+   chosen ground first. */
 if (NEAR.length === 2 && isFinite(NEAR[0]) && isFinite(NEAR[1])) {
   const d = key => {
     const [z, x, y] = key.split('/').map(Number);
@@ -363,21 +350,11 @@ for (const key of todo) {
 }
 checkpoint();
 
-/* ---- the overview pyramid ----------------------------------------------
-   So the map can show survey data at least as fine as the screen can
-   draw at ANY zoom, two downsampled levels ride beside the full tiles:
-
-     level A  (native z − 3):  8×8 native tiles in one 128×128 PNG,
-                               16 px per tile — one px ≈ 8×8 survey
-                               cells, ~500-600 m of ground
-     level B  (native z − 6):  built from level A, 64×64 native tiles,
-                               2 px per tile — one px ≈ ~4 km
-
-   RGBA: the value rides in R (=G=B) and COVERAGE rides in alpha — an
-   aggregate must never blur "mean is zero" into "not surveyed yet".
-   Regeneration is incremental: a parent is rebuilt when a child settled
-   this run, or when it is missing while a settled child exists (which
-   is also how the first run after this change backfills everything). */
+/* The overview pyramid. Two downsampled levels ride beside the full tiles so
+   the map can show survey data at least as fine as the screen draws at any
+   zoom. Level A (native z minus 3) packs 8x8 native tiles into one 128x128
+   PNG, 16px per tile, one pixel covering about 500-600 m. Level B (native z
+   minus 6) is built from level A, 64x64 native tiles at 2px each. */
 const OV = path.join(DATA, 'ov');
 function ovPath(k) {
   const [z, x, y] = k.split('/');

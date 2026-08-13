@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-"""Re-vendor PREPRINT into assets/preprint/.
+"""Re-copy PREPRINT into assets/preprint/.
 
     tools/sync-preprint [path-to-preprint]      default ../preprint
 
-The sync itself lives in the system, at preprint/tools/sync, because two
-consumers holding two byte-identical copies of it was the same drift the script
-exists to stop. This is the local door to it, kept because it is the command
-this repo's README documents and the one in the fingers.
+The sync itself lives in the system, at preprint/tools/sync, so the two
+consumers do not hold two copies of it. This is the local entry point, kept
+because it is the command this repo's README documents.
 
 To update every consumer at once, run `tools/push` in the system instead.
 """

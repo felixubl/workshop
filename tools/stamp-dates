@@ -1,21 +1,17 @@
 #!/usr/bin/env python3
-"""Press each live tool's dates onto its card.
+"""Write each built tool's dates onto its card in index.html.
 
     tools/stamp-dates
 
-For every plate on the index — the divs carrying `data-tool` around a
+For every plate on the index — a div carrying `data-tool` around a
 `.plate-say` sentence — this reads the tool's git history and rewrites the
-`<code class="plate-dates">` line under that sentence: the day the folder's
-first commit landed, and the day of the last commit that touched it. One
-date when they are the same day, because "added and unchanged since" is one
-fact, not two.
+`<code class="plate-dates">` line: the date of the folder's first commit and
+of the last commit that touched it. One date when they are the same.
 
-The dates are baked into index.html because the site has no build step and
-fetches nothing on load; this script is the press that keeps them true. Run
-it after committing a change to any tool and commit what it rewrites — the
-stamping commit touches only the index, so it never moves the dates it just
-printed. A tool with no committed history yet is skipped with a note:
-commit the tool first, then stamp.
+The dates are stored in index.html because the site has no build step and
+fetches nothing on load. Run this after committing a change to any tool and
+commit the result; the stamping commit touches only the index, so it does not
+move the dates it just wrote. A tool with no committed history is skipped.
 """
 import re
 import subprocess

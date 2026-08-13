@@ -1,17 +1,14 @@
 # Felix' Workshop
 
-A small collection of self-serve browser tools, hosted at
+A collection of browser tools, hosted at
 [workshop.fubl.org](https://workshop.fubl.org). No accounts and no build step:
-the site is a folder of static files, and the whole thing is open source, so
-what any one tool does is checkable rather than merely asserted.
+the site is a folder of static files, and the source is public, so what any
+tool does can be checked.
 
-Most of them run entirely in your browser. Not all of them will. Rather than a
-site-wide vow that one tool could falsify — and rather than the older
-arrangement, where the reassuring case was the *absence* of a mark — every card
-on the index says what leaves your machine, on a five-rung ladder printed on
-all of them:
+Most tools run entirely in the browser; not all will. Rather than a site-wide
+claim, every card on the index carries a custody rating on a five-rung scale:
 
-| rung | what it means |
+| rung | meaning |
 |---|---|
 | `local` | Nothing leaves your machine. |
 | `fetch` | Reads public data from a third party. Nothing of yours is sent; the request still reveals your IP. |
@@ -19,358 +16,276 @@ all of them:
 | `store` | Something of yours is kept on a server. The tool says whose. |
 | `account` | Kept, and tied to a login. |
 
-The ladder is printed in ink, not in a plate: the plates are the index's
-*category* vocabulary, and a second colour code on the same card would make
-both harder to read. It shows as five small squares filled from the left, with
-the word darkening as the rung rises. The key at the foot of the index defines
-all five; a card carries the rating and nothing more.
+The rating is drawn in ink rather than in a plate colour, because the plates
+are the index's category vocabulary and a second colour code on the same card
+would make both harder to read. It appears as five squares filled from the
+left plus one word. The key at the foot of the index defines all five; a card
+carries the rating and nothing more.
 
 No tool is above `fetch` today: six never open a socket, three read public data
-and keep nothing. `store` and `account` are defined ahead of the tools that will
-need them (Convex, Supabase, or self-hosted).
+and keep nothing. `store` and `account` are defined ahead of the tools that
+will need them.
 
-Each of the three on `fetch` names who it is about to talk to on its own page,
-before anything is sent, and in two of them the traffic is the subject rather
-than an aside. The Network Inspector can look your
-IP address up with a third party, ask a STUN server what it sees, and probe
-your local range — all behind buttons, with nothing sent on load at all.
-Eclipse Recon is a map
-of the world with live weather on it, which cannot exist without a network:
-it fetches elevation tiles (Mapzen/AWS) for both the base map and the horizon
-scans, map labels (Carto/OSM) and forecasts (Open-Meteo), plus a keyless
-reverse geocoder for place names, and credits every one of them on screen.
-The third asks for two things and only on demand: Eclipse Countdown sends a
-typed place name to Open-Meteo's keyless geocoder to turn it into coordinates,
-and reads AWS terrain tiles when you press the horizon check — each on its own
-button and never on load. Type coordinates and skip the horizon and it opens no
-socket at all. The eclipse mathematics itself runs in your browser in both of
-the eclipse tools.
+Each of the three on `fetch` names the hosts it contacts on its own page,
+before anything is sent. In two of them the traffic is the subject of the tool
+rather than an aside — see Network Inspector and Eclipse Recon below.
 
 ## Tools
 
-The homepage groups them by domain, not by what is finished. Sorting by state
-instead answered "how far along is this site", which is a question nobody
-arrives holding.
-
-Only built tools are printed there. The areas used to carry their planned tools
-as rows underneath, which put fifteen names a reader cannot use in front of nine
-they can — a category view answers "what can I use", and a tool that does not
-exist yet cannot answer it. The lists below are the roadmap and live here; on
-the index each area's brief survives as a comment in the section that will hold
-the tool.
+The index groups tools by domain rather than by build state, and prints only
+the tools that exist. The planned tools listed below are the roadmap; on the
+index each is kept as a comment in the section that will hold it.
 
 ### Media
 
-Raster and vector images, type, colour, and the audio and video files beside
-them.
+Raster and vector images, type, colour, audio and video.
 
 - [Pixel Art SVG Drawer](draw-svg/) — draw pixel art on a grid-snapped canvas,
-  start from a classic sprite size or type your own, export exactly what you
-  drew as a real SVG file.
+  starting from a standard sprite size or a custom one, and export the result
+  as an SVG file.
 
-- [Image Metadata Cleaner](metadata-cleaner/) — read every field a JPEG, PNG or
-  WebP is carrying (EXIF, GPS, XMP, IPTC, colour profile, embedded thumbnail),
-  see what each one gives away, and choose field by field what to strip. Batch
-  or single file, and lossless: the pixels are never re-encoded.
+- [Image Metadata Cleaner](metadata-cleaner/) — read every metadata field a
+  JPEG, PNG or WebP carries (EXIF, GPS, XMP, IPTC, colour profile, embedded
+  thumbnail), see what each one discloses, and choose field by field what to
+  remove. Works on batches or single files, and is lossless: the pixels are
+  never re-encoded.
 
-Still on the list: image, SVG, font, colour, audio and video toolkits.
+Planned: image, SVG, font, colour, audio and video toolkits.
 
 ### Documents
 
 Tools whose output is a document or a printed sheet. The bingo generator is
-filed here rather than under computation: the arithmetic is the method, the
-artefact is the deliverable.
+filed here rather than under computation, because the artefact is the
+deliverable.
 
 - [PDF Toolkit](pdf-toolkit/) — merge, split, extract, reorder, delete and
-  turn PDF pages, with every page shown as a real preview you can drag. The
-  PDF engine underneath is written from scratch: no library parses, renders
-  or writes anything here.
+  rotate PDF pages, with a preview of every page that can be dragged. The PDF
+  engine is written from scratch: no library parses, renders or writes
+  anything.
 
-- [Bingo Card Generator](bingo-cards/) — type the squares, and it counts every
-  distinct card that list can make, exactly, however many digits that takes.
-  Ask for as many as you want and it deals that many, no two alike, seeded so
-  the same set comes back. The PDF is one card per page and is written here,
-  byte by byte, with no library involved.
+- [Bingo Card Generator](bingo-cards/) — enter the squares and it counts the
+  number of distinct cards that list can produce, exactly, at any number of
+  digits. Request any number of cards and it generates that many, all
+  different, from a seed so the same set can be reproduced. The PDF is one card
+  per page and is written here without a library.
 
-Still on the list: QR codes and barcodes, text and document utilities, email tools.
+Planned: QR codes and barcodes, text and document utilities, email tools.
 
 ### Data & Computation
 
 Numbers, text as data, tables, archives and code — work whose output is a
 figure or another file rather than a rendering.
 
-- [Random Number Generator](random-numbers/) — draw from eleven distributions in
-  up to ten dimensions, seeded and reproducible, with summary statistics and
+- [Random Number Generator](random-numbers/) — draw from eleven distributions
+  in up to ten dimensions, seeded and reproducible, with summary statistics and
   CSV/JSON export.
 
-- [Abecedarian Distance](abecedarian/) — *billowy* and *almost* already run in
-  alphabetical order; nearly every other word would too, under some other
-  alphabet. This finds the nearest such alphabet and counts the letter swaps it
-  took to get there — the minimum Cayley distance over all 26! orderings, which
-  is a claim the tool cannot demonstrate at 26 letters and so
-  [proves at five and six](tools/verify/abecedarian.html), where every word can
-  be checked against every permutation by brute force. Some words — *anna*,
-  *knowledge* — have no distance at all, and the page says which letter left and
-  came back. The engine is a separate file from the page and runs under node too,
-  off the same assertions.
+- [Abecedarian Distance](abecedarian/) — *billowy* and *almost* are already in
+  alphabetical order; most other words would be under some other alphabet. This
+  finds the nearest such alphabet and counts the letter swaps needed to reach
+  it — the minimum Cayley distance over all 26! orderings. That claim cannot be
+  demonstrated at 26 letters, so it is
+  [proved at five and six letters](tools/verify/abecedarian.html), where every
+  word can be checked against every permutation by brute force. Some words
+  (*anna*, *knowledge*) have no distance at all, and the page reports which
+  letter recurs. The engine is a separate file from the page and also runs
+  under node, against the same assertions.
 
-Still on the list: CSV and spreadsheet toolkit, developer tools, archive and file tools,
+Planned: CSV and spreadsheet toolkit, developer tools, archive and file tools,
 calendar and date tools.
 
 ### Geospatial & Networks
 
 Tools that measure something outside the browser rather than a file the reader
-supplied: terrain, sky, and the connection itself. Every rung above `local` on
-the page is in this area, which follows from the definition — a tool that
-reports on an external system has to query it.
+supplied: terrain, sky and the network connection. Every rung above `local` is
+in this category, which follows from the definition.
 
-- [Eclipse Recon](eclipse-recon/) — an ops-console view of a solar
-  eclipse: the path computed from Besselian elements in the browser, an
-  animated umbra you can scrub through time, and a dossier for any point
-  you click or type as coordinates — contact times, Sun altitude, a
-  terrain-masked horizon profile (does that ridge hide a low Sun?), and the
-  cloud outlook, including the sightline: for a low Sun, cloud is read
-  where the line to the Sun crosses each deck, tens of kilometres toward
-  its azimuth. A suitability field paints the whole umbral band in a
-  red-to-green ramp, weighted by certainty: the horizon is surveyed fact
-  and counts squared, air mass punishes a Sun under 8°, the sky is a
-  prognosis and is softened — though a certain storm still scores zero —
-  and duration counts gently, because any totality is the event. A Sun
-  behind terrain is zero whatever the forecast, and the formula is
-  printed in the tool, factor by factor, for every site you click. A
-  "within reach" panel answers the practical question — I am here, where
-  could I go? — by painting that field inside a travel radius, graded on
-  the local curve, at a cell size the reader chooses — down to 100 m,
-  the scale at which the terrain data itself runs out: finer costs
-  more horizon scans, all computed on their own machine, and every scan
-  is kept in the browser (IndexedDB) — the horizon is surveyed fact and
-  never expires — so finer passes and return visits only pay for ground
-  not yet surveyed. Forecasts are never stored that way. Behind it runs
-  the repo's one piece of automation: a GitHub Action
-  ([`tools/crawl-vis.mjs`](tools/crawl-vis.mjs)) crawls the entire band
-  at the same resolution, hour after hour, back to back, until every
-  square has its value — ocean and high-Sun tiles resolve instantly,
-  mountainous ground gets truly scanned — committing progress into
-  [`eclipse-recon/data/`](eclipse-recon/data/) as it goes, which Pages
-  serves to everyone; the Event panel shows how far it has got, and
-  every visitor's fine maps reuse what it has settled. When the queue
-  empties the workflow switches its own schedule off: the crawl is a
-  finite data build, not a resident service. The site still runs no
-  server, and the browser math and the crawler math are the same
-  formulas line for line. Nothing is per-eclipse in the code: a
-  catalogue record is elements and a date, everything else is derived, and
-  any other eclipse loads by pasting the Polynomial Besselian Elements
-  block off its NASA/GSFC page. It wears PREPRINT like the rest: the map is
-  drawn from elevation alone — water the palest flat tone, land darkening
-  in altitude steps with a key in the corner — the Moon's shadow is printed
-  in actual black, and the plates appear only where they mean something —
-  plate 3 is totality, and every score wears one scale: viridis, worst
-  to best — the standard scientific ramp, perceptually uniform and
-  legible under every form of colour vision, deliberately not pressed
-  from the site's own plates because the field is data, not chrome. A
-  switch takes totality's duration out of the score, leaving it purely
-  about seeing. It is
-  the second tool that talks to the network (see above), and it works on a
-  phone.
+- [Eclipse Recon](eclipse-recon/) — a planning console for a solar eclipse.
+  The path is computed from Besselian elements in the browser, with an animated
+  umbra that can be scrubbed through time and a report for any point clicked or
+  entered as coordinates: contact times, Sun altitude, a terrain-masked horizon
+  profile, and the cloud forecast. For a low Sun, cloud is read where the line
+  of sight crosses each deck, tens of kilometres toward the Sun's azimuth.
 
-- [Eclipse Countdown](eclipse-countdown/) — the same arithmetic, asked the
-  smaller question: from where I am, when is the next one and what will it look
-  like? A clock counts down to the next phase — first contact, totality, last
-  contact — beside a drawing of the Sun for the moment on the clock: zenith up,
-  the Moon at its true separation and position angle, and the whole thing
-  printed as two plates and their overprint — plate 2 is Sun nobody is
-  covering, plate 3 is Moon standing off the Sun's face, and the dark third
-  colour where they land on the same paper is exactly the bite — with the
-  horizon at true scale, so a Sun that sets mid-eclipse is drawn setting.
-  Beside it, the same instant seen from outside: the Moon, the shadow cone it
-  casts, the Earth it lands on and a dot for the reader standing under it, all
-  read off the same Besselian elements and moving with the clock, so the bite
-  in the disc above and the cone in the diagram are one shadow drawn from both
-  ends. Under it, every phase with
-  its local time, its time in UT and the Sun's altitude. A preview plays the
-  whole eclipse in 15 seconds, easing continuously into the middle and out
-  again — a rate that changes in steps reads as a fault rather than as a
-  slowdown — and printing the rate it is running at. A horizon check borrows Recon's terrain reader and asks it
-  a much narrower question — the skyline in the strip of sky the eclipse
-  actually crosses — and prints the answer upright: the quarter hour either
-  side of totality, tall, with the ground filled in and the Sun's path drawn
-  across it, dashed and in plate 2 wherever the ground takes it. It says what
-  the skyline is made of as well as how high it stands, because a block from
-  40 km out is a mountain range and a block from 150 m out is the elevation
-  model reading the roof across the street. Once it has been read, that same
-  skyline is what the Sun sets behind in the drawing above — the real ridge
-  line at true scale, in place of the flat horizon an unread one gets. It holds no eclipse data and no
-  eclipse arithmetic of its own: the catalogue, the engine and the terrain
-  reader are Recon's files
+  A suitability field scores the whole umbral band from 0 to 100, weighted by
+  certainty: horizon visibility is measured terrain and counts squared, air
+  mass penalises a Sun below 8°, the sky is a forecast and is weighted less
+  (though a certain storm scores zero), and duration counts gently. A Sun
+  behind terrain scores zero regardless of forecast. The formula is printed in
+  the tool for every site. A switch removes duration from the score.
+
+  A "within reach" panel maps that field inside a travel radius at a chosen
+  cell size, down to 100 m, which is where the terrain data runs out. Finer
+  cells cost more horizon scans, all computed in the browser; every scan is
+  stored in IndexedDB and does not expire, so finer passes and return visits
+  only pay for new ground. Forecasts are not stored.
+
+  A GitHub Action ([`tools/crawl-vis.mjs`](tools/crawl-vis.mjs)) crawls the
+  whole band at the same resolution and commits results to
+  [`eclipse-recon/data/`](eclipse-recon/data/), which Pages serves to every
+  visitor. The workflow disables its own schedule when the queue empties. The
+  browser and the crawler run the same formulas. Nothing in the code is
+  specific to one eclipse: a catalogue record is a set of elements and a date,
+  and another eclipse can be loaded by pasting the Polynomial Besselian
+  Elements block from its NASA/GSFC page.
+
+  The map is drawn from elevation alone, with water as the palest tone and land
+  darkening in altitude steps. Scores use viridis rather than the site's
+  plates: it is perceptually uniform and legible under every form of colour
+  vision, and the field is data rather than page furniture. Works on a phone.
+
+- [Eclipse Countdown](eclipse-countdown/) — the same arithmetic applied to a
+  narrower question: from a given place, when is the next eclipse and what will
+  it look like? A clock counts down to each phase beside a drawing of the Sun
+  at the moment on the clock, with the Moon at its true separation and position
+  angle and the horizon at true scale, so a Sun that sets mid-eclipse is drawn
+  setting. Beside it, the same instant seen from outside: the Moon, its shadow
+  cone, the Earth, and a marker for the reader, all from the same elements and
+  moving with the clock. Below, every phase with its local time, UT and Sun
+  altitude. A preview plays the whole eclipse in 15 seconds.
+
+  A horizon check reads the skyline in the strip of sky the eclipse crosses and
+  draws it upright: the quarter hour either side of totality, with the ground
+  filled in and the Sun's path across it. It reports what the skyline is made
+  of as well as its height, because a block 40 km away is a mountain range and
+  a block 150 m away is a roof. Once read, that skyline replaces the flat
+  horizon in the drawing above.
+
+  It holds no eclipse data or arithmetic of its own: the catalogue, engine and
+  terrain reader are Recon's files
   ([`eclipse-recon/js/eclipses.js`](eclipse-recon/js/eclipses.js),
   [`eclipse-recon/js/bessel.js`](eclipse-recon/js/bessel.js),
   [`eclipse-recon/js/terrain.js`](eclipse-recon/js/terrain.js)), loaded from
-  the folder next door rather than copied, so the two tools cannot disagree
-  about when the Moon arrives or what stands in the way — and an eclipse pasted
-  into Recon appears here too. It sits on `fetch` for two reasons, each behind
-  its own button: turning a typed place name into coordinates, and reading the
-  ground around you. Type the coordinates and skip the horizon and it opens no
-  socket at all.
+  the neighbouring folder rather than copied, so the two tools cannot disagree.
+  It is on `fetch` for two reasons, each behind its own button: converting a
+  typed place name to coordinates, and reading the terrain. Enter coordinates
+  and skip the horizon check and it opens no socket.
 
-- [Network Inspector](network-inspector/) — see what your browser gives away to
-  every site before you touch anything, from your keyboard layout and installed
-  voices to a fingerprint of the machine, watch the page's own requests broken
-  into DNS, TCP, TLS and wait time, measure the line, then opt in to an IP
-  lookup, a WebRTC probe, a scan of the ports your own computer is listening on,
-  and a sweep of the network around it.
+- [Network Inspector](network-inspector/) — shows what the browser discloses to
+  every site before any interaction, from keyboard layout and installed voices
+  to a device fingerprint; breaks the page's own requests into DNS, TCP, TLS
+  and wait time; and measures the connection. An IP lookup, a WebRTC probe, a
+  scan of local listening ports and a sweep of the local network are each
+  behind a button.
 
-Still on the list: geospatial tools.
+Planned: geospatial tools.
 
 ### General
 
-Tools that share no domain with the others. Not a residue category apologising
-for itself: "belongs to no other category" is a category, and it is where a job
-that is one job belongs. It is the one area the index does not print: it holds
-nothing built, and a heading over an empty space is a category the reader cannot
-enter. It appears the day something lands in it.
+Tools that share no domain with the others. The index does not print this
+category, because it holds nothing built.
 
-Still on the list: odds and ends — webpage to PDF, an invoice photo to structured CSV, a slider
-comparing two image versions, a signature photo to a transparent PNG, a
+Planned: odds and ends — webpage to PDF, an invoice photo to structured CSV, a
+slider comparing two image versions, a signature photo to a transparent PNG, a
 passport-photo sheet at exact print dimensions.
 
-Each new tool lands in its own top-level folder, inside the area for its
-domain, and appears on the index the day it is built — as solid stock with a
-cast, next to whatever else that area holds.
-The area carries the register (`reg-N`), so a tool's ink is wherever the tool is
-standing and the two cannot disagree; the area's band prints that ink as a small
-square in front of its name, which is why the index needs no legend for it.
+## The index
 
-A card carries the tool's name, one sentence of what it is for, two dates
-in small print — the day the tool first landed and the day it last changed,
-read out of git history by `tools/stamp-dates` rather than written by hand —
-a pin that drives it and its area to the front, and its rung on the ladder
-above: `<code class="plate-custody" data-custody="…">`, holding a five-square
-meter and the rung's word. That is the whole of it. The card used to finish
-that line with an em dash and a clause naming the hosts — `fetch — AWS terrain,
-Carto, Open-Meteo, BigDataCloud` — a different sentence per tool, of a
-different length, saying a different amount, so no two cards could be read
-against each other and the mark stopped being a scale. A rating compares or it
-is not a rating. The hosts are on the tool's own page, in full, named before
-anything is sent, which is where a reader is standing when the answer matters.
-One attribute sets both the filled-square count and the ink, and the key at the
-foot of the page reads the same attribute, so a card and the key cannot drift
-apart.
+Each tool lives in its own top-level folder and appears on the index once it is
+built. The section carries the register class (`reg-N`), so a tool takes the
+colour of the category it sits in; the section's band prints that colour as a
+small square, which is why the index needs no legend.
+
+A card carries the tool's name, one sentence describing it, two dates written
+by `tools/stamp-dates` from git history, a pin, and the custody rating as
+`<code class="plate-custody" data-custody="…">`. One attribute sets both the
+number of filled squares and the ink, and the key at the foot reads the same
+attribute, so the two cannot disagree.
 
 ## Stack
 
-Plain HTML/CSS/JS per tool, no bundler, no framework. The one exception to
-"no library" is Eclipse Recon, which vendors Leaflet 1.9.4 (BSD-2) into its
-own folder for the map pane — the eclipse engine, terrain reader and weather
-client beside it are written from scratch, and everything the tool draws
-(map overlays, charts) reads its colour off the PREPRINT tokens at draw
-time, so the pull cord restyles the map along with the page. The design
-language is
-**PREPRINT**: a printed sheet, then annotated by hand. Hepta Slab for display,
-Zilla Slab for anything read at length, Cousine for anything the machine said,
-three press plates instead of an accent colour, hard offset casts instead of
-soft shadows, and one dark mode for every surface via `data-mode`.
+Plain HTML, CSS and JS per tool: no bundler, no framework. The one library is
+Leaflet 1.9.4 (BSD-2), vendored into Eclipse Recon for the map pane; the
+eclipse engine, terrain reader and weather client are written from scratch, and
+everything the tool draws reads its colours from the PREPRINT tokens at draw
+time, so changing mode restyles the map with the page.
+
+The design language is **PREPRINT**: Hepta Slab for display, Zilla Slab for
+running text, Cousine for machine output, three press plates instead of an
+accent colour, hard offset casts instead of soft shadows, and one dark mode
+across every surface via `data-mode`.
 
 Three CSS layers, in this order:
 
 | layer | file | rule |
 |---|---|---|
-| the system | [`assets/preprint/`](assets/preprint/) | **vendored verbatim, do not edit.** `tools/sync-preprint` re-copies it from `~/code/preprint`, and `tools/push` in the system does every consumer at once. |
+| the system | [`assets/preprint/`](assets/preprint/) | **vendored verbatim, do not edit.** `tools/sync-preprint` re-copies it from `~/code/preprint`; `tools/push` in the system updates every consumer. |
 | shared chrome | [`assets/base.css`](assets/base.css) | the classes every tool reuses, built only from `--pp-*` tokens |
-| the workshop's own deviations | [`assets/site.css`](assets/site.css) | the whole list: halftone screen, category washes, sticker chips, the tilt |
+| workshop deviations | [`assets/site.css`](assets/site.css) | the complete list: halftone screen, the tilt, the drawing surface's ground |
 
-Three of the four scripts are the system's, vendored with it.
-[`assets/preprint/js/mode.js`](assets/preprint/js/mode.js) sets `data-mode`
-before the first paint and flips it on any `[data-mode-toggle]`. It is the
-system's rather than the workshop's because there is one dark mode across
-everything set in PREPRINT, and this file was previously written twice.
-[`assets/preprint/js/pullcord.js`](assets/preprint/js/pullcord.js) is the
-control that drives it here. Core ships two, and the workshop takes the cord
-rather than the swatch fubl.org wears: a 1px line hanging off the top edge with
-a bead on the end. Take hold of the bead and it follows the hand until the
-detent trips at 42px, which is where the mode changes — let go short of that
-and it springs back having done nothing. It goes sideways as well as down,
-swinging from the point it hangs off, and it resists as it goes: the first
-pixels track the hand exactly and the last ones barely move, in both
-directions. How far sideways depends on how much page there is next to it, so
-the cord never reaches the edge. Let go and it swings once past rest and
-settles. Clicking it plays an abbreviated 13px version of the same pull, and
-Enter and Space go through that too. Either way there is a two-part click when
-the detent goes. The sound is on by default and silenced by
-`localStorage['preprint-sound'] = 'off'` or by `prefers-reduced-motion`, which
-also drops the animation while leaving the drag and its threshold intact.
-Neither script draws anything: the cord is `.pullcord` in `core.css`, and the
-positioned ancestor it hangs from is `.wrap` / `.masthead` in `base.css`.
-[`assets/preprint/js/controls.js`](assets/preprint/js/controls.js), with
-[`assets/preprint/controls.css`](assets/preprint/controls.css) beside it, draws
-the five widgets the browser would otherwise style itself: the number field's
-spinner, the checkbox, the colour swatch and its OS dialog, the menu a
-`<select>` opens, and the grey box a `title` attribute produces. It works by
-enhancement, so the native `<input>` and `<select>` stay in the DOM as the value
-and keep firing `input` and `change`. A tool reads its controls exactly as if
-none of this existed, and a `MutationObserver` picks up controls built after
-load. Use `data-tip` rather than `title` for any tooltip.
+Three of the five scripts come from the system:
 
-Two scripts are the workshop's own.
-[`assets/share.js`](assets/share.js) backs the one `[data-share]` button each
-tool page carries beside its title, which copies that tool's own address.
-[`assets/favourites.js`](assets/favourites.js) backs the pin: any `[data-pin]`
-button toggles its tool in a list held in `localStorage` under
-`workshop-pinned`, and pinned tools sort to the front of the index. The script
-only sets a class; the sorting is two CSS rules, because a pinned tool now has
-to clear two levels — it comes to the front of its own area, and its area comes
-to the front of the page, or it would sit at the top of a category the reader
-still has to scroll to find. The index and the tool pages read the same list, so
-pinning from inside a tool moves its card too.
+- [`js/mode.js`](assets/preprint/js/mode.js) sets `data-mode` before first
+  paint and toggles it on any `[data-mode-toggle]`.
+- [`js/pullcord.js`](assets/preprint/js/pullcord.js) is the control that
+  toggles it here: a line hanging from the top edge with a bead on the end.
+  Dragging it past a 42px detent changes the mode; releasing short of that
+  springs it back. It moves sideways as well as down, with resistance, and
+  swings once past rest on release. Clicking plays a shortened version, as do
+  Enter and Space. Sound is on by default and is silenced by
+  `localStorage['preprint-sound'] = 'off'` or by `prefers-reduced-motion`,
+  which also drops the animation while keeping the drag and its threshold.
+  Neither script draws anything: the cord is `.pullcord` in `core.css`, and it
+  hangs from `.wrap` / `.masthead` in `base.css`.
+- [`js/controls.js`](assets/preprint/js/controls.js) and
+  [`controls.css`](assets/preprint/controls.css) draw five widgets the browser
+  would otherwise style itself: the number spinner, the checkbox, the colour
+  swatch, the `<select>` menu and the `title` tooltip. They work by
+  enhancement, so the native `<input>` and `<select>` stay in the DOM and keep
+  firing `input` and `change`; a tool reads its controls as if none of this
+  existed. A `MutationObserver` picks up controls added after load. Use
+  `data-tip` rather than `title`.
+
+Two scripts are the workshop's own. [`assets/share.js`](assets/share.js) backs
+the `[data-share]` button beside each tool title, which copies that tool's
+address. [`assets/favourites.js`](assets/favourites.js) backs the pin: a
+`[data-pin]` button toggles its tool in a `localStorage` list under
+`workshop-pinned`. The script only sets a class; the sorting is two CSS rules,
+because a pinned tool moves to the front of its category and its category to
+the front of the page. The index and the tool pages read the same list.
 
 The one vendored file the workshop rewrites is
-[`assets/preprint/tokens/fonts.css`](assets/preprint/tokens/fonts.css), which
-self-hosts the faces instead of requesting them from Google Fonts. The family
-names it declares must not change.
+[`tokens/fonts.css`](assets/preprint/tokens/fonts.css), which self-hosts the
+faces instead of requesting them from Google Fonts. The family names it
+declares must not change.
 
 ## Adding a new tool
 
 1. Create `<tool-name>/index.html`, `style.css`, `script.js`.
-2. Link `../assets/preprint/js/mode.js` (in `<head>`, before the stylesheets)
-   and `../assets/preprint/js/pullcord.js` after it with `defer`, then
+2. In `<head>`, before the stylesheets, link `../assets/preprint/js/mode.js`,
+   then `../assets/preprint/js/pullcord.js` with `defer`, then
    `../assets/preprint/styles.css`, `../assets/preprint/core.css`,
-   `../assets/preprint/controls.css`, `../assets/base.css`, and
-   `../assets/site.css`. Write only the tool-specific layout in the tool's own
+   `../assets/preprint/controls.css`, `../assets/base.css` and
+   `../assets/site.css`. Put only tool-specific layout in the tool's own
    `style.css`.
 3. At the end of `<body>`, load the tool's `script.js`, then
    `../assets/preprint/js/controls.js`, `../assets/share.js` and
-   `../assets/favourites.js`. The tool's own script goes first so anything it
-   builds at startup is already in the DOM when the controls are drawn.
-4. Give the page the shared header: a `.back-link`, a `.title-row` holding the
-   `h1.tool-title` plus the `[data-share]` and `[data-pin]` buttons, which both
-   key off the folder name. The `.pullcord` goes above the header as the first
-   child of `.wrap`, not inside it — it hangs from the top of the page, and
-   `<header>` starts below the shell's padding.
-5. Add a card for it to the root [index.html](index.html), inside the
-   `section.area` for the tool's domain — the area carries the register class,
-   so the card does not. A `div` in that area's `.plates` with `data-tool`,
-   holding a `.plate.plate-live` — the name in an `h3` wrapped in
-   `a.plate-open`, the pin, and one `.plate-say` sentence. Remove the tool's
-   brief from that area's planned-tools comment, and update that area's count
-   and the inventory line. If no existing area fits, `General` does — printing
-   its band for the first time; a sixth area is a
-   decision about the taxonomy, not about the tool.
-6. Give the card its rung. Copy a `code.plate-custody` from any existing card
-   and set `data-custody` to the highest rung the tool actually reaches — a
-   tool that keeps one thing on a server is `store` even if everything else it
-   does is local. The word and the meter are the whole of the line: nothing
-   about hosts, conditions or what is kept goes on the card, because a rating
-   that varies in length per tool stops comparing. The five `<i>` squares are
-   always five; the attribute decides how many are filled. Anything above
-   `local` has to be named on the tool's own page, in its own words, before
-   anything is sent or kept.
-7. Commit, then run `tools/stamp-dates` and commit what it rewrites: it reads
-   git history and presses two dates onto every card — the day the tool first
-   landed, the day it last changed — and that script is the only thing that
-   writes those lines. Run it again after any later change to a tool.
+   `../assets/favourites.js`. The tool's script goes first, so anything it
+   builds at startup is in the DOM when the controls are drawn.
+4. Give the page the shared header: a `.back-link` and a `.title-row` holding
+   `h1.tool-title` plus the `[data-share]` and `[data-pin]` buttons, which key
+   off the folder name. The `.pullcord` is the first child of `.wrap`, above
+   the header, because it hangs from the top of the page.
+5. Add a card to the root [index.html](index.html), inside the `section.area`
+   for the tool's domain. The section carries the register class, so the card
+   does not. Add a `div` in that section's `.plates` with `data-tool`, holding
+   a `.plate.plate-live`: the name in an `h3` wrapped in `a.plate-open`, the
+   pin, and one `.plate-say` sentence. Remove the tool from that section's
+   planned-tools comment and update the section count and the inventory line.
+   If no section fits, use `General`, which prints its band for the first time.
+6. Give the card its rating. Copy a `code.plate-custody` from another card and
+   set `data-custody` to the highest rung the tool reaches: a tool that keeps
+   one thing on a server is `store` even if the rest is local. The word and the
+   meter are the whole line; hosts and conditions belong on the tool's own
+   page. The five `<i>` squares are always five, and the attribute decides how
+   many are filled.
+7. Commit, then run `tools/stamp-dates` and commit what it rewrites. It is the
+   only thing that writes the date lines. Run it again after any later change
+   to a tool.
 
 ## License
 
-Code in this repo is unlicensed (all rights reserved) unless stated
-otherwise. The fonts in `assets/fonts/` are Hepta Slab and Zilla Slab (SIL
-Open Font License 1.1) and Cousine (Apache License 2.0). See the `LICENSE-*`
-files alongside them.
+Code in this repo is unlicensed (all rights reserved) unless stated otherwise.
+The fonts in `assets/fonts/` are Hepta Slab and Zilla Slab (SIL Open Font
+License 1.1) and Cousine (Apache License 2.0). See the `LICENSE-*` files
+alongside them.
