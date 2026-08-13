@@ -22,9 +22,9 @@ would make both harder to read. It appears as five squares filled from the
 left plus one word. The key at the foot of the index defines all five; a card
 carries the rating and nothing more.
 
-No tool is above `fetch` today: six never open a socket, three read public data
-and keep nothing. `store` and `account` are defined ahead of the tools that
-will need them.
+No tool is above `fetch` today: seven never open a socket, three read public
+data and keep nothing. `store` and `account` are defined ahead of the tools
+that will need them.
 
 Each of the three on `fetch` names the hosts it contacts on its own page,
 before anything is sent. In two of them the traffic is the subject of the tool
@@ -49,6 +49,28 @@ Raster and vector images, type, colour, audio and video.
   thumbnail), see what each one discloses, and choose field by field what to
   remove. Works on batches or single files, and is lossless: the pixels are
   never re-encoded.
+
+- [Chiptune Tracker](chiptune-tracker/) — write music for the NES sound chip in
+  a pattern grid: two pulse channels with four duty cycles, a triangle with 32
+  fixed levels and no volume control, and noise off a 15-bit shift register.
+  Instruments are per-frame sequences rather than envelopes, which is how every
+  sound driver on the console did it, and the difference between a note that
+  decays and one that sustains is a loop point.
+
+  The chip is arithmetic, not samples:
+  [`chiptune-tracker/apu.js`](chiptune-tracker/apu.js) steps each voice in CPU
+  cycles at four times the output rate and decimates, mixes through the
+  hardware's measured non-linear ladders, and applies the analog filters on the
+  console's output. What that buys is the wrongness — pitch is an integer
+  divider off one 1.789773 MHz clock, so a note is only ever the nearest one
+  available and the page prints the error in cents; tempo is a whole number of
+  video frames, so speed 6 is 150.2 BPM and speed 7 is 128.8 and there is
+  nothing between them; the noise channel has sixteen periods and no pitch at
+  all.
+
+  One render serves both the transport and the export, so the WAV cannot differ
+  from what was heard. A song is a few kilobytes of integers, saved to a file
+  rather than a server. Note entry wants a keyboard, and the page says so.
 
 Planned: image, SVG, font, colour, audio and video toolkits.
 

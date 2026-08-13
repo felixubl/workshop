@@ -1,0 +1,475 @@
+/* Chiptune Tracker. Only what this tool invents: the pattern grid, the order
+   and instrument lists, and the sequence editors. Everything else is
+   assets/base.css and the PREPRINT tokens. */
+
+.readout {
+  font-family: var(--pp-font-mono);
+  font-size: 0.76rem;
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+  white-space: nowrap;
+}
+
+/* The deck: the order down the left, the pattern beside it. Below 900px the
+   order folds above the pattern and runs sideways instead of down, because a
+   column of two-digit numbers is the one thing on this page that does not need
+   the width. */
+.deck {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 900px) {
+  .deck {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .order-list {
+    display: flex;
+    flex-wrap: wrap;
+    max-height: none;
+  }
+  .order-row {
+    width: auto;
+  }
+}
+
+/* ── The order ────────────────────────────────────────────────────────────── */
+
+.order-list {
+  border: var(--pp-rule-line) solid var(--pp-line);
+  background: var(--pp-surface);
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.order-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.3rem 0.6rem;
+  background: transparent;
+  border: 0;
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+  text-align: left;
+}
+.order-row:last-child {
+  border-bottom: 0;
+}
+.order-row:hover {
+  background: var(--pp-tint);
+}
+.order-row .oi {
+  font-family: var(--pp-font-mono);
+  font-size: 0.74rem;
+  color: var(--pp-faint);
+}
+/* Position on the left, the pattern it plays on the right, so a column of
+   identical-looking pairs still reads as two columns. */
+.order-row .op {
+  margin-left: auto;
+  font-family: var(--pp-font-mono);
+  font-size: 0.82rem;
+  color: var(--pp-ink);
+}
+/* The selected position is filled, the playing one carries a bar down its
+   leading edge. Two states that can both be true at once need two different
+   marks, not two colours of the same one. */
+.order-row.is-current {
+  background: var(--pp-edge);
+}
+.order-row.is-current .oi,
+.order-row.is-current .op {
+  color: var(--pp-paper);
+}
+.order-row.is-playing {
+  box-shadow: inset 3px 0 0 var(--pp-plate-1);
+}
+
+.order-tools {
+  margin-top: 0.8rem;
+}
+
+/* ── The pattern grid ─────────────────────────────────────────────────────── */
+
+.patternwrap {
+  min-width: 0;
+}
+
+.grid {
+  position: relative;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  background: var(--pp-surface);
+  max-height: 62vh;
+  min-height: 300px;
+  overflow: auto;
+  scrollbar-width: thin;
+  font-family: var(--pp-font-mono);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  /* The grid takes the keyboard, and a text caret over a keyboard instrument
+     would describe the wrong device. */
+  cursor: var(--pp-cursor-arrow);
+}
+.grid:focus-visible {
+  outline: 3px solid var(--pp-selection);
+  outline-offset: -3px;
+}
+
+.grid-head,
+.tr {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  white-space: nowrap;
+}
+
+.grid-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--pp-surface);
+  border-bottom: var(--pp-rule-structure) solid var(--pp-edge);
+}
+
+.gh {
+  padding: 0.4rem 0.5rem;
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-label);
+  text-transform: uppercase;
+  color: var(--pp-faint);
+}
+.gh.rn {
+  width: 2.9em;
+  text-align: right;
+}
+/* The four channels share whatever the row has left over, but never go under
+   the width their columns need — the fields inside are fixed, so a channel that
+   shrank would overlap the one beside it rather than reflow. */
+.gh-ch,
+.tc {
+  flex: 1 1 12.6em;
+  min-width: 12.6em;
+  border-left: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+
+.rn {
+  flex: none;
+  width: 2.9em;
+  padding-right: 0.55rem;
+  text-align: right;
+  color: var(--pp-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.tc {
+  padding: 0 0.5rem;
+}
+
+/* Empty columns are drawn as middle dots rather than left blank, so the shape
+   of a pattern is legible before anything is in it and a cursor always has
+   something to sit on. */
+.f {
+  display: inline-block;
+  color: var(--pp-faint);
+  padding: 0 1px;
+}
+.f.is-set {
+  color: var(--pp-ink);
+}
+.fn { width: 3.2em; }
+.fi { width: 2.1em; }
+.fv { width: 1.2em; }
+.fx { width: 1.1em; }
+.fp { width: 2.1em; }
+
+/* The note column carries the weight: it is what a pattern is read for, and
+   the digit columns beside it are qualifiers. */
+.fn.is-set {
+  font-weight: var(--pp-weight-strong);
+}
+.fv.is-set {
+  color: var(--pp-plate-1-text);
+}
+.fx.is-set,
+.fp.is-set {
+  color: var(--pp-plate-3-text);
+}
+
+/* Beats and bars, ruled rather than tinted: a background band behind a row
+   would fight the cursor and the playhead, which both need to win. */
+.tr.is-beat {
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+.tr.is-bar {
+  border-top: var(--pp-rule-line) solid var(--pp-line);
+}
+.tr.is-bar .rn {
+  color: var(--pp-ink);
+}
+
+.tr.is-playing {
+  background: var(--pp-marker-citron);
+}
+
+.f.is-cursor {
+  background: var(--pp-edge);
+  color: var(--pp-paper);
+}
+.f.is-cursor.is-set {
+  color: var(--pp-paper);
+}
+
+.grid:focus-visible .f.is-cursor,
+.grid:focus .f.is-cursor {
+  background: var(--pp-plate-3);
+}
+
+/* ── Instruments ──────────────────────────────────────────────────────────── */
+
+.bench {
+  margin-bottom: 2rem;
+}
+
+.instrument {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .instrument {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .inst-list {
+    max-height: 180px;
+  }
+}
+
+.inst-list {
+  border: var(--pp-rule-line) solid var(--pp-line);
+  background: var(--pp-surface);
+  max-height: 340px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.inst-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.35rem 0.6rem;
+  background: transparent;
+  border: 0;
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+  text-align: left;
+  font-family: var(--pp-font-body);
+  font-size: 0.88rem;
+  color: var(--pp-ink);
+}
+.inst-row:last-child {
+  border-bottom: 0;
+}
+.inst-row:hover {
+  background: var(--pp-tint);
+}
+.inst-row .oi {
+  flex: none;
+  font-family: var(--pp-font-mono);
+  font-size: 0.74rem;
+  color: var(--pp-faint);
+}
+.inst-row .inm {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.inst-row.is-current {
+  background: var(--pp-edge);
+  color: var(--pp-paper);
+}
+.inst-row.is-current .oi {
+  color: var(--pp-paper);
+}
+
+.inst-edit {
+  min-width: 0;
+}
+.toolbar.inst-bar {
+  padding-top: 0;
+  margin-bottom: 1.1rem;
+}
+
+/* ── Sequence editors ─────────────────────────────────────────────────────── */
+
+.seqs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+
+.seq {
+  min-width: 0;
+}
+
+.seq-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.seq-name {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--pp-track-label);
+  text-transform: uppercase;
+  color: var(--pp-faint);
+}
+
+.seq-at {
+  font-family: var(--pp-font-mono);
+  font-size: 0.72rem;
+  color: var(--pp-ink);
+  min-width: 8ch;
+}
+
+.seq-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.seq-controls label {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-label);
+  color: var(--pp-muted);
+}
+
+/* The canvas is as wide as the sequence is long, so it scrolls rather than
+   squeezing: a frame must always be the same width, or a sequence cannot be
+   counted by eye. */
+.seq-canvas,
+.seq-strip {
+  display: block;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  cursor: var(--pp-cursor-point);
+}
+.seq-canvas {
+  border-bottom: 0;
+  touch-action: none;
+}
+
+/* The loop strip: a rail under the sequence where the loop point is set. Dotted
+   because a loop point is optional, which is what dotted means here. */
+.seq-strip {
+  position: relative;
+  height: 12px;
+  border-top: var(--pp-rule-line) dotted var(--pp-line);
+  background: var(--pp-sunk);
+}
+
+.seq-flag {
+  position: absolute;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-left: 6px solid var(--pp-plate-3);
+  border-bottom: 10px solid transparent;
+}
+
+.seqwrap {
+  overflow-x: auto;
+}
+
+/* The canvas and its rail scroll together, as one object. */
+.seq > .seq-canvas,
+.seq > .seq-strip {
+  max-width: 100%;
+}
+
+/* ── The foot ─────────────────────────────────────────────────────────────── */
+
+.toolbar.make {
+  border-bottom: 0;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+  margin-bottom: 1.25rem;
+}
+
+.field.titlefield {
+  width: 20ch;
+}
+
+/* A file input has to stay in the tab order, so it is clipped rather than
+   hidden — the same reasoning as .dropzone in base.css. */
+.loadbtn {
+  position: relative;
+  overflow: hidden;
+}
+.loadbtn input[type='file'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+}
+.loadbtn:focus-within {
+  outline: 3px solid var(--pp-selection);
+  outline-offset: 1px;
+  border-color: var(--pp-edge);
+}
+
+.notes {
+  margin-top: 2.5rem;
+  max-width: 78ch;
+}
+.notes h2 {
+  margin: 2rem 0 0.85rem;
+}
+.notes h2:first-child {
+  margin-top: 0;
+}
+.notes p {
+  margin: 0 0 0.95rem;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--pp-muted);
+}
+.notes .sheet-note {
+  color: var(--pp-faint);
+}
+.notes code {
+  font-family: var(--pp-font-mono);
+  font-size: 0.85em;
+  color: var(--pp-ink);
+}
+.notecols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0 2rem;
+}
+.notes .sheet td:first-child {
+  color: var(--pp-ink);
+}
+
+#gridNote code {
+  font-family: var(--pp-font-mono);
+  font-size: 0.85em;
+  color: var(--pp-ink);
+}
+
+.btn-primary.is-playing {
+  background: var(--pp-plate-1);
+  border-color: var(--pp-plate-1);
+}

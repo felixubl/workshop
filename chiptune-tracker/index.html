@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chiptune Tracker — Felix' Workshop</title>
+<meta name="description" content="Write music for the NES sound chip in a pattern grid — two pulse channels, a triangle and noise — with instruments built from per-frame sequences. The chip is emulated from scratch in the browser, and the WAV you export is the buffer you heard.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
+<script src="../assets/preprint/js/mode.js"></script>
+<script src="../assets/preprint/js/pullcord.js" defer></script>
+<link rel="stylesheet" href="../assets/preprint/styles.css">
+<link rel="stylesheet" href="../assets/preprint/core.css">
+<link rel="stylesheet" href="../assets/preprint/controls.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <button class="pullcord" type="button" data-pullcord aria-label="Pull the string to switch colour mode"><span class="pullcord__cord" aria-hidden="true"></span><span class="pullcord__bead" aria-hidden="true"></span></button>
+  <header>
+    <div>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <div class="title-row">
+        <h1 class="tool-title">Chiptune Tracker</h1>
+        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
+          <span data-share-label>copy link</span>
+        </button>
+        <button class="share-btn pin-btn" type="button" data-pin="chiptune-tracker" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="spine"></div>
+
+  <div class="toolbar">
+    <div class="group">
+      <button class="btn-primary" type="button" id="play">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"></path></svg>
+        <span id="playLabel">Play</span>
+      </button>
+      <button class="btn-ghost" type="button" id="stop" data-tip="Stop, and put the playhead back where the cursor is">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 3h10v10H3z"></path></svg>
+        Stop
+      </button>
+    </div>
+
+    <div class="group">
+      <label class="checkbox" data-tip="Scroll the pattern to keep the playing row in view"><input type="checkbox" id="follow" checked> Follow</label>
+      <label class="checkbox" data-tip="Play a note as it is typed, using the instrument under the cursor"><input type="checkbox" id="preview" checked> Preview</label>
+    </div>
+
+    <div class="group">
+      <label for="speed" data-tip="Video frames per row. A row cannot last a fraction of a frame, so this is the only tempo control the chip has.">Speed</label>
+      <input class="field num narrow" type="number" id="speed" min="1" max="31" step="1" value="6">
+      <code class="readout" id="bpm">— BPM</code>
+    </div>
+
+    <div class="group">
+      <label for="octave">Octave</label>
+      <input class="field num narrow" type="number" id="octave" min="0" max="7" step="1" value="4">
+    </div>
+
+    <div class="group">
+      <label for="step" data-tip="How far the cursor drops after a note is entered">Step</label>
+      <input class="field num narrow" type="number" id="step" min="0" max="16" step="1" value="1">
+    </div>
+  </div>
+
+  <div class="deck">
+    <section class="orders">
+      <div class="result-bar">
+        <p class="section-label">Order</p>
+        <div class="group">
+          <button class="btn-ghost preset" type="button" id="orderAdd" data-tip="Add a position, holding the pattern the current one holds">+</button>
+          <button class="btn-ghost preset" type="button" id="orderDel" data-tip="Remove this position from the order">−</button>
+        </div>
+      </div>
+      <div class="order-list" id="orderList" role="listbox" aria-label="Order list"></div>
+      <p class="sheet-note">
+        The order plays patterns by number. A pattern can appear in it as often
+        as it likes; there is only ever one of it.
+      </p>
+      <div class="group order-tools">
+        <label for="patAt" data-tip="Which pattern the selected position plays">Plays</label>
+        <input class="field num narrow" type="number" id="patAt" min="0" max="63" step="1" value="0">
+      </div>
+      <div class="group order-tools">
+        <label for="rows" data-tip="How many rows this pattern has. Patterns need not all be the same length.">Rows</label>
+        <input class="field num narrow" type="number" id="rows" min="4" max="128" step="4" value="64">
+      </div>
+      <div class="group order-tools">
+        <button class="btn-ghost preset" type="button" id="patNew">New pattern</button>
+        <button class="btn-ghost preset" type="button" id="patClone" data-tip="Copy this pattern into a new one and point this position at it">Clone</button>
+      </div>
+    </section>
+
+    <section class="patternwrap">
+      <div class="result-bar">
+        <p class="section-label">Pattern <span id="patName">00</span></p>
+        <code class="readout" id="cursorNote">—</code>
+      </div>
+
+      <div class="grid" id="grid" tabindex="0" role="grid" aria-label="Pattern editor">
+        <div class="grid-head" aria-hidden="true">
+          <span class="gh rn">row</span>
+          <span class="gh gh-ch" data-ch="0">Pulse 1</span>
+          <span class="gh gh-ch" data-ch="1">Pulse 2</span>
+          <span class="gh gh-ch" data-ch="2">Triangle</span>
+          <span class="gh gh-ch" data-ch="3">Noise</span>
+        </div>
+        <div class="grid-body" id="gridBody"></div>
+      </div>
+
+      <p class="sheet-note" id="gridNote">
+        Click a column to put the cursor in it, then play the keyboard:
+        <code>Z</code>–<code>M</code> is one octave, <code>Q</code>–<code>U</code>
+        the one above. <code>−</code> stops a ringing note. In the other columns
+        type hex digits, and in the effect column a letter first.
+      </p>
+    </section>
+  </div>
+
+  <section class="bench">
+    <div class="result-bar">
+      <p class="section-label">Instruments</p>
+      <div class="group">
+        <button class="btn-ghost preset" type="button" id="instNew">New</button>
+        <button class="btn-ghost preset" type="button" id="instDup">Duplicate</button>
+        <button class="btn-ghost preset" type="button" id="instDel">Delete</button>
+      </div>
+    </div>
+
+    <div class="instrument">
+      <div class="inst-list" id="instList" role="listbox" aria-label="Instruments"></div>
+
+      <div class="inst-edit">
+        <div class="toolbar inst-bar">
+          <div class="group">
+            <label for="instName">Name</label>
+            <input class="field" type="text" id="instName" maxlength="24" spellcheck="false">
+          </div>
+          <div class="group">
+            <label id="dutyLabel" data-tip="The pulse waveform. On the noise channel the low bit picks the long run or the short one instead; the triangle has nothing to select.">Duty</label>
+            <div class="group presets" role="group" aria-labelledby="dutyLabel" id="dutyPresets">
+              <button class="btn-ghost preset" type="button" data-duty="0">12.5%</button>
+              <button class="btn-ghost preset" type="button" data-duty="1">25%</button>
+              <button class="btn-ghost preset" type="button" data-duty="2">50%</button>
+              <button class="btn-ghost preset" type="button" data-duty="3">75%</button>
+            </div>
+          </div>
+          <div class="group">
+            <button class="btn-ghost preset" type="button" id="instTry" data-tip="Play this instrument on the channel the cursor is in">Try it</button>
+          </div>
+        </div>
+
+        <div class="seqs" id="seqs"></div>
+      </div>
+    </div>
+
+    <p class="sheet-note">
+      A sequence is read one value per video frame — sixty a second — and holds
+      its last value forever unless it is given a loop point, which is the
+      difference between a note that decays and one that sustains. Drag across a
+      sequence to draw it; click the strip beneath to set where it loops.
+    </p>
+  </section>
+
+  <div class="toolbar make">
+    <div class="group">
+      <label for="title">Title</label>
+      <input class="field titlefield" type="text" id="title" maxlength="60" spellcheck="false">
+    </div>
+    <div class="group">
+      <label for="loops" data-tip="How many times through the song the file should run">Passes</label>
+      <input class="field num narrow" type="number" id="loops" min="1" max="16" step="1" value="2">
+      <button class="btn-primary" type="button" id="export">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M8 2v8M4.5 7.5 8 11l3.5-3.5M2.5 13.5h11"></path></svg>
+        Download WAV
+      </button>
+    </div>
+    <div class="group">
+      <button class="btn-ghost" type="button" id="save">Save song</button>
+      <label class="btn-ghost loadbtn" for="load">Load song<input type="file" id="load" accept=".json,application/json"></label>
+      <button class="btn-ghost" type="button" id="demo" data-tip="Replace what is here with the tune the page opens on">Demo</button>
+      <button class="btn-ghost" type="button" id="clear" data-tip="Empty every pattern and start again">Clear</button>
+    </div>
+  </div>
+
+  <p class="hint" id="hint" hidden></p>
+
+  <div class="card prompt">
+    Everything you hear is computed here, one sample at a time, from a model of
+    the Ricoh 2A03 — the chip in the NES. Two pulse channels with four duty
+    cycles, a triangle with 32 fixed levels and no volume control at all, and
+    noise off a 15-bit shift register. No sockets are opened and nothing is
+    uploaded; the song is held in this browser and saved to a file you keep. The
+    WAV you download is the same buffer the page just played, so it cannot
+    differ from what you heard.
+  </div>
+
+  <section class="notes">
+    <h2 class="section-label">What the chip will and will not do</h2>
+    <div class="notecols">
+      <div>
+        <p>
+          A pitch on this chip is not a frequency but an integer divider off one
+          1.789773 MHz clock, so most notes are slightly wrong and the error
+          grows as you go up: middle C is under two cents flat and the top of
+          the range reaches a fifth of a semitone. The readout beside the
+          pattern prints the error for the note under the cursor. The pulse
+          channels run out of divider at <code>A-1</code> and the triangle an
+          octave below that.
+        </p>
+        <p>
+          The noise channel has no pitch, only sixteen periods. A note picks one
+          and the octave is ignored, so a run up the keyboard is a run through
+          sixteen timbres that starts over every twelve keys.
+        </p>
+      </div>
+      <div>
+        <p>
+          Tempo is quantised. A row lasts a whole number of video frames at
+          60.0988 Hz and nothing finer, which is why the speed control is in
+          frames and the BPM beside it is a readout rather than an input: speed 6
+          is 150.2 BPM, speed 7 is 128.8, and there is nothing in between.
+        </p>
+        <p>
+          The mix is not a sum. The console drives two resistor ladders that are
+          deliberately non-linear, so two channels at half volume are louder than
+          one at full. The measured curves are used here, along with the analog
+          filters on the console's output — high-passes at 90 Hz and 440 Hz and a
+          low-pass at 14 kHz — which are most of why NES audio sounds thinner
+          than a bare square wave.
+        </p>
+      </div>
+    </div>
+
+    <h2 class="section-label">Effects</h2>
+    <div class="sheet">
+      <div class="sheet-scroll">
+        <table>
+          <thead><tr><th style="width: 6rem">Column</th><th>What it does</th></tr></thead>
+          <tbody id="fxTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <h2 class="section-label">Keys</h2>
+    <div class="sheet">
+      <div class="sheet-scroll">
+        <table>
+          <thead><tr><th style="width: 15rem">Key</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td>Z S X D C V G B H N J M</td><td>The octave shown in the Octave box, from C upwards.</td></tr>
+            <tr><td>Q 2 W 3 E R 5 T 6 Y 7 U</td><td>One octave above it. The rows carry on through , L . ; / and I 9 O 0 P.</td></tr>
+            <tr><td>−</td><td>Note off: stop whatever that channel is holding.</td></tr>
+            <tr><td>Step</td><td>The cursor drops by the step after a note and after nothing else, so a two-digit column can be typed in one place.</td></tr>
+            <tr><td>0–9, A–F</td><td>Digits, in the instrument, volume and parameter columns. In the effect column, the letter of an effect; entering one moves across to its parameter.</td></tr>
+            <tr><td>Space</td><td>Play, or stop if already playing.</td></tr>
+            <tr><td>Enter</td><td>Play from the row the cursor is on.</td></tr>
+            <tr><td>Arrows, Tab</td><td>Move the cursor. Tab moves a whole channel.</td></tr>
+            <tr><td>Page Up / Page Down</td><td>Sixteen rows at a time. Home and End go to the ends.</td></tr>
+            <tr><td>Delete, Backspace</td><td>Clear the column under the cursor. Backspace steps up first.</td></tr>
+            <tr><td>[ and ]</td><td>Drop or raise the entry octave.</td></tr>
+            <tr><td>Ctrl+Z, Ctrl+Shift+Z</td><td>Undo and redo, fifty deep.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="sheet-note">
+      Note entry wants a physical keyboard. On a phone the pattern can be read
+      and played but not usefully typed into, and the page says so here rather
+      than pretending otherwise.
+    </p>
+  </section>
+</div>
+
+<script src="apu.js"></script>
+<script src="song.js"></script>
+<script src="script.js"></script>
+<script src="../assets/preprint/js/controls.js"></script>
+<script src="../assets/share.js"></script>
+<script src="../assets/favourites.js"></script>
+</body>
+</html>
