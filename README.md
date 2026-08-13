@@ -52,10 +52,16 @@ the eclipse tools.
 
 ## Tools
 
-The homepage groups them by domain, not by what is finished, and each area
-carries both the tools that exist and the ones still on its list. Sorting by
-state instead answered "how far along is this site", which is a question nobody
+The homepage groups them by domain, not by what is finished. Sorting by state
+instead answered "how far along is this site", which is a question nobody
 arrives holding.
+
+Only built tools are printed there. The areas used to carry their planned tools
+as rows underneath, which put fifteen names a reader cannot use in front of nine
+they can — a category view answers "what can I use", and a tool that does not
+exist yet cannot answer it. The lists below are the roadmap and live here; on
+the index each area's brief survives as a comment in the section that will hold
+the tool.
 
 ### Media
 
@@ -223,19 +229,20 @@ Still on the list: geospatial tools.
 
 Tools that share no domain with the others. Not a residue category apologising
 for itself: "belongs to no other category" is a category, and it is where a job
-that is one job belongs.
+that is one job belongs. It is the one area the index does not print: it holds
+nothing built, and a heading over an empty space is a category the reader cannot
+enter. It appears the day something lands in it.
 
 Still on the list: odds and ends — webpage to PDF, an invoice photo to structured CSV, a slider
 comparing two image versions, a signature photo to a transparent PNG, a
 passport-photo sheet at exact print dimensions.
 
 Each new tool lands in its own top-level folder, inside the area for its
-domain, and its card goes from a queue row to solid stock with a cast once it's
-built.
+domain, and appears on the index the day it is built — as solid stock with a
+cast, next to whatever else that area holds.
 The area carries the register (`reg-N`), so a tool's ink is wherever the tool is
-standing and the two cannot disagree; the area's band prints that ink as the
-same small square a queued name wears, which is why the index needs no legend
-for it.
+standing and the two cannot disagree; the area's band prints that ink as a small
+square in front of its name, which is why the index needs no legend for it.
 
 A card carries the tool's name, one sentence of what it is for, two dates
 in small print — the day the tool first landed and the day it last changed,
@@ -347,8 +354,9 @@ names it declares must not change.
    so the card does not. A `div` in that area's `.plates` with `data-tool`,
    holding a `.plate.plate-live` — the name in an `h3` wrapped in
    `a.plate-open`, the pin, and one `.plate-say` sentence. Remove the tool's
-   queue row if that area had one, and update that area's counts and the
-   inventory line. If no existing area fits, `General` does; a sixth area is a
+   brief from that area's planned-tools comment, and update that area's count
+   and the inventory line. If no existing area fits, `General` does — printing
+   its band for the first time; a sixth area is a
    decision about the taxonomy, not about the tool.
 6. Give the card its rung. Copy a `code.plate-custody` from any existing card
    and set `data-custody` to the highest rung the tool actually reaches — a
