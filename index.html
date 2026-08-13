@@ -1199,32 +1199,32 @@
 
         <div class="key-row" data-custody="local">
           <dt><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</dt>
-          <dd>Nothing leaves the page. The tool is the whole of it &mdash; it is fetched once and then runs on your machine, and closing the tab is the end of it.</dd>
+          <dd>Nothing leaves your machine.</dd>
         </div>
 
         <div class="key-row" data-custody="fetch">
           <dt><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>fetch</dt>
-          <dd>It asks somebody else for public data &mdash; map tiles, a forecast, a lookup. Nothing you gave it goes out, but the request does, and a request is your address and what you asked for. The tool names who it is about to ask, on its own page, before it asks.</dd>
+          <dd>Reads public data from a third party. Nothing of yours is sent; the request still reveals your IP. The tool names who it asks.</dd>
         </div>
 
         <div class="key-row" data-custody="send">
           <dt><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>send</dt>
-          <dd>Something you gave it &mdash; a file, a picture, a paragraph &mdash; goes out to be worked on and comes back. It is not kept afterwards.</dd>
+          <dd>Something of yours is uploaded, processed and returned. Not kept.</dd>
         </div>
 
         <div class="key-row" data-custody="store">
           <dt><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>store</dt>
-          <dd>Something you gave it is kept on a server and is still there on your next visit. The tool says whose server, because a box in my flat and somebody else&rsquo;s platform are not the same answer.</dd>
+          <dd>Something of yours is kept on a server. The tool says whose.</dd>
         </div>
 
         <div class="key-row" data-custody="account">
           <dt><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>account</dt>
-          <dd>Kept, and tied to a name you signed in with. Everything below this rung is anonymous by construction; this one is not, and that is the whole of the difference.</dd>
+          <dd>Kept, and tied to a login. Every rung below is anonymous.</dd>
         </div>
 
       </dl>
 
-      <p class="key-note">The bottom two rungs are the whole workshop today: six tools never open a socket, and three read public data and keep nothing &mdash; all three under Geospatial &amp; Networks, where a tool that reports on an external system has to query it. <code>store</code> and <code>account</code> are printed here unused, because a scale written to describe a thing that already exists is a scale bent to fit it.</p>
+      <p class="key-note">No tool here is above <code>fetch</code>.</p>
     </section>
   </main>
 
