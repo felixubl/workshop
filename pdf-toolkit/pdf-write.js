@@ -1,12 +1,9 @@
-// The writer: objects back out to bytes, and objects copied between documents.
-//
-// Copying is the interesting half. A page is not a self-contained thing — it
-// points at its resources, which point at fonts, which point at font files,
-// and somewhere up the tree it points back at its parent, which points at
-// every other page in the source document. Pulling one page across means
-// walking that graph, renumbering as it goes, remembering what it has already
-// copied so shared resources stay shared, and cutting the links that would
-// otherwise drag the entire source file along.
+// The writer: objects back to bytes, and objects copied between documents.
+// Copying is the harder half. A page points at its resources, which point at
+// fonts, which point at font files, and somewhere up the tree it points back
+// at its parent, which points at every other page. So the copy is a deep
+// traversal with a memo, and /Parent is cut on page tree nodes to stop the
+// whole source document being pulled across.
 
 ;(function (PDF) {
   'use strict';
@@ -72,14 +69,11 @@
     }
   }
 
-  // Two unrelated things live under the key /Parent, and only one of them is a
-  // link worth cutting. On a page tree node it walks up into the source tree and
-  // straight back down through /Kids, which drags every other page across: that
-  // is the link this file exists to cut, and a page reached sideways through a
-  // link annotation's /Dest has to be cut too, not just the page being copied.
-  // On an annotation or a form field it is the link to its field, and cutting it
-  // orphans the field and takes /AcroForm down with it. So the decision belongs
-  // to what the dictionary is, never to how deep it happens to sit.
+  // Two unrelated things use the key /Parent, and only one is a link worth
+  // cutting. On a page tree node it walks up into the source tree and back
+  // down through /Kids, dragging every other page across; that is the link
+  // this file cuts. On an annotation or a form field, /Parent points within
+  // the page or the field tree and must be followed.
   const PAGE_NODE_TYPES = new Set(['Page', 'Pages']);
 
   function isPageNode(dict) {
@@ -214,8 +208,8 @@
     }
 
     // A plain, uncompressed file with a classic cross-reference table. Every
-    // reader since 1993 can open it, and it stays greppable, which is worth
-    // more here than the few percent an object-stream build would save.
+    // reader since 1993 can open it and it stays greppable, which is worth
+    // more here than the space an object-stream build would save.
     build(trailerExtras) {
       const sink = new ByteSink();
       sink.text('%PDF-' + this.version + '\n');

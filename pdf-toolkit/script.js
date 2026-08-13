@@ -1,13 +1,10 @@
-// The tool: files in, a page pile you can rearrange, files out.
-//
-// There is exactly one piece of state that matters, `pile`: an ordered list of
-// { docId, pageIndex, rotate }. Every button rewrites that list, and saving
-// hands it to PDF.ops.assemble. Merging is loading two files into one pile,
-// splitting is slicing it, deleting is filtering it, and reordering is moving
-// entries about — so none of those are separate code paths.
-//
-// Undo falls out of the same idea: because the whole document is that one list,
-// a history entry is a copy of it, and stepping back is putting a copy back.
+// The tool: files in, a reorderable pile of pages, files out. One piece of
+// state matters, `pile`: an ordered list of { docId, pageIndex, rotate }.
+// Every button rewrites that list, and saving passes it to PDF.ops.assemble.
+// Merging is loading two files into one pile, splitting is slicing it,
+// deleting is filtering it, reordering is moving entries, so none of those is
+// a separate code path. Undo follows from the same design: a history entry is
+// a copy of the list, and stepping back restores a copy.
 
 (function () {
   'use strict';
@@ -47,15 +44,16 @@
 
   // --- history ---------------------------------------------------------------
 
-  // Entries are copied one level down rather than sliced, because turning a page
-  // edits `rotate` in place: a shallow copy of the list would hand the history
-  // the very objects the next action is about to change.
+  // Entries are copied one level down rather than sliced, because rotating a
+  // page edits `rotate` in place: a shallow copy would hand the history the
+  // objects the next action is about to change.
   function stateNow() {
     return { pile: pile.map((item) => ({ ...item })), selected: Array.from(selected) };
   }
 
-  // Selection alone is not remembered. It rides along with a change so undo puts
-  // back the pages you had in hand, but clicking a card is not a step to undo.
+  // Selection is not remembered on its own. It is stored with a change so undo
+  // restores the pages that were selected, but selecting a card is not itself
+  // an undo step.
   function remember(state) {
     history.push(state || stateNow());
     if (history.length > HISTORY_MAX) history.shift();
@@ -107,10 +105,10 @@
       try {
         const bytes = new Uint8Array(await file.arrayBuffer());
         const doc = PDF.PDFDocument.load(bytes);
-        // Refused before the page count is even consulted. Standard security
-        // leaves the xref and the page tree readable, so an encrypted file
-        // looks perfectly loadable while every stream is still ciphertext:
-        // it would preview blank and save as an unreadable file.
+        // Refused before the page count is read. Standard security leaves the
+        // xref and page tree readable, so an encrypted file appears loadable
+        // while every stream is still ciphertext: it would preview blank and
+        // save unreadable.
         if (doc.encrypted) {
           problems.push(file.name + ' is password protected, which this tool cannot open yet');
           continue;
@@ -153,9 +151,9 @@
   // "The pile changed, show it." Both surfaces come through here, so an edit
   // made anywhere — including an undo — reaches whichever one is on screen.
   function render() {
-    // The grid is covered while the viewer is up, and rebuilding it there would
-    // requeue every thumbnail in the document on every keystroke. It is built
-    // once on the way out, from whatever the pile has become by then.
+    // The grid is covered while the viewer is open, and rebuilding it there
+    // would requeue every thumbnail on every keystroke. It is rebuilt once on
+    // close, from whatever the pile has become.
     if (viewAt >= 0) {
       gridStale = true;
       if (viewAt > pile.length - 1) viewAt = pile.length - 1;
@@ -283,16 +281,12 @@
 
   // --- the viewer ---------------------------------------------------------------
 
-  // The thumbnails say what order the pages are in. They are too small to say
-  // whether the right page is there, which is what you want to know before you
-  // save. So the viewer draws one page of the pile, at whatever size the window
-  // allows, in the order and the turn it will be saved with — and lets you fix
-  // what you find there, rather than sending you back to the grid to do it.
-  //
-  // It edits the page it is showing and nothing else. The grid is where you act
-  // on many pages at once, and a surface showing one page has no honest way to
-  // mean "these fourteen". Marking a page is the bridge between the two: tick
-  // pages as you read, close, and the grid has them in hand.
+  // Thumbnails show the page order but are too small to confirm the right page
+  // is present, which is what matters before saving. The viewer draws one page
+  // at the size the window allows, in the order and rotation it will be saved
+  // with, and allows edits in place. It edits only the page it is showing; the
+  // grid is where several pages are acted on at once. Marking a page connects
+  // the two: tick pages while reading, close, and the grid has them selected.
 
   const viewer = el('viewer');
   const stage = el('viewerStage');
@@ -319,9 +313,9 @@
     // The page underneath is covered, so it should not be tabbable either.
     document.querySelector('.wrap').inert = true;
     // A button takes focus, not the panel. Chrome draws its own ring around a
-    // focused container that `outline: none` does not remove, which puts a blue
-    // rectangle round the whole window. Space is handled below rather than left
-    // to whichever button has focus, so it means the same thing either way.
+    // focused container that outline: none does not remove. Space is handled
+    // below rather than left to the focused button, so it means the same thing
+    // either way.
     el('viewerClose').focus();
     drawViewer();
   }
@@ -372,9 +366,9 @@
     if (paper) paper.parentNode.classList.toggle('is-selected', marked);
   }
 
-  // How big the page may be drawn is a question about the stage, which is why
-  // the panel fills the window: a panel sized by the sheet could not be asked
-  // how much room the sheet has.
+  // The panel fills the window, because the available size is a property of
+  // the stage: a panel sized by the sheet could not report how much room the
+  // sheet has.
   function layoutSheet(canvas, sheetPaper) {
     const c = canvas || shownCanvas;
     const p = sheetPaper || paper;
@@ -408,9 +402,9 @@
     if (!item) return;
     refreshViewerBar();
 
-    // Turning a page and moving it both leave the ink alone: one is a transform
-    // on the canvas already drawn, the other is a change of place in the pile.
-    // Only a different page is worth rendering again.
+    // Rotating and moving both leave the rendered image unchanged: one is a
+    // transform on the drawn canvas, the other a change of position in the
+    // pile. Only a different page needs re-rendering.
     if (item === shownItem && shownCanvas) {
       layoutSheet();
       return;
@@ -429,8 +423,8 @@
     stage.textContent = '';
     stage.appendChild(sheet);
 
-    // Measured before the render, so the page is asked for at the size it will
-    // be shown at and the sheet holds its place while the ink is on its way.
+    // Measured before rendering, so the page is requested at the size it will
+    // be shown and the sheet holds its place while the image is produced.
     paper = fresh;
     shownCanvas = null;
     shownItem = null;
@@ -457,9 +451,9 @@
 
   // --- editing from the viewer -----------------------------------------------
 
-  // Each of these acts on the page being shown, then stays with it: turning
-  // leaves you on the same page, moving follows it to its new place, and
-  // deleting leaves you where you were, now showing whatever came next.
+  // Each of these acts on the page being shown and then follows it: rotating
+  // stays on the same page, moving follows it, and deleting leaves the index
+  // in place, showing whatever comes next.
 
   function viewerTurn(delta) {
     if (viewAt < 0) return;
@@ -483,9 +477,9 @@
     announce('Moved to place ' + (viewAt + 1) + ' of ' + pile.length + '.');
   }
 
-  // Staying at the same index means the next page slides under you, which is
-  // what you want when clearing several in a row. Past the end, render() pulls
-  // the index back to the last page.
+  // Staying at the same index brings the next page into view, which suits
+  // clearing several in a row. Past the end, render() pulls the index back to
+  // the last page.
   function viewerDelete() {
     if (viewAt < 0) return;
     const was = viewAt + 1;
@@ -547,9 +541,8 @@
       case '[': viewerTurn(-90); break;
       case ']': viewerTurn(90); break;
       case 'Delete': case 'Backspace': viewerDelete(); break;
-      // Space means the same thing wherever focus happens to be, which costs it
-      // the usual "press the focused button". Enter still does that, and a key
-      // that marked a page here and closed the viewer there would be worse.
+      // Space means the same thing wherever focus is, which costs it the usual
+      // "press the focused button". Enter still does that.
       case ' ': viewerMark(); break;
       default: return;
     }
@@ -678,15 +671,14 @@
     setSelection(pile.map((_, i) => i).filter((i) => !selected.has(i)));
   });
 
-  // The three actions below take the pages to act on rather than reading the
-  // selection themselves, because the two surfaces aim at different pages: the
-  // grid at everything you have selected, the viewer at the one page it is
-  // showing. Same list, same history, one code path.
+  // The three actions below are given the pages to act on rather than reading
+  // the selection themselves, because the two surfaces target different pages:
+  // the grid the selection, the viewer the page shown. Same list, same
+  // history, one code path.
 
-  // Which pages stay selected across an edit is a question about pages, not
-  // about positions: indices move when the pile does, the entries do not. So
-  // selection is carried over by identity, and a page ticked while reading
-  // survives deleting or moving a different one.
+  // Selection is carried across an edit by identity rather than by index,
+  // because indices move when the pile does and entries do not. A page ticked
+  // while reading survives deleting or moving a different one.
   function markedItems() {
     const items = new Set();
     for (const i of selected) if (pile[i]) items.add(pile[i]);

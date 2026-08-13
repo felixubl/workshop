@@ -1,14 +1,7 @@
-// The PDF object layer: bytes in, COS objects out.
-//
-// A PDF file is a container of eight object types (null, boolean, number,
-// string, name, array, dictionary, stream) plus indirect references between
-// them. This file turns bytes into those, and nothing more — it knows about
-// syntax, not about pages, xref tables or filters.
-//
-// Strings are kept as latin1 JS strings, one character per byte. That is
-// lossless for arbitrary binary and lets the writer put them back byte for
-// byte, which matters because a signed PDF's byte ranges must survive a
-// round trip.
+// The PDF object layer: bytes in, COS objects out. A PDF file contains eight
+// object types (null, boolean, number, string, name, array, dictionary,
+// stream) plus indirect references. This file turns bytes into those and
+// nothing more: it knows syntax, not pages, xref tables or encryption.
 
 ;(function (PDF) {
   'use strict';

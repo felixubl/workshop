@@ -1,25 +1,25 @@
-/* Tool-specific layout only — faces, buttons, fields, the tool title and the
-   toolbar band come from ../assets/base.css over the vendored system. This
-   file styles the page grid this tool invents. */
+/* Tool-specific layout only. Faces, buttons, fields, the title and the toolbar
+   come from ../assets/base.css over the vendored system. This file styles the
+   page grid. */
 
-/* Several actions belong to one label, so they sit on a row of their own
-   rather than each claiming a labelled group and tripling the toolbar. */
+/* Several actions share one label, so they sit on their own row rather than
+   each claiming a labelled group. */
 .btn-row {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-/* The tally and the way into the viewer are one thought — how many pages there
-   are, and how to look at them — so they travel together at the right end. */
+/* The page count and the link into the viewer travel together at the right
+   end. */
 .result-right {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-/* The grid is sized by the thumbnails, not the other way round: a column is
-   one page wide, and the count follows the viewport. */
+/* The grid is sized by the thumbnails: a column is one page wide, and the
+   column count follows the viewport. */
 .page-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
@@ -43,18 +43,17 @@
   cursor: var(--pp-cursor-point, pointer);
 }
 
-/* Selection is the one state the whole tool turns on, so it takes both signals
-   the laws grant, a tint and a firmer edge, and neither a lift nor a shadow.
-   The border width is deliberately left alone: widening it moves the card's
-   own height, which shifts every row below and rescales the thumbnail inside.
-   The sheet inside keeps its paper white, only the frame around it tints. */
+/* Selection takes both signals the laws allow, a tint and a firmer edge, and
+   neither a lift nor a shadow. The border width is left alone: widening it
+   changes the card height, which shifts every row below and rescales the
+   thumbnail. */
 .page-card.is-selected {
   background: var(--pp-tint);
   border-color: var(--pp-edge);
 }
 
-/* The page being dragged and the gap it would drop into read differently:
-   one is lifted, the other is a hole in the row. */
+/* The page being dragged and the gap it would drop into read differently: one
+   is lifted, the other is a hole in the row. */
 .page-card.is-dragging {
   opacity: 0.35;
 }
@@ -67,8 +66,8 @@
   box-shadow: 3px 0 0 0 var(--pp-ink);
 }
 
-/* A fixed box so the grid does not reflow as each thumbnail arrives, and so
-   portrait and landscape pages sit on the same baseline. */
+/* A fixed box, so the grid does not reflow as thumbnails arrive and portrait
+   and landscape pages share a baseline. */
 .page-thumb {
   display: flex;
   align-items: center;
@@ -84,7 +83,7 @@
   display: block;
   max-width: 100%;
   max-height: 100%;
-  /* A page is a sheet of paper; it keeps its own white in dark mode. */
+  /* A page is a sheet of paper and keeps its white in dark mode. */
   background: #fff;
 }
 
@@ -115,8 +114,8 @@
   color: var(--pp-faint);
 }
 
-/* Rotation is state the thumbnail already shows, but only if you know which
-   way up the page started, so it is also stated in words. */
+/* Rotation is visible in the thumbnail only if the original orientation is
+   known, so it is also stated in words. */
 .page-cap .turn {
   margin-left: auto;
   color: var(--pp-ink);
@@ -126,11 +125,10 @@
   margin-top: 4px;
 }
 
-/* --- the viewer ------------------------------------------------------------
-   The shell is the system's: .modal, .scrim, .modal__panel, .modal__bar and
-   .modal__body carry the scrim, the edge and the one hard cast. What is left
-   here is what only this tool wants, a caption naming the page, a sheet of
-   paper to draw it on, and a bar of things to do to it. */
+/* The viewer. The shell is the system's: .modal, .scrim, .modal__panel,
+   .modal__bar and .modal__body carry the scrim, the edge and the cast. What is
+   here is only what this tool adds: a caption naming the page and a sheet to
+   draw it on. */
 
 /* The panel fills the window rather than shrinking to the page. Two reasons,
    and the second is the load-bearing one: a page you are working on wants the

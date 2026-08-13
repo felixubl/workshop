@@ -1,12 +1,9 @@
-// The document layer: a file of objects becomes a document with pages.
-//
-// Finding an object in a PDF means walking backwards. The last line points at
-// a cross-reference section, that section points at objects and at the section
-// before it, and so on to the start of the file. There are two incompatible
-// formats for those sections (a text table, and a compressed stream), files
-// that use both at once, and files whose offsets are simply wrong — which is
-// why every path here ends in the same fallback: read the whole file and look
-// for object headers directly.
+// The document layer: a file of objects becomes a document with pages. Finding
+// an object means walking backwards. The last line points at a cross-reference
+// section, that section points at objects and at the section before it, and so
+// on to the start of the file. There are two incompatible formats for those
+// sections, and damaged files have neither, so this also reconstructs the
+// table by scanning for object headers.
 
 ;(function (PDF) {
   'use strict';

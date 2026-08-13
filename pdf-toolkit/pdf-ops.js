@@ -1,11 +1,7 @@
-// Page operations.
-//
-// Merging, splitting, extracting, deleting, reordering and rotating look like
-// six features, but they are one: each produces an ordered list of "take page
-// P out of document D, turned by R degrees". Everything below builds such a
-// list and hands it to assemble(), so there is a single piece of code that
-// knows how to construct an output file, and a single place where a bug in
-// that construction can live.
+// Page operations. Merging, splitting, extracting, deleting, reordering and
+// rotating are one operation: each produces an ordered list of "take page P
+// from document D, rotated by R degrees". Everything below builds such a list
+// and passes it to assemble().
 
 ;(function (PDF) {
   'use strict';

@@ -1,14 +1,8 @@
-// Stream filters: encoded bytes in, decoded bytes out.
-//
-// Every filter here is synchronous on purpose. The browser ships an inflate in
-// DecompressionStream, but it only speaks Promises, and a PDF renderer decodes
-// streams inside the innermost loop it has — a Form XObject inside a pattern
-// inside a page. Making that path async would turn the whole engine inside out
-// to save two hundred lines, so the inflate below is written out longhand.
-//
-// The image filters (DCT, JPX, JBIG2, CCITT) are deliberately *not* decoded
-// here. They are left encoded and flagged, because a JPEG is better handed to
-// the browser's own image decoder than unpacked by us.
+// Stream filters: encoded bytes in, decoded bytes out. Every filter here is
+// synchronous. The browser provides inflate in DecompressionStream, but only
+// as a Promise, and a PDF renderer decodes streams in its innermost loop, so
+// an async boundary there would spread through the whole renderer. The inflate
+// below is therefore written out.
 
 ;(function (PDF) {
   'use strict';
@@ -146,10 +140,10 @@
       return e & 0xffff;
     }
 
-    // A damaged stream is worth more than an exception: half a content stream
+    // A damaged stream is more useful than an exception: half a content stream
     // still draws most of a page, and half a font still measures text. The
-    // loop below breaks out on any malformed block and returns the prefix,
-    // leaving it to the caller to notice that nothing at all came back.
+    // loop below breaks on a malformed block and returns the prefix, leaving
+    // the caller to detect that nothing was decoded.
     try {
     for (;;) {
       // Past the end with no final block seen: the stream is truncated, and
