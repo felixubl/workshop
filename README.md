@@ -13,25 +13,21 @@ all of them:
 
 | rung | what it means |
 |---|---|
-| `local` | Nothing leaves the page. It is fetched once and then runs on your machine. |
-| `fetch` | It asks somebody else for public data. Nothing you gave it goes out, but the request does, and a request is your address and what you asked for. |
-| `send` | Something you gave it goes out to be worked on and comes back. It is not kept. |
-| `store` | Something you gave it is kept on a server. The tool says whose. |
-| `account` | Kept, and tied to a name you signed in with. |
+| `local` | Nothing leaves your machine. |
+| `fetch` | Reads public data from a third party. Nothing of yours is sent; the request still reveals your IP. |
+| `send` | Something of yours is uploaded, processed and returned. Not kept. |
+| `store` | Something of yours is kept on a server. The tool says whose. |
+| `account` | Kept, and tied to a login. |
 
-The ladder is printed in ink and never in a plate, because the plates are the
-index's *category* vocabulary — the cast on a card, the square in front of a
-queued name — and a second colour code on the same object would make both
-harder to trust. Invasiveness is measured in ink coverage instead: five small
-squares driven in from the left, and a word that darkens as the rung rises.
-The key at the foot of the index defines all five, and it is the only place
-one is spelled out: a card carries the rating and stops there.
+The ladder is printed in ink, not in a plate: the plates are the index's
+*category* vocabulary, and a second colour code on the same card would make
+both harder to read. It shows as five small squares filled from the left, with
+the word darkening as the rung rises. The key at the foot of the index defines
+all five; a card carries the rating and nothing more.
 
-Nothing on the bench is above `fetch` today — six tools never open a socket,
-and three read public data and keep nothing. `store` and `account` are printed
-unused because the tools that will need them (Convex, Supabase, or something
-self-hosted on a VPS) are planned, and a scale written to describe what already
-exists is a scale bent to fit it.
+No tool is above `fetch` today: six never open a socket, three read public data
+and keep nothing. `store` and `account` are defined ahead of the tools that will
+need them (Convex, Supabase, or self-hosted).
 
 Each of the three on `fetch` names who it is about to talk to on its own page,
 before anything is sent, and in two of them the traffic is the subject rather
