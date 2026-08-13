@@ -79,11 +79,15 @@ input[type='number'] {
   border: 0;
 }
 
-/* Layout shell shared by every page */
+/* Layout shell shared by every page. The top pad is the header's rather than
+   the wrap's, so the header's box starts at the very top of the page: the bench
+   lamp hangs off that edge and is clipped by that box, and a header inset from
+   the top would leave the lamp starting in mid-air and its light stopping short
+   of the spine. Nothing else moves — the pad is the same, one element down. */
 .wrap {
   max-width: var(--pp-page-max);
   margin: 0 auto;
-  padding: clamp(2rem, 5vw, 3rem) var(--pp-gutter) clamp(2.5rem, 6vw, 4rem);
+  padding: 0 var(--pp-gutter) clamp(2.5rem, 6vw, 4rem);
 }
 
 /* The spine: a 6px solid rule marking a break, used once per page. Nothing
@@ -99,6 +103,7 @@ header {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+  padding-top: clamp(2rem, 5vw, 3rem);
   padding-bottom: 1.25rem;
 }
 
@@ -251,12 +256,14 @@ header {
   margin: 0 0 1rem;
 }
 
-/* The mode control belongs to core.css and is not drawn here. The workshop
-   takes the pull cord rather than the swatch; both are core's parts. */
-.wrap,
-.masthead {
+/* The mode control is the workshop's own bench lamp, drawn in assets/site.css
+   in place of either of the system's two. It hangs off the top edge of whatever
+   element holds it: the masthead on the index, the header on a tool page. Both
+   are the element whose top edge IS the top of the page, which is the one thing
+   a hanging fixture needs from its container. */
+.masthead,
+.wrap > header {
   position: relative;
-  --pp-cord-inset: calc(var(--pp-gutter) - 16px);
 }
 
 /* Buttons. Border weight is the hierarchy: 2px primary, 1px secondary. Hover

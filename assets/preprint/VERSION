@@ -1,5 +1,7 @@
-4c024f1
-# PREPRINT, vendored from /Users/felixubl/code/preprint. Do not edit anything in this
+a189e7b
+# PREPRINT, vendored from /workspace/felixubl/preprint. Do not edit anything in this
 # directory: run tools/sync-preprint here, or tools/push in the
-# system, instead. tokens/fonts.css is this site's self-hosted
-# override and is deliberately not synced.
+# system, instead. tokens/fonts.css was seeded by the first sync
+# and is this site's own file now: self-host the faces there.
+# The rules are AGENTS.md, beside this file. The identity, as data,
+# is colophon.json.

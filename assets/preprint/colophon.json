@@ -1,0 +1,156 @@
+{
+  "colophon": 1,
+  "system": "PREPRINT",
+  "premise": "a scientific preprint, printed first, then annotated by hand",
+  "about": "The colophon: what this thing is set in, as data. A book's colophon names its faces, its paper and its inks. This one does the same for the design language, machine-readably, and it is vendored beside the tokens so any tool or agent can learn what never changes without the system repository present. tools/check verifies every value here against the token CSS, so this file cannot quietly drift from what actually ships.",
+  "source": "https://github.com/felixubl/preprint",
+  "vendored-to": "assets/preprint/",
+  "read-first": "AGENTS.md beside this file. In the system repository, readme.md and guidelines/invariants.md.",
+
+  "namespace": {
+    "prefix": "--pp-",
+    "rule": "a site's own variables live under the site's own prefix, and a --pp-* the system does not define is squatting"
+  },
+
+  "invariants": {
+    "note": "The identity. Restate one of these in a site's own layer and the family stops being a family. Everything not listed here, and not a law, is the site's own call.",
+    "tokens": {
+      "--pp-paper": { "light": "#fbfbf9", "dark": "#141413" },
+      "--pp-surface": { "light": "#ffffff", "dark": "#1c1c1a" },
+      "--pp-sunk": { "light": "#f2f2ee", "dark": "#0e0e0d" },
+      "--pp-ink": { "light": "#171716", "dark": "#efeee8" },
+      "--pp-hair": { "light": "rgba(23, 23, 22, .11)", "dark": "rgba(239, 238, 232, .13)" },
+      "--pp-line": { "light": "rgba(23, 23, 22, .27)", "dark": "rgba(239, 238, 232, .30)" },
+      "--pp-edge": { "light": "#171716", "dark": "#efeee8" },
+      "--pp-plate-1": { "light": "#01a368", "dark": "#26d494" },
+      "--pp-plate-2": { "light": "#ed0a3f", "dark": "#ff4d68" },
+      "--pp-plate-3": { "light": "#0066ff", "dark": "#6a9dff" },
+      "--pp-plate-1-text": { "light": "#017a4e", "dark": "#45e2a6" },
+      "--pp-plate-2-text": { "light": "#c8082f", "dark": "#ff8b9d" },
+      "--pp-plate-3-text": { "light": "#0052cc", "dark": "#9dbfff" },
+      "--pp-marker-citron": { "light": "rgba(222, 238, 46, .62)", "dark": "rgba(222, 238, 46, .32)" },
+      "--pp-marker-pink": { "light": "rgba(255, 79, 163, .34)", "dark": "rgba(255, 79, 163, .30)" },
+      "--pp-marker-cyan": { "light": "rgba(64, 204, 255, .38)", "dark": "rgba(64, 204, 255, .30)" }
+    },
+    "plates": "pressed with the page: full strength, never translucent, no fixed meaning, never a fill behind white, and below 18px they hand over to their -text companions",
+    "markers": "added afterwards: translucent, and only ever a field behind type, via .mk--citron, .mk--pink, .mk--cyan or data-pp-mark, never a raw background and never a text colour"
+  },
+
+  "faces": {
+    "display": { "family": "Hepta Slab", "job": "display, weight and size" },
+    "body": { "family": "Zilla Slab", "job": "anything read at length" },
+    "mono": { "family": "Cousine", "job": "anything the machine said" },
+    "math": { "family": "Source Serif 4", "job": "inside mathematics only", "optional": "a site with no mathematics omits it by declaring so in its tokens/fonts.css" },
+    "rule": "three faces, three jobs. A face never takes a job that belongs to another."
+  },
+
+  "type": {
+    "body": "17px over a 66-character column at 1.68",
+    "micro-floor": "13px, and nothing goes below it"
+  },
+
+  "scales": {
+    "radius": {
+      "px": [2, 3, 4, 6],
+      "rule": "the cut scale: trimmed rather than moulded, rising with control size",
+      "pill": "tags only, never a step"
+    },
+    "space": { "px": [4, 8, 12, 20, 32, 52] },
+    "rules": {
+      "weights-px": { "hairline": 1, "line": 1, "structure": 2, "spine": 6 },
+      "styles": {
+        "solid": "structure",
+        "dotted": "provisional or optional",
+        "dashed": "a boundary the reader may cross"
+      }
+    },
+    "measure": "66ch",
+    "narrow-line-px": 820,
+    "targets-px": {
+      "floor": 44,
+      "prominent-wide": 52,
+      "prominent-narrow": 46,
+      "compact": 36,
+      "touch": "compact meets the floor where hover is none"
+    }
+  },
+
+  "mode": {
+    "attribute": "data-mode",
+    "values": ["light", "dark"],
+    "storage": "preprint-mode",
+    "script": "js/mode.js",
+    "api": "window.PreprintMode: toggle, other, relabel",
+    "hooks": ["[data-mode-toggle]", "[data-mode-label]"],
+    "rule": "one dark mode for every surface, set on the root element before first paint, never forked per site or per page"
+  },
+
+  "motion": {
+    "licences": [
+      "the process is time",
+      "continuity of state",
+      "confirming the irreversible",
+      "restoring position"
+    ],
+    "durations-ms": { "fast": 90, "state": 140, "confirm": 200, "mode": 520 },
+    "ease": "cubic-bezier(.2, .7, .3, 1)",
+    "reduced": "prefers-reduced-motion sets every duration token to 0ms",
+    "rule": "everything else is still, including on load and on scroll"
+  },
+
+  "interdictions": [
+    "gradients",
+    "blur",
+    "transparency as decoration",
+    "soft glow shadows: a cast is a hard offset (5px 5px 0) or there is no cast",
+    "hover lifts",
+    "entrance animations, scroll reveals, parallax",
+    "looping accents, skeleton shimmer",
+    "emoji, anywhere",
+    "icons off the angle law",
+    "a marker as text colour",
+    "a plate as running text below 18px",
+    "a plate as a fill behind white",
+    "pill radius outside tags"
+  ],
+
+  "assets": {
+    "icons": 28,
+    "pointers": 13,
+    "pointer-modes": ["light", "dark"],
+    "angle-law": "16-unit grid, 1.35px stroke, square caps, horizontal, vertical and 45 degrees only, at most one filled square per glyph"
+  },
+
+  "surfaces": {
+    "reading": "surfaces/reading.css",
+    "app": "surfaces/app.css",
+    "rule": "load one, never both: .btn, .note, .rail and .head__row name different objects in the two sheets"
+  },
+
+  "laws": {
+    "source": "guidelines/laws.md",
+    "law-00": "two licensed breaches in one view cancel each other, so budget one per view",
+    "marker": "a breach is declared in place, in a comment: breach(NN): what, and why. An undeclared deviation is drift. See guidelines/transfer.md.",
+    "table": [
+      { "n": "01", "law": "corners follow the surface's scale", "breach": "one element borrows a radius from another scale", "budget": "1 / view" },
+      { "n": "02", "law": "type sits on the scale", "breach": "one line leaves it, in size, weight or face", "budget": "1 / page" },
+      { "n": "03", "law": "everything meets the column", "breach": "one element crosses or bleeds past it", "budget": "1 / section" },
+      { "n": "04", "law": "two elevation levels", "breach": "one element casts a hard offset instead of a soft one", "budget": "1 / view" },
+      { "n": "05", "law": "plates carry no fixed meaning", "breach": "one element claims a plate semantically", "budget": "1 / flow" },
+      { "n": "06", "law": "nothing sits off-axis", "breach": "one element rotates, up to 1.5 degrees", "budget": "1 / page" },
+      { "n": "07", "law": "density is uniform", "breach": "one section takes twice the air, or half", "budget": "1 / page" }
+    ]
+  },
+
+  "moves": {
+    "vendor": "system to site, by tools/sync, into assets/preprint/, committed",
+    "promote": "site to system, when a second surface wants the thing, by changing the system at its source",
+    "quote": "site to site, never: route it through the system or leave it home",
+    "source": "guidelines/transfer.md"
+  },
+
+  "checks": {
+    "conformance": "tools/conformance.js reads a site's own layer and fails on restated invariants, a squatted namespace, and survivors of earlier systems",
+    "system": "tools/check reads the system repository and fails when this file, the docs and the disk disagree"
+  }
+}
