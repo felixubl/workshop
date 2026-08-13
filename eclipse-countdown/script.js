@@ -1,20 +1,7 @@
-/* Eclipse Countdown.
-
-   One question, asked properly: from where I am standing, when does the Moon
-   next cross the Sun, and what will it look like when it does?
-
-   Everything on the page comes from two files borrowed from Eclipse Recon
-   next door — the catalogue of Besselian elements (js/eclipses.js) and the
-   reduction of them (js/bessel.js). Nothing about an eclipse is stored here,
-   and nothing is fetched to compute one: a date, a set of coefficients and a
-   pair of coordinates are enough for every number on this page. The one
-   thing this tool cannot know on its own is where "Reykjavík" is, and that is
-   the only request it ever makes.
-
-   The drawing is the geometry, not an illustration of it. The Moon's centre
-   is placed at the true separation and the true position angle for the
-   instant on the clock, rotated so the zenith is up, which is how a sky looks
-   to someone standing in it. */
+/* Eclipse Countdown. From a given position, when is the next eclipse and what
+   will it look like? Everything comes from two files borrowed from Eclipse
+   Recon: the catalogue and the Besselian engine. This file holds no eclipse
+   data and no eclipse arithmetic of its own. */
 (function () {
   'use strict';
 
@@ -55,22 +42,23 @@
 
   /* ================= the catalogue ================= */
 
-  /* Recon's shipped records, plus anything a reader pasted into Recon from a
-     NASA page. Reading its store rather than keeping one of our own means an
-     eclipse added over there is simply here too. */
+  /* Recon's shipped records plus anything pasted into Recon from a NASA page.
+     Reading its store rather than keeping a separate one means an eclipse
+     added there appears here too. */
   function catalogue() {
     var all = ECLIPSES.slice();
     try {
       JSON.parse(localStorage.getItem(RECON_STORE) || '[]').forEach(function (e) {
         if (e && e.id && !all.some(function (x) { return x.id === e.id; })) all.push(e);
       });
-    } catch (err) { /* a broken store is no extra eclipses, not a broken page */ }
+    } catch (err) { /* A broken store means no extra eclipses, not a broken
+                       page. */ }
     return all.sort(function (a, b) { return a.id < b.id ? -1 : 1; });
   }
 
-  /* Every eclipse on file, as it stands at this position: its local
+  /* Every eclipse on file as it stands at this position: its local
      circumstances (null when the eclipse never reaches there), and the moment
-     it is done with, so an eclipse already over drops out. */
+     it ends, so a past eclipse drops out. */
   function survey(lat, lon) {
     return catalogue().map(function (ecl) {
       var circ = Bessel.localCircumstances(ecl, lat, lon, 0);
@@ -83,10 +71,10 @@
 
   /* ================= the geometry of one instant ================= */
 
-  /* What the Sun looks like at a given moment: how far the Moon's centre is
-     from it (in Sun radii), how big the Moon is against it, which way it lies
-     with the zenith up, and how high the Sun itself is. Null outside the
-     window the elements were fitted over, where the polynomials are fiction. */
+  /* What the Sun looks like at a given moment: the Moon's centre distance from
+     it in Sun radii, the Moon's size against it, its orientation with the
+     zenith up, and the Sun's altitude. Null outside the window the elements
+     were fitted over. */
   function frameAt(ecl, at) {
     var day = Date.UTC(ecl.date[0], ecl.date[1] - 1, ecl.date[2]);
     var t = (at - day) / 3600000 + ecl.deltaT / 3600;   // TT hours on the day
@@ -124,16 +112,13 @@
         '</pattern>',
       '</defs>',
       '<rect class="sky" x="-150" y="-150" width="300" height="300"/>',
-      /* Two plates and their overprint, which is the whole drawing. The Sun
-         is printed in plate 2 and the Moon in plate 3, both solid; where
-         they land on the same paper the ink is the product of the two, as
-         it would be off a press. So the three regions name themselves —
-         plate 2 is Sun nobody is covering, plate 3 is Moon standing off the
-         Sun's face, the dark overprint is exactly the bite — and no
-         cleverness is needed to see which is which. It reads the same at
-         second contact as at first: when the overprint has eaten the whole
-         Sun, what is left around it is a ring of plate 3, and that ring
-         changing thickness IS the Moon moving. */
+      /* Two plates and their overprint. The Sun is printed in plate 2 and the
+         Moon in plate 3, both solid; where they overlap the ink is the product
+         of the two, as it would be off a press. The three regions are
+         therefore self-describing: plate 2 is uncovered Sun, plate 3 is Moon
+         off the Sun's face, and the dark overprint is the covered part. At
+         second contact the remaining ring of plate 3 is the Moon beyond the
+         Sun's edge. */
       '<circle class="sun" cx="0" cy="0" r="' + SUN_PX + '"/>',
       '<circle class="moon-off" id="ec-off" cx="0" cy="0" r="0"/>',
       '<g class="moon-cut" id="ec-cut"><circle class="moon-body" id="ec-body" cx="0" cy="0" r="0"/></g>',
@@ -242,30 +227,20 @@
   }
 
 
-  /* ================= the system, seen from outside =================
-
-     The same instant the disc draws, from a place nobody stands: the Moon,
-     its shadow, and the Earth the shadow lands on. Nothing here is
-     decoration — every distance is read off the elements.
-
-     What is true in the picture. The Earth's radius is the unit. The Moon
-     sits where BOTH cones have the Moon's own radius, which the elements
-     agree on to about a tenth of a percent — it is one body seen two ways,
-     and the agreement is the check that the drawing is the geometry rather
-     than a sketch of it. The cone edges are the real cones: the penumbra
-     opening to l1 at the fundamental plane, the umbra closing to a point at
-     l2/tan f2. Where that point falls is the whole story — past the Earth's
-     surface and somebody sees totality, short of it and the same eclipse is
-     annular. The axis sits its true distance off the Earth's centre, so the
-     shadow crosses high or low exactly as it will on the day.
-
-     What is not. Along-axis distance is compressed, and the caption says by
-     how much: the Moon is 57 Earth radii away and the Earth is one radius
-     across, so a true side view is a hair 23 times longer than it is tall.
-     Heights stay true — the cone's taper is therefore exaggerated by the
-     same factor as the compression, which is the one lie, and it is the lie
-     that makes the taper visible at all. The Sun is not drawn: it is 400
-     times further again, off to the left, and an arrow says so. */
+  /* The system, seen from outside: the Moon, its shadow, and the Earth the
+     shadow falls on, at the same instant the disc draws. Every distance is
+     read from the elements. The Earth's radius is the unit. The Moon sits
+     where both cones have the Moon's own radius, which the elements agree on
+     to about a tenth of a percent. The cone edges are the real cones: the
+     penumbra opening to l1 at the fundamental plane, the umbra closing to a
+     point at l2/tan f2. Whether that point falls before or after the Earth's
+     surface is what makes the eclipse total or annular. The axis sits its true
+     distance from the Earth's centre. One distortion: along-axis distance is
+     compressed, and the caption states the factor. The Moon is 57 Earth radii
+     away and the Earth is one radius across, so a true side view would be 23
+     times longer than tall. Heights stay true, so the cone's taper is
+     exaggerated by the same factor, which is what makes it visible. The Sun is
+     not drawn; an arrow marks its direction. */
 
   var MOON_R = 0.2725076;      // Moon radius, in Earth radii
   var SYS = { w: 340, h: 128, cx: 246, cy: 64, re: 30 };
@@ -648,24 +623,16 @@
 
   /* ================= preview ================= */
 
-  /* The eclipse, played through in fifteen seconds — but not at one speed.
-     Run linearly, an hour of partial phases either side of a minute of
-     totality would spend a tenth of a second on the only part anybody came
-     for. Run in three stretches at three fixed rates, as this did, the rate
-     JUMPS twice: the Moon tears across, parks for four and a half seconds
-     over three pixels of travel, then tears off again. Both readings of the
-     eclipse are wrong, and the second one reads as a fault in the page.
-
-     So the rate is a smooth function of where the eclipse has got to —
-     fastest at the ends, slowest through the middle, with no step anywhere
-     and no dead stop. The curve is smoothstep, flat where it starts, so the
-     pace eases out of totality rather than popping out of it; and it
-     reaches full speed at KNEE rather than at the very end, so the outer
-     half runs at one steady pace instead of accelerating into first and
-     last contact. The mapping is built once as a table of eclipse-time
-     against preview-progress and read back by interpolation; the rate is
-     printed as it goes, which is what makes the slowdown a stated fact
-     rather than a trick. */
+  /* The eclipse played through in fifteen seconds, at a varying rate. At a
+     constant rate, an hour of partial phase either side of a minute of
+     totality would spend a tenth of a second on totality. At three fixed rates
+     the speed jumps twice, which reads as a fault. So the rate is a smooth
+     function of progress: fastest at the ends, slowest through the middle,
+     with no step and no stop. The curve is smoothstep, flat at the start, and
+     reaches full speed at KNEE rather than at the end, so the outer half runs
+     at one steady pace. The mapping is built once as a table of eclipse time
+     against preview progress and read back by interpolation. The current rate
+     is printed as it runs. */
   var PREVIEW_STEPS = 240;
   var PREVIEW_FAST = 16;        // how many times the middle's pace the ends run at
   var PREVIEW_KNEE = 0.45;      // how far out full speed is reached
@@ -733,12 +700,10 @@
 
   /* ================= the horizon ================= */
 
-  /* Recon asks the terrain a wide question and draws a wide picture of it.
-     Here the question is narrower and so is the frame: only the strip of sky
-     this eclipse crosses, printed upright, because a Sun near setting moves
-     mostly downward and a tall frame is where that reads. The axes are
-     therefore NOT at the same scale — degrees are marked on both so the
-     stretch is stated rather than implied. */
+  /* Recon asks the terrain a wide question and draws a wide figure. Here the
+     question is narrower: only the strip of sky this eclipse crosses, drawn
+     upright, because a Sun near setting moves mostly downward. The axes are
+     therefore not at the same scale, and degrees are marked on both. */
 
   var hz = { scan: null, key: null, busy: false };
 
@@ -748,12 +713,10 @@
       : null;
   }
 
-  /* The window the figure is about. Not the whole eclipse: two and a half
-     hours of partial phases drawn end to end put the minute of totality
-     inside a single pixel, and that minute is the entire question. So the
-     frame is the quarter hour either side of the central phase — the
-     approach, the event, the exit — or, when there is no central phase,
-     the half hour either side of maximum. */
+  /* The window the figure covers. Not the whole eclipse: two and a half hours
+     of partial phase drawn end to end would put the minute of totality inside
+     one pixel. The frame is the quarter hour either side of the central phase,
+     or the half hour either side of maximum when there is no central phase. */
   function hzWindow() {
     var c = state.circ;
     var pad = 12 / 60;                          // hours

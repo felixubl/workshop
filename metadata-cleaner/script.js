@@ -473,12 +473,10 @@
     return pair[1] === 0 ? NaN : pair[0] / pair[1];
   }
 
-  /* The one number a formatter wants, whatever numeric type it was stored in.
-     Exposure time and aperture are RATIONAL by the specification and that is
-     what cameras write, but plenty of software writes them as a float or a
-     plain integer instead. Reading only the specified type turns a perfectly
-     legible value into the word "invalid", which reads as a fault in the file
-     rather than a gap in the reader. */
+  /* The single number a formatter needs, whatever numeric type it was stored
+     in. Exposure time and aperture are rational by specification, but some
+     software writes them as a float or an integer. Reading only the specified
+     type would report a legible value as invalid. */
   function scalar(value, index = 0) {
     if (value.rationals && value.rationals.length > index) return ratio(value.rationals[index]);
     if (value.numbers && value.numbers.length > index) return value.numbers[index];
@@ -709,13 +707,11 @@
     return null;
   }
 
-  /* ── TIFF, reading ─────────────────────────────────────────────────────
-     EXIF is a TIFF file, wherever it is stored: a JPEG APP1 segment, a PNG
-     eXIf chunk, a WebP EXIF chunk. The block is sliced out first so that every
-     offset inside is relative to zero. Offsets in a TIFF are relative to the
-     first byte of the II/MM header and nothing else, and getting that wrong is
-     the single most common bug in EXIF code — slicing makes it impossible to
-     express. */
+  /* TIFF, reading. EXIF is a TIFF file wherever it is stored: a JPEG APP1
+     segment, a PNG eXIf chunk, a WebP EXIF chunk. The block is sliced out
+     first so every offset inside is relative to zero. Offsets in a TIFF are
+     relative to the first byte of the II/MM header, and slicing makes it
+     impossible to get that wrong. */
 
   const TYPE_SIZE = [0, 1, 1, 2, 4, 8, 1, 1, 2, 4, 8, 4, 8, 4];
   const POINTER_TAGS = new Set([0x8769, 0x8825, 0xa005]);

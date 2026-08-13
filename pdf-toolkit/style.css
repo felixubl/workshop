@@ -130,11 +130,9 @@
    here is only what this tool adds: a caption naming the page and a sheet to
    draw it on. */
 
-/* The panel fills the window rather than shrinking to the page. Two reasons,
-   and the second is the load-bearing one: a page you are working on wants the
-   room, and a panel sized by the sheet cannot be asked how much room the sheet
-   has. Filling the window makes the stage measurable, so the fit is read off
-   the box instead of guessed at from a sum of paddings. */
+/* The panel fills the window rather than shrinking to the page, so the
+   available size can be measured: a panel sized by the sheet cannot report how
+   much room the sheet has. */
 #viewer .modal__panel {
   width: 100%;
   height: 100%;

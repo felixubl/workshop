@@ -229,16 +229,11 @@ var timer = null;
 function run() {
   var v = field.value;
   showWord(v);
-  /* The hash is the deep link, and it is deliberately not what the copy-link
-     button copies: that button belongs to the tool, and every tool on this site
-     hands over its own address rather than its current state.
-
-     Clearing it takes the real path and not the ' ' that stood here — a single
-     space is not a URL, and a browser resolving one is doing something
-     undefined rather than something agreed. In a try, because Safari throws
-     once replaceState is called more than a hundred times in thirty seconds,
-     and losing the deep link for a moment is not a reason to stop answering
-     the question the reader is typing. */
+  /* The hash is the deep link. The copy-link button deliberately copies the
+     tool's address rather than the current state, as every tool on this site
+     does. Clearing it uses the real path rather than a single space, which is
+     not a valid URL. Wrapped in a try, because Safari throws after about a
+     hundred replaceState calls in thirty seconds. */
   var slug = ABC.normalise(v).word.toLowerCase();
   var next = slug ? '#' + encodeURIComponent(slug) : location.pathname + location.search;
   if (location.hash.slice(1) === slug) return;
@@ -265,16 +260,10 @@ var fromHash = decodeURIComponent(location.hash.slice(1) || '');
 field.value = fromHash;
 showWord(fromHash);
 
-/* Focus on load, but NOT on a touch screen, and this is a bug fix rather than
-   a nicety. A phone will not open its keyboard for a script — that needs a
-   real gesture — so the field arrived already focused, showing a caret, with
-   no keyboard under it. The tap that should then have raised one lands on an
-   input that is ALREADY focused, which iOS treats as moving the caret rather
-   than as entering the field, so it often raises nothing at all. A caret you
-   cannot type into is worse than no caret: the page looks broken instead of
-   looking untouched.
-
-   (hover: none) is the system's own test for a finger rather than a pointer —
-   it is what tokens/rules.css uses to drop the compact target rung — so the
-   question is asked here the same way it is asked there. */
+/* Focus on load, but not on a touch screen. A phone will not open its keyboard
+   for a script, so the field would arrive focused with a caret and no
+   keyboard. The tap that should raise one then lands on an already-focused
+   input, which iOS treats as moving the caret rather than entering the field,
+   so often nothing appears. (hover: none) is the system's own test for a
+   finger rather than a pointer, and is what tokens/rules.css uses. */
 if (!window.matchMedia || !window.matchMedia('(hover: none)').matches) field.focus();

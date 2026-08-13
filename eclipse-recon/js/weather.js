@@ -1,13 +1,7 @@
-/* Eclipse Recon — the weather desk.
-   Three modes, chosen by how far away the event is:
-   - forecast     eclipse within ~15 days: the Open-Meteo forecast, hourly
-   - archive      eclipse in the past: what the sky actually did (ERA5)
-   - climatology  eclipse further out: the same calendar date over the last
-                  ten years of ERA5, averaged — the odds, not a promise
-
-   Endpoints: api.open-meteo.com, archive-api.open-meteo.com,
-   geocoding-api.open-meteo.com (search), api.bigdatacloud.net (name for a
-   coordinate). All keyless. Nothing is sent until a mode that needs it runs. */
+/* Eclipse Recon: the weather client. Three modes, chosen by how far away the
+   event is. Within about 15 days: the Open-Meteo hourly forecast. In the past:
+   the ERA5 archive. Further out: climatology, the mean of the same calendar
+   date over recent years. */
 
 var Wx = (function () {
   'use strict';

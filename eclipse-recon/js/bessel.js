@@ -1,16 +1,9 @@
-/* Eclipse Recon — the engine.
-   Classical Besselian-element reduction, after Meeus ("Elements of Solar
-   Eclipses") and the Explanatory Supplement. Everything works in the
-   fundamental plane: the plane through Earth's centre perpendicular to the
-   Moon's shadow axis. The elements say where the axis and the two shadow
-   cones are; the observer is rotated into that frame and the rest is circle
-   geometry.
-
-   Conventions used throughout:
-   - time is decimal hours TT on the eclipse day; UT = TT - deltaT/3600
-   - longitude is degrees east-positive, latitude degrees north-positive
-   - the smooth-limb Moon: no Baily's-beads limb corrections, so contact
-     times at the very edge of the band carry a few seconds of uncertainty */
+/* Eclipse Recon: the engine. Classical Besselian-element reduction, after
+   Meeus (Elements of Solar Eclipses) and the Explanatory Supplement.
+   Everything works in the fundamental plane: the plane through Earth's centre
+   perpendicular to the Moon's shadow axis. Inputs are the polynomial elements;
+   outputs are contact times, magnitude, obscuration, Sun position and the path
+   of the umbra. */
 
 var Bessel = (function () {
   'use strict';
@@ -82,8 +75,9 @@ var Bessel = (function () {
     };
   }
 
-  /* Sun's geometric altitude/azimuth for the observer, using the shadow
-     axis as the Sun's direction (they differ by under half an arcminute). */
+  /* The Sun's geometric altitude and azimuth for the observer, using the
+     shadow axis as the Sun's direction. The two differ by under half an
+     arcminute. */
   function sunAltAz(ecl, t, lat, lonDeg) {
     var el = elements(ecl, t);
     var H = el.mu + (lonDeg - ROT * ecl.deltaT) * RAD;
@@ -97,10 +91,10 @@ var Bessel = (function () {
     return { alt: alt, az: ((az % 360) + 360) % 360 };
   }
 
-  /* Parallactic angle: the position angle of the zenith as seen at the Sun,
-     degrees east of north. The eclipse geometry comes out in the celestial
-     frame, where north is up; a drawing of the Sun as an eye actually sees it
-     wants the zenith up instead, and this is the rotation between the two. */
+  /* Parallactic angle: the position angle of the zenith as seen at the Sun, in
+     degrees east of north. The eclipse geometry is computed in the celestial
+     frame, where north is up; a drawing of the Sun as seen by an observer
+     needs the zenith up instead. */
   function parallactic(ecl, t, lat, lonDeg) {
     var el = elements(ecl, t);
     var H = el.mu + (lonDeg - ROT * ecl.deltaT) * RAD;
@@ -366,13 +360,11 @@ var Bessel = (function () {
       center.push(entry);
     }
 
-    /* The band does not end where the axis leaves the Earth: the umbra is
-       a wide low-Sun ellipse by then, and it keeps grazing the ground for
-       minutes more — the 2026 path covers the Balearics entirely inside
-       that cap, at totality durations over a minute. Both caps are walked
-       with the axis projected onto the disc's rim standing in for the
-       centre, which continues the track smoothly where the axis itself
-       has left. */
+    /* The band does not end where the axis leaves the Earth: by then the umbra
+       is a wide low-Sun ellipse and keeps grazing the ground for minutes more.
+       The 2026 path covers the Balearics entirely inside that cap, at totality
+       durations over a minute. Both caps are walked with the axis projected
+       onto the disc's rim standing in for the centre. */
     function cap(dir) {
       if (!center.length) return;
       var edgeIdx = dir > 0 ? center.length - 1 : 0;
@@ -410,27 +402,23 @@ var Bessel = (function () {
     cap(+1);
     cap(-1);
 
-    /* The rails are exact limit curves, but a band's END is not where they
-       converge: it is a sunrise/sunset contact arc that bulges past them —
-       the 2026 band reaches Menorca east of everything the rails trace,
-       because totality there ran out before the shadow's last ground
-       contact further west. Rather than derive the set curves, each end is
-       closed by asking the engine itself: a fan of bearings from the last
-       on-axis centre — safely inside, and seeing the whole rounded cap —
-       swept rail to rail through the outward direction, each ray bisected
-       against the localCircumstances oracle. The fan IS the boundary, to a
-       kilometre. */
+    /* The rails are exact limit curves, but a band's end is a sunrise/sunset
+       contact arc that bulges past them. The 2026 band reaches Menorca east of
+       everything the rails trace. Rather than deriving the set curves, each
+       end is closed by querying the engine: a fan of bearings from the last
+       on-axis centre, swept rail to rail through the outward direction, each
+       ray bisected against localCircumstances. The fan is the boundary, to
+       about a kilometre. */
     function isCentral(lat, lon) {
       var lc = localCircumstances(ecl, lat, lon, 0);
       return !!(lc && lc.type !== 'partial' && lc.c2 && lc.c3 &&
                 lc.centralVisible);
     }
-    /* March along the oracle's own contour: from a rail end, probe ahead
-       at a fixed step, preferring to go straight, turning as the boundary
-       turns; each accepted step is refined onto the contour by bisecting
-       across it. Cusps, lobes, whatever shape the cap takes — the marcher
-       follows it, which no fan from any single origin can promise. The
-       band is kept on the RIGHT of the direction of travel throughout. */
+    /* March along the contour: from a rail end, probe ahead at a fixed step,
+       preferring to continue straight and turning as the boundary turns; each
+       accepted step is refined onto the contour by bisecting across it. This
+       follows cusps and lobes, which a fan from a single origin cannot. The
+       band is kept on the right of the direction of travel throughout. */
     function traceBoundary(startPt, heading, target, stepKm, awayFrom) {
       var P = startPt, h = heading;
       var pts = [];
@@ -479,13 +467,11 @@ var Bessel = (function () {
       return pts;
     }
 
-    /* The ring: rails through the middle, marched caps at the ends. A
-       rail index is kept only while its point verifiably sits ON the
-       observable boundary (outward feeler dark, inward feeler central) —
-       near a sunrise/sunset end the geometric rails dive INSIDE the
-       observable band, where they are no boundary at all. From the last
-       good index on each side the marcher takes over and rounds the whole
-       end region, whatever its shape. */
+    /* The ring: rails through the middle, marched caps at the ends. A rail
+       index is kept only while its point verifiably sits on the observable
+       boundary (outward probe dark, inward probe central), because near a
+       sunrise/sunset end the geometric rails run inside the observable band.
+       From the last good index on each side the marcher takes over. */
     var ring = [];
     function onObservable(pr, key) {
       var e = pr[key], c0 = pr.c;
@@ -530,12 +516,12 @@ var Bessel = (function () {
       ring = mainN.concat(mainS.slice().reverse());
     }
 
-    /* `center` carries the caps because the sampling frame wants them; the
-       DRAWN centreline must not. A rim stand-in is a fine oracle but a false
-       centre: at the sunset cap it walks the terminator, mostly cross-track,
-       and a dashed line following it turns a hard corner where the axis
-       leaves the ground. The central line ends at the extreme points, the
-       way every published eclipse map ends it — `main` is that line. */
+    /* `center` carries the caps because the sampling frame needs them; the
+       drawn centreline must not. A rim stand-in is a usable oracle but a false
+       centre: at the sunset cap it follows the terminator, mostly cross-track,
+       so a line following it turns a hard corner where the axis leaves the
+       ground. The central line ends at the extreme points, as published
+       eclipse maps do; `main` is that line. */
     return { center: center, main: mainC, north: north, south: south, ring: ring };
   }
 
@@ -553,15 +539,13 @@ var Bessel = (function () {
     return groundPoint(ecl, el, u * s, v * s * rho1);
   }
 
-  /* The umbral limit curves, from the elements themselves: the axis
-     displaced by the local umbral radius perpendicular to the shadow's
-     motion — motion RELATIVE TO THE GROUND, the (a, b) the contact solver
-     already uses, because the band is traced on a rotating Earth and the
-     fixed-frame direction is wrong exactly where it matters, at low Sun.
-     Displacements iterate against the surface height and map to ground.
-     Where a displaced point has slid off the disc it is clamped to the rim
-     (flagged off), so the rails keep following the limb through the caps
-     until the whole band is gone. */
+  /* The umbral limit curves, from the elements: the axis displaced by the
+     local umbral radius perpendicular to the shadow's motion relative to the
+     ground, the (a, b) the contact solver uses, because the band is traced on
+     a rotating Earth and the fixed-frame direction is wrong at low Sun.
+     Displacements iterate against surface height and map to ground. A
+     displaced point that has left the disc is clamped to the rim and flagged,
+     so the rails follow the limb through the caps. */
   function bandLimits(ecl, t, near) {
     var el = elements(ecl, t);
     // relative velocity at the nearest ground point the caller knows of;

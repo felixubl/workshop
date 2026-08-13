@@ -179,15 +179,12 @@ var ABCTest = (function (ABC) {
          ABC.letterOrder(c[0]) === c[1], String(ABC.letterOrder(c[0])));
     });
 
-    /* ── The published table ─────────────────────────────────────────────────
-       The distance is asserted; the Kendall tau beside it is NOT, and the
-       handoff says why in its own words: the nearest alphabet is not unique.
-       Tau is a property of whichever minimal alphabet you land on, so a solver
-       that finds an equally good one and reports a different tau is right, and
-       a test demanding the number in the table would be testing the search
-       order. It is printed next to the table's value so the two can be
-       compared by eye — five of the seven agree, because trying a letter's own
-       square first tends to land on exactly the alphabet the handoff shows. */
+    /* The published table. The distance is asserted; the Kendall tau beside it
+       is not, because the nearest alphabet is not unique. Tau is a property of
+       whichever minimal alphabet the search reaches, so a solver finding an
+       equally good one and reporting a different tau is still correct. It is
+       printed next to the table's value for comparison; five of the seven
+       agree. */
     [['BILLOWY', 0, 0], ['ALMOST', 0, 0], ['TEE', 1, 31], ['ZEBRA', 2, 56],
      ['SPHINX', 2, 62], ['CLAUDE', 3, 87], ['DEUTSCH', 3, 55],
      ['ANNA', null, null],

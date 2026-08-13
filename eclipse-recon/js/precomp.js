@@ -1,16 +1,7 @@
-/* Eclipse Recon — the pre-surveyed band.
-   The workshop's crawler (tools/crawl-vis.mjs, run by a scheduled GitHub
-   Action) walks the umbral band with no hurry and precomputes, for every
-   ~60-80 m pixel, the fraction of totality the local horizon lets
-   through — the expensive, eternal factor of the score. What it has
-   settled is committed to the repo and served by Pages as static files:
-   a manifest and a grayscale PNG per map tile.
-
-   This module is the reader. scanVis asks it first; a hit costs one
-   cached PNG fetch instead of a full terrain scan, and a miss falls back
-   to scanning locally, so the map is always right — the crawl only makes
-   it faster, further along every week. The tiling (z by latitude, so a
-   pixel stays 60-80 m) MIRRORS the crawler; change one, change both. */
+/* Eclipse Recon: the pre-surveyed band. The crawler (tools/crawl-vis.mjs, run
+   by a scheduled GitHub Action) walks the umbral band and precomputes, for
+   every 60-80 m pixel, the fraction of totality the local horizon allows. This
+   module reads those tiles so the browser does not repeat the work. */
 
 var Precomp = (function () {
   'use strict';
@@ -27,9 +18,9 @@ var Precomp = (function () {
     return { z: z, x: x, y: y, n: n };
   }
 
-  /* which overview tiles exist is derivable, not fetched: a parent is on
-     disk exactly when at least one of its children has settled, and the
-     manifest lists every child's status */
+  /* Which overview tiles exist is derivable rather than fetched: a parent
+     exists exactly when at least one of its children has settled, and the
+     manifest lists every child's status. */
   function buildCover() {
     M.ovA = {}; M.ovB = {};
     if (!M.man || !M.man.tiles) return;

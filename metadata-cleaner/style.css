@@ -344,14 +344,11 @@
   color: var(--pp-muted);
   white-space: nowrap;
 }
-/* The highlight on the page. A marker, not a plate: this is the reader's own
-   pen going over the lines that matter, which is exactly what law 05 keeps the
-   plates away from.
-
-   The citron field itself comes from core's .mk--citron now, which the markup
-   adds alongside this class. What is left here is the part that is this pill's
-   rather than the pen's: a marked pill drops its edge and takes full ink,
-   because the field is already the boundary. */
+/* The highlight. A marker rather than a plate: this is the reader's own pen
+   over the lines that matter. The citron field comes from core's .mk--citron,
+   which the markup adds alongside this class. What is left here is specific to
+   the pill: a marked pill drops its edge and takes full ink, because the field
+   is already the boundary. */
 .risk.is-high,
 .legend .tag.is-marked {
   border-color: transparent;

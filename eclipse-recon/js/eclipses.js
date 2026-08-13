@@ -1,23 +1,7 @@
-/* Eclipse Recon — the catalogue.
-   Pure data: polynomial Besselian elements, nothing else. Everything a
-   record used to carry beside them — a display name, a type word, a home
-   view, a line of prose — is derivable from the elements, so app.js derives
-   it. A record is:
-     { id, date: [y,m,d], t0, deltaT,
-       x, y, d, l1, l2, mu (each a0..a3), tanF1, tanF2 }
-   a(t) = a0 + a1*t + a2*t^2 + a3*t^3, t = TT hours since t0.
-   x, y      shadow-axis intersection with the fundamental plane, Earth radii
-   d, mu     declination and ephemeris hour angle of the shadow axis, degrees
-   l1, l2    penumbral / umbral cone radii in the fundamental plane
-   tanF1/2   cone half-angle tangents
-   deltaT    TT - UT1 in seconds; observed/modern values, which land the
-             path within ~1 km of the NASA plot.
-
-   The shipped records are transcribed from NASA/GSFC eclipse predictions by
-   Fred Espenak (VSOP87/ELP2000-82). Any other eclipse loads at runtime:
-   parseElements() below reads the "Polynomial Besselian Elements" block off
-   a NASA page verbatim, and the app keeps what it parses in localStorage.
-   That is the whole generalisation story — data in, everything computed. */
+/* Eclipse Recon: the catalogue. Polynomial Besselian elements and nothing
+   else. Names, type words, home views and descriptions are all derivable from
+   the elements, so app.js derives them. Adding an eclipse means adding its
+   elements. */
 
 var ECLIPSES = [
   {
@@ -79,11 +63,9 @@ var ECLIPSES = [
 ];
 
 /* Parses the "Polynomial Besselian Elements" block from a NASA/GSFC eclipse
-   page, pasted as plain text. Tolerant of the page's own variations: the
+   page, pasted as plain text. Tolerant of that page's variations: the
    coefficient table is read as rows n = 0..3 of six numbers in the fixed
-   column order x y d l1 l2 mu; t0, tan f1/f2 and ΔT are read off their
-   labelled lines; the date comes from the page title. Returns a catalogue
-   record, or throws with the first thing it could not find. */
+   column order x y d l1 l2 mu. */
 function parseElements(text) {
   var MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
                  jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };

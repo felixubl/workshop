@@ -1,44 +1,33 @@
-/* Eclipse Recon — tool-specific layout.
-   The sheet system, the type, the plates and both colour modes come from
-   PREPRINT; this file only lays out a map page: a full-bleed relief map
-   pinned under the masthead, with paper cards floating on it.
+/* Eclipse Recon: tool-specific layout. The table system, type, plates and both
+   colour modes come from PREPRINT; this file lays out a map page: a full-bleed
+   relief map pinned under the masthead, with cards floating on it. */
 
-   Colour policy: the ground is drawn from elevation alone — water is the
-   palest tone and dead flat, land darkens in altitude steps — the Moon's
-   shadow is printed in actual black, and ink does the drawing. Plates
-   appear only where they mean something — plate 3 (blue) is totality
-   wherever it shows up, and every score on the page wears one ramp
-   pressed from plate 2 through the citron marker to plate 1: cannot see
-   it, gamble, go. Everything else is ink on paper. */
-
-/* an explicit display (flex on sheets) must never beat the hidden attribute */
+/* An explicit display (flex on tables) must never beat the hidden attribute. */
 [hidden] { display: none !important; }
 
 html, body { height: 100%; }
 body {
   display: flex; flex-direction: column;
   overflow: hidden;
-  /* the dynamic viewport, where it exists: a phone's URL bar grows and
-     shrinks, and 100% of the initial containing block leaves either a gap
-     or a console under the browser chrome */
+  /* The dynamic viewport where it exists. A phone's URL bar grows and shrinks,
+     and 100% of the initial containing block leaves either a gap or an
+     overflow under the browser chrome. */
   height: 100dvh;
-  /* a map page owns its edges: no pull-to-refresh firing under a pan */
+  /* A map page owns its edges: no pull-to-refresh firing under a pan. */
   overscroll-behavior: none;
 }
 
-/* Touch grammar for the whole page. No grey flash under a tap; the drags
-   this page owns — sheet heads, the scrub, the map — never start a text
-   selection; and everything tipped drops the long-press callout, because
-   a long press here means "show me the tip" (wired in app.js). */
+/* Touch behaviour for the whole page. No grey flash under a tap; the drags
+   this page owns (sheet heads, the scrub, the map) never start a text
+   selection; and anything with a tooltip drops the long-press callout. */
 button, .sheet-head, #scrub-wrap { -webkit-tap-highlight-color: transparent; }
 button { touch-action: manipulation; }
 .sheet-head { user-select: none; -webkit-user-select: none; }
 [data-tip] { -webkit-touch-callout: none; }
 
-/* A switch states itself by filling with ink — the same statement the
-   system's Segmented makes, and the only one a thumb can read at arm's
-   length. Every aria-pressed key on this page speaks it: suitability,
-   the duration switch, follow. */
+/* A switch states itself by filling with ink, the same signal the system's
+   Segmented uses. Every aria-pressed control on this page uses it:
+   suitability, the duration switch, follow. */
 .btn-ghost[aria-pressed='true'] {
   background: var(--pp-edge); border-color: var(--pp-edge);
   color: var(--pp-paper);
@@ -588,15 +577,11 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
 .which-eclipse #ecl-add { min-width: 2em; padding: 0.2em 0.5em;
   font-size: 0.9rem; line-height: 1; }
 
-/* ---- small screens --------------------------------------------------
-   A phone gets the map, and the sheets learn phone manners on it. The
-   event panel folds to a chip top-left. The dossier becomes a real
-   bottom drawer above the console: a grabber in its head, dragged by
-   hand between three snaps — peek (the head bar, wearing the score and
-   the name), half, and full — with app.js doing the dragging and this
-   block doing the dressing. Everything pressable meets the 44px target
-   the system sets, and everything pinned to an edge respects the
-   phone's own insets. */
+/* Small screens. The event panel folds to a chip at top left. The report panel
+   becomes a bottom drawer above the console, with a grabber in its head
+   dragged between three positions: peek, half and full. app.js does the
+   dragging; this block styles it. Everything pressable meets the 44px target,
+   and everything pinned to an edge respects the device insets. */
 
 @media (max-width: 900px) {
   .wrap.tool-head { padding-top: 0.9rem; padding-bottom: 0.6rem; }

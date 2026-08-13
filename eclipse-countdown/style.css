@@ -1,12 +1,6 @@
-/* Tool-specific layout only — faces, buttons, fields, the toolbar band, the
-   sheet and its table all come from ../assets/base.css over the vendored
-   system. What this file draws is the two things this tool invents: the disc,
-   and the clock beside it.
-
-   The disc is drawn in CSS rather than in the script on purpose. Everything in
-   it is a token, so pulling the cord repaints the sky, the plate and the
-   hatching at the same moment as the page around it — the drawing is not a
-   picture pasted onto PREPRINT, it is set in it. */
+/* Tool-specific layout only. Faces, buttons, fields, the toolbar, the table
+   and its rows come from ../assets/base.css over the vendored system. This
+   file draws the two things this tool adds: the disc and the clock beside it. */
 
 .field.place {
   width: min(320px, 58vw);
@@ -14,14 +8,13 @@
   font-size: 0.86rem;
 }
 
-/* "Looking that up…" is not a complaint, and .hint is a plate-2 line. */
+/* "Looking that up" is not an error, and .hint is a plate-2 line. */
 .hint.is-quiet {
   color: var(--pp-faint);
 }
 
-/* The geocoder rarely returns one obvious answer to a place name — a dozen
-   towns share most names — so the runners-up stay on the page as an offer
-   rather than being thrown away. */
+/* A place name rarely has one obvious match, so the runners-up stay on the
+   page as options rather than being discarded. */
 .alts {
   display: flex;
   align-items: baseline;
@@ -61,7 +54,7 @@
 }
 
 /* The note under the toolbar says where a place name goes; the report starts a
-   new movement under it and needs the air to say so. */
+   new section below it and needs the space to show that. */
 #report {
   margin-top: 2rem;
 }
@@ -126,17 +119,11 @@
   color: var(--pp-plate-3-text);
 }
 
-/* ── The drawing ────────────────────────────────────────────────────────────
-   Sky, plate, ink, hatch. The Sun takes plate 2 at full strength because it is
-   printed rather than lit, and the Moon is the ink over it: black on a light
-   sheet, black on a dark one. That is one of the two values here that do not
-   follow the mode, for the same reason Recon prints the umbra in actual black
-   — a shadow that turns pale in dark mode is no longer a shadow.
-
-   The four pens the drawing uses are named here rather than written into each
-   rule, so the frame is restyled in one place and both colour modes follow the
-   page's own paper. Totality darkens no longer: the drawing states the geometry
-   and lets the words beside it say what the sky is doing. */
+/* Sky, plate, ink, hatch. The Sun takes plate 2 at full strength because it is
+   printed rather than lit, and the Moon is the ink over it: black in both
+   modes. That is one of two values here that do not follow the mode, for the
+   same reason Recon prints the umbra in black. The four pens are named here
+   rather than written into each rule, so the figure is restyled in one place. */
 .disc {
   --ec-sky: var(--pp-sunk);
   --ec-pen: var(--pp-faint);
@@ -150,12 +137,9 @@
 .disc .sun {
   fill: var(--pp-plate-2);
 }
-/* The Moon, printed twice: the whole disc in plate 3, then the part of it
-   that lands on the Sun's face again in the overprint — the product of the
-   two inks, as a press would lay them. Three flat regions, no translucency
-   and no blend mode, so what the reader sees is exactly what is drawn:
-   plate 2 is uncovered Sun, plate 3 is Moon off the Sun's face, the dark
-   third colour is the bite. */
+/* The Moon, printed twice: the whole disc in plate 3, then the part covering
+   the Sun's face again in the overprint, the product of the two inks. Three
+   flat regions, no translucency and no blend mode. */
 .disc .moon-off {
   fill: var(--pp-plate-3);
 }
@@ -433,14 +417,10 @@ body {
   --ec-overprint: #50244e;
 }
 
-/* ---- the system, seen from outside ------------------------------------
-   One vocabulary with the disc, so the two figures are the same eclipse and
-   not two drawings of it: sunlight in plate 2, the Moon in plate 3, and the
-   shadow in the overprint of the two — which on the disc is exactly the bite
-   the Moon takes out of the Sun, because it is the same shadow seen from the
-   other end. The reader takes plate 1, the one ink neither body wears.
-   Nothing here is translucent; the penumbra is a pair of edges rather than a
-   wash, which is also what it honestly is. */
+/* The system seen from outside, sharing the disc's vocabulary so the two
+   figures read as one eclipse: sunlight in plate 2, the Moon in plate 3, the
+   shadow in the overprint of the two. The reader's position takes plate 1.
+   Nothing is translucent; the penumbra is a pair of edges rather than a wash. */
 
 .system {
   margin: 1.6rem 0 0;

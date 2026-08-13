@@ -1,17 +1,7 @@
-/* Eclipse Recon — the page.
-   Wiring: Leaflet relief map, the Besselian engine, the terrain reader
-   and the weather client. All colour comes off the PREPRINT tokens at draw
-   time, so the pull cord restyles the map and charts along with the page:
-   the ground is an altitude ramp drawn from elevation data, the shadow is
-   printed in black, plate 3 is totality, and every score wears one ramp
-   pressed from plate 2 through the citron marker to plate 1 — cannot see
-   it, gamble, go.
-
-   Nothing about a particular eclipse lives in here. A catalogue record is
-   Besselian elements and a date, and everything shown — the name, the
-   type, the path, the opening view, every number on every panel — is
-   computed from them. Records pasted off a NASA elements page load at
-   runtime and persist in localStorage. */
+/* Eclipse Recon: the page. Wires together the Leaflet relief map, the
+   Besselian engine, the terrain reader and the weather client. All colour is
+   read from the PREPRINT tokens at draw time, so changing mode restyles the
+   map and charts with the page. */
 
 (function () {
   'use strict';
@@ -81,8 +71,8 @@
     });
     return out;
   }
-  /* the live PREPRINT palette — read fresh at draw time so both colour
-     modes get their own steps */
+  /* The live PREPRINT palette, read fresh at draw time so each colour mode
+     gets its own steps. */
   function cssVar(name, fallback) {
     var v = getComputedStyle(document.documentElement)
       .getPropertyValue(name).trim();
@@ -137,10 +127,10 @@
     return all.sort(function (a, b) { return a.id < b.id ? -1 : 1; });
   }
 
-  /* Everything a record used to state is computed off its elements once and
-     memoised: global times, and the central type read from the umbral cone
-     at greatest eclipse (a positive l2 is an antumbra). No name strings, no
-     type flags, no home views in the data. */
+  /* Everything a record used to state is computed from its elements once and
+     memoised: global times, and the central type read from the umbral cone at
+     greatest eclipse (a positive l2 is an antumbra). The data holds no names,
+     type flags or home views. */
   var metaCache = {};
   function metaFor(ecl) {
     if (metaCache[ecl.id]) return metaCache[ecl.id];
@@ -155,8 +145,8 @@
     return m;
   }
 
-  /* A hybrid is total at greatest and annular at the ends (or the reverse);
-     only the full path can say, so it refines the cheap label. */
+  /* A hybrid eclipse is total at greatest and annular at the ends, or the
+     reverse. Only the full path can tell, so this refines the cheap label. */
   function refineType(ecl, path, type) {
     // the extreme points, not the graze caps: a hybrid flips where the
     // cone tip meets the ground, and that is on the axis line
@@ -197,27 +187,17 @@
   map.getPane('heat').style.pointerEvents = 'none';
   map.getPane('eclShadow').style.pointerEvents = 'none';
 
-  /* The ground layer is not a photograph. It was — Esri imagery through a
-     grayscale() filter — and a photograph turned grey still ranks a forest
-     against a desert by how much light each threw at a satellite, which is a
-     fact about vegetation and weather, not about the ground. The recon map
-     has to answer exactly two questions about the ground: is that water, and
-     how high is that. So it is drawn from the answers themselves: the same
-     Mapzen terrarium tiles the horizon scan reads, decoded to metres per
-     pixel and pressed into altitude bands.
-
-     Water is the palest tone on the map and dead flat; land starts a step
-     darker and darkens with height. Lighter than everything = water, darker
-     = higher, and the key beside the credits says where the steps fall. The
-     bands are steps rather than a smooth ramp because a smooth ramp can only
-     be compared ("higher than there"), while a step can be read ("above two
-     thousand"), and reading is the point.
-
-     The one lie the data tells: terrarium's zero is the sea. A lake above
-     sea level is a positive elevation like the land around it, and the shore
-     of a below-sea-level basin (the Dead Sea's, Death Valley's) sits under
-     zero like the sea does. No single elevation number can say "wet", and
-     this map would rather be simple than pretend otherwise. */
+  /* The ground layer is drawn from elevation rather than from imagery. A
+     grayscale satellite photograph ranks a forest against a desert by
+     reflected light, which describes vegetation rather than terrain. This map
+     answers two questions about the ground: is it water, and how high is it.
+     So it is drawn from the same Mapzen terrarium tiles the horizon scan
+     reads, decoded to metres per pixel and grouped into altitude bands. Water
+     is the palest tone and flat; land starts a step darker and darkens with
+     height, with a key beside the credits. Bands are steps rather than a
+     smooth ramp because a step can be read as an absolute height. One
+     limitation: terrarium's zero is sea level, so a lake above sea level reads
+     as land and a below-sea-level basin reads as sea. */
   var HYPSO_WATER = 236;
   var HYPSO_BANDS = [
     { upTo: 200,      shade: 208 },
@@ -967,12 +947,11 @@
     var prof = scan.profile;
     var n = prof.length;
 
-    /* The window is the Sun's own track, padded — not the whole scanned
-       horizon. A 2° eclipse squeezed under a 45° ridge axis was a chart of
-       the ridge, not of the eclipse. Terrain taller than the window clips
-       flat against its top edge, which is honest: it left the frame. The
-       figure is taller than wide territory now, which is what a phone
-       wants and what a track that mostly moves vertically deserves. */
+    /* The window is the Sun's own track, padded, rather than the whole scanned
+       horizon. A 2 degree eclipse under a 45 degree ridge would otherwise
+       produce a chart of the ridge. Terrain taller than the window clips flat
+       against its top edge. The figure is taller than wide, which suits both a
+       phone and a track that moves mostly vertically. */
     var azMin = prof[0].az;
     var azSpanTotal = ((prof[n - 1].az - azMin) % 360 + 360) % 360 || 1;
     function relOf(az) {
@@ -1319,32 +1298,19 @@
 
   /* ---- assessment ---- */
 
-  /* One suitability number, 0..100, and it is the same arithmetic the
-     heatmap paints. Four factors, each 0..1, weighted by how certain the
-     thing it measures is:
-
-     HORIZON, squared. Surveyed fact — a ridge does not clear up on the
-     day. The visible fraction of the central phase counts twice over:
-     90% visible costs a fifth, half visible costs three quarters, fully
-     blocked is the hard 0 it always was.
-
-     AIR, √(alt/8°). Below 8° the eclipsed Sun stands in many air masses
-     — at 2° it is twenty — and haze, marine murk and unforecastable
-     horizon cloud live there. Geometry, not weather, so it belongs with
-     the certain factors, but gently: √.
-
-     SKY, softened in the middle, steep at the floor. A forecast is a
-     probability, so 50/50 must not kill a site the way a 50%-blocked
-     horizon does — the 0.75 power lifts the middle. Below 20 it falls
-     quadratically: a sky that is certainly storm is a site where the
-     eclipse cannot be seen, and scores like one.
-
-     DURATION, square-rooted. Half the maximum is still most of the show.
-
-     The gates stay absolute — below the horizon, outside the central
-     band, fully behind terrain is 0 whatever the weather says. A null
-     sky (service unreachable) drops the factor rather than the score,
-     and the display says which. */
+  /* One suitability number, 0 to 100, using the same arithmetic the heatmap
+     paints. Four factors, each 0 to 1, weighted by how certain the quantity
+     is. HORIZON, squared: measured terrain, so it counts twice over. 90%
+     visible costs a fifth; fully blocked is 0. AIR, sqrt(alt/8deg): below 8
+     degrees the Sun stands in many air masses, where haze and horizon cloud
+     live. This is geometry rather than weather, so it counts with the certain
+     factors, but gently. SKY, raised to 0.75, so a 50/50 forecast does not
+     penalise a site as hard as a half-blocked horizon; below 20 it falls
+     quadratically, since a certain storm means the eclipse cannot be seen.
+     DURATION, square-rooted: half the maximum is still most of the event. The
+     gates are absolute: below the horizon, outside the central band, or fully
+     behind terrain scores 0. A null sky drops the factor rather than the
+     score, and the display says so. */
   /* The one score switch: with duration off, any totality is the event
      and the score is purely about SEEING it — horizon, air, sky. */
   var SCORE = { durOff: false };
@@ -1388,14 +1354,12 @@
     return { lc: lc, lonN: lonN, minAlt: minAlt, azs: azs, dur: lc.duration };
   }
 
-  /* Every score on this page wears the same scale: viridis, worst to
-     best — deep violet through teal and green to yellow. It is the
-     standard scientific ramp for exactly this job: perceptually
-     uniform, monotone in lightness (so a greyscale print keeps the
-     ordering), and legible under every form of colour vision — its
-     safety never leans on telling red from green. It is deliberately
-     NOT built from the page's plates: the field is data, not chrome,
-     and the same scale serves both modes. */
+  /* Every score on this page uses the same scale: viridis, worst to best, deep
+     violet through teal and green to yellow. It is perceptually uniform and
+     monotone in lightness, so a greyscale print keeps the ordering, and it is
+     legible under every form of colour vision. It is not built from the page's
+     plates, because the field is data rather than page furniture, and the same
+     scale serves both modes. */
   var VIRIDIS = ['#440154', '#482878', '#3e4989', '#31688e', '#26828e',
                  '#1f9e89', '#35b779', '#6ece58', '#b5de2b', '#fde725'];
   function hexRGB(h) {
@@ -1585,21 +1549,15 @@
 
   /* ================= suitability field ================= */
 
-  /* The verdict, as a place instead of a point: the dossier's suitability
-     number for every block of the current view, at the band survey's own
-     resolution. Same arithmetic (suitabilityOf above), same gates — a Sun
-     behind terrain for the whole central phase is 0 however clear the sky,
-     outside the central band nothing is painted at all.
-
-     Three ingredients at three cadences. Astronomy is exact on a lattice
-     and interpolated per block — it varies over hundreds of kilometres, a
-     lattice loses nothing. Sky is the weather desk's coarse subgrid,
-     fetched live, so the wash moves with the prognosis. And the horizon
-     factor is the crawled band: tile MEANS straight off the manifest when
-     the view is wide, true ~60-80 m pixels once it narrows enough to
-     fetch its tiles. Ground the crawler has not settled yet is not
-     painted — the field never guesses, and the legend says how much of
-     the band is in. */
+  /* The suitability number for every block of the current view, at the band
+     survey's resolution. Same arithmetic and same gates as suitabilityOf
+     above. Three inputs at three cadences. Astronomy is computed exactly on a
+     lattice and interpolated per block, since it varies over hundreds of
+     kilometres. Sky is the weather service's coarse subgrid, fetched live. The
+     horizon factor is the crawled band: tile means from the manifest when the
+     view is wide, and true 60-80 m pixels once it narrows enough to fetch
+     tiles. Ground the crawler has not settled is left unpainted, and the
+     legend states how much of the band is complete. */
 
   var SUIT = { on: false, run: 0, aborter: null, wx: {}, localGrade: false };
 
@@ -2297,13 +2255,12 @@
     });
   })();
 
-  /* The dossier as a bottom drawer. Three snaps — peek (just the head
-     bar, wearing the score and the name), half, and full — a grabber to
-     drag between them, a tap on the bar to flip peek/half, a fling to
-     skip. The numbers are read off the live boxes rather than re-derived
-     from the stylesheet, so the safe area and the console's height stay
-     facts instead of assumptions. Desktop keeps the paper card it always
-     had: everything here checks the layout first. */
+  /* The report panel as a bottom drawer on small screens. Three positions:
+     peek (the head bar with the score and name), half and full, with a grabber
+     to drag between them, a tap on the bar to flip peek and half, and a fling
+     to skip. The measurements are read from the live boxes rather than from
+     the stylesheet, so the safe area and console height stay accurate. Desktop
+     keeps the card layout. */
   var Drawer = (function () {
     var el = $('dossier');
     var head = el.querySelector('.sheet-head');

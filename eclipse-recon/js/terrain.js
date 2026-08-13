@@ -1,10 +1,7 @@
-/* Eclipse Recon — terrain interrogation.
-   Elevation from the AWS Open Data terrain tiles (Mapzen "terrarium"
-   encoding: height = R*256 + G + B/256 - 32768, metres). Used to build a
-   horizon profile around the Sun's azimuth: for a low eclipse, the mountain
-   ridge 40 km west of you is as much a part of the prediction as the Moon.
-
-   All requests go to s3.amazonaws.com/elevation-tiles-prod — nothing else. */
+/* Eclipse Recon: terrain interrogation. Elevation from the AWS Open Data
+   terrain tiles (Mapzen terrarium encoding: height = R*256 + G + B/256 -
+   32768, in metres). Used to build a horizon profile around the Sun's azimuth,
+   since a low eclipse can be hidden by terrain. */
 
 var Terrain = (function () {
   'use strict';
@@ -14,12 +11,10 @@ var Terrain = (function () {
   var REFRACTION_K = 0.13;          // standard terrestrial refraction coefficient
   var cache = new Map();            // "z/x/y" -> Promise<ImageData|null>
 
-  /* The horizon is surveyed fact: it never changes, so a scan once made is
-     kept — in IndexedDB, across visits. The key is the exact question asked
-     (site to ~11 m, azimuth window, step, reach, eye height); ask it again
-     and the answer comes back without a single tile fetch. Weather is never
-     stored this way: a forecast is stale in hours, a ridge is not. SCAN_V
-     bumps when the scan algorithm changes, orphaning old answers. */
+  /* A horizon scan does not change, so it is kept in IndexedDB across visits.
+     The key is the exact question asked (site to about 11 m, azimuth window,
+     step, reach, eye height), so repeating it returns the stored answer
+     without a fetch. */
   var SCAN_V = 1;
   var dbP = null;
   function db() {
@@ -54,9 +49,9 @@ var Terrain = (function () {
       });
     });
   }
-  /* Writes are batched: a fine survey stores tens of thousands of scans,
-     and one transaction each would trail the survey by minutes. A tab
-     closed mid-survey loses at most the last few hundred milliseconds. */
+  /* Writes are batched: a fine survey stores tens of thousands of scans, and
+     one transaction each would lag the survey by minutes. A tab closed mid-
+     survey loses at most the last few hundred milliseconds. */
   var putQ = new Map(), putTimer = null;
   function storeScan(key, val) {
     putQ.set(key, val);
@@ -121,9 +116,9 @@ var Terrain = (function () {
     return px[i] * 256 + px[i + 1] + px[i + 2] / 256 - 32768;
   }
 
-  /* Bilinear elevation from an already-fetched tile set. Returns metres or
+  /* Bilinear elevation from an already-fetched tile set. Returns metres, or
      null when the tile is missing. Ocean tiles carry bathymetry; anything
-     below sea level reads as 0 because water makes its own horizon. */
+     below sea level reads as 0, because water forms its own horizon. */
   function sampleSync(tiles, lat, lon, z) {
     var tc = tileCoords(lat, lon, z);
     var tx = Math.floor(tc.x), ty = Math.floor(tc.y);
@@ -164,14 +159,10 @@ var Terrain = (function () {
     });
   }
 
-  /* The horizon scan. Sweeps azCenter ± azSpan/2 in azStep steps; along each
-     bearing walks geometrically spaced ranges out to maxKm, converts each
-     terrain sample to an elevation angle with Earth curvature and standard
-     refraction, and keeps the maximum: that is the horizon in that direction.
-
-     opts: { azCenter, azSpan=110, azStep=1, maxKm=120, eyeM=2,
-             onProgress(frac), signal }
-     resolves { h0, siteElev, profile: [{az, ang, distKm, elevM}] }        */
+  /* The horizon scan. Sweeps azCenter plus or minus azSpan/2 in azStep steps;
+     along each bearing it walks geometrically spaced ranges out to maxKm,
+     converts each terrain sample to an elevation angle with Earth curvature
+     and standard refraction, and keeps the maximum. */
   function horizonScan(lat, lon, opts) {
     opts = opts || {};
     var o = {
@@ -287,8 +278,8 @@ var Terrain = (function () {
   return {
     elevationAt: elevationAt,
     horizonScan: horizonScan,
-    /* one terrarium tile as ImageData (null on failure), promise-cached —
-       the suitability wash reads these to ink the coastline above itself */
+    /* One terrarium tile as ImageData, null on failure, promise-cached. The
+       suitability wash reads these to draw the coastline above itself. */
     tile: fetchTile,
     cacheSize: function () { return cache.size; }
   };

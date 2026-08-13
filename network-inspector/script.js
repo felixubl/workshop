@@ -533,16 +533,11 @@
     return tr;
   }
 
-  /* The speed test pulls the same file a few thousand times, and every one of
-     those is a resource entry. Left in, the tool's own instrumentation buries
-     the page's real traffic under its noise and the counter reads in the
-     thousands, which is a measurement artefact rather than anything about your
-     connection. They carry a marker in the query string precisely so this can
-     drop them.
-
-     The sweep's probes are the same kind of noise, and they are spotted by
-     their target rather than a marker: nothing this page legitimately loads
-     lives at a literal private address, so anything that does is the sweep. */
+  /* The speed test fetches the same file a few thousand times, and each is a
+     resource entry. Left in, they bury the page's real traffic and the counter
+     reads in the thousands. They carry a marker in the query string so they
+     can be dropped. The sweep's probes are identified by their target instead:
+     nothing this page legitimately loads is at a literal private address. */
   const PRIVATE_URL = /^https?:\/\/(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|127\.)/;
   const isOwnNoise = (name) =>
     name.includes('cachebust=') || name.includes('ping=') || PRIVATE_URL.test(name);
@@ -753,14 +748,10 @@
       ['Country, from your address', d.country_code, 'isp'],
     ]);
 
-    /* The verdict rests on the time zone alone, and only the time zone.
-
-       The language-implied country is in the table because it is a real
-       disclosure, but it is worthless as VPN evidence: half the world browses
-       in en-US from everywhere, so it disagrees with the address constantly on
-       connections that have no VPN anywhere near them. An early version scored
-       the two signals together and confidently told a machine sitting in Vienna,
-       on an Austrian address, in Europe/Vienna, that it looked like a VPN. */
+    /* The verdict rests on the time zone alone. The language-implied country
+       is in the table because it is a real disclosure, but it is not evidence
+       of a VPN: much of the world browses in en-US, so it disagrees with the
+       address constantly on connections with no VPN. */
     if (tzAgrees) {
       note(wrap, 'Clock and address agree, which is what no VPN looks like. A VPN that moves your time '
         + 'zone too would look the same, so this is consistency, not proof.');
@@ -784,14 +775,12 @@
 
   // ── 7. WebRTC ────────────────────────────────────────────────────────────
 
-  /* Opening a peer connection makes the browser enumerate the addresses it
-     could be reached on and, via STUN, the address the outside world sees. A
-     page reads them out of the ICE candidates without a permission prompt.
-
-     Chrome and Safari now hand out a random .local hostname instead of the real
-     private address unless the page already has camera or microphone access,
-     which closed most of this leak. The tool reports which one you got, because
-     "the leak is closed on your browser" is the useful answer. */
+  /* Opening a peer connection makes the browser enumerate the addresses it can
+     be reached on and, via STUN, the address the outside world sees. A page
+     reads them from the ICE candidates with no permission prompt. Chrome and
+     Safari now return a random .local hostname instead of the private address
+     unless the page already has camera or microphone access. The tool reports
+     which was returned. */
   function rtcProbe() {
     const btn = $('webrtc');
     busy(btn, 'Probing');
@@ -869,20 +858,16 @@
 
   // ── 8. Looking for other devices ─────────────────────────────────────────
 
-  /* What this is not: a scan. A browser cannot open a raw socket, read ARP, or
-     see a reply it did not ask for.
-
-     What it is: a connection attempt to each address, timed. An address with
-     something listening refuses or resets almost immediately, in single-digit
-     to low tens of milliseconds. An address with nothing at it has to be ARPed
-     for and never answers, so the attempt hangs until the timeout. The gap
-     between those two is the entire signal, and it is genuinely noisy.
-
-     Two things make it worse, both stated in the output rather than hidden:
-     served over HTTPS, a request to a plain http:// address inside the LAN is
-     blocked as mixed content before it is even attempted, so the sweep has to
-     use https:// and gets a TLS failure it must time instead. And Chrome's
-     Private Network Access work is progressively blocking exactly this. */
+  /* This is not a port scan. A browser cannot open a raw socket, read ARP, or
+     see an unsolicited reply. It is a timed connection attempt to each
+     address. An address with something listening refuses or resets in single-
+     digit to low tens of milliseconds; an address with nothing at it must be
+     ARPed for and never answers, so the attempt hangs until the timeout. That
+     gap is the whole signal, and it is noisy. Two conditions make it worse,
+     both stated in the output: over HTTPS a request to a plain http:// LAN
+     address is blocked as mixed content, so the sweep must use https:// and
+     time a TLS failure; and Chrome's Private Network Access work is
+     progressively blocking this. */
   const GATEWAYS = [
     '192.168.0.1', '192.168.1.1', '192.168.2.1', '192.168.8.1', '192.168.10.1',
     '192.168.100.1', '192.168.178.1', '192.168.1.254', '10.0.0.1', '10.0.1.1',
@@ -929,18 +914,12 @@
     return out;
   }
 
-  /* ── Ports on your own machine ──────────────────────────────────────────
-
-     The same timing trick as the network sweep, but pointed at 127.0.0.1, where
-     it works far better: loopback has no ARP and no packet loss, so a closed
-     port refuses in about a millisecond while an open one takes visibly longer,
-     and the two populations barely overlap.
-
-     This is the technique eBay was found running against its own visitors, and
-     it is the strongest demonstration on the page precisely because it is the
-     one that returns real results. The port list is chosen to be legible: each
-     one is named after the software that normally sits on it, so the output
-     reads as "you are running Postgres" rather than as a column of numbers. */
+  /* Ports on the local machine. The same timing method as the network sweep,
+     pointed at 127.0.0.1, where it works better: loopback has no ARP and no
+     packet loss, so a closed port refuses in about a millisecond while an open
+     one takes visibly longer. This is the technique eBay was found running
+     against its own visitors. The port list is chosen so each entry can be
+     named after the software normally on it. */
   const PORTS = [
     [22, 'SSH'], [80, 'a web server'], [443, 'a web server over TLS'],
     [445, 'Windows file sharing'], [631, 'CUPS printing'], [1080, 'a SOCKS proxy'],
@@ -956,23 +935,15 @@
   ];
   const PORT_TIMEOUT = 1200;
 
-  /* Three outcomes, and the boundary between them is measured rather than
-     guessed. Against ports whose state was known in advance:
-
-       open, speaks HTTP      the fetch RESOLVES, in about 1 ms
-       open, speaks something the connection is accepted and then nothing
-       else                   matches, so it hangs until the abort at 1200 ms
-       closed                 refused in 0.3 to 8 ms
-
-     An earlier version called anything slower than 40 ms open, which a closed
-     port answering in 8 ms is one bad moment away from tripping. The honest
-     split is the timeout: a fast rejection is refusal, a rejection that had to
-     be aborted is a connection that was accepted and went quiet.
-
-     What this misses, and the note under the table says so: a service that
-     greets you the instant you connect, like SSH, or answers rubbish and hangs
-     up, like a real Redis, is rejected just as fast as a closed port and is
-     indistinguishable from one here. */
+  /* Three outcomes, with the boundaries measured rather than guessed, against
+     ports whose state was known in advance. Open and speaking HTTP: the fetch
+     resolves, in about 1 ms. Open and speaking something else: the connection
+     is accepted and nothing matches, so it hangs until the abort at 1200 ms.
+     Closed: refused in 0.3 to 8 ms. The split is the timeout: a fast rejection
+     is a refusal, a rejection that had to be aborted is a connection that was
+     accepted. This misses a service that greets on connect, such as SSH, or
+     one that answers and hangs up, such as Redis; both are rejected as fast as
+     a closed port. The note under the table says so. */
   function probePort(port) {
     return new Promise((resolve) => {
       const t0 = performance.now();
@@ -1051,32 +1022,21 @@
     busy(btn, 'Sweeping');
     const wrap = section('scanWrap');
 
-    /* Always http:, whatever this page is served over.
-
-       An earlier version switched to https: on a secure page, on the assumption
-       that a plain http: request into the local network would be refused as
-       mixed content. Measured from an HTTPS origin, it is not: a request to a
-       LAN address that answers plain HTTP resolved in 3.3 ms, and one to
-       loopback in 2.3 ms. Meanwhile https: to a device is close to useless,
-       because almost nothing on a home network speaks TLS.
-
-       The measurement was taken from a private-address origin, and the deployed
-       site is a public one, which is the transition Chrome's Private Network
-       Access actually restricts. So this may yet be blocked in production. It
-       costs nothing to find out this way round: if the request is refused it
-       fails instantly and reads as a closed address, which is the same answer
-       the https: version was giving for every address anyway. */
+    /* Always http:, whatever this page is served over. Measured from an HTTPS
+       origin, a request to a LAN address answering plain HTTP resolved in 3.3
+       ms and one to loopback in 2.3 ms, so mixed content does not block it.
+       https: to a device is close to useless, because little on a home network
+       speaks TLS. The measurement was taken from a private-address origin and
+       the deployed site is public, which is the transition Chrome's Private
+       Network Access restricts, so this may be blocked in production. If the
+       request is refused it fails instantly and reads as a closed address. */
     const scheme = 'http:';
 
-    /* Finding the range to sweep.
-
-       WebRTC would hand us the local address directly, but Chrome and Safari
-       now answer with a random .local name instead, so on most browsers there
-       is nothing to read. Rather than fall back to knocking on fourteen router
-       addresses and calling it a sweep, phase one probes those fourteen and
-       phase two sweeps the whole /24 around whichever ones answered. A router
-       that says no is a reliable marker for the range you are on, which is the
-       same fact WebRTC used to give away for free. */
+    /* Finding the range to sweep. WebRTC would supply the local address, but
+       Chrome and Safari answer with a random .local name, so on most browsers
+       there is nothing to read. Phase one probes fourteen common router
+       addresses; phase two sweeps the whole /24 around whichever answered. A
+       router that refuses is a reliable marker for the range in use. */
     let subnet = rtcLocalV4 ? rtcLocalV4.split('.').slice(0, 3).join('.') : null;
     const subnets = new Set();
     let seeds = [];
@@ -1132,13 +1092,12 @@
 
     if (!hits.length) {
       row(tb, 'Nothing answered', `${probed} addresses probed, every one silent`, null);
-      /* The most likely outcome, and the one worth explaining properly, because
-         "found nothing" reads as "nothing is there" and it usually is not. The
-         probe can only see a device that actively refuses the connection. A
-         device that drops the packet without replying is indistinguishable from
-         an address with nothing on it, and dropping is the normal, correct,
-         secure behaviour for most hardware. Verified on a network with six
-         devices on it, none of which this technique could see. */
+      /* The most likely outcome, and worth explaining: "found nothing" reads
+         as "nothing is there", and usually is not. The probe can only see a
+         device that actively refuses the connection. A device that drops the
+         packet is indistinguishable from an empty address, and dropping is the
+         normal, correct behaviour for most hardware. Verified on a network
+         with six devices, none of which this technique could see. */
       note(wrap, 'Silence is not an empty network. This only sees a device that answers to say no, and '
         + 'most drop the packet without a word. Your network can be full and still look like this.');
     } else {
