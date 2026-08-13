@@ -233,22 +233,12 @@ Three CSS layers, in this order:
 |---|---|---|
 | the system | [`assets/preprint/`](assets/preprint/) | **vendored verbatim, do not edit.** `tools/sync-preprint` re-copies it from `~/code/preprint`; `tools/push` in the system updates every consumer. |
 | shared chrome | [`assets/base.css`](assets/base.css) | the classes every tool reuses, built only from `--pp-*` tokens |
-| workshop deviations | [`assets/site.css`](assets/site.css) | the complete list: halftone screen, the tilt, the drawing surface's ground |
+| workshop deviations | [`assets/site.css`](assets/site.css) | the complete list: halftone screen, the tilt, the bench lamp, the drawing surface's ground |
 
-Three of the five scripts come from the system:
+Two of the four scripts come from the system:
 
 - [`js/mode.js`](assets/preprint/js/mode.js) sets `data-mode` before first
   paint and toggles it on any `[data-mode-toggle]`.
-- [`js/pullcord.js`](assets/preprint/js/pullcord.js) is the control that
-  toggles it here: a line hanging from the top edge with a bead on the end.
-  Dragging it past a 42px detent changes the mode; releasing short of that
-  springs it back. It moves sideways as well as down, with resistance, and
-  swings once past rest on release. Clicking plays a shortened version, as do
-  Enter and Space. Sound is on by default and is silenced by
-  `localStorage['preprint-sound'] = 'off'` or by `prefers-reduced-motion`,
-  which also drops the animation while keeping the drag and its threshold.
-  Neither script draws anything: the cord is `.pullcord` in `core.css`, and it
-  hangs from `.wrap` / `.masthead` in `base.css`.
 - [`js/controls.js`](assets/preprint/js/controls.js) and
   [`controls.css`](assets/preprint/controls.css) draw five widgets the browser
   would otherwise style itself: the number spinner, the checkbox, the colour
@@ -257,6 +247,19 @@ Three of the five scripts come from the system:
   firing `input` and `change`; a tool reads its controls as if none of this
   existed. A `MutationObserver` picks up controls added after load. Use
   `data-tip` rather than `title`.
+
+The mode control is the workshop's own, and it is the **bench lamp**: a fixture
+on a jointed arm hung off the top edge of the page, throwing a cone of light
+across the sheet down to the spine. Light mode is the lamp on; dark mode is the
+lamp off and the room with it. It replaces both of the system's mode controls —
+the swatch and the pull cord — because once the light itself is drawn, a cord
+reaching for an undrawn light is the smaller half of the same idea. It is drawn
+entirely in [`assets/site.css`](assets/site.css) and has no script: the switch
+is a `[data-mode-toggle]` button sitting over the shade, and `mode.js` answers
+it. The drawing is a separate, inert `span` at `z-index: -1`, so the cone passes
+*behind* the wordmark instead of washing over it, and it is clipped by whatever
+element holds it — `.masthead` on the index, `header` on a tool page — which is
+what lands the light exactly on the spine at every width.
 
 Two scripts are the workshop's own. [`assets/share.js`](assets/share.js) backs
 the `[data-share]` button beside each tool title, which copies that tool's
@@ -275,8 +278,7 @@ declares must not change.
 
 1. Create `<tool-name>/index.html`, `style.css`, `script.js`.
 2. In `<head>`, before the stylesheets, link `../assets/preprint/js/mode.js`,
-   then `../assets/preprint/js/pullcord.js` with `defer`, then
-   `../assets/preprint/styles.css`, `../assets/preprint/core.css`,
+   then `../assets/preprint/styles.css`, `../assets/preprint/core.css`,
    `../assets/preprint/controls.css`, `../assets/base.css` and
    `../assets/site.css`. Put only tool-specific layout in the tool's own
    `style.css`.
@@ -286,8 +288,10 @@ declares must not change.
    builds at startup is in the DOM when the controls are drawn.
 4. Give the page the shared header: a `.back-link` and a `.title-row` holding
    `h1.tool-title` plus the `[data-share]` and `[data-pin]` buttons, which key
-   off the folder name. The `.pullcord` is the first child of `.wrap`, above
-   the header, because it hangs from the top of the page.
+   off the folder name. Copy the `.lamp` span and the `.lamp-switch` button
+   from another tool as the first children of `<header>`: the lamp hangs off
+   that element's top edge and is clipped by it, which is why the page's top
+   padding belongs to the header and not to `.wrap`.
 5. Add a card to the root [index.html](index.html), inside the `section.area`
    for the tool's domain. The section carries the register class, so the card
    does not. Add a `div` in that section's `.plates` with `data-tool`, holding

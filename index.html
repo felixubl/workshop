@@ -7,7 +7,6 @@
 <meta name="description" content="Small self-serve tools, built one at a time. Every card carries a mark saying what leaves your machine, from nothing at all upward.">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=5">
 <script src="assets/preprint/js/mode.js"></script>
-<script src="assets/preprint/js/pullcord.js" defer></script>
 <link rel="stylesheet" href="assets/preprint/styles.css">
 <!-- core.css is loaded for the .mk--citron marker. base.css follows it and wins
    where they overlap. -->
@@ -29,7 +28,7 @@
     max-width: var(--pp-page-max);
     width: 100%;
     margin: 0 auto;
-    padding: clamp(1.75rem, 6vh, 3rem) var(--pp-gutter) clamp(1rem, 2.5vw, 1.4rem);
+    padding: clamp(3rem, 9vh, 5rem) var(--pp-gutter) clamp(1.5rem, 3.5vw, 2.2rem);
     display: grid;
     /* Explicit column. An implicit auto column sizes to its widest item
        instead of the page measure. */
@@ -129,13 +128,41 @@
   .nails i:nth-child(2) { top: 6px; right: 7px; }
   .nails i:nth-child(3) { bottom: 6px; left: 7px; }
   .nails i:nth-child(4) { bottom: 6px; right: 7px; }
-  /* The W matches the favicon: same face, citron fill, pink edge, blue offset
-     two units down and right. Sized in em so it scales with the wordmark. */
+  /* The W is the favicon at another size, and now it is measured against it
+     rather than approximated. The favicon strokes the glyph at 210 units on a
+     2000 upem body and offsets the cast by the same 210, which is 0.105em of
+     each; the wordmark had been carrying a 0.026em edge and a 0.05em cast, so
+     the one letter that is supposed to be the mark was a quarter of the mark's
+     weight and read as a printing fault.
+
+     Two things had to change with it. The cast is a second, STROKED copy rather
+     than a text-shadow, because a shadow follows the fill and the fill is
+     narrower than the pink silhouette — the favicon's comment says so, and the
+     narrow version is what makes it read as a shadow instead of as a second
+     pass through the press. And the letter is given clearance: at the wordmark's
+     -0.05em tracking the edge and the cast both landed on the o, which is what
+     made the whole mark look like an accident. It sets at its own tracking with
+     air either side, the way a stamped initial does. */
   .wordmark .mark-w {
+    position: relative;
+    margin: 0 0.15em 0 0.05em;
+    letter-spacing: 0;
     color: var(--w-mark-fill);
-    -webkit-text-stroke: 0.026em var(--w-mark-edge);
+    -webkit-text-stroke: 0.105em var(--w-mark-edge);
     paint-order: stroke fill;
-    text-shadow: 0.05em 0.05em 0 var(--pp-plate-3);
+  }
+  /* The cast. z-index: -1 puts it under the wordmark's own letters and over the
+     panel they sit on, which works because the panel's rotation makes it a
+     stacking context. */
+  .wordmark .mark-w::before {
+    content: 'W';
+    position: absolute;
+    left: 0.115em;
+    top: 0.115em;
+    z-index: -1;
+    color: var(--pp-plate-3);
+    -webkit-text-stroke: 0.105em var(--pp-plate-3);
+    paint-order: stroke fill;
   }
 
   /* The repo link takes the secondary 1px border. Every other property is
@@ -540,7 +567,30 @@
 <div class="page">
 
   <header class="masthead">
-    <button class="pullcord" type="button" data-pullcord aria-label="Pull the string to switch colour mode"><span class="pullcord__cord" aria-hidden="true"></span><span class="pullcord__bead" aria-hidden="true"></span></button>
+    <!-- The bench lamp, drawn in assets/site.css. The span is the fixture and
+       hangs behind the page; the button is the switch and sits over the shade.
+       Everything after the cone is one group rotated about the lower knuckle, so
+       the throw is written straight down and swings with the head. -->
+    <span class="lamp" aria-hidden="true">
+      <svg viewBox="-85 0 217 479" fill="none">
+        <g transform="rotate(12 74 58)">
+          <path class="lamp__cone" d="M37 142 111 142 143 470 5 470Z"></path>
+          <g class="lamp__rig">
+            <path d="M74 58V88"></path>
+            <path class="lamp__shade" d="M65 88 83 88 111 142 37 142Z"></path>
+            <path class="lamp__lip" d="M44 129 104 129 111 142 37 142Z"></path>
+            <path class="lamp__rim" d="M40 142H108"></path>
+          </g>
+        </g>
+        <g class="lamp__rig">
+          <path d="M112 0V20L74 58"></path>
+          <path class="lamp__joint" d="M112 14 118 20 112 26 106 20Z"></path>
+          <path class="lamp__joint" d="M74 52 80 58 74 64 68 58Z"></path>
+        </g>
+      </svg>
+    </span>
+    <button class="lamp-switch" type="button" data-mode-toggle aria-label="Switch colour mode"></button>
+
     <div class="shelf">
       <h1 class="wordmark">Felix' <span class="mark-w">W</span>orkshop<span class="nails" aria-hidden="true"><i></i><i></i><i></i><i></i></span></h1>
     </div>

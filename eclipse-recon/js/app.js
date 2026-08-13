@@ -2500,7 +2500,7 @@
 
   /* ================= colour mode ================= */
 
-  /* the pull cord flips data-mode on <html>; everything drawn in JS —
+  /* the bench lamp flips data-mode on <html>; everything drawn in JS —
      leaflet vectors, the SVG charts — re-reads the tokens and follows */
   function applyMode() {
     var P = palette();

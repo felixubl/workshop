@@ -242,13 +242,15 @@ function run() {
      nb.scrollWidth <= nb.clientWidth + 1,
      nb.scrollWidth + ' vs ' + nb.clientWidth);
 
-  /* ── the cards ─────────────────────────────────────────────────────────── */
-  var cards = hd.querySelectorAll('.tool-card');
-  ok('the index lists its tools as cards', cards.length > 0, cards.length + ' cards');
-  var live = hd.querySelectorAll('.tool-card-live').length;
-  var soon = hd.querySelectorAll('.tool-card-soon').length;
-  ok('every card is either live or coming', live + soon === cards.length,
-     live + ' live, ' + soon + ' soon, ' + cards.length + ' total');
+  /* ── the plates ────────────────────────────────────────────────────────── */
+  /* .tool-card until the index dropped the queued rows and renamed what was
+     left. Both halves of the old pair passed on zero, so the rename left a
+     check that could only fail and a check that could only pass. */
+  var plates = hd.querySelectorAll('.plate');
+  ok('the index lists its tools as plates', plates.length > 0, plates.length + ' plates');
+  var live = hd.querySelectorAll('.plate-live').length;
+  ok('every plate is a live one', live === plates.length && live > 0,
+     live + ' live of ' + plates.length + ' total');
 }
 
 var done = false;
