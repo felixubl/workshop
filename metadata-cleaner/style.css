@@ -1,12 +1,11 @@
-/* Tool-specific layout only — the shell, the toolbar band, buttons, fields,
-   the sheet and the drop target all come from ../assets/base.css over the
-   vendored system. This file styles the two things this tool invents: the rail
-   of loaded files, and a sheet whose rows are switches rather than figures. */
+/* Tool-specific layout only. The shell, toolbar, buttons, fields, table and
+   drop target come from ../assets/base.css over the vendored system. This file
+   styles the file rail and a table whose rows are switches rather than
+   figures. */
 
-/* ── The drop target ──────────────────────────────────────────────────────
-   It has two sizes. Open, it is the whole page and the only thing to do with
-   it. Once files are loaded the work is the subject and the target drops to a
-   line, still a drop target, no longer an invitation. */
+/* The drop target has two sizes. Open, it fills the page and is the only thing
+   to do. Once files are loaded it drops to a line: still a target, no longer
+   an invitation. */
 .dz-open {
   padding: clamp(2.5rem, 8vw, 4.5rem) 1.25rem;
 }
@@ -63,11 +62,10 @@
   display: none;
 }
 
-/* ── The work ─────────────────────────────────────────────────────────────
-   Rail of files beside the sheet for the one being read. minmax(0, 1fr) on the
-   second track is what keeps a wide table inside the column instead of pushing
-   the page sideways. Below the fold width the rail becomes a band above the
-   sheet, which is the same list read in the other direction. */
+/* The work area: a rail of files beside the table for the one being read.
+   minmax(0, 1fr) on the second track keeps a wide table inside the column
+   instead of widening the page. Below the fold width the rail becomes a band
+   above the table. */
 .work {
   display: grid;
   grid-template-columns: 15rem minmax(0, 1fr);
@@ -108,8 +106,8 @@
   }
 }
 
-/* One file, as a slip: press the body to read it, press the arrow to save it.
-   Two targets in one row, so the row is not a button — the pick is. */
+/* One file as a row: press the body to read it, press the arrow to save it.
+   Two targets in one row, so the row itself is not a button. */
 .slip {
   display: flex;
   align-items: stretch;
@@ -122,13 +120,9 @@
 .slip:hover {
   border-color: var(--pp-edge);
 }
-/* The open file fills with ink at its edge only: a 2px rule on the left, the
-   same statement the toolbar's active preset makes with a fill. A full fill
-   here would out-shout the sheet the slip is pointing at.
-
-   Structure weight, not --pp-rule-spine. The spine is 6px and a page gets one,
-   spent already on the masthead break in base.css. This is a marked edge on a
-   list row, which is what the 2px structure weight is for. */
+/* The open file is marked with a 2px rule on its left edge rather than a fill,
+   which would out-shout the table it points at. Structure weight, not --pp-
+   rule-spine: the spine is 6px and a page gets one, already spent in base.css. */
 .slip.is-open {
   border-color: var(--pp-edge);
   border-left-width: var(--pp-rule-structure);
@@ -188,10 +182,9 @@
   color: var(--pp-plate-2-text);
 }
 
-/* ── The sheet of fields ──────────────────────────────────────────────────
-   Same sheet as the random number generator prints, holding switches instead
-   of figures: so the cells align left, the keep column is a fixed narrow
-   track, and the value column takes whatever is left. */
+/* The field table. Same table the random number generator prints, holding
+   switches instead of figures: cells align left, the keep column is a fixed
+   narrow track, and the value column takes the rest. */
 .sheet-meta {
   --w-sheet-min: 620px;
 }
@@ -202,9 +195,8 @@
 .sheet-meta .col-name {
   width: 34%;
 }
-/* Wide enough for the longest mark plus the cell's own padding. Sized to the
-   word rather than guessed: "identifying" sets the floor, and a track that
-   merely fits the pill leaves the padding to overflow. */
+/* Wide enough for the longest mark plus the cell's padding, sized to the word
+   "identifying" rather than guessed. */
 .sheet-meta .col-note {
   width: 128px;
 }
@@ -218,9 +210,9 @@
   letter-spacing: var(--w-track-label);
 }
 
-/* A group is a rule with a name on it, not a box: the sheet already has
-   borders, and a second container inside it would be two frames around one
-   thing. It sits on the sunk ground so the eye can find the breaks. */
+/* A group is a named rule rather than a box: the table already has borders,
+   and a second container inside it would be two frames around one thing. It
+   sits on the sunk ground so the breaks are visible. */
 .sheet-meta td,
 .sheet-meta th {
   vertical-align: top;
@@ -319,8 +311,8 @@
   color: var(--pp-faint);
 }
 
-/* A row on its way out is struck through, which is what a proof reader does to
-   a line that goes. The strike is on the name, not the value: the value is
+/* A row being removed is struck through, the way a proof reader marks a
+   deleted line. The strike is on the name, not the value: the value is
    evidence and stays legible. */
 .fld.is-cut .fld-name {
   color: var(--pp-faint);
@@ -330,16 +322,16 @@
 .fld.is-cut .val {
   color: var(--pp-faint);
 }
-/* Structural rows: kept because removing them would change a pixel. The box is
-   gone rather than disabled, because there is no decision to offer. */
+/* Structural rows, kept because removing them would change a pixel. The
+   checkbox is absent rather than disabled, because there is no decision to
+   offer. */
 .fld.is-fixed .col-keep::after {
   content: '\2014';
   color: var(--pp-faint);
 }
 
-/* What a field gives away, said in a word. Named .risk and not .mark: core's
-   .mark is the system's three-square plate mark, and this page now links core.
-   Two objects sharing a name is how one of them silently inherits a 22px box. */
+/* What a field discloses, in one word. Named .risk rather than .mark: core's
+   .mark is the system's plate mark, and this page links core. */
 .risk {
   display: inline-flex;
   align-items: center;

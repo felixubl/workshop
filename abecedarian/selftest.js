@@ -1,21 +1,9 @@
-/* Abecedarian Distance — the proof.
-
-   The engine's central claim is a MINIMUM over 26! alphabets, and 26! is not a
-   number anyone can enumerate to check. So the check is run on alphabets short
-   enough to enumerate completely: for ABCDE and ABCDEF, every word up to the
-   length of the alphabet is scored by the solver and again by brute force over
-   all n! permutations, and the two must agree on every one of them. A search
-   that agrees with exhaustion at n=5 and n=6 and is derived rather than tuned
-   is a search you can believe at n=26.
-
-   Everything the engine promises is checked here, not just the headline:
-   ranking against the permutations in lexicographic order, the swap sequence
-   against the alphabet it claims to build, and the returned alphabet against
-   the word it claims to sort — a distance that is right about a wrong alphabet
-   is still wrong.
-
-   Runs in a browser (tools/verify/abecedarian.html) and in node
-   (node abecedarian/selftest.js), off one set of assertions. */
+/* Abecedarian Distance: the proof. The engine's central claim is a minimum
+   over 26! alphabets, which cannot be enumerated. So it is checked on
+   alphabets short enough to enumerate completely: for ABCDE and ABCDEF, every
+   word up to the length of the alphabet is scored by the solver and again by
+   brute force over all n! permutations, and the two must agree. Runs in the
+   browser and under node against the same assertions. */
 
 var ABCTest = (function (ABC) {
   'use strict';
@@ -31,7 +19,7 @@ var ABCTest = (function (ABC) {
     return out;                       // recursion in this order IS lex order
   }
 
-  /* Every word over the alphabet from length 1 up to `max`. */
+  /* Every word over the alphabet, from length 1 up to `max`. */
   function words(letters, max) {
     var out = [], level = [''];
     for (var len = 1; len <= max; len++) {
@@ -45,7 +33,7 @@ var ABCTest = (function (ABC) {
     return out;
   }
 
-  /* The honest answer, at whatever cost: try every alphabet there is. */
+  /* The exhaustive answer: try every alphabet. */
   function bruteForce(word, letters, perms) {
     var best = null;
     for (var i = 0; i < perms.length; i++) {
@@ -85,12 +73,11 @@ var ABCTest = (function (ABC) {
        ABC.alphabetFromSeed(1n) === 'ABCDEFGHIJKLMNOPQRSTUVWXZY',
        ABC.alphabetFromSeed(1n));
 
-    /* The handoff puts the rotation at 25! = 15,511,210,043,330,985,984,000,000.
-       That is the rank of BACDEF...Z — the FIRST alphabet beginning with B,
-       which is what 25! counts: everything starting with A. The rotation is
-       not the first of the B block, since BACD... precedes it, and its own
-       rank is 25! + 24! + … + 1!. Both are asserted, so the correction is on
-       the record rather than in a commit message. */
+    /* The handoff puts the rotation at 25! =
+       15,511,210,043,330,985,984,000,000, the rank of BACDEF...Z, the first
+       alphabet beginning with B, since 25! counts everything starting with A.
+       The rotation itself is not first in the B block (BACD... precedes it)
+       and has rank 25! + 24! + ... + 1!. Both are asserted. */
     var rot = ABC.AZ.slice(1) + ABC.AZ[0];
     ok('25! is the rank of BACDEF...Z, the first alphabet starting with B',
        ABC.alphabetFromSeed(15511210043330985984000000n) === 'BACDEFGHIJKLMNOPQRSTUVWXYZ',
@@ -102,7 +89,7 @@ var ABCTest = (function (ABC) {
        ABC.alphabetFromSeed(ABC.factorial(26) - 1n) ===
        ABC.AZ.split('').reverse().join(''));
 
-    /* ── The two distances, on alphabets whose answers are known ─────────── */
+    /* The two distances, on alphabets whose answers are known. */
     ok('an untouched alphabet is zero under both measures',
        ABC.cayleyDistance(ABC.AZ) === 0 && ABC.kendallTauDistance(ABC.AZ) === 0);
     ok('the rotation is Cayley 25 and Kendall tau 25 — the measures diverge',
@@ -113,7 +100,7 @@ var ABCTest = (function (ABC) {
        ABC.cayleyDistance(rev) === 13 && ABC.kendallTauDistance(rev) === 325,
        'cayley ' + ABC.cayleyDistance(rev) + ', tau ' + ABC.kendallTauDistance(rev));
 
-    /* ── The swap sequence rebuilds the alphabet, in exactly Cayley many ─── */
+    /* The swap sequence rebuilds the alphabet in exactly Cayley-many swaps. */
     (function () {
       var perms = permutations('ABCDEF'), bad = 0, first = '';
       for (var i = 0; i < perms.length; i++) {
@@ -154,8 +141,8 @@ var ABCTest = (function (ABC) {
 
         var key = ABC.letterOrder(w);
         /* Words no alphabet sorts share one cache entry. The sentinel is
-           parenthesised because a forced order is uppercase letters and
-           nothing else, so this can never collide with a real one. */
+           parenthesised, because a forced order is uppercase letters only and
+           cannot collide. */
         key = (key === null) ? '(none)' : key;
         if (cache[key] === undefined) cache[key] = bruteForce(w, letters, perms);
         var want = cache[key];

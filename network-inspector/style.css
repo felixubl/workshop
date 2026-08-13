@@ -1,13 +1,13 @@
-/* Tool-specific layout only. The sheet, the toolbar, the buttons and the page
-   shell come from ../assets/base.css over the vendored system. What this file
-   adds is the one thing this tool invents: a table where every row carries who
-   else can see the value in it. */
+/* Tool-specific layout only. The table, toolbar, buttons and page shell come
+   from ../assets/base.css over the vendored system. This file adds the one
+   thing the tool invents: a table where every row states who else can see its
+   value. */
 
-/* Two sheets side by side above the fold, stacking when there is no room for
+/* Two tables side by side above the fold, stacking when there is no room for
    two readable columns of mono. */
-/* Two sheets side by side, each ending where its own last row does. Without the
-   start alignment the shorter sheet stretches to match the taller one and ends
-   in a stretch of empty ruled paper, which reads as a table still loading. */
+/* Each table ends where its own last row does. Without start alignment the
+   shorter one stretches to match the taller and ends in empty ruled space,
+   which reads as still loading. */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
@@ -32,9 +32,9 @@
   margin-top: 2.25rem;
 }
 
-/* A key/value sheet, not a grid of figures: the name is the quiet column and
-   the value is the read. Values go mono and tabular so an address, a byte
-   count and a millisecond all sit on the same rhythm. */
+/* A key/value table rather than a grid of figures: the name is the quiet
+   column, the value is the read. Values are mono and tabular so an address, a
+   byte count and a millisecond share a rhythm. */
 .sheet td.k {
   width: 40%;
   color: var(--pp-faint);
@@ -50,18 +50,9 @@
   color: var(--pp-faint);
 }
 
-/* WHO ELSE KNOWS IT.
-
-   The square is the index's device, used for the reason the index uses it: a
-   category, printed at full strength as one small solid square in front of the
-   word that names it. Law 05 wants a plate to reinforce a message the words are
-   already carrying rather than to replace it, so the word is never dropped. The
-   square is what lets you scan the column without reading it, which is the whole
-   point of a disclosure table.
-
-   Plate 1 is what stays here, plate 3 is what your network operator sees anyway,
-   plate 2 is what any site you open can read for itself. That last one is the
-   loud one on purpose: it is the answer to "surely they cannot see that". */
+/* Who else knows the value. A category printed as one small solid square in
+   front of the word naming it, the same device the index uses. The word is
+   never dropped: the square lets the column be scanned without being read. */
 .who {
   display: inline-flex;
   align-items: center;
@@ -87,9 +78,9 @@
 .who--isp .sq { background: var(--pp-plate-3); }
 .who--site .sq { background: var(--pp-plate-2); }
 
-/* The live traffic table is figures, so it aligns right, except the resource
-   name which is a label and stays left. It is the one table here wide enough to
-   need the sideways scroll base.css already gives every sheet. */
+/* The live traffic table holds figures, so it aligns right, except the
+   resource name. It is the one table wide enough to need the sideways scroll
+   base.css gives every table. */
 .sheet table.traffic {
   --w-sheet-min: 720px;
   min-width: var(--w-sheet-min);
@@ -111,10 +102,9 @@
 .traffic td.blank {
   color: var(--pp-faint);
 }
-/* A request still in flight has no end timings yet, so its row is provisional
-   until it settles. Dotted is the system's provisional, and it is drawn on the
-   row's own left edge rather than as a wash, because a wash behind figures is
-   the thing site.css says not to bring back. */
+/* A request still in flight has no end timings, so its row is provisional
+   until it settles. Dotted is the system's provisional, drawn on the row's
+   left edge rather than as a wash. */
 .traffic tr.is-live td:first-child {
   border-left: var(--pp-rule-structure) dotted var(--pp-plate-3);
   padding-left: 0.6rem;
@@ -139,8 +129,8 @@
   color: var(--pp-ink);
 }
 
-/* The measured line. Three readings printed big enough to be the answer, since
-   this is the one panel a visitor actually came for. */
+/* The measured connection. Three readings printed large, because this is the
+   panel most visitors came for. */
 .readings {
   display: flex;
   flex-wrap: wrap;
@@ -169,9 +159,9 @@
   color: var(--pp-muted);
 }
 
-/* The sweep's progress, and its results. A found address is a row like any
-   other; what makes it worth looking at is the time it took to fail, so that
-   number is printed rather than hidden behind a verdict. */
+/* The sweep's progress and results. A found address is an ordinary row; what
+   makes it interesting is the time it took to fail, so that number is printed
+   rather than hidden behind a verdict. */
 .scan-bar {
   display: flex;
   align-items: center;

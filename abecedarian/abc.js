@@ -1,39 +1,20 @@
-/* Abecedarian Distance — the engine.
-
-   A word is *abecedarian* when its letters already run in alphabetical order:
-   billowy, almost. Generalise that by allowing any permutation of the alphabet
-   to count as "alphabetical", and a word stops being sorted-or-not and starts
-   having a DISTANCE: how far the nearest alphabet that sorts it lies from the
-   ordinary A–Z.
-
-   Everything here takes the alphabet as a parameter rather than assuming 26
-   letters, which is what makes the exhaustive test on ABCDE and ABCDEF
-   possible — a claim about a search is worth what its brute-force check is
-   worth, and 26! is not a number you can enumerate.
-
-   The handoff spec names its API in snake_case; this is a browser file, so the
-   names are camelCase and the correspondence is one to one:
-     alphabet_from_seed  -> alphabetFromSeed      is_sorted     -> isSorted
-     seed_from_alphabet  -> seedFromAlphabet      letter_order  -> letterOrder
-     cayley_distance     -> cayleyDistance        minimal_alphabet
-     kendall_tau_distance-> kendallTauDistance    alphabet_distance
-     swap_sequence       -> swapSequence          profile                     */
+/* Abecedarian Distance: the engine. A word is abecedarian when its letters run
+   in alphabetical order (billowy, almost). Allowing any permutation of the
+   alphabet to count as alphabetical turns that into a distance: how far the
+   nearest alphabet that sorts the word lies from ordinary A-Z. Everything here
+   takes the alphabet as a parameter, so the same code runs on 5, 6 or 26
+   letters; the small cases are what the brute-force tests check. */
 
 var ABC = (function () {
   'use strict';
 
   var AZ = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-  /* ── Addressing alphabets ────────────────────────────────────────────────
-     A seed is a permutation's lexicographic rank in [0, n!). Seed 0 is the
-     ordinary alphabet. The conversion both ways is the Lehmer code — the
-     factorial number system — which is O(n) and bijective.
-
-     BigInt throughout, and not as caution: 26! is 4.03e26, twenty-seven digits,
-     and a double carries fifteen. Rank 1 is ABC...XZY, the smallest possible
-     disturbance. The rotation BCD...ZA that people reach for first is rank
-     15,511,210,043,330,985,984,000,000 — rotations are 26 of the 26!, and
-     numbering by them would leave almost every alphabet unaddressable. */
+  /* Addressing alphabets. A seed is a permutation's lexicographic rank in [0,
+     n!). Seed 0 is the ordinary alphabet. The conversion both ways is the
+     Lehmer code (the factorial number system), which is O(n) and bijective.
+     BigInt throughout: 26! is 4.03e26, twenty-seven digits, and a double
+     carries fifteen. */
 
   function factorial(n) {
     var f = 1n;
@@ -72,22 +53,11 @@ var ABC = (function () {
     return seed;
   }
 
-  /* ── Distance between two alphabets ──────────────────────────────────────
-     Read the alphabet as a permutation: the letter that normally sits at
-     position p now sits wherever this alphabet puts it. Both measures below
-     are of that permutation against the identity.
-
-     CAYLEY is the minimum number of swaps of ANY two letters, and equals
-     n minus the number of cycles: a cycle of length L costs L-1 swaps, and
-     the letters left alone are cycles of length 1 costing nothing. Maximum 25.
-
-     KENDALL TAU is the minimum number of swaps of ADJACENT letters, which is
-     the inversion count. Maximum 325.
-
-     They disagree loudly, and the disagreement is the point: the rotation
-     BCD...ZA is 25 under Cayley — the worst score there is — and 25 out of 325
-     under Kendall tau, which is mild. One measure asks how tangled the
-     alphabet is, the other how far it has been carried. */
+  /* Distance between two alphabets. Read an alphabet as a permutation of
+     positions and measure it against the identity. Cayley distance is the
+     minimum number of swaps of any two letters and equals n minus the number
+     of cycles, because a cycle of length L costs L-1 swaps. Kendall tau counts
+     adjacent transpositions, which is the number of inversions. */
 
   function permOf(alphabet, letters) {
     var idx = {}, i;
@@ -110,10 +80,10 @@ var ABC = (function () {
     return p.length - cycles;
   }
 
-  /* O(n²), and deliberately. At 26 letters that is 325 comparisons; a
-     merge-sort counter would be O(n log n) and unreadable for no gain any
-     reader of this page could measure. It is the line to change first if this
-     ever runs on an alphabet of thousands. */
+  /* O(n squared), deliberately. At 26 letters that is 325 comparisons; a
+     merge-sort counter would be O(n log n) and harder to read for no
+     measurable gain. This is the first line to change if it ever runs on an
+     alphabet of thousands. */
   function kendallTauDistance(alphabet, letters) {
     letters = letters || AZ;
     var p = permOf(alphabet, letters);
@@ -124,12 +94,11 @@ var ABC = (function () {
     return inv;
   }
 
-  /* One minimal swap sequence, as pairs of letters, applied left to right to
-     the ordinary alphabet. Selection-sort order: walk the positions, and
-     whenever a position holds the wrong letter, fetch the right one from
-     wherever it is. Every swap it makes puts at least one letter home for
-     good, so it spends exactly n - cycles of them, which is the Cayley
-     distance. The sequence is not unique; its length is. */
+  /* One minimal swap sequence, as pairs of letters applied left to right to
+     the ordinary alphabet. Selection-sort order: walk the positions, and when
+     a position holds the wrong letter, fetch the right one. Every swap places
+     at least one letter permanently, so it uses exactly n minus cycles swaps,
+     which is the Cayley distance. The sequence is not unique; its length is. */
   function swapSequence(alphabet, letters) {
     letters = letters || AZ;
     var cur = letters.split('');
@@ -153,19 +122,11 @@ var ABC = (function () {
     return cur.join('');
   }
 
-  /* ── Which words can be sorted at all ────────────────────────────────────
-     A word is abecedarisable exactly when no letter appears in two separate
-     blocks: aabb yes, abab no, anna no (a…n…n…a), tee yes. Under any single
-     ordering every copy of a letter has to sit together, so a letter that
-     leaves and comes back can never be accommodated — no permutation of the
-     alphabet helps, and this is not an approximation but a complete test.
-     (Formally the word must avoid the pattern abab: a Davenport-Schinzel
-     sequence of order 2.)
-
-     What survives is the FORCED ORDER: the distinct letters in order of first
-     appearance. Everything else about the word — repeats, length — stops
-     mattering the moment this is extracted, which is also why a dictionary run
-     should cache on the forced order rather than on the word. */
+  /* Which words can be sorted at all. A word is abecedarisable exactly when no
+     letter appears in two separate blocks: aabb yes, abab no, anna no. Under
+     any single ordering every copy of a letter must sit together, so a letter
+     that leaves and returns can never be accommodated, whatever the
+     permutation. */
 
   function letterOrder(word) {
     var seen = {}, out = '';
@@ -179,10 +140,9 @@ var ABC = (function () {
     return out;
   }
 
-  /* Where it breaks, for a word that cannot be sorted: the letter that comes
-     back, the index it first ran to, and the index it reappears at. The tool
-     shows this rather than a bare refusal — "no" is a verdict, and the reader
-     asked a question. */
+  /* Where it breaks, for a word that cannot be sorted: the letter that recurs,
+     the index it first ran to, and the index it reappears at. Shown rather
+     than a bare refusal. */
   function firstBreak(word) {
     var last = {}, i, ch;
     for (i = 0; i < word.length; i++) {
@@ -202,33 +162,10 @@ var ABC = (function () {
     return true;
   }
 
-  /* ── The search ──────────────────────────────────────────────────────────
-     The obvious construction is wrong, and expensively so. Reordering the
-     word's own letters among their own alphabetical positions looks like the
-     whole problem and is not: the letters the word never uses are parking
-     spaces, and parking is usually cheaper than shuffling.
-
-     Forced order B, C, A on the alphabet ABCDE:
-       local reshuffle  -> BCADE, one 3-cycle,        two swaps
-       optimal          -> DBCAE, one swap A<->D,     one swap
-     D is not in the word and does nothing but hold a place, and holding a
-     place is what makes it a single swap instead of a rotation.
-
-     So: pick rising slots p_1 < … < p_k for the k bound letters l_1 … l_k.
-     Each choice draws an edge "the letter that normally lives at p_i now holds
-     l_i" in a partial permutation of all n letters. Whatever is left over can
-     always be filled in so that every open chain closes into its own cycle, so
-     the finished permutation has 26 - k + z cycles, where z counts the cycles
-     already closed among the chosen edges.
-
-       cost = n - cycles = k - z
-
-     The whole problem is therefore to MAXIMISE z, and the word's length, its
-     repeats and the size of the alphabet have all dropped out of it.
-
-     A self-loop — a letter parked on its own square — is the commonest way to
-     close a cycle, which is why a forced order with no inversions costs
-     nothing and is exactly the classical abecedarian case. */
+  /* The search. Reordering only the word's own letters among their own
+     positions is not the whole problem: the letters the word never uses are
+     free positions, and using them is usually cheaper than shuffling. The
+     search therefore considers the full alphabet. */
 
   function solve(word, letters) {
     letters = letters || AZ;
@@ -249,37 +186,12 @@ var ABC = (function () {
     var slots = new Array(k);
     var succ = {};                       // letter -> the letter it now holds
 
-    /* Depth-first over the slot for each index in turn. Two things keep it in
-       the milliseconds:
-
-       ITS OWN SQUARE FIRST. A self-loop is free and usually available, so
-       trying it before anything else tends to walk straight to the optimum on
-       the first descent, and everything after that is pruned rather than
-       searched.
-
-       THE BOUND, in two halves. Each remaining index draws one edge and one
-       edge shuts at most one loop, so no more than `remaining` cycles are
-       still to be had. And every letter on a cycle is a BOUND letter — a cycle
-       has the same letters as sources and as targets, and the targets are the
-       word's own — so the edge that shuts a loop always runs out of some bound
-       letter's own square. Distinct loops shut on distinct edges from distinct
-       squares, and squares only rise, so no more loops remain than there are
-       bound letters' squares at or above the floor. The smaller of the two is
-       the bound, and the second half is what makes a fourteen-letter word
-       finish in single-digit milliseconds instead of hundreds: once the floor
-       has climbed past the last of the word's own squares, nothing below can
-       close and the whole subtree goes.
-
-       A third, sharper-LOOKING bound is available and is WRONG, which cost a
-       brute-force run to find out: "an index whose own square is already
-       behind the floor cannot be a self-loop, so of the m left, only the s
-       that still can are worth one apiece and the rest need two each". That
-       quietly assumes a cycle is paid for entirely by the indices inside it.
-       It is not — an edge drawn now closes a loop through edges drawn earlier.
-       On alphabet ABCDE the word EA needs A->E first and E->A second, and the
-       second index alone, unable to self-loop, shuts the loop the first one
-       opened. That bound scored the index zero and pruned the only optimum
-       there is. */
+    /* Depth-first over the slot for each index in turn. Two things keep it
+       fast. Its own square first: a self-loop is free and usually available,
+       so trying it first tends to reach the optimum on the first descent and
+       prune the rest. The bound: each remaining index draws one edge, and one
+       edge closes at most one cycle, so the best possible remaining cost is
+       known and any branch that cannot beat the incumbent is cut. */
     var homeAtOrAfter = new Array(n + 1).fill(0);
     (function () {
       var isHome = new Array(n).fill(0);
@@ -313,9 +225,9 @@ var ABC = (function () {
 
         var src = letters[p];
         /* Does this edge close a cycle? Follow the chain forward from the
-           letter being placed; dst is nobody's target yet, so the walk cannot
-           loop and ends at whichever letter has nothing yet. If that is the
-           letter we are drawing FROM, the loop shuts. */
+           letter being placed. dst is nobody's target yet, so the walk cannot
+           loop and ends at whichever letter has no target. If that is the
+           letter being drawn from, the cycle closes. */
         var end = dst;
         while (succ[end] !== undefined) end = succ[end];
 

@@ -1,19 +1,10 @@
-/* Network Inspector.
-
-   Four questions, kept strictly apart because they cost different things to
-   answer:
-
-     1. What does this page already know, having asked nobody?  Rendered on
-        load. Nothing leaves the browser to produce it.
-     2. What is the connection actually doing right now?  Resource Timing,
-        live. Also free, also nobody asked.
-     3. What does one lookup add?  A button, because it hands your address to a
-        third party and that should be a decision rather than a side effect.
-     4. Who else is on this network?  A button, and the weakest answer on the
-        page. A browser cannot scan. See probe() for what it does instead.
-
-   The whole tool is one long argument that (1) and (2) are much larger than
-   people expect, which is why they are the parts that render without asking. */
+/* Network Inspector. Four questions, kept apart because they cost different
+   things to answer. 1: what the page already knows without asking anyone,
+   rendered on load, nothing sent. 2: what the connection is doing now, from
+   Resource Timing, also nothing sent. 3: what one lookup adds, behind a button
+   because it sends your address to a third party. 4: what is on your own
+   network, behind a button because it probes machines that did not ask to be
+   probed. */
 
 (() => {
   'use strict';
@@ -21,8 +12,8 @@
   const $ = (id) => document.getElementById(id);
   const DASH = '–';
 
-  /* Who else can see a value. The three answers this tool ever gives, named
-     once so a row cannot invent a fourth. */
+  /* Who else can see a value. The three answers this tool gives, named once so
+     a row cannot invent a fourth. */
   const WHO = {
     local: ['local', 'stays in your browser'],
     isp: ['network', 'your ISP and anyone operating this network'],
@@ -38,10 +29,10 @@
     return n;
   }
 
-  /* One row of a key/value sheet. `who` is a key of WHO, or null for a row
-     that is a measurement rather than a disclosure. A value of null prints the
-     dash and goes quiet, which is itself information: the browser declining to
-     answer is worth seeing next to the ones it answers freely. */
+  /* One row of a key/value table. `who` is a key of WHO, or null for a row
+     that is a measurement rather than a disclosure. A null value prints a
+     dash: a browser declining to answer is worth seeing beside the ones that
+     answer freely. */
   function row(tbody, key, value, who) {
     const tr = el('tr');
     tr.append(el('td', 'k', key));
@@ -63,14 +54,10 @@
     return tr;
   }
 
-  /* Rows with nothing in them are dropped rather than printed as "not
-     available". Which signals a browser refuses to answer varies by browser and
-     by platform, so hardcoding a list of dead ones would be wrong somewhere
-     else: Chrome has no connection.type on desktop, Firefox has no deviceMemory
-     or Client Hints, Safari has no battery. Filtering on the value covers all
-     of them and keeps the sheet to things that actually say something.
-
-     Callers that want an absence stated out loud still call row() directly. */
+  /* Empty rows are dropped rather than printed as "not available". Which
+     signals a browser refuses varies by browser and platform — Chrome has no
+     connection.type on desktop, Firefox no deviceMemory or Client Hints,
+     Safari no battery — so filtering on the value covers all of them. */
   const fill = (tbody, rows) => {
     tbody.replaceChildren();
     for (const r of rows) {
@@ -90,8 +77,8 @@
   const ms = (n) => (n == null ? null : `${n < 10 ? n.toFixed(1) : Math.round(n)} ms`);
 
   /* Some of these buttons carry an icon beside their label, so the busy state
-     has to put the whole button back rather than overwrite its text and drop
-     the SVG on the floor. */
+     replaces the whole button rather than overwriting its text and dropping
+     the SVG. */
   const idleMarkup = new WeakMap();
 
   function busy(btn, label) {
@@ -106,9 +93,9 @@
     if (idleMarkup.has(btn)) btn.innerHTML = idleMarkup.get(btn);
   }
 
-  /* Replaces a section's idle prompt with real content. Sections start as a
-     .card.prompt saying nothing has been sent, and that card is the thing being
-     answered, so it goes when the answer arrives. */
+  /* Replaces a section's idle prompt with its content. A section starts as a
+     .card.prompt saying nothing has been sent, and that card is what the
+     answer replaces. */
   function section(wrapId) {
     const wrap = $(wrapId);
     wrap.classList.remove('idle');
@@ -138,10 +125,10 @@
 
   // ── 1. The line, as the browser estimates it ─────────────────────────────
 
-  /* navigator.connection is the browser's own guess, revised as you use the
-     network. It is not a measurement and it rounds hard (downlink caps at 10
-     and buckets to 0.05) precisely so it cannot be used to fingerprint a
-     connection. The measured numbers that replace these come from measure(). */
+  /* navigator.connection is the browser's own estimate, revised as the network
+     is used. It is not a measurement and it rounds hard (downlink caps at 10
+     and buckets to 0.05) so it cannot be used to fingerprint a connection. The
+     measured numbers come from measure(). */
   function renderLine() {
     const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     const rows = [
@@ -170,9 +157,9 @@
 
   // ── 2. Where you look like you are, with no lookup ───────────────────────
 
-  /* The point of this panel: a site can place you roughly without touching the
-     network, and a VPN does not change any of it. If the IP lookup later says
-     Frankfurt and this says Europe/Vienna, that gap is the tell. */
+  /* A site can place you roughly without touching the network, and a VPN does
+     not change any of it. If the IP lookup later reports Frankfurt and this
+     reports Europe/Vienna, the gap is the signal. */
   function renderPlace() {
     const dt = Intl.DateTimeFormat().resolvedOptions();
     const off = -new Date().getTimezoneOffset();
@@ -197,9 +184,9 @@
     ]);
   }
 
-  /* A bare language tag like "de" carries no country, but CLDR knows the most
-     likely one, so "de" maximizes to de-Latn-DE. That inference is the reason a
-     language header is a location hint and not just a display preference. */
+  /* A bare language tag such as "de" carries no country, but CLDR knows the
+     most likely one, so "de" maximizes to de-Latn-DE. That inference is why a
+     language header is a location hint rather than only a display preference. */
   function regionOf(locale) {
     try {
       return new Intl.Locale(locale).maximize().region || null;
@@ -211,8 +198,8 @@
   // ── 3. The machine ───────────────────────────────────────────────────────
 
   /* Every entry here is readable by any script on any page, with no prompt and
-     no permission. Collected together because that is the honest way to show
-     it: the individual facts are dull and the combination is an identifier. */
+     no permission. Collected together because the individual facts are
+     unremarkable and the combination is an identifier. */
   async function renderMachine() {
     const rows = [];
     const nav = navigator;
@@ -259,9 +246,8 @@
         ? `${Math.round(performance.memory.jsHeapSizeLimit / 1048576)} MB` : null, 'site'],
       ['Built-in PDF viewer', nav.pdfViewerEnabled == null ? null
         : (nav.pdfViewerEnabled ? 'yes' : 'no'), 'site'],
-      /* Where you came from. Not a property of the machine, but it belongs with
-         the things handed over without being asked for, and people are
-         consistently surprised a site is told which page sent them. */
+      /* The referring page. Not a property of the machine, but it is handed
+         over without being asked for. */
       ['The page that sent you here', document.referrer || 'opened directly, no referrer', 'site'],
       ['Cookies enabled', nav.cookieEnabled ? 'yes' : 'no', 'site'],
       ['Do Not Track', nav.doNotTrack === '1' ? 'on, and almost universally ignored' : 'not set', 'site'],

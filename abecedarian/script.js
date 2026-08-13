@@ -1,14 +1,8 @@
-/* Abecedarian Distance — the page.
-
-   The engine is in abc.js and knows nothing about the DOM; this file knows
-   nothing about permutations. It reads the field, asks for a profile, and
-   prints it.
-
-   No button. A real word is answered in well under a millisecond and the worst
-   nonsense anyone can type in forty characters takes a third of a second, so
-   waiting for a press would be a ceremony around nothing. The one concession is
-   a short debounce, which exists so that typing "backgrounds" solves eleven
-   prefixes instead of eleven prefixes and a stutter. */
+/* Abecedarian Distance: the page. The engine is in abc.js and knows nothing
+   about the DOM; this file knows nothing about permutations. It reads the
+   field, asks for a profile and prints it. No button: a real word is answered
+   in well under a millisecond, and the worst forty-character input takes about
+   a third of a second. */
 
 var field = document.getElementById('word');
 var hint = document.getElementById('hint');
@@ -20,9 +14,8 @@ var verdictSay = document.getElementById('verdictSay');
 var verdictMeta = document.getElementById('verdictMeta');
 var facts = document.getElementById('facts');
 var alphaMeta = document.getElementById('alphaMeta');
-/* The three blocks that only exist when there IS an alphabet. A word no
-   ordering can sort has no strip, no swaps and no seed, and hiding them one id
-   at a time was four lines that had to be kept in step with the markup. */
+/* The three blocks that exist only when there is an alphabet. A word no
+   ordering can sort has no strip, no swaps and no seed. */
 var whenSortable = document.querySelectorAll('[data-when="sortable"]');
 var strip = document.getElementById('strip');
 var stripKey = document.getElementById('stripKey');
@@ -34,9 +27,9 @@ var readMeta = document.getElementById('readMeta');
 var rereadNote = document.getElementById('rereadNote');
 var seedEl = document.getElementById('seed');
 
-/* Thin spaces every three digits. A twenty-seven-digit number is evidence, not
-   reading, but ungrouped it is not even checkable against another copy of
-   itself. */
+/* Thin spaces every three digits. A twenty-seven-digit number is evidence
+   rather than reading, and ungrouped it cannot be checked against another
+   copy. */
 function grouped(n) {
   return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 }
@@ -57,14 +50,10 @@ function fact(dl, term, value) {
   dl.appendChild(el('dd', null, value));
 }
 
-/* ── The strip ─────────────────────────────────────────────────────────────
-   Twenty-six squares in position order. Each holds the letter that lives there
-   under the new alphabet; where that is not the letter that normally lives
-   there, the normal one is printed above it, struck through, so the
-   substitution can be read off the square itself rather than by comparing two
-   rows. The word's own letters are the ones the whole exercise is about, so
-   they take the structural border and the full ink; everything else steps back
-   to faint. */
+/* The strip: twenty-six squares in position order. Each holds the letter that
+   occupies that position under the new alphabet; where that differs from the
+   usual letter, the usual one is printed above it and struck through, so the
+   substitution can be read off the square. */
 function drawStrip(p) {
   strip.textContent = '';
   var inWord = {};
@@ -96,8 +85,8 @@ function drawStrip(p) {
 function drawSwaps(p) {
   swaps.textContent = '';
   /* An abecedarian word needs no swaps, and an empty list inside a bordered
-     box is a box with nothing in it — which reads as something failing to
-     load rather than as the good answer it is. So the panel says so. */
+     box reads as a failure to load rather than as the correct answer, so the
+     panel says so in words. */
   if (!p.swaps.length) {
     swaps.appendChild(el('li', 'swap-none', 'nothing to swap'));
     swapMeta.textContent = 'none needed';
@@ -114,9 +103,9 @@ function drawSwaps(p) {
     'alphabet above. There are other sequences of the same length; there is none shorter.';
 }
 
-/* The word read back under its new alphabet, letter by letter with the place
-   each one now occupies. The numbers only ever go up, which is the claim of the
-   whole page made checkable in one line. */
+/* The word read back under its new alphabet, letter by letter with the
+   position each now occupies. The numbers only increase, which is the page's
+   claim made checkable in one line. */
 function drawReread(p) {
   reread.textContent = '';
   var at = {};
@@ -130,8 +119,8 @@ function drawReread(p) {
   readMeta.textContent = p.word.length === p.order.length
     ? plural(p.word.length, 'letter', 'letters')
     : p.word.length + ' letters, ' + p.order.length + ' different';
-  /* The second sentence only appears for a word that HAS repeats, because for
-     a word without any the root is the word and saying so twice is noise. */
+  /* The second sentence appears only for a word with repeats; without them the
+     root is the word itself. */
   rereadNote.textContent = 'The place each letter takes under the alphabet above. ' +
     'They never decrease — which is what it means for the word to be sorted.' +
     (p.word.length === p.order.length ? '' :
@@ -151,8 +140,8 @@ function showWord(input) {
 
   if (!norm.word) { showNothing(''); return; }
   if (norm.rejected) {
-    /* Refused rather than stripped: dropping a hyphen quietly would turn two
-       words into one and answer a question nobody asked. */
+    /* Refused rather than stripped: dropping a hyphen would silently turn two
+       words into one. */
     var uniq = norm.rejected.split('').filter(function (c, i, a) { return a.indexOf(c) === i; });
     showNothing('Letters A to Z only — this has ' +
       uniq.map(function (c) { return c === ' ' ? 'a space' : '“' + c + '”'; }).join(', ') +

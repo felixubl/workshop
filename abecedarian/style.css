@@ -1,12 +1,10 @@
-/* Abecedarian Distance — only what is particular to this page.
-
-   Everything structural is base.css: the toolbar, the sheets, the result bars,
-   the cards, the buttons. What is here is the strip of twenty-six squares,
-   which nothing else on the site needs, and the handful of sizes around it. */
+/* Abecedarian Distance: only what is particular to this page. The toolbar,
+   tables, result bars, cards and buttons are in base.css. What is here is the
+   strip of twenty-six squares and the sizes around it. */
 
 /* The word field is the whole interface, so it is the one control allowed to
-   be large. Mono, because the letters are being read as letters — as a
-   sequence to be taken apart — and not as a word to be read for meaning. */
+   be large. Mono, because the letters are read as a sequence rather than as a
+   word. */
 .group.grow {
   flex: 1 1 18rem;
   min-width: 0;
@@ -18,15 +16,15 @@
   letter-spacing: 0.06em;
 }
 
-/* The sheets carry no padding of their own — base.css gives them an edge and a
-   ground and stops, so that a table can run to the border. Everything here is
-   prose or figures inside the box, so each one gets a body. */
+/* base.css gives tables an edge and a ground and no padding, so a table can
+   run to the border. Everything here is prose or figures inside the box, so
+   each gets a body. */
 .sheet-body {
   padding: 1rem 1.15rem;
 }
 
-/* The headline figure, at the display face. Words and not a bare numeral:
-   "3 swaps" is the answer, "3" is a number the reader has to caption. */
+/* The headline figure, at the display face. Words rather than a bare numeral:
+   "3 swaps" is the answer, "3" needs a caption. */
 .count-big {
   margin: 0;
   font-family: var(--pp-font-display);
@@ -36,10 +34,9 @@
   line-height: 1.1;
   text-wrap: balance;
 }
-/* Zero is the good answer and no distance is no answer, and neither is a
-   failure, so neither takes the plate .hint owns. Zero goes quiet by being
-   ordinary ink; the refusal steps back to faint, which is where this site puts
-   a state rather than a result. */
+/* Zero is a good answer and no distance is no answer; neither is a failure, so
+   neither takes the plate .hint owns. Zero is ordinary ink; the refusal steps
+   back to faint. */
 .count-big.is-none {
   color: var(--pp-faint);
 }
@@ -51,10 +48,9 @@
   color: var(--pp-muted);
   text-wrap: pretty;
 }
-/* The word quoted back with its two guilty letters in ink and everything
-   between them faint, so the eye jumps the gap the way the letter did. Set as
-   the machine's face, because at this point the word is being read as a
-   sequence rather than as a word. */
+/* The word quoted back with the two repeated letters in ink and everything
+   between them faint, so the eye skips the gap. Set in mono, because the word
+   is being read as a sequence. */
 .verdict-say .quote {
   font-family: var(--pp-font-mono);
   letter-spacing: 0.08em;
@@ -66,8 +62,7 @@
 }
 
 /* Four short facts under the verdict. Two columns of term and value on a wide
-   screen, stacked below — the same shape the key on the index uses, for the
-   same reason: a term and its value are one row, not two paragraphs. */
+   screen, stacked below, matching the key on the index. */
 .facts {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -91,11 +86,10 @@
   overflow-wrap: anywhere;
 }
 
-/* ── The strip ─────────────────────────────────────────────────────────────
-   Twenty-six squares in position order, wrapping rather than scrolling: an
-   alphabet read in two rows of thirteen on a phone is still an alphabet, and
-   one that runs off the side of the screen is a puzzle. auto-fit rather than a
-   fixed thirteen, so the break lands wherever the column actually ends. */
+/* The strip: twenty-six squares in position order, wrapping rather than
+   scrolling. An alphabet in two rows of thirteen is still readable; one that
+   runs off the screen is not. auto-fit rather than a fixed thirteen, so the
+   break lands where the column ends. */
 .strip {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(2.05rem, 1fr));

@@ -1,33 +1,16 @@
-/* Image Metadata Cleaner.
-
-   Reads a JPEG, PNG or WebP as bytes, decodes everything the container is
-   carrying alongside the picture, and writes the file back out with the
-   fields the reader chose to drop actually gone.
-
-   Two rules govern the whole thing:
-
-   LOSSLESS. The pixels are never decoded, never re-encoded, never touched. We
-   rewrite the container around them. A cleaned JPEG's scan data is the same
-   bytes it arrived as, so this tool cannot cost you a generation of quality.
-
-   SHRINK ONLY. Nothing is ever added that was not already there. Every value
-   written back is a verbatim copy of the value that came in, in the byte order
-   it came in. That is what makes rebuilding an EXIF block safe: we are never
-   re-encoding a rational or guessing an endianness, only laying the same bytes
-   down at new offsets.
-
-   And one promise the tool has to keep to be worth using at all: after every
-   rewrite the output is parsed again with the same parser, and the surviving
-   fields are compared against what was asked for. A mismatch refuses the
-   download rather than handing over a file that lies about what it lost. */
+/* Image Metadata Cleaner. Reads a JPEG, PNG or WebP as bytes, decodes the
+   metadata the container carries alongside the picture, and writes the file
+   back with the chosen fields removed. Two rules govern the whole tool.
+   Lossless: the pixels are never decoded or re-encoded, only the container
+   around them is rewritten. Local: nothing is uploaded, and no library is
+   used. */
 
 (function () {
   "use strict";
 
-  /* ── Bytes ─────────────────────────────────────────────────────────────
-     Everything below reads out of a Uint8Array with an explicit byte order.
-     No DataView state is kept anywhere: every read names its own endianness,
-     because a TIFF inside a JPEG inside a page has three of them in play. */
+  /* Bytes. Everything below reads from a Uint8Array with an explicit byte
+     order. No DataView state is kept: every read names its own endianness,
+     because a TIFF inside a JPEG inside a page involves three of them. */
 
   const UTF8 = new TextDecoder("utf-8");
   const LATIN1 = new TextDecoder("windows-1252");
@@ -111,10 +94,9 @@
     return printable / n >= 0.9;
   }
 
-  /* ── CRC32 ─────────────────────────────────────────────────────────────
-     PNG chunks and ZIP entries use the identical reflected polynomial, so one
-     table serves both. That shared thirty lines is the whole reason the batch
-     download can build a real .zip without a dependency. */
+  /* CRC32. PNG chunks and ZIP entries use the same reflected polynomial, so
+     one table serves both. That is what lets the batch download build a .zip
+     without a dependency. */
 
   let crcTable = null;
   function crc32(bytes) {
@@ -131,15 +113,11 @@
     return (c ^ 0xffffffff) >>> 0;
   }
 
-  /* ── Inflate ───────────────────────────────────────────────────────────
-     PNG's zTXt, iTXt and iCCP are zlib-wrapped deflate, which is the browser's
-     "deflate" (the raw variety is "deflate-raw" and fails on the two-byte zlib
-     header). This is the only asynchronous step in the whole tool, and it is
-     the only reason reading a file is a promise.
-
-     A tool that accepts arbitrary uploads is a decompression-bomb target: a
-     kilobyte of zTXt can claim to expand to gigabytes. The cap aborts on the
-     way in rather than after. */
+  /* Inflate. PNG's zTXt, iTXt and iCCP are zlib-wrapped deflate, which is the
+     browser's "deflate" format; the raw variety is "deflate-raw" and fails on
+     the two-byte zlib header. This is the only asynchronous step in the tool
+     and the reason reading a file returns a promise. Output is capped, because
+     a tool accepting arbitrary uploads is a decompression-bomb target. */
 
   const INFLATE_CAP = 32 << 20;
 
@@ -163,15 +141,10 @@
     }
   }
 
-  /* ── ZIP ───────────────────────────────────────────────────────────────
-     Stored, never deflated. The payloads are already-compressed images, so
-     compressing them again would spend time to gain nothing, and STORE keeps
-     the writer to one page of struct-filling.
-
-     The timestamp is pinned to the DOS epoch on purpose. A tool hired to strip
-     metadata that stamps the archive with the reader's own clock has leaked
-     the thing it was paid to remove — and a fixed stamp makes the archive
-     byte-reproducible for free. */
+  /* ZIP. Stored, never deflated: the payloads are already-compressed images,
+     so compressing them again gains nothing, and STORE keeps the writer short.
+     The timestamp is pinned to the DOS epoch, because a tool that strips
+     metadata should not stamp the archive with the reader's clock. */
 
   const DOS_DATE = 0x0021; // 1980-01-01
   const DOS_TIME = 0x0000;
@@ -251,11 +224,10 @@
     return new Blob(parts, { type: "application/zip" });
   }
 
-  /* ── Groups ────────────────────────────────────────────────────────────
-     Fields are grouped by what they tell somebody about you, not by where the
-     format happens to keep them. A GPS tag and an IPTC city are the same
-     disclosure and belong on the same line of the sheet, even though one lives
-     in a TIFF IFD and the other in a Photoshop resource block. */
+  /* Groups. Fields are grouped by what they disclose rather than by where the
+     format stores them. A GPS tag and an IPTC city are the same disclosure and
+     belong on the same line, though one lives in a TIFF IFD and the other in a
+     Photoshop resource block. */
 
   const GROUPS = [
     ["location", "Location", "where the picture was taken"],
@@ -273,14 +245,11 @@
   const MED = "med";
   const LOW = "low";
 
-  /* ── The tag dictionary ────────────────────────────────────────────────
-     [label, group, risk, formatter].
-
-     A tag earns a line here if it names a person, a place or one specific
-     device; if a photographer would recognise it in an info panel; or if it is
-     unreadable without a formatter. Everything else falls through to the
-     name-only list below, and everything after that renders as its own tag
-     number, which is honest about the fact that we do not know. */
+  /* The tag dictionary: [label, group, risk, formatter]. A tag is listed here
+     if it names a person, a place or a specific device; if a photographer
+     would recognise it in an info panel; or if it is unreadable without a
+     formatter. Everything else falls through to the name-only list below, then
+     to its own tag number. */
 
   const TAGS_IFD0 = {
     0x0100: ["Image width", "render", LOW],
@@ -380,8 +349,8 @@
     0xa435: ["Lens serial number", "device", HIGH],
   };
 
-  /* Every GPS tag is location. GPSVersionID is the one that discloses nothing,
-     and it is still in the group because that is where a reader will look. */
+  /* Every GPS tag is location. GPSVersionID discloses nothing but stays in the
+     group, because that is where a reader will look for it. */
   const TAGS_GPS = {
     0x0000: ["GPS tag version", "location", LOW, "bytes"],
     0x0001: ["Latitude ref", "location", HIGH],
@@ -422,9 +391,9 @@
     0x0002: ["Interoperability version", "render", LOW, "version"],
   };
 
-  /* Names only. These decode fine as plain numbers and nobody tunes their
-     privacy on them, so packing them as "hex:Name" costs a dozen source lines
-     instead of a couple of hundred. */
+  /* Names only. These decode as plain numbers and nobody makes privacy
+     decisions on them, so packing them as "hex:Name" saves a few hundred
+     source lines. */
   const MORE_TAGS =
     "00fe:SubfileType 00ff:OldSubfileType 0107:Thresholding 0108:CellWidth 0109:CellLength " +
     "010a:FillOrder 0111:StripOffsets 0115:SamplesPerPixel 0116:RowsPerStrip 0117:StripByteCounts " +
@@ -468,9 +437,8 @@
     };
   }
 
-  /* ── Enumerations ──────────────────────────────────────────────────────
-     Spelled out rather than numbered, because "Rotated 90° clockwise" is a
-     thing a reader can act on and "6" is not. */
+  /* Enumerations, spelled out rather than numbered: "Rotated 90 degrees
+     clockwise" is actionable and "6" is not. */
 
   const ORIENTATION = {
     1: "Normal", 2: "Mirrored horizontally", 3: "Rotated 180°",
@@ -495,11 +463,10 @@
   const WHITE_BALANCE = { 0: "Auto", 1: "Manual" };
   const COLOR_SPACE = { 1: "sRGB", 2: "Adobe RGB", 0xfffd: "Wide gamut RGB", 0xffff: "Uncalibrated" };
 
-  /* ── Formatters ────────────────────────────────────────────────────────
-     Several of these need a neighbour: a latitude is meaningless without its
-     N/S ref, a GPS time without its date stamp, a user comment without the
-     byte order of the TIFF it sits in. So every formatter is handed the whole
-     IFD it came from rather than just its own value. */
+  /* Formatters. Several need a neighbouring value: a latitude needs its N/S
+     ref, a GPS time its date stamp, a user comment the byte order of its TIFF.
+     Each formatter is therefore given the whole IFD rather than just its own
+     value. */
 
   function ratio(pair) {
     if (!pair || pair.length < 2) return NaN;
