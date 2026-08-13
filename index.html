@@ -337,8 +337,10 @@
      tool that exists in one heap and every tool that does not in another,
      which answers "how far along is this site" and nothing else. A reader
      arrives holding a job, not a question about progress. So the heap is cut
-     by domain instead: Media, Documents, Data & Computation, Geospatial &
-     Networks, and General for what belongs to none of them.
+     by domain instead: Media, Documents, Data & Computation, and Geospatial &
+     Networks. A fifth, General, is written out below but not printed: it held
+     one planned tool and nothing built, and a heading over an empty space is a
+     category the reader cannot enter.
 
      The names are domain terms and not metaphors. An earlier pass labelled
      these areas by where the work would happen in a physical shop — the light
@@ -351,12 +353,13 @@
      step, and each plate only as tall as its own sentence needs. Nothing is
      scattered and nothing is random; the grid has simply stopped insisting
      that different things are the same size. */
-  /* The register, and it is one vocabulary across an area. A queue row prints
-     it as the 7px square in front of its name, the band prints the same square
-     in front of the area's name, and a plate prints it as the ink its cast is
-     struck in. Same values, same meaning, three sizes — which is the only
-     reason a reader can look at a pink cast and a pink square and know they
-     are the same claim.
+  /* The register, and it is one vocabulary across an area. The band prints it
+     as the 7px square in front of the area's name, and a plate prints it as the
+     ink its cast is struck in. Same values, same meaning, two sizes — which is
+     the only reason a reader can look at a pink cast and a pink square and know
+     they are the same claim. The queue rows used to print it a third way, in
+     front of each planned name; they are out of the view now, and the mark went
+     with them.
 
      It is declared on the AREA now rather than on each of twenty-four cards.
      That is not a tidying: it is the mark finally being true. The ink was a
@@ -366,8 +369,8 @@
      the two cannot disagree.
 
      Plate 2 is Media, plate 1 is Documents, plate 3 is Data & Computation, and
-     the line carries the two areas that are not a domain of the reader's own
-     files: Geospatial & Networks, and General. */
+     the line carries Geospatial & Networks — the one area that is not a domain
+     of the reader's own files. */
   .reg-1 { --w-card-ink: var(--pp-plate-1); }
   .reg-2 { --w-card-ink: var(--pp-plate-2); }
   .reg-3 { --w-card-ink: var(--pp-plate-3); }
@@ -593,64 +596,13 @@
     background: currentColor;
   }
 
-  /* ── The queue ─────────────────────────────────────────────────────────────
-     Fifteen intentions, and a list of intentions should look like a list. They
-     are split across the areas now, each under the tools of its own domain, so
-     a category states what it holds and what it is still missing in one
-     place.
-
-     They were fifteen dashed boxes over fifteen category washes, which made the
-     single largest field of colour on the page out of the information that
-     mattered least. Now they are an index: the register survives as one square
-     of its plate, the name is set in the machine's face because a queue is a
-     manifest rather than prose, and nothing is drawn around any of them.
-
-     The register squares are the plates at full strength, which is the only
-     form a plate takes. The washes they replace were plates at 7% — a plate
-     "never translucent" is the invariant, and color-mix to transparent was
-     exactly that with a token in front of it. Two rules gone rather than
-     restated. */
-  .queue-list {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
-    gap: 0 var(--pp-space-4);
-  }
-  /* Under the plates of the same area. No rule between the two: the difference
-     between a plate and a row is already the loudest thing in the area, and a
-     line drawn across to announce it would be the page explaining its own
-     typography. */
-  .plates + .queue-list {
-    margin-top: var(--pp-space-5);
-  }
-  .q {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    min-height: var(--pp-target-compact);
-    color: var(--pp-muted);
-    font-family: var(--pp-font-mono);
-    font-size: var(--pp-size-mono);
-    letter-spacing: var(--w-track-mono);
-  }
-  .q::before {
-    content: '';
-    width: 7px;
-    height: 7px;
-    flex: none;
-    background: var(--w-card-ink);
-  }
-  /* The name does not stretch, so the pin sits against the word it belongs to
-     and the column comes out ragged. Stretched, every pin lined up at the far
-     right of a wide column with a gap of dots between it and its own name, and
-     a mark that far from what it marks stops reading as attached to it. Ragged
-     is the correct answer here rather than the tolerated one. */
-  .q-name {
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-  /* No pointer change and no hover state on the row itself. These do not open,
-     and a row that lit up under the cursor would be promising that they do. */
+  /* The queue is gone from the stylesheet along with the rows it dressed. It
+     was fifteen names in the machine's face, each behind a 7px square of its
+     area's register, sitting under the plates of the same area. Removing the
+     rows left `.queue-list`, `.q`, `.q::before` and `.q-name` matching nothing,
+     and a rule that matches nothing is a rule nobody can check. The briefs
+     survive as comments in the areas that will hold the tools; the markup and
+     these rules come back together, from git, on the day one is built. */
 
   /* ── The key ───────────────────────────────────────────────────────────────
      What the marks on the plates mean, printed once at the foot rather than
@@ -917,7 +869,7 @@
     <div class="band band-inventory">
       <p class="section-label">Inventory</p>
       <span class="band-rule" aria-hidden="true"></span>
-      <code><span data-pin-count></span><span class="mk mk--citron">9 built</span> · 15 planned</code>
+      <code><span data-pin-count></span><span class="mk mk--citron">9 built</span></code>
     </div>
 
     <!-- The areas. Each one holds the tools for a kind of work: what exists as
@@ -936,7 +888,7 @@
         <span class="band-mark" aria-hidden="true"></span>
         <p class="section-label">Media</p>
         <span class="band-rule" aria-hidden="true"></span>
-        <code>2 built · 6 planned</code>
+        <code>2 built</code>
       </div>
 
       <div class="plates">
@@ -984,59 +936,48 @@
 
       </div>
 
-      <ul class="queue-list">
-        <!-- Convert between PNG/JPEG/WebP/AVIF/HEIC, remove backgrounds, resize or pad
-        without distorting, batch-rename, and generate favicons, app-icon sets, and
-        social-media sizes from one source image. Also home to the pixel randomizer:
-        every color gets swapped for a new, unrelated random one, consistently, so
-        identical pixels always match but neighbors can end up worlds apart. -->
-        <li class="q" data-tool="image-toolkit">
-          <span class="q-name">Image Toolkit</span>
-          <button class="pin" type="button" data-pin="image-toolkit" aria-label="Pin Image Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
+      <!-- Planned for this area. Kept in the file and out of the view:
+           the category view answers "what can I use", and a tool that
+           does not exist yet cannot answer it. Each name carries the
+           brief for building the thing.
 
-        <!-- Upload an existing SVG to keep editing it in the Pixel Art SVG Drawer, or reach
-        for the deeper tools here: optimize and simplify paths, replace colors, convert
-        strokes and text to paths, normalize the viewBox, and build sprites from a folder
-        of icons. The flagship: &quot;Fix my SVG,&quot; which auto-resolves clipping,
-        missing viewBoxes, and oversized canvases in one pass. -->
-        <li class="q" data-tool="svg-toolkit">
-          <span class="q-name">SVG Toolkit</span>
-          <button class="pin" type="button" data-pin="svg-toolkit" aria-label="Pin SVG Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
+           Image Toolkit
+           Convert between PNG/JPEG/WebP/AVIF/HEIC, remove backgrounds, resize or pad
+           without distorting, batch-rename, and generate favicons, app-icon sets,
+           and social-media sizes from one source image. Also home to the pixel
+           randomizer: every color gets swapped for a new, unrelated random one,
+           consistently, so identical pixels always match but neighbors can end up
+           worlds apart.
 
-        <!-- Convert TTF/OTF to WOFF2, preview every glyph, detect missing characters, subset
-        a font down to the characters you actually use, and generate a ready-to-paste
-        @font-face block. -->
-        <li class="q" data-tool="font-tools">
-          <span class="q-name">Font Tools</span>
-          <button class="pin" type="button" data-pin="font-tools" aria-label="Pin Font Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
+           SVG Toolkit
+           Upload an existing SVG to keep editing it in the Pixel Art SVG Drawer, or
+           reach for the deeper tools here: optimize and simplify paths, replace
+           colors, convert strokes and text to paths, normalize the viewBox, and
+           build sprites from a folder of icons. The flagship: &quot;Fix my
+           SVG,&quot; which auto-resolves clipping, missing viewBoxes, and oversized
+           canvases in one pass.
 
-        <!-- Convert between HEX/RGB/HSL/OKLCH, check and auto-repair contrast, extract a
-        palette from an image, build tint/shade scales, and preview a palette under
-        different types of color-vision deficiency. -->
-        <li class="q" data-tool="color-and-design-tools">
-          <span class="q-name">Color &amp; Design Tools</span>
-          <button class="pin" type="button" data-pin="color-and-design-tools" aria-label="Pin Color & Design Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
+           Font Tools
+           Convert TTF/OTF to WOFF2, preview every glyph, detect missing characters,
+           subset a font down to the characters you actually use, and generate a
+           ready-to-paste @font-face block.
 
-        <!-- Convert between MP3/WAV/M4A/OGG, trim, join, and normalize volume, remove
-        silence, extract audio from video, and compress to a target file size. Also
-        generates waveform images and strips audio metadata. -->
-        <li class="q" data-tool="audio-toolkit">
-          <span class="q-name">Audio Toolkit</span>
-          <button class="pin" type="button" data-pin="audio-toolkit" aria-label="Pin Audio Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
+           Color & Design Tools
+           Convert between HEX/RGB/HSL/OKLCH, check and auto-repair contrast, extract
+           a palette from an image, build tint/shade scales, and preview a palette
+           under different types of color-vision deficiency.
 
-        <!-- Trim without re-encoding, strip audio, extract a frame, convert to and from GIF,
-        compress to a target size, and fix aspect ratio or orientation. Plus subtitle
-        conversion and timing shifts, and loop/boomerang clip generation. -->
-        <li class="q" data-tool="video-toolkit">
-          <span class="q-name">Video Toolkit</span>
-          <button class="pin" type="button" data-pin="video-toolkit" aria-label="Pin Video Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
-      </ul>
+           Audio Toolkit
+           Convert between MP3/WAV/M4A/OGG, trim, join, and normalize volume, remove
+           silence, extract audio from video, and compress to a target file size.
+           Also generates waveform images and strips audio metadata.
+
+           Video Toolkit
+           Trim without re-encoding, strip audio, extract a frame, convert to and
+           from GIF, compress to a target size, and fix aspect ratio or orientation.
+           Plus subtitle conversion and timing shifts, and loop/boomerang clip
+           generation.
+      -->
     </section>
 
     <!-- ── Documents ─────────────────────────────────────────────────────────
@@ -1050,7 +991,7 @@
         <span class="band-mark" aria-hidden="true"></span>
         <p class="section-label">Documents</p>
         <span class="band-rule" aria-hidden="true"></span>
-        <code>2 built · 3 planned</code>
+        <code>2 built</code>
       </div>
 
       <div class="plates">
@@ -1077,33 +1018,28 @@
 
       </div>
 
-      <ul class="queue-list">
-        <!-- Generate QR codes styled to match this site instead of plain black squares, still
-        verified to scan cleanly, plus Wi-Fi, contact-card, and calendar-event QR codes,
-        barcode generation and reading, and batch generation from a CSV for print-ready
-        label sheets. -->
-        <li class="q" data-tool="qr-code-and-barcodes">
-          <span class="q-name">QR Code &amp; Barcodes</span>
-          <button class="pin" type="button" data-pin="qr-code-and-barcodes" aria-label="Pin QR Code & Barcodes to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
+      <!-- Planned for this area. Kept in the file and out of the view:
+           the category view answers "what can I use", and a tool that
+           does not exist yet cannot answer it. Each name carries the
+           brief for building the thing.
 
-        <!-- Clean up pasted text: dedupe and sort lines, fix smart quotes and invisible
-        Unicode characters, diff two files, and convert between Markdown, HTML, and plain
-        text. Also formats and minifies JSON, YAML, CSS, and SQL, and counts tokens for
-        common AI models. -->
-        <li class="q" data-tool="text-and-document-utilities">
-          <span class="q-name">Text &amp; Document Utilities</span>
-          <button class="pin" type="button" data-pin="text-and-document-utilities" aria-label="Pin Text & Document Utilities to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
+           QR Code & Barcodes
+           Generate QR codes styled to match this site instead of plain black
+           squares, still verified to scan cleanly, plus Wi-Fi, contact-card, and
+           calendar-event QR codes, barcode generation and reading, and batch
+           generation from a CSV for print-ready label sheets.
 
-        <!-- View EML files and their attachments, inspect headers with a plain-language
-        SPF/DKIM/DMARC explanation, preview HTML emails at different widths, and strip
-        tracking pixels from saved HTML. -->
-        <li class="q" data-tool="email-tools">
-          <span class="q-name">Email Tools</span>
-          <button class="pin" type="button" data-pin="email-tools" aria-label="Pin Email Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
-      </ul>
+           Text & Document Utilities
+           Clean up pasted text: dedupe and sort lines, fix smart quotes and
+           invisible Unicode characters, diff two files, and convert between
+           Markdown, HTML, and plain text. Also formats and minifies JSON, YAML, CSS,
+           and SQL, and counts tokens for common AI models.
+
+           Email Tools
+           View EML files and their attachments, inspect headers with a
+           plain-language SPF/DKIM/DMARC explanation, preview HTML emails at
+           different widths, and strip tracking pixels from saved HTML.
+      -->
     </section>
 
     <!-- ── Data & Computation ────────────────────────────────────────────────
@@ -1115,7 +1051,7 @@
         <span class="band-mark" aria-hidden="true"></span>
         <p class="section-label">Data &amp; Computation</p>
         <span class="band-rule" aria-hidden="true"></span>
-        <code>2 built · 4 planned</code>
+        <code>2 built</code>
       </div>
 
       <div class="plates">
@@ -1142,39 +1078,33 @@
 
       </div>
 
-      <ul class="queue-list">
-        <!-- &quot;Fix this CSV&quot; detects encoding, delimiter, and broken rows
-        automatically, plus merge, split, dedupe, and diff CSV files, convert to and from
-        XLSX and JSON, reshape wide/long data, and pull a random sample of rows. -->
-        <li class="q" data-tool="csv-and-spreadsheet-toolkit">
-          <span class="q-name">CSV &amp; Spreadsheet Toolkit</span>
-          <button class="pin" type="button" data-pin="csv-and-spreadsheet-toolkit" aria-label="Pin CSV & Spreadsheet Toolkit to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
+      <!-- Planned for this area. Kept in the file and out of the view:
+           the category view answers "what can I use", and a tool that
+           does not exist yet cannot answer it. Each name carries the
+           brief for building the thing.
 
-        <!-- JSON/JWT/Base64/URL formatting and decoding, UUID and hash generation, a regex
-        tester, cron explainer, and converters for cURL, TypeScript types, and Zod
-        schemas &mdash; the everyday grab-bag of things a browser tab full of separate
-        sites usually handles. -->
-        <li class="q" data-tool="developer-tools">
-          <span class="q-name">Developer Tools</span>
-          <button class="pin" type="button" data-pin="developer-tools" aria-label="Pin Developer Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
+           CSV & Spreadsheet Toolkit
+           &quot;Fix this CSV&quot; detects encoding, delimiter, and broken rows
+           automatically, plus merge, split, dedupe, and diff CSV files, convert to
+           and from XLSX and JSON, reshape wide/long data, and pull a random sample
+           of rows.
 
-        <!-- Zip and unzip files entirely in-browser, strip macOS junk files from an archive,
-        find duplicates by hash, generate and verify checksums, and sanitize or bulk-
-        rename a folder of filenames. -->
-        <li class="q" data-tool="archive-and-file-tools">
-          <span class="q-name">Archive &amp; File Tools</span>
-          <button class="pin" type="button" data-pin="archive-and-file-tools" aria-label="Pin Archive & File Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
+           Developer Tools
+           JSON/JWT/Base64/URL formatting and decoding, UUID and hash generation, a
+           regex tester, cron explainer, and converters for cURL, TypeScript types,
+           and Zod schemas &mdash; the everyday grab-bag of things a browser tab full
+           of separate sites usually handles.
 
-        <!-- View and convert ICS files, merge calendars, shift event times, fix timezone
-        mistakes, and generate a recurring-event ICS from a plain-language rule. -->
-        <li class="q" data-tool="calendar-and-date-tools">
-          <span class="q-name">Calendar &amp; Date Tools</span>
-          <button class="pin" type="button" data-pin="calendar-and-date-tools" aria-label="Pin Calendar & Date Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
-      </ul>
+           Archive & File Tools
+           Zip and unzip files entirely in-browser, strip macOS junk files from an
+           archive, find duplicates by hash, generate and verify checksums, and
+           sanitize or bulk- rename a folder of filenames.
+
+           Calendar & Date Tools
+           View and convert ICS files, merge calendars, shift event times, fix
+           timezone mistakes, and generate a recurring-event ICS from a
+           plain-language rule.
+      -->
     </section>
 
     <!-- ── Geospatial & Networks ─────────────────────────────────────────────
@@ -1189,7 +1119,7 @@
         <span class="band-mark" aria-hidden="true"></span>
         <p class="section-label">Geospatial &amp; Networks</p>
         <span class="band-rule" aria-hidden="true"></span>
-        <code>3 built · 1 planned</code>
+        <code>3 built</code>
       </div>
 
       <div class="plates">
@@ -1226,39 +1156,29 @@
 
       </div>
 
-      <ul class="queue-list">
-        <!-- Convert between GPX, KML, and GeoJSON, extract or remove GPS data from photos,
-        calculate distances, and simplify or merge GPX tracks. -->
-        <li class="q" data-tool="geospatial-tools">
-          <span class="q-name">Geospatial Tools</span>
-          <button class="pin" type="button" data-pin="geospatial-tools" aria-label="Pin Geospatial Tools to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
-      </ul>
+      <!-- Planned for this area. Kept in the file and out of the view:
+           the category view answers "what can I use", and a tool that
+           does not exist yet cannot answer it. Each name carries the
+           brief for building the thing.
+
+           Geospatial Tools
+           Convert between GPX, KML, and GeoJSON, extract or remove GPS data from
+           photos, calculate distances, and simplify or merge GPX tracks.
+      -->
     </section>
 
-    <!-- ── General ───────────────────────────────────────────────────────────
-         Tools that share no domain with the others. This is not a residue
-         category apologising for itself: "belongs to no other category" is a
-         category, and it is where a job that is one job belongs. -->
-    <section class="area reg-0">
+    <!-- ── General ────────────────────────────────────────────────────────
+         Retired from the view, not from the plan. It held one planned tool and
+         nothing built, so with the queue rows gone its band stood over an empty
+         space — a heading for a category the reader cannot enter. It comes back
+         the day something lands in it.
 
-      <div class="band">
-        <span class="band-mark" aria-hidden="true"></span>
-        <p class="section-label">General</p>
-        <span class="band-rule" aria-hidden="true"></span>
-        <code>1 planned</code>
-      </div>
-
-      <ul class="queue-list">
-        <!-- The stuff that doesn't fit a category: webpage-to-PDF, an invoice photo to
-        structured CSV, a slider to compare two image versions, a signature photo to a
-        transparent PNG/SVG, and a passport-photo sheet at exact print dimensions. -->
-        <li class="q" data-tool="odds-and-ends">
-          <span class="q-name">Odds &amp; Ends</span>
-          <button class="pin" type="button" data-pin="odds-and-ends" aria-label="Pin Odds & Ends to the top"><span class="pin-head" aria-hidden="true"></span></button>
-        </li>
-      </ul>
-    </section>
+         Odds & Ends
+           The stuff that doesn't fit a category: webpage-to-PDF, an invoice photo to
+           structured CSV, a slider to compare two image versions, a signature photo
+           to a transparent PNG/SVG, and a passport-photo sheet at exact print
+           dimensions.
+    -->
 
     <!-- The key to the mark every plate carries, and the only place a rung is
          spelled out — a card carries the rating and stops there. Five rungs,
