@@ -151,6 +151,29 @@ figure or another file rather than a rendering.
   letter recurs. The engine is a separate file from the page and also runs
   under node, against the same assertions.
 
+  At the foot of the page the same question is asked of four languages at once:
+  every headword of the English, Spanish, French and German Hunspell
+  dictionaries — 222,830 words — run through that engine, drawn as one figure
+  with a column per dictionary per distance and a switch for each. The shapes
+  are close. Every one of the four peaks at two or three swaps, and the tails
+  differ: no Spanish word needs more than seven, and German alone reaches ten.
+  Most words of every language have no distance at all — 61% of English and
+  around 80% of the other three — and the figure says how many rather than
+  quietly dropping them. Whatever is in the field is marked on the figure, so a
+  word can be read against its language.
+
+  The counting is a build step, not a fetch:
+  [`tools/abecedarian-corpus.mjs`](tools/abecedarian-corpus.mjs) surveys the
+  four lists offline and writes the tallies to
+  [`abecedarian/data/`](abecedarian/data/), which is sixty numbers rather than
+  four megabytes of word lists, and keeps the tool on `local`. The sources are
+  pinned to one commit of one repository so the four are packaged identically
+  and the run repeats. The figure's four inks are not the site's plates: the
+  plates are the index's category vocabulary, and green beside red is the one
+  pair a red-green reader cannot separate. They were searched for instead,
+  against the lightness, chroma, contrast and colour-vision separation each
+  needs, and then searched again for the quietest set that still clears it.
+
 Planned: CSV and spreadsheet toolkit, developer tools, archive and file tools,
 calendar and date tools.
 

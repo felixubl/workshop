@@ -133,6 +133,7 @@ function showNothing(message) {
   empty.hidden = false;
   hint.hidden = !message;
   if (message) hint.textContent = message;
+  CORPUS.mark(null);
 }
 
 function showWord(input) {
@@ -184,6 +185,9 @@ function showWord(input) {
     fact(facts, 'again at', 'position ' + (b.again + 1));
     fact(facts, 'alphabets that sort it', '0 of 26!');
     whenSortable.forEach(function (n) { n.hidden = true; });
+    /* The figure below plots distances, and this word has none. It joins the
+       majority the figure counts but cannot draw. */
+    CORPUS.mark(null);
     return;
   }
 
@@ -221,6 +225,7 @@ function showWord(input) {
   drawSwaps(p);
   drawReread(p);
   seedEl.textContent = grouped(p.seed);
+  CORPUS.mark(p.distance, p.word.toLowerCase());
 }
 
 /* ── Wiring ──────────────────────────────────────────────────────────────── */
