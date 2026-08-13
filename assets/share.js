@@ -1,13 +1,7 @@
-/* Hand this tool to somebody else.
-
-   Every tool page carries one [data-share] button beside its name. It copies
-   the tool's own address — origin and path, with any query string or fragment
-   dropped, because what a reader wants to pass on is the tool and not the
-   state they happen to have it in.
-
-   The button reports back in its own label rather than in a toast. A toast is
-   a second surface appearing to describe something that already has a place on
-   the page, and the place is the control you just pressed. */
+/* Copies the current tool's address. Every tool page carries one [data-share]
+   button beside its name. The query string and fragment are dropped, so what
+   is copied is the tool rather than one reader's state. The button reports in
+   its own label rather than in a toast. */
 (function () {
   "use strict";
 
@@ -17,9 +11,8 @@
     return location.origin + location.pathname;
   }
 
-  /* The async clipboard needs a secure context, which localhost is and a
-     file:// page is not. The textarea route is the one that still works there,
-     so it stays as a fallback rather than being assumed dead. */
+  /* The async clipboard API needs a secure context, which file:// is not. The
+     textarea fallback still works there. */
   function copy(text) {
     if (navigator.clipboard && window.isSecureContext) {
       return navigator.clipboard.writeText(text).then(

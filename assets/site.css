@@ -1,102 +1,62 @@
-/* The workshop's own deviations from PREPRINT, and the whole list of them.
-
+/* The workshop's deviations from PREPRINT, and the complete list of them.
    Everything else comes from assets/preprint/, which is vendored verbatim and
-   must not be edited — when the system changes, re-copy it and this file
-   survives. Note what is NOT here: no ground override, no ink override, no
-   plate override. There is one dark mode for every surface, and forking it is
-   how a family stops looking related. */
+   must not be edited. No ground, ink or plate override: there is one dark mode
+   across every surface. */
 
 :root {
   --w-screen-dot: var(--pp-hair);
 
-  /* The three category washes are gone, and they should not come back. They
-     were plates at 7-8%, held behind fifteen queued cards, and the invariant is
-     that a plate is pressed at full strength and never translucent — color-mix
-     to transparent was exactly the thing the rule names, with a token in front
-     of it. What replaced them says the same thing correctly: one 7px square of
-     the plate itself, at full strength, in front of each queued name.
-
-     They also made the single largest field of colour on the index out of the
-     information that mattered least, which is the other half of why the index
-     needed redoing at all. See the entry in DECISIONS.md.
-
-     --w-wash-0 stays. It is ink at 4%, not a plate, and it is the ground of a
-     note rather than a category: .card.prompt and .dropzone both stand on it. */
+  /* The category washes were removed and should not return. They were plates
+     at 7-8% behind queued cards, and a plate is always pressed at full
+     strength. What replaced them is one 7px square of the plate itself. */
   --w-wash-0: color-mix(in srgb, var(--pp-ink) 4%, transparent);
 
-  /* The sticker chips (--w-chip-live / -soon / -ink) lived here until the
-     badges they coloured were cut from the cards. Nothing reads them now, and
-     a token with no reader is a value waiting to be used wrongly. The
-     reasoning is worth keeping even though the values are gone: a chip is
-     opaque in both modes with near-black text always, because a translucent
-     marker is right behind body copy and wrong on a sticker, where a dark
-     ground turns it into a dim smudge. */
+  /* The sticker chip tokens were removed with the badges they coloured. A
+     token with no reader invites misuse. Recorded here in case they are needed
+     again: a chip is opaque in both modes with near-black text. */
 
-  /* The wordmark W, and the favicon, are the same object printed at two sizes,
-     so they use the same two inks at the same full strength. Nothing else on
-     any surface may take these. */
+  /* The wordmark W and the favicon are the same object at two sizes, so they
+     share two inks at full strength. Nothing else may use them. */
   --w-mark-fill: #deee2e;
   --w-mark-edge: #ff4fa3;
 
-  /* Law 06 rotation, declared once. A breach used twice is an undeclared
-     token, and this one is used on the wordmark and on every card. The cards take
-     a third of it, so the third is derived rather than typed out: the brief
-     says "a third of it" and this is the only way to say that in CSS and have
-     it stay true when the tilt changes. */
+  /* The rotation, declared once. Used on the wordmark and on every card. Cards
+     take a third of it, derived rather than typed, so the ratio holds if the
+     tilt changes. */
   --w-tilt: -1.5deg;
   --w-tilt-card: calc(var(--w-tilt) / 3);
 
-  /* Two trackings the workshop uses that the system's scale does not carry.
-     --pp-track-label is 0.16em, which is right for a lone uppercase eyebrow
-     and far too wide for the mono labels this site runs everywhere. Ten uses
-     of one value and three of the other is an undeclared token twice over, so
-     both get named here rather than retyped. */
+  /* Two trackings the system's scale does not carry. --pp-track-label is
+     0.16em, right for a lone uppercase eyebrow and too wide for the mono
+     labels used here. */
   --w-track-label: 0.06em;
   --w-track-mono: 0.04em;
 
-  /* The press. Nothing on this site lifts, so every pressable thing moves one
-     pixel down and right, the way a stamp does. Eight elements wrote this out
-     by hand before it had a name. */
+  /* The press. Nothing on this site lifts; every pressable element moves one
+     pixel down and right. */
   --w-press: translate(1px, 1px);
 
-  /* The artwork's own ground, and the rule drawn on it. Both are pinned light
-     in either mode, because the drawing surface is the artwork's paper rather
-     than the page's: the default pen is near-black and would vanish on a
-     graphite sheet. That is a real deviation, so it is named here where the
-     conformance check can see it — written as literals inside draw-svg they
-     looked like stray hexes and would have drifted the day PREPRINT repaints
-     paper. The values are today's light-mode --pp-paper and --pp-line,
-     deliberately copied rather than referenced: the point is that they do NOT
-     follow the mode.
-
-     The rule takes the LINE weight, not the hairline. Ink at an alpha is how
-     the system writes every rule it has, so that part is its idiom rather than
-     a grey pretending to be quiet — but the pixel grid is a working guide on a
-     drawing surface, not a divider between regions, and at hairline it is
-     there in a screenshot and not there in use. */
+  /* The drawing surface's own ground and rule. Both stay light in either mode,
+     because the surface is the artwork's paper rather than the page's, and the
+     default pen is near-black. Named here so the conformance check can see the
+     deviation. */
   --w-artwork-paper: #fbfbf9;
   --w-artwork-rule: rgba(23, 23, 22, .27);
 }
 
-/* Both about this page's own devices rather than the palette: the halftone
-   screen needs more presence on a dark ground to survive at all, and a note's
-   ground needs roughly double the strength to register. */
+/* Both concern this page's own devices rather than the palette: the halftone
+   needs more presence on a dark ground, and a note's ground needs roughly
+   double the strength. */
 [data-mode='dark'] {
   --w-screen-dot: rgba(239, 238, 232, .16);
   --w-wash-0: color-mix(in srgb, var(--pp-ink) 7%, transparent);
 }
 
-/* The pointers used to be repointed here, and in fubl.org's site.css too, both
-   working around Chrome resolving a relative url() inside a custom property
-   against the document rather than the stylesheet. Two surfaces writing the
-   same workaround at two different paths is what laws.md calls a breach used
-   twice, so the system took it back: tokens/cursors.css now declares absolute
-   paths from /assets/preprint/, and this file declares nothing about pointers
-   at all. */
-/* The halftone screen. Not decoration — this is how a plate is actually laid
-   down, which makes it functional texture. Pinned to the viewport: the screen
-   is ON the paper and the work slides over it. The press does not move when
-   you turn the page. */
+/* Pointer paths are declared in tokens/cursors.css with absolute paths, so no
+   surface repoints them. Chrome resolves a relative url() in a custom property
+   against the document rather than the stylesheet. */
+/* The halftone screen. Functional texture rather than decoration: it is how a
+   plate is laid down. Pinned to the viewport, so the work moves over it. */
 body {
   background-image: radial-gradient(var(--w-screen-dot) 1px, transparent 1.5px);
   background-size: 15px 15px;

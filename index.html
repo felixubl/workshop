@@ -9,10 +9,8 @@
 <script src="assets/preprint/js/mode.js"></script>
 <script src="assets/preprint/js/pullcord.js" defer></script>
 <link rel="stylesheet" href="assets/preprint/styles.css">
-<!-- core.css, which this page skipped while base.css was standing in for it. It
-     is here for the marker: .mk--citron is one of the two ink families and the
-     annotated half of "printed first, then annotated". base.css follows it and
-     wins every tie. -->
+<!-- core.css is loaded for the .mk--citron marker. base.css follows it and wins
+   where they overlap. -->
 <link rel="stylesheet" href="assets/preprint/core.css">
 <link rel="stylesheet" href="assets/preprint/controls.css">
 <link rel="stylesheet" href="assets/base.css">
@@ -24,36 +22,21 @@
     grid-template-rows: auto auto 1fr auto;
   }
 
-  /* The masthead is fubl.org's in both bands: a shelf carrying the name, then a
-     bar carrying the addresses. The mode key was the third thing here, pushed
-     to the far edge of the bar; the cord hangs off this element's top edge
-     instead, which is why it is the positioned ancestor and not .page — .page
-     is full-bleed, and 48px in from a 2000px viewport is nowhere near the
-     column. No standfirst — the page is a grid of cards that say what
-     they are, and a sentence explaining them above the fold was explaining the
-     obvious.
-
-     What the workshop does not take from fubl.org is the rule between the two.
-     See .bar below: that rule is there to give a bare wordmark a bottom edge,
-     and this wordmark is a signboard that already has four.
-
-     The air is the personal site's, measured in vh rather than vw so a laptop
-     and a phone both get a masthead rather than a title page. Law 07's breach
-     is spent here, and the 6px spine marks where it stops. */
+  /* Page header: one row for the site name, one for the two links. The mode
+     toggle hangs from this element's top edge, so this is the positioned
+     ancestor rather than .page. */
   .masthead {
     max-width: var(--pp-page-max);
     width: 100%;
     margin: 0 auto;
     padding: clamp(1.75rem, 6vh, 3rem) var(--pp-gutter) clamp(1rem, 2.5vw, 1.4rem);
     display: grid;
-    /* Explicit: an implicit auto column sizes itself to its widest item rather
-       than stretching, which silently held the whole masthead to the width of
-       the rule's contents instead of the page's measure. */
+    /* Explicit column. An implicit auto column sizes to its widest item
+       instead of the page measure. */
     grid-template-columns: minmax(0, 1fr);
     gap: clamp(0.7rem, 2vw, 1.1rem);
   }
-  /* The shelf holds the name and nothing else, so it is a row only so that a
-     future neighbour has somewhere to stand. */
+  /* Holds the site name. A flex row so a second item can be added later. */
   .shelf {
     display: flex;
     flex-wrap: wrap;
@@ -62,19 +45,8 @@
     gap: 0.75rem clamp(1rem, 4vw, 2.5rem);
   }
 
-  /* The second band: the addresses, reading left to right, and now nothing
-     else. The mode key used to be pushed to the far end of this row by an auto
-     margin; it is the cord hanging off the masthead's top edge instead, which
-     is a corner rather than a slot and needed none of the alignment rules the
-     key did.
-
-     No rule above it, and this is where the workshop parts company with
-     fubl.org on purpose. There, the band sits under a 1px line because the
-     wordmark above it is bare display type with no edge of its own — the rule
-     is the only thing giving the name a bottom. Here the wordmark is a
-     signboard: 2px of ink all the way round, nailed at four corners. It has
-     its own edge. A rule under a closed box is a second boundary drawn 10px
-     below the first one, which is not a separator, it is a stutter. */
+  /* Second header row: the two site links. No rule above it, because the
+     wordmark has its own border. */
   .bar {
     display: flex;
     flex-wrap: wrap;
@@ -82,18 +54,10 @@
     gap: 0.5rem 1.4rem;
     margin-top: clamp(0.6rem, 2vw, 1rem);
   }
-  /* The addresses, built the way the personal site builds the buttons in its
-     header bar: one shape at two ranks. Everything that decides SIZE is set
-     once, here, so they cannot drift apart again. Only the ground and the
-     border weight differ, and that difference IS the rank. Box-sizing is
-     border-box, so 2px on one and 1px on the other still measure the same.
-
-     38px rather than the 44px target, which is the height fubl.org gives the
-     same object in the same band. A bar is a strip of addresses read at a
-     glance, not a row of primary actions, and at 44px two of them make the
-     masthead look like it has a toolbar. The mode key beside them is 34px for
-     the same reason and sets its own size in base.css, because it is the one
-     control that appears in the corner of every page in the family. */
+  /* Both header links share every size property so they cannot drift apart.
+     Only the background and border weight differ, which marks primary from
+     secondary. 38px rather than the 44px target: this is a strip of addresses,
+     not a row of primary actions. */
   .home-link,
   .repo-link {
     display: inline-flex;
@@ -108,17 +72,8 @@
     font-weight: 700;
     letter-spacing: var(--w-track-label);
   }
-  /* The way back to fubl.org: a solid square, the bare host in mono, exactly as
-     that site labels its own header buttons. It takes the primary 2px weight
-     and the ink ground.
-
-     It does NOT cast, and hovering it does not move it. The citron key on the
-     personal site does both, because there it is that page's whole licensed
-     breach of law 04 — the one loud object on a page of quiet prose. Here the
-     cast belongs to the live tool cards, and law 00 is not a preference: at two
-     breaches each carries half the weight, which is worse than none. So this
-     takes the system's ordinary button behaviour instead — hover changes the
-     ground to plate 3, press moves 1px down-right. */
+  /* Link back to fubl.org: primary 2px border, ink background. Hover switches
+     the background to plate 3; active moves it 1px down and right. */
   .home-link {
     background: var(--pp-edge);
     border: var(--pp-rule-structure) solid var(--pp-edge);
@@ -139,33 +94,18 @@
   .home-link:active {
     transform: var(--w-press);
   }
-  /* The wordmark is a signboard: a plate of stock, nailed to the paper and
-     hung very slightly crooked. This is the page's law 06 rotation, and it is
-     the use the reference design names for it — "kept on badges and the
-     wordmark only, and declared as a token. Twenty tilted cards is noise; a
-     tilted sticker is a sticker." So it takes `--w-tilt` as declared rather
-     than a bespoke angle of its own.
-
-     It does NOT cast, and that is not a compromise. Law 04 allows one hard
-     offset per view and the live tool card holds it, but a board nailed flat
-     to a wall does not float anyway — the nails are what say it is attached,
-     and a shadow would be saying it twice. What separates the board from the
-     page is the halftone: the screen is pinned to the viewport, so the dots
-     run under everything and stop dead at this edge. Solid stock laid on
-     screened paper is the same object relationship the cards use, printed
-     larger. */
+  /* The site name, in a bordered box rotated by --w-tilt. No drop shadow: the
+     corner nails already show it is fixed to the page. */
   .wordmark {
     position: relative;
-    /* Room for the corners the rotation throws out: a 1.5° turn on a board
+    /* Room for the corners the rotation pushes out. A 1.5 degree turn on a box
        this wide lifts each end about 6px past the flat bounding box. */
     margin: 0.45rem 0;
-    /* The padding is the nails' lane, so it has to clear them rather than just
-       look like air: a 7px square turned 45° is 9.9px across, set 7px in. Any
-       tighter and the heads crowd the type as the wordmark clamps down. */
+    /* Padding leaves a lane for the corner nails. A 7px square rotated 45
+       degrees is 9.9px across, set 7px in. */
     padding: 0.6rem 1.6rem 0.7rem;
     background: var(--pp-surface);
-    /* 2px is the weight that marks the one panel that matters, and on a page
-       of 1px cards this is it. */
+    /* 2px marks the most important panel on the page. */
     border: var(--pp-rule-structure) solid var(--pp-edge);
     border-radius: var(--pp-radius-lg);
     transform: rotate(var(--w-tilt));
@@ -176,13 +116,8 @@
     letter-spacing: -0.05em;
     text-wrap: balance;
   }
-  /* Four nail heads, one to a corner. Each is a filled ink square turned 45°,
-     which is a shape the iconography law already draws — the warning glyph is
-     a diamond for the same reason — and not a second rotation: law 06 is about
-     things sitting off the page's axis, and a diamond is on it.
-
-     They sit inside the edge rather than on it. A nail through the border
-     would read as a bullet hole. */
+  /* Four nail heads, one per corner: filled squares rotated 45 degrees, set
+     inside the border rather than on it. */
   .nails i {
     position: absolute;
     width: 7px;
@@ -194,14 +129,8 @@
   .nails i:nth-child(2) { top: 6px; right: 7px; }
   .nails i:nth-child(3) { bottom: 6px; left: 7px; }
   .nails i:nth-child(4) { bottom: 6px; right: 7px; }
-  /* The W is the favicon, set in running type: the same Hepta Slab glyph, the
-     same citron fill, the same pink edge, the same blue offset print two units
-     down and right. It is the sibling of the F on fubl.org, which is built the
-     same way — the resemblance is the construction, not the inks.
-
-     Everything is in em so the letter survives the wordmark's clamp. The
-     stroke is 0.026em, not the favicon's ~0.1em: at 32px only the silhouette
-     matters, but in running type that weight closes the W's counters. */
+  /* The W matches the favicon: same face, citron fill, pink edge, blue offset
+     two units down and right. Sized in em so it scales with the wordmark. */
   .wordmark .mark-w {
     color: var(--w-mark-fill);
     -webkit-text-stroke: 0.026em var(--w-mark-edge);
@@ -209,17 +138,8 @@
     text-shadow: 0.05em 0.05em 0 var(--pp-plate-3);
   }
 
-  /* The repo takes the secondary weight, because border weight IS the
-     hierarchy here: 2px is primary, 1px is secondary. The two keys are one
-     object at two ranks, which is how the personal site's keys differ from each
-     other rather than by inventing a second ground — so everything except the
-     border weight is shared with .home-link above, and the two are the same
-     size to the pixel. Lowercase because both labels are addresses, not words.
-
-     Its mark is the GitHub logo where the primary key carries a plain square.
-     That is the one place the pair is allowed to differ in kind: fubl.org is a
-     place and takes the system's own square, while a repository is somewhere
-     specific and the reader recognises the logo before they read the path. */
+  /* The repo link takes the secondary 1px border. Every other property is
+     shared with .home-link, and the two are the same size. */
   .repo-link {
     background: transparent;
     color: var(--pp-ink);
@@ -241,34 +161,16 @@
     margin: 0 auto;
     padding: clamp(1.75rem, 4vw, 2.75rem) var(--pp-gutter) clamp(2.5rem, 6vw, 4rem);
     display: grid;
-    /* One section per area of the shop, then the key. The gap between them is
-       the gap between one kind of work and the next: one step of the space
-       scale above the gap inside any of them, which is the only thing
-       separating them — same rhythm, further apart.
-
-       It used to be two sections, built and planned, which is how a changelog
-       is organised and not how a workshop is. A joiner does not keep a bench
-       for the tools they own and a second bench for the ones they mean to buy;
-       they keep a bench per kind of work, and the gaps on the wall are part of
-       it. So the areas are the sections now, and within one, what exists is a
-       plate and what is intended is a row. */
+    /* One section per category, then the custody key. The gap between sections
+       is one step of the space scale above the gap inside them. */
     gap: clamp(2rem, 5vw, 3.25rem);
     align-content: start;
   }
 
-  /* ── The band ──────────────────────────────────────────────────────────────
-     What a section is, a rule across the rest of the measure, and the count.
-     The rule is a flex child rather than a border on the row, because it has
-     to start where the label stops and stop where the count starts, which a
-     border-bottom on the whole row cannot do.
-
-     An area band opens with its own register printed as the same 7px square a
-     queue row prints in front of its name. That square is the key the four
-     inks used to need a legend for: a bar of four swatches sat at the top of
-     the queue explaining a vocabulary nothing on the page had named. Now the
-     name is right beside the ink, once per area, and the legend is gone. The
-     one mark on this page that still earns a key is the custody ladder, and
-     that key is a section of its own at the foot. */
+  /* Section header: a label, a rule across the remaining width, and a count.
+     The rule is a flex child so it starts where the label ends and stops where
+     the count begins. A category band also prints its register as a 7px
+     square. */
   .band {
     display: flex;
     align-items: center;
@@ -297,80 +199,29 @@
     flex: none;
     background: var(--w-card-ink);
   }
-  /* The shop's own line, above the areas: what the whole page adds up to. It
-     carries no register square, because it is not an area — the absence of the
-     mark is what says so.
-
-     The order is the one thing here that is not decoration. A pinned area takes
-     order -1 to climb the page, and this line is a grid item of the same
-     container, so at the default 0 it was overtaken by whatever the reader
-     pinned — the page's own header ending up below the first bench. -2 puts it
-     out of that race for good: it is not in the running order, it is the line
-     the running order is printed under. */
+  /* Page totals, above the categories. No register square, because it is not a
+     category. order: -2 keeps it above any category a pin promotes to -1. */
   .band-inventory {
     order: -2;
     margin-bottom: 0;
   }
 
-  /* The count of built tools is the one thing on this page worth a pen, so it
-     takes one. This is the annotated half of "printed first, then annotated",
-     which the workshop had been skipping entirely: nineteen cards, all printed,
-     nothing marked. A marker is a field behind type and never type itself, and
-     the class is core's now rather than a local rgba — see the entry in
-     DECISIONS.md, and preprint's own for why it came down to core. */
+  /* The built count is the one marked figure on the page. The marker is a
+     background field and is never applied to the type itself. */
   .band .mk--citron {
     color: var(--pp-ink);
     padding: 0.08em 0.3em;
   }
 
-  /* ── The areas ─────────────────────────────────────────────────────────────
-     Five stations, each holding one kind of work: the tools that exist as
-     plates, the ones still intended as rows underneath them.
-
-     What changed, and why. All the cards used to be the same 44px row, so a
-     built tool and a queued one differed by a border weight and a wash and
-     nothing else — a hierarchy problem, which law 00 says is never fixed by
-     adding another exception. Size became the hierarchy, and the plate carries
-     the sentence saying what the tool is FOR.
-
-     What changed after that is where a card stands. Sorting by state put every
-     tool that exists in one heap and every tool that does not in another,
-     which answers "how far along is this site" and nothing else. A reader
-     arrives holding a job, not a question about progress. So the heap is cut
-     by domain instead: Media, Documents, Data & Computation, and Geospatial &
-     Networks. A fifth, General, is written out below but not printed: it held
-     one planned tool and nothing built, and a heading over an empty space is a
-     category the reader cannot enter.
-
-     The names are domain terms and not metaphors. An earlier pass labelled
-     these areas by where the work would happen in a physical shop — the light
-     table, the press, the bench. It read well and classified badly: a reader
-     scanning for a PDF tool should not have to translate a figure of speech
-     first, and "the press" is a guess about what the category holds where
-     "Documents" is a statement of it.
-
-     The plates do not share a baseline. Two columns, the right one dropped a
-     step, and each plate only as tall as its own sentence needs. Nothing is
-     scattered and nothing is random; the grid has simply stopped insisting
-     that different things are the same size. */
-  /* The register, and it is one vocabulary across an area. The band prints it
-     as the 7px square in front of the area's name, and a plate prints it as the
-     ink its cast is struck in. Same values, same meaning, two sizes — which is
-     the only reason a reader can look at a pink cast and a pink square and know
-     they are the same claim. The queue rows used to print it a third way, in
-     front of each planned name; they are out of the view now, and the mark went
-     with them.
-
-     It is declared on the AREA now rather than on each of twenty-four cards.
-     That is not a tidying: it is the mark finally being true. The ink was a
-     category and the card was where it was written, so a card could carry an
-     ink its neighbours did not and nothing on the page would flinch. With the
-     area holding it, a tool's register is wherever the tool is standing, and
-     the two cannot disagree.
-
-     Plate 2 is Media, plate 1 is Documents, plate 3 is Data & Computation, and
-     the line carries Geospatial & Networks — the one area that is not a domain
-     of the reader's own files. */
+  /* Categories, one per domain: Media, Documents, Data & Computation,
+     Geospatial & Networks. A fifth, General, is written out below but not
+     printed, because it holds nothing built. Plates share no baseline: two
+     columns, the right one dropped a step, each plate as tall as its own text. */
+  /* The register: one colour per category. The band prints it as a 7px square,
+     a plate as the colour of its cast. It is declared on the section, so a
+     tool takes the colour of wherever it sits. Plate 2 is Media, plate 1
+     Documents, plate 3 Data & Computation, and the line colour Geospatial &
+     Networks. */
   .reg-1 { --w-card-ink: var(--pp-plate-1); }
   .reg-2 { --w-card-ink: var(--pp-plate-2); }
   .reg-3 { --w-card-ink: var(--pp-plate-3); }
@@ -385,20 +236,16 @@
     .plates {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    /* The air the scrawl hangs in. It is absolutely positioned and contributes
-       no height of its own, which is the point of the part and also means the
-       room for it has to be made here — in the one area that carries it, not
-       above every grid on the page. :first-of-type is DOM order and stays with
-       that area even when a pinned tool sends another one to the top, which is
-       correct: the annotation and its air travel together. */
+    /* Space for the annotation above the first plate. The annotation is
+       absolutely positioned and adds no height, so the room is made here, in
+       the one category that carries it. :first-of-type is DOM order, so the
+       space stays with that category when a pin reorders the page. */
     .area:first-of-type .plates {
       margin-top: 2rem;
     }
-    /* The drop is one step of the space scale, not a hand-picked offset. It is
-       what stops two columns of stock reading as a table of two rows.
-       nth-child and not nth-of-type, and deliberately not recomputed when a pin
-       reorders the grid: `order` moves a plate without moving its offset, so a
-       pinned tool arrives carrying the same lie of the hand it always had. */
+    /* One step of the space scale. It stops two columns of plates reading as a
+       two-row table. Not recomputed when a pin reorders the grid: order moves
+       a plate without moving its offset. */
     .plates > :nth-child(even) {
       margin-top: var(--pp-space-4);
     }
@@ -415,24 +262,9 @@
     border-radius: var(--pp-radius-lg);
     color: inherit;
   }
-  /* The cast: the same silhouette printed again in a plate ink, off register,
-     which is the plate mark itself. Hover slips it FURTHER out of register
-     rather than lifting the plate. Press pulls it back in. Nothing moves here
-     that a printer could not do.
-
-     This is a declared token and not a law 04 breach — four live tools all
-     carry it, and "the second time a violation appears, it stops being one".
-
-     It takes its area's register rather than plate 2 for all of them. The
-     old comment here argued the opposite: that the cast declares the STATE
-     "built and open", and a cast also carrying the category would be one mark
-     saying two things. That argument came from the nineteen-card grid, where a
-     built tool and a queued one stood side by side and the cast was the only
-     thing telling them apart. Nothing sorts by state any more: being a plate
-     at all is what says built, and no queued thing has a plate to cast. So the
-     ink is free to carry the area, which is the same register the rows below
-     it and the band above it both print as a square. One vocabulary per area
-     rather than one per card. */
+  /* The cast: the plate silhouette repeated in the category colour, offset.
+     Hover increases the offset, active reduces it. It takes the colour from
+     the section, so a plate and the rows around it always agree. */
   .plate-live {
     box-shadow: 5px 5px 0 var(--w-card-ink);
     transition: box-shadow var(--pp-dur-state) var(--pp-ease-out);
@@ -440,27 +272,20 @@
   .plate-live:hover {
     box-shadow: 8px 8px 0 var(--w-card-ink);
   }
-  /* Four angles off one declared token, so "a third of the sticker tilt" stays
-     literally true if --w-tilt ever moves. Written out as four multipliers
-     rather than four typed angles, which is the difference between one token
-     used four ways and four undeclared ones. */
+  /* Four angles from one token, so the ratio holds if --w-tilt changes. */
   .plates > :nth-child(1) .plate { transform: rotate(calc(var(--w-tilt-card) * 0.96)); }
   .plates > :nth-child(2) .plate { transform: rotate(calc(var(--w-tilt-card) * -1.1)); }
   .plates > :nth-child(3) .plate { transform: rotate(calc(var(--w-tilt-card) * -0.8)); }
   .plates > :nth-child(4) .plate { transform: rotate(calc(var(--w-tilt-card) * 1.15)); }
-  /* An area holds three plates at most, so those four angles became two or
-     three, dealt in the same order in every area down the page — a hand
-     that repeats is a press, which is the one thing the tilt exists not to be.
-     Every other area turns its pair the other way. Same token, two more
-     multipliers, and no area sits directly under another laid out alike. */
+  /* A category holds at most three plates, so only the first two or three
+     angles are used. Alternate categories turn the other way, so no two
+     adjacent ones repeat the same layout. */
   .area:nth-of-type(even) .plates > :nth-child(1) .plate { transform: rotate(calc(var(--w-tilt-card) * -0.85)); }
   .area:nth-of-type(even) .plates > :nth-child(2) .plate { transform: rotate(calc(var(--w-tilt-card) * 1.05)); }
 
-  /* The name is the link, and it throws a covering layer over the whole plate
-     so the entire box is the target. The pin sits above that layer, which is
-     the only reason this is a div wrapping an anchor rather than an anchor: a
-     button inside a link is not a thing HTML allows, and a pin that opened the
-     tool instead of pinning it would be the obvious bug. */
+  /* The tool name is the link, and its ::after covers the whole plate so the
+     full box is clickable. The pin sits above that layer, which is why this is
+     a div wrapping an anchor: HTML does not allow a button inside a link. */
   .plate-open {
     grid-column: 1;
     min-width: 0;
@@ -483,10 +308,8 @@
     line-height: 1.15;
     text-wrap: balance;
   }
-  /* Micro, which is the floor and not a size chosen for being small: a plate is
-     a name you are reading and a sentence you are checking, and those are not
-     the same job. The measure is held well short of 66ch because two of these
-     sit side by side. */
+  /* Micro size, the smallest on the page. The measure is held well short of
+     66ch because two plates sit side by side. */
   .plate-say {
     grid-column: 1 / -1;
     margin: 0;
@@ -496,11 +319,8 @@
     color: var(--pp-muted);
     text-wrap: pretty;
   }
-  /* The dates: when the tool first landed and when it last changed, read out
-     of git history by tools/stamp-dates — never written by hand, so edit that
-     script rather than these lines. Machine facts in the machine's face, at
-     the label floor the copyright line set, and fainter than the sentence
-     above: a plate answers "what is this", and "since when" is its colophon. */
+  /* Dates are written by tools/stamp-dates from git history. Do not edit them
+     by hand; edit the script. */
   .plate-dates {
     grid-column: 1 / -1;
     margin-top: 0.1rem;
@@ -509,52 +329,15 @@
     letter-spacing: var(--w-track-mono);
     color: var(--pp-faint);
   }
-  /* ── What leaves your machine ──────────────────────────────────────────────
-     One of these on every plate, the local ones included, and the key at the
-     foot of the page says what each rung means.
-
-     What was here before: a `network` line printed on the two tools that talk
-     to one, and nothing on the other five, so the promise for most of the page
-     was the ABSENCE of a mark. An absent mark and a forgotten mark look
-     exactly alike, which is the wrong way round for the claim that matters
-     most — the reassuring case is the one that should be printed, and the
-     reader should not have to know the convention to collect it. It also had
-     one rung, so it could only answer "does this touch a network", and that
-     stopped being the interesting question as soon as any of this could KEEP
-     something. Fetching a map tile and holding your files on a server are the
-     same bit set and nowhere near the same promise.
-
-     So: five rungs, ordered by what happens to YOUR material, printed on every
-     card. Nothing on the bench is above `fetch` today; `store` and `account`
-     exist because the ladder has to be built before the tool that needs it,
-     not after — a scale invented in a hurry to describe something already
-     shipped describes that one thing.
-
-     The ladder is measured in INK and never in a plate, which is the whole of
-     why it can sit on a card that already carries a colour. The plates are
-     this page's category vocabulary — the cast here, the square in front of a
-     queued name, one meaning across both sections — and a green mark for
-     "local" beside a red cast for "media" would be two colour codes on one
-     object, each making the other harder to trust. Ink coverage is an axis the
-     register does not use: more of your material leaving means more ink on the
-     card, in the squares and in the word alike, so the mark states its own
-     quantity. It survives every form of colour vision, and it does not
-     editorialise — plate 2 for `account` would be the page calling signing in
-     an error, and this system's own note says red is not "error" unless the
-     component says so in words.
-
-     Three inks across five rungs, because the ink scale has three stops.
-     Inventing a fourth grey to give every rung its own would be an undeclared
-     token bought for one step of contrast the squares have already made. */
+  /* Custody rating, on every plate including the local ones. Five squares
+     filled from the left, plus one word; the key at the foot defines each
+     rung. One ink at every rung: this is a measurement, not a warning. */
   .plate-custody {
     grid-column: 1 / -1;
     display: flex;
-    /* Baseline, not centre. The squares carry no text, so flex synthesises
-       their baseline from the bottom edge and they sit ON the line like five
-       small glyphs — which at one line is a third of a pixel away from centred
-       and at two is the difference between a mark beside its first line and a
-       mark floating in the middle of both. A long list of hosts wraps on a
-       phone, so two lines is a case this has to be right in. */
+    /* Baseline alignment rather than centre. The squares carry no text, so
+       flex derives their baseline from the bottom edge and they sit on the
+       line like glyphs. This matters when the line wraps. */
     align-items: baseline;
     gap: 0.45rem;
     justify-self: start;
@@ -572,10 +355,8 @@
     color: var(--pp-ink);
   }
 
-  /* Five squares, driven in from the left and hollow the rest of the way,
-     which is the pin's own idiom at half its size: in or not, nothing between.
-     currentColor for both states, so the squares and the word take the same
-     ink and the mark gets heavier as one object rather than two. */
+  /* Five squares, filled from the left. currentColor for both states, so the
+     squares and the word take the same ink. */
   .custody-meter {
     display: flex;
     flex: none;
@@ -584,8 +365,7 @@
   .custody-meter i {
     width: 6px;
     height: 6px;
-    /* --line and not --hairline: the same 1px, but a hairline splits inside a
-       container and never encloses, and this one encloses. */
+    /* --line rather than --hairline: the same 1px, but this border encloses. */
     border: var(--pp-rule-line) solid currentColor;
   }
   [data-custody='local'] .custody-meter i:nth-child(-n+1),
@@ -596,39 +376,14 @@
     background: currentColor;
   }
 
-  /* The queue is gone from the stylesheet along with the rows it dressed. It
-     was fifteen names in the machine's face, each behind a 7px square of its
-     area's register, sitting under the plates of the same area. Removing the
-     rows left `.queue-list`, `.q`, `.q::before` and `.q-name` matching nothing,
-     and a rule that matches nothing is a rule nobody can check. The briefs
-     survive as comments in the areas that will hold the tools; the markup and
-     these rules come back together, from git, on the day one is built. */
+  /* The queue rules were removed with the rows they styled. .queue-list, .q,
+     .q::before and .q-name matched nothing once planned tools left the view.
+     The briefs remain as comments in each category. */
 
-  /* ── The key ───────────────────────────────────────────────────────────────
-     What the marks on the plates mean, printed once at the foot rather than
-     five times up the page.
-
-     It is a description list because that is what it is: a term and what the
-     term means, five times. Each pair is wrapped in a div so it has somewhere
-     to carry data-custody — the same attribute doing the same job here as on a
-     card, which is what keeps the key and the thing it explains from drifting
-     apart. There is no third state to define:
-     the mark in the key and the mark on the plate are the same two elements
-     under the same rules.
-
-     Last on the page on purpose. A key belongs where a colophon belongs, and
-     the ladder is readable from the marks alone: five squares, some filled,
-     and one word. A reader who wants to know what the word promises is a
-     reader who will look for it, once, at the foot.
-
-     This is now the ONLY place on the page where a rung is explained. A card
-     used to finish its rating with a clause — `fetch — AWS terrain, Carto,
-     Open-Meteo, BigDataCloud` — which is a different sentence per tool, of a
-     different length, saying a different amount, so no two cards could be
-     read against each other and the mark stopped being a scale. A rating
-     compares or it is not a rating. The hosts did not go missing: they are on
-     the tool's own page, in full, named before anything is sent, which is
-     where a reader is standing when the answer matters. */
+  /* The custody key: five rungs and their definitions, printed once at the
+     foot. A description list, each pair wrapped in a div carrying data-
+     custody, so the key and the plates read the same attribute. Last on the
+     page, where a colophon belongs. */
   .key-list {
     display: grid;
     gap: 0.6rem;
@@ -637,15 +392,11 @@
     display: grid;
     gap: 0.15rem;
   }
-  /* Wide, the five rows are ONE grid rather than five: display:contents drops
-     each pair's box so the dt and dd become items of the list itself, and the
-     mark column is then measured once, against the longest word, instead of
-     five times against five. Five independent grids each sized their own auto
-     column, which set every definition to start at a different x — a ragged
-     left edge down a column of prose, which is the one place ragged is just
-     wrong. The row div still carries data-custody and colour still inherits
-     through it, which is the whole reason this works without moving the
-     attribute onto both children. */
+  /* Wide layout: the five rows form one grid rather than five. display:
+     contents removes each pair's box, so dt and dd become items of the list
+     and the mark column is measured once against the longest word. Five
+     separate grids would each size their own column and start every definition
+     at a different x. */
   @media (min-width: 561px) {
     .key-list {
       grid-template-columns: auto minmax(0, 1fr);
@@ -664,9 +415,7 @@
     font-size: var(--pp-size-label);
     letter-spacing: var(--w-track-mono);
   }
-  /* The prose stays one ink at every rung. The ramp is the MARK's job, and a
-     definition set darker because of what it defines would be the page raising
-     its voice on the sentence that is only there to be clear. */
+  /* Definitions keep one ink at every rung. The colour ramp is the mark's job. */
   .key-row dd {
     max-width: 60ch;
     font-size: var(--pp-size-micro);
@@ -674,9 +423,8 @@
     color: var(--pp-muted);
     text-wrap: pretty;
   }
-  /* Below 561px there is no room for a mark column and a measure beside it, so
-     the pair stacks and the mark reads as a heading over its own paragraph —
-     the same relationship, turned through ninety degrees. */
+  /* Below 561px there is no room for a mark column beside a measure, so the
+     pair stacks and the mark reads as a heading over its paragraph. */
   .key-note {
     margin-top: var(--pp-space-4);
     max-width: 60ch;
@@ -685,21 +433,17 @@
     color: var(--pp-faint);
     text-wrap: pretty;
   }
-  /* A bare <code> is styled nowhere in this family — every other one on the
-     page carries a class that sets the face — so naming a rung inside a
-     sentence has to set it here or fall back to whatever monospace the
-     browser keeps. Slightly under 1em because Cousine sets larger than Zilla
-     at the same size, and a word quoted mid-sentence should not outgrow the
-     sentence. */
+  /* A bare <code> is styled nowhere else in this family, so a rung named
+     inside a sentence sets its face here. Slightly under 1em, because Cousine
+     sets larger than Zilla at the same size. */
   .key-note code {
     font-family: var(--pp-font-mono);
     font-size: 0.94em;
     letter-spacing: var(--w-track-mono);
   }
 
-  /* Pinning is nailing it to the board — the same 45° square the wordmark wears
-     at its corners, hollow until you drive it in. It reads as a mark rather
-     than a control at rest, which is what keeps a page of nineteen quiet. */
+  /* The pin is a 45 degree square, hollow until set. It reads as a mark rather
+     than a control at rest. */
   .pin {
     position: relative;
     z-index: 2;
@@ -717,24 +461,15 @@
     grid-row: 1;
     margin: -0.25rem -0.25rem 0 0;
   }
-  /* The blow. The head's own half of this — losing the cast it stands on — is
-     in base.css with the other three states, because the nail is one object and
-     splitting its states across two files is how they drift apart. What is left
-     here is only the move, which is the button's and not the head's. */
+  /* Only the button's movement. The head's own states are in base.css with the
+     other three. */
   .pin:active {
     transform: var(--w-press);
   }
-  /* A pinned tool comes to the front of its own area, and its area comes to
-     the front of the page — two rules, because with the bench broken into five
-     areas the first one alone would leave a pinned tool at the top of a
-     category the reader still has to scroll to find, which is most of the
-     pin's job undone.
-     Together they put it back where it was: first thing under the masthead.
-
-     Order rather than a move in the DOM, so the angle a plate was dealt stays
-     with it, and so main's own grid does the work — an area is a grid item and
-     takes `order` exactly as a plate does. The key is a grid item too and has
-     no order of its own, so it stays at the foot where it belongs. */
+  /* A pinned tool moves to the front of its category, and its category to the
+     front of the page. Both rules are needed: the first alone leaves it at the
+     top of a category the reader still has to scroll to. order rather than a
+     DOM move, so each plate keeps its angle. */
   .is-pinned {
     order: -1;
   }
@@ -742,93 +477,53 @@
     order: -1;
   }
 
-  /* ── The scrawl ────────────────────────────────────────────────────────────
-     The system's hand annotation, pointing at the one control on this page that
-     explains nothing about itself. A pin at rest is a small hollow diamond in
-     the corner of a plate, and there is no reading of that shape that gets you
-     to "this drives the tool to the top and keeps it there".
-
-     Core owns the two arrangements and which one is on. What is the surface's
-     is the arrow, where it points from, and the tilt — law 06 is a per-page
-     budget and the system cannot know what else is spending it. Here the
-     rotation is --w-tilt again, the same declared token the wordmark and the
-     plates take, so this adds no new angle to the page.
-
-     Anchored to the first plate's WRAPPER, not to the plate: core puts a scrawl
-     at `bottom: 100%`, so from the wrapper it sits in the air directly above
-     the pin and the arrow can come down onto it. Anchored to the plate itself
-     it would inherit that plate's rotation and swing the arrowhead off its own
-     target. Anchored to the section it pointed at the corner of the page,
-     which is where the count is, not where the pin is. */
+  /* Hand annotation pointing at the pin, which explains nothing about itself.
+     The system owns the arrangement; this file sets the arrow, where it points
+     from, and the tilt. Anchored to the first plate's wrapper rather than the
+     plate, so it does not inherit the plate's rotation. */
   .plates > div {
     position: relative;
   }
   .plates > div:first-child .scrawl {
     right: 0.9rem;
-    /* Over the plate rather than under it. A plate is opaque stock and comes
-       later in the DOM, so at auto the annotation was painted over and lost its
-       descenders to the top border. It is a mark made ON the page, so it wins.
-    */
+    /* Above the plate. A plate is opaque and comes later in the DOM, so at
+       auto the annotation was painted over. */
     z-index: 3;
     font-size: 0.95rem;
-    /* The annotated layer, not the printed one. The system draws a scrawl in
-       its own text ink rather than in a quiet grey, because "printed first,
-       then annotated" only reads if the second pass is visibly a second pass.
-       At --pp-muted the sentence and the arrow were two greys sitting near
-       body copy, and the arrow was separately overridden to plate 3, so one
-       annotation was printed in two inks. One ink now, and it is the same
-       register the plate below it casts in. */
+    /* Drawn in text ink rather than grey, and in one ink for both the words
+       and the arrow. */
     color: var(--pp-plate-2-text);
     transform: rotate(var(--w-tilt));
   }
-  /* Only the ARROW crosses onto the plate, and the words stay off it. Core
-     positions the two independently in the beside arrangement — the text hangs
-     off `right: 100%` of the scrawl, so translating the svg moves the arrow
-     without dragging the sentence down onto the border with it. That split is
-     the reason this needs no second element and no second position. */
+  /* Only the arrow crosses onto the plate; the words stay off it. The system
+     positions the two independently, so translating the svg moves the arrow
+     alone. */
   .scrawl svg {
     translate: 0 1.15rem;
   }
   @media (max-width: 700px) {
-    /* One column, and the plates lose their offsets, so the air the annotation
-       hangs in is gone and it would sit on the band above. It comes off rather
-       than being made to fit: a hand annotation squeezed into a gap it does not
-       fit is drift, and the pin is still reachable without it. */
+    /* One column, so the plates lose their offsets and the space the
+       annotation needs is gone. It is hidden rather than squeezed, and the pin
+       still works without it. */
     .scrawl {
       display: none;
     }
   }
-  /* And it retires the moment anything is pinned. Two reasons, and the second
-     is the one that made it necessary. It teaches the pin, so once the reader
-     has used one the lesson is over and a note explaining a control back to
-     someone already using it is clutter. And `order` moves a pinned plate to
-     the front, which pushes this one down a row — where the 2rem of air it
-     hangs in does not exist, and it would sit over the plate above. */
+  /* Hidden once anything is pinned. The annotation teaches the pin, and order
+     moves a pinned plate into a row where its space does not exist. */
   main:has(.is-pinned) .scrawl {
     display: none;
   }
 
-  /* The footer is one line. What it used to carry is either already in the
-     masthead — both site keys sit up there now — or gone by request.
-
-     The rule that closes the page drops from a 3px dashed plate-2 band to the
-     same hairline the masthead opens with, for two reasons. A rule that loud
-     over a single line of mono is a frame around a stamp. And 3px was never
-     one of the four declared weights (hairline, line, 2px structure, 6px
-     spine), while dashed means "a boundary the reader may cross" — the end of
-     the page is not one. Solid is structure, which is what this is. The page
-     now opens and closes on the same rule. */
+  /* One line. The closing rule is the same hairline the header opens with. */
   footer {
     max-width: var(--pp-page-max);
     width: 100%;
     margin: 0 auto;
     padding: 1.5rem var(--pp-gutter) 2.5rem;
   }
-  /* A name, not a handle. `fubl.org` and `felixubl/workshop` are set lowercase
-     up in the masthead because they are addresses, but a copyright line names
-     the person holding the right, so it is cased like a person. Mono keeps it
-     in the same register as the page's other micro-labels, at 0.06em to match
-     them, and at --pp-size-label (11.2px), the floor nothing here goes below. */
+  /* A name rather than an address, so it is cased like a name. Mono at the
+     label size, matching the page's other micro-labels. */
   .copyright {
     display: block;
     padding-top: 0.9rem;
@@ -863,25 +558,17 @@
 
   <main>
 
-    <!-- The whole page's totals. It is not an area — no register square — and
-         it carries the one figure worth a pen plus the pin count, both facts
-         about the page rather than about any one category. -->
+    <!-- Page totals. Not a category, so no register square. -->
     <div class="band band-inventory">
       <p class="section-label">Inventory</p>
       <span class="band-rule" aria-hidden="true"></span>
       <code><span data-pin-count></span><span class="mk mk--citron">9 built</span></code>
     </div>
 
-    <!-- The areas. Each one holds the tools for a kind of work: what exists as
-         a plate, what is still intended as a row underneath. The sentence on
-         each plate is the same copy that was kept as an HTML comment beside the
-         card while the cards were one line tall, cut to what fits a plate; each
-         queue row still keeps its own brief as a comment, for the same reason a
-         row is not where a paragraph belongs. -->
+    <!-- Categories. Each holds the built tools of one domain as plates; the
+       planned ones are listed in a comment inside the section. -->
 
-    <!-- ── Media ─────────────────────────────────────────────────────────────
-         Raster and vector images, type, colour, and the audio and video files
-         beside them. -->
+    <!-- Media. Raster and vector images, type, colour, audio and video. -->
     <section class="area reg-2">
 
       <div class="band">
@@ -894,25 +581,15 @@
       <div class="plates">
 
         <div data-tool="draw-svg">
-          <!-- Points at this plate's pin. aria-hidden and not a label: the
-               control it annotates already carries its own accessible name, and
-               a reader on a screen reader gets that name rather than a
-               description of an arrow they cannot see. -->
+          <!-- Points at this plate's pin. aria-hidden rather than a label: the
+             pin has its own accessible name, and a description of an arrow is
+             no use on a screen reader. -->
           <span class="scrawl scrawl--beside" aria-hidden="true">
             <span class="scrawl__t">pin one to keep it on top</span>
-            <!-- Round caps and a 1.6 stroke, which are the system's own scrawl
-                 arrow (Preprint Index.dc.html) and not the icon set's. The angle
-                 law governs icons — 16 grid, 1.35px, square caps, 45° only — and
-                 a hand annotation is the one mark it does not govern. Drawn with
-                 square caps it read as a glyph somebody had drawn carefully,
-                 which is the opposite of the point.
-
-                 It ends heading almost straight down. The old curve flattened
-                 out and ran the last third of its length ALONG the plate's top
-                 border before stopping 8px to the right of the pin, so it
-                 pointed past its own target and collided with the edge it was
-                 crossing. Coming down steeply, it crosses the border at a
-                 near-right angle and stops just short of the nail. -->
+            <!-- Round caps and a 1.6 stroke, taken from the system's annotation
+               arrow rather than the icon set. It ends heading almost straight
+               down, so it crosses the plate border at close to a right angle
+               and stops short of the pin. -->
             <svg width="34" height="30" viewBox="0 0 34 30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 2c12 2 16 10 18.5 23M20.5 25 16 18.5M20.5 25 25.5 19"></path></svg>
           </span>
           <div class="plate plate-live">
@@ -936,10 +613,8 @@
 
       </div>
 
-      <!-- Planned for this area. Kept in the file and out of the view:
-           the category view answers "what can I use", and a tool that
-           does not exist yet cannot answer it. Each name carries the
-           brief for building the thing.
+      <!-- Planned for this category, kept in the file and out of the view.
+           Each name is followed by the brief for building it.
 
            Image Toolkit
            Convert between PNG/JPEG/WebP/AVIF/HEIC, remove backgrounds, resize or pad
@@ -980,11 +655,9 @@
       -->
     </section>
 
-    <!-- ── Documents ─────────────────────────────────────────────────────────
-         Tools whose output is a document or a printed sheet. The bingo generator
-         is filed here rather than under computation: the arithmetic is the
-         method, the artefact is the deliverable, and a reader looks for it
-         under the artefact. -->
+    <!-- Documents. Tools whose output is a document or a printed sheet. The
+       bingo generator is filed here rather than under computation, because the
+       artefact is the deliverable. -->
     <section class="area reg-1">
 
       <div class="band">
@@ -1018,10 +691,8 @@
 
       </div>
 
-      <!-- Planned for this area. Kept in the file and out of the view:
-           the category view answers "what can I use", and a tool that
-           does not exist yet cannot answer it. Each name carries the
-           brief for building the thing.
+      <!-- Planned for this category, kept in the file and out of the view.
+           Each name is followed by the brief for building it.
 
            QR Code & Barcodes
            Generate QR codes styled to match this site instead of plain black
@@ -1042,9 +713,7 @@
       -->
     </section>
 
-    <!-- ── Data & Computation ────────────────────────────────────────────────
-         Numbers, text as data, tables, archives and code — work whose output is
-         a figure or another file rather than a rendering. -->
+    <!-- Data & Computation. Numbers, text as data, tables, archives and code. -->
     <section class="area reg-3">
 
       <div class="band">
@@ -1078,10 +747,8 @@
 
       </div>
 
-      <!-- Planned for this area. Kept in the file and out of the view:
-           the category view answers "what can I use", and a tool that
-           does not exist yet cannot answer it. Each name carries the
-           brief for building the thing.
+      <!-- Planned for this category, kept in the file and out of the view.
+           Each name is followed by the brief for building it.
 
            CSV & Spreadsheet Toolkit
            &quot;Fix this CSV&quot; detects encoding, delimiter, and broken rows
@@ -1107,12 +774,9 @@
       -->
     </section>
 
-    <!-- ── Geospatial & Networks ─────────────────────────────────────────────
-         Tools that measure something outside the browser rather than a file the
-         reader supplied: terrain, sky, and the connection itself. Every rung
-         above `local` on the page is in this area, which follows from the
-         definition — a tool that reports on an external system has to query
-         it. -->
+    <!-- Geospatial & Networks. Tools that measure something outside the browser:
+       terrain, sky, and the connection itself. Every rung above local is in
+       this category. -->
     <section class="area reg-0">
 
       <div class="band">
@@ -1156,10 +820,8 @@
 
       </div>
 
-      <!-- Planned for this area. Kept in the file and out of the view:
-           the category view answers "what can I use", and a tool that
-           does not exist yet cannot answer it. Each name carries the
-           brief for building the thing.
+      <!-- Planned for this category, kept in the file and out of the view.
+           Each name is followed by the brief for building it.
 
            Geospatial Tools
            Convert between GPX, KML, and GeoJSON, extract or remove GPS data from
@@ -1168,10 +830,8 @@
     </section>
 
     <!-- ── General ────────────────────────────────────────────────────────
-         Retired from the view, not from the plan. It held one planned tool and
-         nothing built, so with the queue rows gone its band stood over an empty
-         space — a heading for a category the reader cannot enter. It comes back
-         the day something lands in it.
+         Not printed. It holds one planned tool and nothing built, so its band
+         would stand over an empty space. It returns when something lands in it.
 
          Odds & Ends
            The stuff that doesn't fit a category: webpage-to-PDF, an invoice photo to
@@ -1180,13 +840,8 @@
            dimensions.
     -->
 
-    <!-- The key to the mark every plate carries, and the only place a rung is
-         spelled out — a card carries the rating and stops there. Five rungs,
-         and the page shows all five even though nothing in the shop climbs
-         past the second: the two above are what the workshop looks like the
-         day a tool keeps something, and printing them now is how the ladder
-         gets built before it is needed rather than around whatever ships
-         first. -->
+    <!-- The custody key, and the only place a rung is defined. All five are
+       printed although nothing in the shop is above the second. -->
     <section class="key">
 
       <div class="band">

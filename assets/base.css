@@ -1,27 +1,16 @@
-/* The workshop's shared chrome, set in PREPRINT.
-
-   Every tool page reuses these classes, so they live here rather than in any
-   one tool. The values all come from assets/preprint/ — this file names no
-   colour and no face of its own. Anything the workshop genuinely deviates on
-   is in assets/site.css instead.
-
-   Three things this file deliberately does NOT do: it does not set a body
-   font (tokens/base.css already sets Zilla Slab at 17px/1.68), it does not
-   restyle input[type='range'] (the system's square thumb on a 2px track is
-   correct as shipped), and it casts no shadow at all. Law 04 allows one hard
-   cast per view and every view spends it elsewhere, so shared chrome cannot
-   have one: a cast here would land on every page at once and cancel whatever
-   that page had already spent its licence on. */
+/* Shared chrome for every tool page. All values come from assets/preprint/;
+   this file names no colour and no typeface of its own. Workshop-specific
+   deviations belong in assets/site.css. It deliberately sets no body font, no
+   page ground and no tokens. */
 
 * {
   box-sizing: border-box;
 }
 
-/* `hidden` has to outrank a class that sets display, and here several do:
-   .toolbar, .group and .dropzone are all display:block-or-flex from a class,
-   which ties [hidden] on specificity and beats it on source order. Without
-   this line the attribute silently does nothing on exactly the elements a
-   tool most wants to hide. */
+/* [hidden] has to outrank classes that set display. .toolbar, .group and
+   .dropzone all set display from a class, which ties [hidden] on specificity
+   and beats it on source order. Without this rule the attribute does nothing
+   on those elements. */
 [hidden] {
   display: none !important;
 }
@@ -36,9 +25,9 @@ body {
   cursor: var(--pp-cursor-arrow);
 }
 
-/* Pointers. Hotspots are contract: a surface may repaint a pointer, never
-   move its point. All of them are dropped on touch, where a drawn cursor is a
-   lie about the input device. */
+/* Pointers. A hotspot is a contract: a surface may repaint a pointer but never
+   move its point. All are dropped on touch, where a drawn cursor misdescribes
+   the input device. */
 a,
 button,
 summary,
@@ -75,8 +64,8 @@ input[type='number'] {
   border-color: var(--pp-plate-3);
 }
 
-/* Present to a screen reader, absent to the eye. For live regions and for
-   labels the layout already states in another way. */
+/* Visible to a screen reader, not to the eye. For live regions and for labels
+   the layout already conveys. */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -97,18 +86,9 @@ input[type='number'] {
   padding: clamp(2rem, 5vw, 3rem) var(--pp-gutter) clamp(2.5rem, 6vw, 4rem);
 }
 
-/* The spine: a break that resets the reader. 6px, once per page — nothing else
-   on a page is 6px.
-
-   Solid ink, which is the system's own spine (`.head--spine` in surfaces/app.css
-   is `6px solid var(--pp-edge)`, and the rules card names it "spine · ink"). It
-   was 6px dashed plate-2, which the workshop's reference design does specify —
-   but the system fixes what the three styles MEAN: solid is structure, dashed is
-   a boundary the reader may cross, dotted is provisional. The end of the
-   masthead is structure. It is the full stop between movements, not a line you
-   step over, so it was the wrong style by the system's own rule and reads as
-   hazard tape at this weight. Going back to solid ink is a return to the
-   system rather than a new deviation. */
+/* The spine: a 6px solid rule marking a break, used once per page. Nothing
+   else on a page is 6px. Solid because solid means structure; dashed means a
+   boundary the reader may cross, and the top of a page is not one. */
 .spine {
   height: 0;
   border-top: var(--pp-rule-spine) solid var(--pp-edge);
@@ -138,13 +118,9 @@ header {
 }
 
 /* Tool-page chrome. Every tool opens the same way: a back link and a title
-   under the spine, then a band of controls above the work. These lived in
-   draw-svg's own stylesheet while it was the only tool; with a second one they
-   are shared, and a tool's style.css should now hold only the controls that
-   tool actually invents.
-
-   The toolbar is chrome, not a panel: a rule separates it from the work rather
-   than a box enclosing it. */
+   under the spine, then a band of controls above the work. A tool's own
+   style.css should hold only the controls it invents. The toolbar is separated
+   from the work by a rule, not a panel. */
 .tool-title {
   margin: 0.6rem 0 0;
   font-family: var(--pp-font-display);
@@ -154,10 +130,9 @@ header {
   line-height: 1.1;
 }
 
-/* The tool's name and the key that hands it to somebody else. The share
-   control sits with the title rather than out at the page edge, because what
-   it copies is a link to this tool specifically — put it in the corner with
-   the mode key and it starts to look like a page-level action. */
+/* The tool name and its share button. The share control sits with the title
+   rather than at the page edge, because it copies a link to this tool
+   specifically; in the corner it would read as a page-level action. */
 .title-row {
   display: flex;
   flex-wrap: wrap;
@@ -195,43 +170,18 @@ header {
 .share-btn:active {
   transform: var(--w-press);
 }
-/* Done is stated in words — share.js swaps the label to "Copied" and swaps it
-   back. No plate: law 05 licenses a semantic plate only when the action is
-   irreversible and the label says so too, and copying a link to the clipboard
-   is the most reversible thing on the page. Plate 1 here would teach that
-   green means "that worked", which is the false rule law 05 exists to stop.
-   The word already carries it, so the edge only firms up. */
+/* Success is stated in words: share.js swaps the label to "Copied" and back.
+   No plate. A semantic plate is licensed only when the action is irreversible
+   and the label says so, and copying a link is fully reversible. */
 .share-btn.is-done {
   border-color: var(--pp-edge);
   color: var(--pp-ink);
 }
 
-/* The pin head: a square turned 45°. It is the same nail the index's wordmark
-   wears at its corners, which is the whole idea — pinning a tool is nailing it
-   to the board. Shared because the same mark appears on a tool page beside the
-   title and on every card of the index, and those two have to be the same
-   object.
-
-   The four states are one physical sequence, and reading them in order is the
-   only way the shape explains itself:
-
-     rest    hollow outline in --pp-line. An empty hole. Nothing is driven.
-     hover   the outline goes to full ink. The hole is a target.
-     press   the head moves 1px down and right and its cast collapses to
-             nothing. That is the blow, and it is the same --w-press every
-             other pressable thing on this site takes.
-     pinned  filled ink, standing on a 1.5px hard cast. A nail head is a solid
-             object sitting proud of the board, and the cast is the only thing
-             that can say so.
-
-   The cast is the system's own device, not a new one: invariants.md fixes a
-   cast as a hard offset or nothing, and the drawn pointer already does exactly
-   this at 1.1px to make a clickable surface read as raised. It takes
-   --pp-shadow rather than an ink, because --pp-shadow is the one colour the
-   system tunes per mode for this job — ink at 12% on paper, black at 60% on
-   graphite. An --pp-edge cast would be a black block touching a black head in
-   light mode and a white one in dark, which is a fatter diamond rather than a
-   raised one. */
+/* The pin head: a square rotated 45 degrees, the same mark the index wordmark
+   wears at its corners. Shared because it appears both on a tool page beside
+   the title and on every index card, and the two must be one object. Four
+   states: at rest hollow with a cast, hover fills, active flush, set solid. */
 .pin-head {
   width: 8px;
   height: 8px;
@@ -258,16 +208,10 @@ header {
   border-color: var(--pp-edge);
   box-shadow: 1.5px 1.5px 0 var(--pp-shadow);
 }
-/* Driven flush for as long as the blow lasts. The button carries the 1px move
-   (see --w-press at each call site), so all the head has to do is lose the
-   cast it was standing on.
-
-   It has to carry `.is-on` to work at all, and that is not belt and braces.
-   The only nail with a cast to lose is one already driven, and `.pin.is-on
-   .pin-head` outranks a plain `.pin:active .pin-head` on specificity — later
-   source order does not save it. Written without `.is-on` this rule matched
-   only the nails that had no cast in the first place, so the one press where
-   the head should visibly go flush was the one press that did nothing. */
+/* Driven flush while the press lasts. The button carries the 1px move
+   (--w-press at each call site), so the head only loses the cast it stood on.
+   It requires .is-on: only a pin already set has a cast to lose, and .pin.is-
+   on .pin-head outranks .pin:active .pin-head. */
 .pin-btn.is-on:active .pin-head,
 .pin.is-on:active .pin-head {
   box-shadow: none;
@@ -307,37 +251,17 @@ header {
   margin: 0 0 1rem;
 }
 
-/* The mode control is core's now, and this file draws none of it. It used to be
-   here in full, with a long argument for why the workshop's corner had to match
-   fubl.org's. That argument was right and it has been won somewhere better: the
-   system took the part, because it had been written three times across three
-   surfaces and a part used three times is not a breach, it is a part.
-
-   Of core's two mode controls the workshop takes the CORD, not the swatch. The
-   swatch is a control in a row and it wants neighbours; this site's top edge is
-   a back link on the left and nothing at all on the right, which is the one
-   place a cord can hang without competing with anything. fubl.org keeps the
-   swatch, and core.css says why the system ships both. A page shows one.
-
-   All this file supplies is the wall it hangs from. The cord is absolutely
-   positioned at `top: 0`, so its ancestor has to be the element whose top edge
-   is the top of the page — the layout shell on a tool page, the masthead on the
-   index, both of which carry the page's own gutter and centre on its measure.
-   Hang it off <header> instead and it starts below the shell's padding, in
-   mid-air.
-
-   The inset lands the 1px line exactly on the content column's right edge,
-   which is where the swatch used to sit: the hit box reaches 16px past the cord
-   on that side, so the gutter has to give that back. */
+/* The mode control belongs to core.css and is not drawn here. The workshop
+   takes the pull cord rather than the swatch; both are core's parts. */
 .wrap,
 .masthead {
   position: relative;
   --pp-cord-inset: calc(var(--pp-gutter) - 16px);
 }
 
-/* Buttons. Border weight IS the hierarchy — 2px is primary, 1px is secondary.
-   Hover changes a border colour or a tint, never a lift and never a shadow.
-   Press moves 1px down-right, which is a thing a printer could do. */
+/* Buttons. Border weight is the hierarchy: 2px primary, 1px secondary. Hover
+   changes a border colour or a tint, never a lift or a shadow. Press moves 1px
+   down and right. */
 .btn-primary,
 .btn-ghost {
   height: var(--pp-target);
@@ -350,9 +274,8 @@ header {
   font-size: 0.95rem;
   font-weight: var(--pp-weight-strong);
   /* A button's box is its height, not its leading, and its label is one line.
-     Left unstated it is whatever the page happens to hand a button: the
-     browser's `normal` on a page without core.css, and the body's 1.68 on a
-     page with it, which moves every label off its baseline by a hair. */
+     Left unstated it inherits whatever the page supplies, which moves labels
+     off their baseline. */
   line-height: normal;
   border-radius: var(--pp-radius-md);
   text-decoration: none;
@@ -387,10 +310,9 @@ button[disabled] {
   cursor: var(--pp-cursor-blocked);
 }
 
-/* Presets: a row of small ghost buttons acting as one control, the shape the
-   system's Segmented takes. The chosen one states itself by filling with ink.
-   No plate — which preset you are on is a position, not a status. Lived in
-   draw-svg while it was the only tool with a row of them. */
+/* Presets: a row of small ghost buttons acting as one control. The chosen one
+   fills with ink. No plate, because which preset is active is a position
+   rather than a status. */
 .btn-ghost.preset {
   height: var(--pp-target-compact);
   padding: 0 0.7rem;
@@ -405,8 +327,8 @@ button[disabled] {
   color: var(--pp-paper);
 }
 
-/* Tags and badges are the only pills in the system. A tag is a label, not a
-   control — anything clickable takes the cut scale instead. */
+/* Tags and badges are the only pill shapes in the system. A tag is a label,
+   not a control; anything clickable takes the cut scale. */
 .tag {
   display: inline-flex;
   align-items: center;
@@ -425,20 +347,9 @@ button[disabled] {
   border-radius: var(--pp-radius-lg);
   padding: 1.15rem;
 }
-/* The prompt is a slip of paper left on the bench, not a region of the page.
-   Three changes, each off a rule rather than a preference.
-
-   DOTTED, not dashed. The system fixes the three styles: solid is structure,
-   dashed is a boundary the reader may cross, dotted is provisional or optional.
-   A prompt that disappears the moment you press the button is the definition of
-   provisional, and it had been claiming to be a boundary.
-
-   STOCK, not a wash. It sits ON the paper the way a plate on the index does,
-   which is also what lets the halftone stop dead at its edge rather than
-   showing through a grey film.
-
-   And it stops at the measure. Full-width it was a banner the width of the
-   toolbar, which made one sentence look like a section of the page. */
+/* The prompt is a provisional note, not a region of the page. Dotted rather
+   than dashed: dotted means provisional or optional, and a prompt that
+   disappears on the next press is provisional. */
 .card.prompt {
   max-width: 72ch;
   padding: 1rem 1.15rem;
@@ -447,11 +358,9 @@ button[disabled] {
   transform: rotate(var(--w-tilt-card));
 }
 
-/* This is the page's one law 05 claim, and it is the sentence itself rather
-   than an edge: .hint is always a line of prose saying what is wrong, so the
-   plate reinforces words that are already there instead of standing in for
-   them. A coloured edge on its own is not a message, which is why nothing else
-   on a tool page claims a plate. */
+/* The one semantic plate on a tool page. .hint is always a line of prose
+   saying what is wrong, so the plate reinforces words that are already present
+   rather than replacing them. */
 .hint {
   margin: -0.75rem 0 1.35rem;
   font-size: 0.86rem;
@@ -459,7 +368,7 @@ button[disabled] {
   color: var(--pp-plate-2-text);
 }
 
-/* The band above a result: what it is on the left, what you can do with it on
+/* The band above a result: what it is on the left, what can be done with it on
    the right. */
 .result-bar {
   display: flex;
@@ -473,15 +382,9 @@ button[disabled] {
   margin: 0;
 }
 
-/* ── The sheet ────────────────────────────────────────────────────────────
-   A table is a table. Fixed tracks, one hairline per row, a 2px rule under the
-   caption, and no rounded shell pretending the data is soft — a sheet of
-   figures is not a card. Below --w-sheet-min it scrolls sideways rather than
-   reflowing into stacks that stop being a table.
-
-   This lived in random-numbers while it was the only tool that printed one.
-   What stayed behind there is everything true of figures rather than of
-   tables: right alignment, tabular numerals, and that tool's column widths. */
+/* Tables. Fixed tracks, one hairline per row, a 2px rule under the caption, no
+   rounded shell. Below --w-sheet-min it scrolls sideways rather than reflowing
+   into stacks. */
 .sheet {
   --w-sheet-min: 460px;
   border: var(--pp-rule-line) solid var(--pp-line);
@@ -550,13 +453,11 @@ button[disabled] {
   color: var(--pp-faint);
 }
 
-/* Fields, the drawn controls and the tooltip used to live here. They are the
-   system's now, in assets/preprint/controls.css, which this page links: they
-   were parts every app wants rather than anything the workshop invented, and
-   the console wanted them next. Nothing about them changed on the way out. */
+/* Fields, drawn controls and the tooltip are in assets/preprint/controls.css,
+   which every page links. Nothing about them changed when they moved. */
 
-/* Drag-and-drop target, shared by every tool that accepts an upload. Dashed
-   because a boundary the reader may cross is dashed. */
+/* Drag-and-drop target, shared by every tool that accepts an upload. Dashed,
+   because it is a boundary the reader may cross. */
 .dropzone {
   display: block;
   border: var(--pp-rule-structure) dashed var(--pp-line);
@@ -567,10 +468,9 @@ button[disabled] {
   color: var(--pp-muted);
   font-size: 0.92rem;
 }
-/* The gap under the invitation was the browser's own paragraph margin, which
-   core.css's reset takes away. A tool that links core.css and one that does
-   not have to draw the same box, so the value is stated rather than inherited
-   from whatever a page happens to load. `1em` is what the browser gave. */
+/* The gap under the invitation is stated rather than inherited: core.css
+   removes the browser's paragraph margin, and a tool that does not link
+   core.css must draw the same box. 1em is the browser's original value. */
 .dropzone > p:first-child {
   margin: 1em 0;
 }
@@ -582,10 +482,10 @@ button[disabled] {
 .dropzone strong {
   color: inherit;
 }
-/* Clipped, not display:none. A file input that is display:none leaves the tab
-   order, and dragging is a pointer convenience — it must never be the only way
-   in. Clipped, the input still takes focus and still opens the picker on
-   Space, and the label below paints its focus ring. */
+/* Clipped rather than display: none. A file input set to display: none leaves
+   the tab order, and dragging must never be the only way in. Clipped, it still
+   takes focus, still opens the picker on Space, and the label paints its focus
+   ring. */
 .dropzone input[type='file'] {
   position: absolute;
   width: 1px;
@@ -609,7 +509,5 @@ footer {
   line-height: 1.6;
 }
 
-/* The plate mark used to be redrawn here, at 19px on 13px squares. It was a
-   second, slightly-wrong copy of core.css's .mark (22px on 14px) and nothing
-   rendered it. The system draws the one mark it has; if a surface here ever
-   needs it again, link core.css rather than retyping the offsets. */
+/* The plate mark is drawn by core.css. A surface that needs it should link
+   core.css rather than redraw it. */

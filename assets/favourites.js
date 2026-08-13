@@ -1,18 +1,8 @@
-/* Pinned tools.
-
-   Nineteen cards is more than anybody uses. A reader who reaches for the same
-   two every week should not have to find them in the grid every time, so a pin
-   drives a tool to the front and it stays there.
-
-   The list lives in this browser and nowhere else, which is the same promise
-   the tools themselves make. It is keyed by a slug on the card rather than by
-   the tool's name or its position, so renaming a tool or reordering the grid
-   does not quietly unpin it.
-
-   Every page that can pin anything loads this: the index, where each card
-   carries a pin, and each tool page, where the same control sits beside the
-   title. They read and write one list, so pinning a tool from inside it puts
-   it at the top of the index too. */
+/* Pinned tools. A pin moves a tool to the front of the index and keeps it
+   there. The list is held in localStorage in this browser only, keyed by a
+   slug on the card rather than by name or position, so renaming or reordering
+   does not unpin anything. Loaded by the index and by every tool page, which
+   read and write the same list. */
 (function () {
   "use strict";
 
@@ -32,8 +22,7 @@
       localStorage.setItem(KEY, JSON.stringify(list));
     } catch (err) {
       /* Private browsing, a full quota, or a blocked origin. The pin still
-         works for this page view; it just will not survive the reload, and
-         that is better than the button doing nothing at all. */
+         works for this page view but will not survive a reload. */
     }
   }
 
