@@ -1,0 +1,320 @@
+/* Tool-specific layout only. Faces, buttons, fields, the toolbar, the sheet
+   and the table come from ../assets/base.css over the vendored system. This
+   file draws the intake, the map stage, the custody line and the cue table. */
+
+/* --- intake ---------------------------------------------------------------- */
+
+/* Two doors, side by side and equal, because they are equal: a file is the
+   better input and a pasted link is the one most people have. Putting the
+   paste box below the dropzone would read as a fallback, and for anybody
+   coming from Google Maps it is the only way in. */
+.intake {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--pp-space-4);
+  align-items: start;
+  margin-bottom: var(--pp-space-4);
+}
+@media (max-width: 760px) {
+  .intake { grid-template-columns: 1fr; }
+}
+
+.intake .dropzone {
+  padding: var(--pp-space-5) var(--pp-space-4);
+}
+.dropzone-formats {
+  margin: var(--pp-space-2) 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pp-space-1);
+  justify-content: center;
+}
+.dropzone-formats code {
+  font-size: 0.7rem;
+  letter-spacing: var(--w-track-mono);
+  border: var(--pp-rule-hairline) solid var(--pp-hair);
+  border-radius: var(--pp-radius-sm);
+  padding: 1px 5px;
+}
+
+.paste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pp-space-2);
+}
+.paste .field {
+  font-family: var(--pp-font-mono);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+/* --- the custody line ------------------------------------------------------- */
+
+/* The index card carries one word about where a tool's data goes. On the tool
+   itself that word has to be live, because here it is a setting: this line
+   restates it as it stands right now, and the dot is the tell. */
+.custody-note {
+  display: flex;
+  align-items: baseline;
+  gap: var(--pp-space-2);
+  margin: 0 0 var(--pp-space-4);
+  padding: var(--pp-space-2) var(--pp-space-3);
+  border-left: var(--pp-rule-structure) solid var(--pp-line);
+  background: var(--w-wash-0);
+  font-size: var(--pp-size-micro);
+  line-height: 1.5;
+  color: var(--pp-muted);
+}
+.custody-note code {
+  font-size: 0.76rem;
+}
+.custody-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--pp-radius-pill);
+  background: var(--pp-plate-1);
+  transform: translateY(1px);
+}
+.custody-note[data-live='on'] {
+  border-left-color: var(--pp-plate-3);
+}
+.custody-note[data-live='on'] .custody-dot {
+  background: var(--pp-plate-3);
+}
+
+/* --- the bench -------------------------------------------------------------- */
+
+/* The map takes the room and the numbers take what is left. Under 900px they
+   stack, map first: on a phone the map is what tells you whether the right
+   file was opened. */
+.bench {
+  display: grid;
+  grid-template-columns: minmax(0, 1.9fr) minmax(240px, 1fr);
+  gap: var(--pp-space-4);
+  align-items: start;
+  margin-bottom: var(--pp-space-4);
+}
+@media (max-width: 900px) {
+  .bench { grid-template-columns: 1fr; }
+}
+
+.map-stage {
+  position: relative;
+  padding: var(--pp-space-2);
+  background:
+    repeating-conic-gradient(var(--w-wash-0) 0% 25%, transparent 0% 50%) 0 0 / 16px 16px;
+}
+.map-stage canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--pp-paper);
+}
+.map-busy {
+  position: absolute;
+  inset: auto var(--pp-space-3) var(--pp-space-3) auto;
+  margin: 0;
+  padding: 4px 10px;
+  border-radius: var(--pp-radius-sm);
+  background: var(--pp-ink);
+  color: var(--pp-paper);
+  font-family: var(--pp-font-mono);
+  font-size: 0.72rem;
+  letter-spacing: var(--w-track-mono);
+}
+.map-credit {
+  margin: 0;
+  padding: var(--pp-space-2) var(--pp-space-3);
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+  font-size: 0.72rem;
+  color: var(--pp-muted);
+}
+
+.pager-at {
+  min-width: 8ch;
+  text-align: center;
+}
+
+/* --- the numbers ------------------------------------------------------------ */
+
+.facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+.facts dt,
+.facts dd {
+  margin: 0;
+  padding: 7px var(--pp-space-3);
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+  font-size: var(--pp-size-micro);
+}
+.facts dt {
+  color: var(--pp-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--w-track-label);
+  font-size: var(--pp-size-label);
+  align-self: center;
+}
+.facts dd {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.facts dd.mono {
+  font-family: var(--pp-font-mono);
+  font-size: 0.76rem;
+}
+.facts dt:last-of-type,
+.facts dd:last-of-type {
+  border-bottom: 0;
+}
+
+.sheet-note.warn {
+  border-left: var(--pp-rule-structure) solid var(--pp-plate-2);
+  padding-left: var(--pp-space-3);
+}
+
+/* --- the cue table ----------------------------------------------------------- */
+
+/* The shared sheet is table-layout: fixed, so a column takes the width it is
+   given and shrink-to-fit is not available: every column but the instruction
+   is measured here, and the instruction takes the remainder. Below the min the
+   sheet scrolls sideways rather than crushing the numbers into each other. */
+.cues {
+  --w-sheet-min: 660px;
+}
+/* The shared cell padding is generous, which is right for a column of prose
+   and wrong for one holding three digits: it would leave the number no room
+   inside its own width. */
+.cues .col-n,
+.cues .col-glyph {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.cues .col-n {
+  width: 40px;
+}
+.cues .col-glyph {
+  width: 30px;
+}
+.cues .col-num {
+  width: 78px;
+  white-space: nowrap;
+  text-align: right;
+  font-family: var(--pp-font-mono);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+.cues .col-coord {
+  width: 156px;
+  white-space: nowrap;
+  font-family: var(--pp-font-mono);
+  font-size: 0.72rem;
+  color: var(--pp-muted);
+}
+.cues td.col-n {
+  font-family: var(--pp-font-mono);
+  font-size: 0.75rem;
+  color: var(--pp-muted);
+  text-align: right;
+}
+/* The glyph column is the one thing in the table read before the words, so it
+   is set larger than the type beside it and given room on both sides. */
+.cues td.col-glyph {
+  font-size: 1.05rem;
+  line-height: 1;
+  text-align: center;
+  padding-left: var(--pp-space-2);
+  padding-right: var(--pp-space-2);
+}
+.cues td strong {
+  font-weight: 600;
+}
+.cue-detail,
+.cue-tag {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--pp-muted);
+  margin-top: 2px;
+}
+.cue-tag {
+  display: inline-block;
+  margin-top: 3px;
+  padding: 0 5px;
+  border: var(--pp-rule-hairline) solid var(--pp-hair);
+  border-radius: var(--pp-radius-sm);
+  font-family: var(--pp-font-mono);
+  font-size: 0.66rem;
+  letter-spacing: var(--w-track-mono);
+}
+/* The two ends of the route are the only rows that are not turns, and the wash
+   is what stops a reader hunting for them. */
+.cues tr[data-type='start'] td,
+.cues tr[data-type='finish'] td {
+  background: var(--w-wash-0);
+}
+.cues tbody tr:hover td {
+  background: var(--pp-marker-citron);
+}
+
+/* --- the ledger at the foot ---------------------------------------------------- */
+
+.colophon {
+  margin-top: var(--pp-space-6);
+  padding-top: var(--pp-space-4);
+  border-top: var(--pp-rule-structure) solid var(--pp-line);
+}
+.ledger {
+  display: grid;
+  grid-template-columns: minmax(150px, 210px) 1fr;
+  gap: 0;
+  margin: var(--pp-space-3) 0 0;
+}
+@media (max-width: 700px) {
+  .ledger { grid-template-columns: 1fr; }
+  .ledger dd { padding-top: 0; }
+}
+.ledger dt,
+.ledger dd {
+  margin: 0;
+  padding: var(--pp-space-3) var(--pp-space-3) var(--pp-space-3) 0;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+.ledger dt {
+  font-family: var(--pp-font-display);
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+.ledger dd {
+  font-size: var(--pp-size-micro);
+  line-height: 1.6;
+  color: var(--pp-muted);
+}
+.ledger dd code {
+  font-size: 0.74rem;
+  letter-spacing: var(--w-track-mono);
+}
+.ledger dd strong,
+.ledger dd em {
+  color: var(--pp-ink);
+}
+
+/* --- the prompt ------------------------------------------------------------------ */
+
+.card.prompt p {
+  margin: 0 0 0.75em;
+}
+.card.prompt p:last-child {
+  margin-bottom: 0;
+}
+
+.hint[data-tone='bad'] {
+  border-left: var(--pp-rule-structure) solid var(--pp-plate-2);
+}
+.hint[data-tone='good'] {
+  border-left: var(--pp-rule-structure) solid var(--pp-plate-1);
+}
