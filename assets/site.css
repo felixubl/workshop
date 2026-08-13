@@ -25,15 +25,12 @@
   --w-mark-fill: #deee2e;
   --w-mark-edge: #ff4fa3;
 
-  /* The cone the lamp throws. The marker citron, which is the system's own
-     answer to "a field laid over paper, behind type", used here at its full
-     token strength for the near half of the throw and thinned for the far
-     half. Two densities rather than a fade: this system prints, so light
-     falling off is a second screen at a lighter percentage, never a gradient.
-     Both are fields behind type and never ink, which is the marker's whole
-     rule. */
-  --w-lamp-near: var(--pp-marker-citron);
-  --w-lamp-far: color-mix(in srgb, var(--pp-marker-citron) 42%, transparent);
+  /* The light the lamp throws. The marker citron, which is the system's own
+     answer to "a field laid over paper, behind type" — a field behind type and
+     never ink, which is the marker's whole rule. One screen at a shade under
+     the token's strength: the throw was two densities meeting on a line, and
+     the seam read as a printing fault rather than as light falling off. */
+  --w-lamp-throw: color-mix(in srgb, var(--pp-marker-citron) 80%, transparent);
 
   /* Where the lamp hangs, and how big. One drawing unit in px: full size from
      1200px of page up, a little under half at 700 and below, and a straight
@@ -132,8 +129,8 @@ body {
      happens HERE and not on :root, because a custom property that resolves a
      var() at the root is inherited already resolved, and a surface that wants a
      smaller fixture would never be heard. */
-  width: calc(357 * var(--w-lamp-unit));
-  height: calc(485 * var(--w-lamp-unit));
+  width: calc(217 * var(--w-lamp-unit));
+  height: calc(479 * var(--w-lamp-unit));
   pointer-events: none;
 }
 .lamp svg {
@@ -157,19 +154,26 @@ body {
 .lamp__joint {
   fill: var(--pp-edge);
 }
-/* The shade is drawn, not blocked in: filled with ink it was a black wedge with
-   an arm attached, and the silhouette of a lamp shade is a trapezoid and a rim,
-   both of which are lines. What the fill carries instead is the state. Lit, the
-   shade is the shop's citron at full strength — brighter than the throw below
-   it, because a source is always brighter than what it lands on — and it is the
-   same ink as the wordmark's W and the favicon, which is the whole point: one
-   light, three places. Off, it empties to paper and the fixture is a line
-   drawing of itself. */
+/* The shade is drawn, not blocked in. It is a trapezoid and a rim, and both of
+   those are lines, so it stays a line drawing in either mode — paper fill, ink
+   outline. Filling the whole of it citron was tried and it read as a yellow
+   triangle on a stick rather than as a lamp: the light does not come out of the
+   OUTSIDE of a shade. */
 .lamp__shade {
+  fill: var(--pp-paper);
+}
+/* The lip: the band of the shade's inside you can actually see through the
+   mouth, and the one part of the fixture that reports the state. It is the
+   shop's citron at full strength — brighter than the throw below it, because a
+   source is always brighter than what it lands on — and it is the same ink as
+   the wordmark's W and the favicon, which is the point: one light, three
+   places. Off, it empties to paper with the rest of the shade. */
+.lamp__lip {
   fill: var(--w-mark-fill);
+  stroke: none;
   transition: fill var(--pp-dur-fast) var(--pp-ease-out);
 }
-[data-mode='dark'] .lamp__shade {
+[data-mode='dark'] .lamp__lip {
   fill: var(--pp-paper);
 }
 /* The rim: the heaviest line on the fixture, and what stops the shade reading as
@@ -181,17 +185,14 @@ body {
   stroke-width: 5;
   stroke-linecap: butt;
 }
-/* The throw. A marker field in the shape of a cone, which is the marker doing
-   exactly its job — a translucent field laid over paper with type above it —
-   in the one shape that says where it came from. Hard edges, because a soft one
-   would be the blur this system does not own; a printed light has a boundary and
-   this one is cut at the spine, where the bench begins. */
+/* The throw. A marker field in the shape of a beam, which is the marker doing
+   exactly its job — a translucent field laid over paper with type above it — in
+   the one shape that says where it came from. Hard edges, because a soft one
+   would be the blur this system does not own: a printed light has a boundary,
+   and this one is cut at the spine, where the bench begins. */
 .lamp__cone {
-  fill: var(--w-lamp-near);
+  fill: var(--w-lamp-throw);
   transition: opacity var(--pp-dur-fast) var(--pp-ease-out);
-}
-.lamp__cone--far {
-  fill: var(--w-lamp-far);
 }
 /* Out the moment the switch is hit, while the room takes the system's mode
    duration to catch up. That order is the point: a bulb stops instantly and the
@@ -207,12 +208,12 @@ body {
   z-index: 5;
   width: var(--pp-target-prominent-narrow);
   height: var(--pp-target-prominent-narrow);
-  /* 80 in from the rig's right edge and 103 down is the middle of the shade,
+  /* 70 in from the rig's right edge and 114 down is the middle of the shade,
      read off the same viewBox the drawing uses; then back by half the target to
      centre it. These two are the only numbers the switch and the drawing have to
      agree on. */
-  margin-right: calc(80 * var(--w-lamp-unit) - var(--pp-target-prominent-narrow) / 2);
-  margin-top: calc(103 * var(--w-lamp-unit) - var(--pp-target-prominent-narrow) / 2);
+  margin-right: calc(70 * var(--w-lamp-unit) - var(--pp-target-prominent-narrow) / 2);
+  margin-top: calc(114 * var(--w-lamp-unit) - var(--pp-target-prominent-narrow) / 2);
   padding: 0;
   border: 0;
   background: transparent;
@@ -263,6 +264,6 @@ body:has(.lamp) {
    header rather than a masthead. Flush to the content column, where the pull
    cord used to hang. */
 .wrap > header {
-  --w-lamp-unit: 0.56px;
+  --w-lamp-unit: 0.5px;
   --w-lamp-inset: 0px;
 }
