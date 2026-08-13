@@ -22,13 +22,15 @@ would make both harder to read. It appears as five squares filled from the
 left plus one word. The key at the foot of the index defines all five; a card
 carries the rating and nothing more.
 
-No tool is above `fetch` today: seven never open a socket, three read public
+No tool is above `fetch` today: seven never open a socket, four read public
 data and keep nothing. `store` and `account` are defined ahead of the tools
 that will need them.
 
-Each of the three on `fetch` names the hosts it contacts on its own page,
+Each of the four on `fetch` names the hosts it contacts on its own page,
 before anything is sent. In two of them the traffic is the subject of the tool
-rather than an aside — see Network Inspector and Eclipse Recon below.
+rather than an aside — see Network Inspector and Eclipse Recon below. In Route
+Sheet the socket is a setting rather than a fact about the tool, so the page
+restates its own rung live as that setting changes.
 
 ## Tools
 
@@ -77,8 +79,10 @@ Planned: image, SVG, font, colour, audio and video toolkits.
 ### Documents
 
 Tools whose output is a document or a printed sheet. The bingo generator is
-filed here rather than under computation, because the artefact is the
-deliverable.
+filed here rather than under computation, and Route Sheet here rather than
+under geospatial, because in both the artefact is the deliverable. The dividing
+line with Geospatial is what a tool reads: those measure something outside the
+browser, and this prints a file the reader supplied.
 
 - [PDF Toolkit](pdf-toolkit/) — merge, split, extract, reorder, delete and
   rotate PDF pages, with a preview of every page that can be dragged. The PDF
@@ -90,6 +94,40 @@ deliverable.
   digits. Request any number of cards and it generates that many, all
   different, from a seed so the same set can be reproduced. The PDF is one card
   per page and is written here without a library.
+
+- [Route Sheet](route-sheet/) — a route in, a printable sheet out: an overview
+  map with the path on it, a scale bar and a north arrow, and every turn
+  numbered, with how far along it is, how far to the next, and its coordinates.
+  Paper needs no signal and no battery, which is the whole argument for it.
+
+  The formats split in two, and the split is what the tool is about. GPX, TCX,
+  KML, KMZ and GeoJSON carry the path itself, every vertex of it, and so does a
+  response from the Google Directions, OSRM, Mapbox or GraphHopper routing APIs
+  — the last of which arrive with written instructions already in them, street
+  names and all. A link from Google Maps, Waze, Apple Maps, OpenStreetMap or
+  Bing carries only the *stops*, because none of the five publishes the road
+  between them; those draw as a dashed line that the sheet labels, in as many
+  words, as not a road. A `maps.app.goo.gl` short link cannot be opened at all:
+  following it is a cross-origin redirect the browser forbids, and resolving it
+  on somebody's server would hand over a destination to save a paste.
+
+  A recorded track has no instructions in it, which is the ordinary case, so
+  they are read out of the shape. The direction of travel is measured over a
+  window either side of each point rather than between neighbours — at one
+  sample apart a GPS fix is noise, at fifty metres it is the road — and where it
+  changes by enough the tool says so, with the angle turned through and the
+  compass heading it leaves on. Against a fixture of straight legs and known
+  corners under ±3 m of jitter, it recovers every corner to within a few degrees
+  and to the right tenth of a kilometre. It can never name a street, and the
+  page says so; that is the price of not sending the route to anybody.
+
+  The PDF is written here, byte by byte, as the two above it are. The turn
+  arrow is drawn at the angle the route actually turns through rather than
+  picked from four pictures, so a bend and a right angle do not look alike. With
+  the map switched on, tiles are fetched at print resolution and at a whole-
+  number zoom, so a tile pixel is a paper pixel, and put through a tone curve
+  that lifts the mid-tones while holding the street names dark — a flat fade
+  toward white takes the most out of exactly the type the map was fetched for.
 
 Planned: QR codes and barcodes, text and document utilities, email tools.
 

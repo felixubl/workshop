@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Route Sheet — Felix' Workshop</title>
+<meta name="description" content="Turn a GPX, TCX, KML, KMZ or GeoJSON route — or a Google Maps, Waze, Apple or OpenStreetMap link — into a printable PDF with a map, a scale bar and turn-by-turn instructions worked out from the shape of the path. Paper works when the phone does not.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
+<script src="../assets/preprint/js/mode.js"></script>
+<link rel="stylesheet" href="../assets/preprint/styles.css">
+<link rel="stylesheet" href="../assets/preprint/core.css">
+<link rel="stylesheet" href="../assets/preprint/controls.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <!-- The bench lamp, drawn in assets/site.css. The span is the fixture and
+       hangs behind the page; the button is the switch and sits over the shade.
+       Everything after the cone is one group rotated about the lower knuckle, so
+       the throw is written straight down and swings with the head. -->
+    <span class="lamp" aria-hidden="true">
+      <svg viewBox="-85 0 217 479" fill="none">
+        <g transform="rotate(12 74 58)">
+          <path class="lamp__cone" d="M37 142 111 142 143 470 5 470Z"></path>
+          <g class="lamp__rig">
+            <path d="M74 58V88"></path>
+            <path class="lamp__shade" d="M65 88 83 88 111 142 37 142Z"></path>
+            <path class="lamp__lip" d="M44 129 104 129 111 142 37 142Z"></path>
+            <path class="lamp__rim" d="M40 142H108"></path>
+          </g>
+        </g>
+        <g class="lamp__rig">
+          <path d="M112 0V20L74 58"></path>
+          <path class="lamp__joint" d="M112 14 118 20 112 26 106 20Z"></path>
+          <path class="lamp__joint" d="M74 52 80 58 74 64 68 58Z"></path>
+        </g>
+      </svg>
+    </span>
+    <button class="lamp-switch" type="button" data-mode-toggle aria-label="Switch colour mode"></button>
+
+    <div>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <div class="title-row">
+        <h1 class="tool-title">Route Sheet</h1>
+        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
+          <span data-share-label>copy link</span>
+        </button>
+        <button class="share-btn pin-btn" type="button" data-pin="route-sheet" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="spine"></div>
+
+  <section class="intake" id="intake">
+    <div class="dropzone" id="dropzone">
+      <p><strong>Drop a route here</strong>, or <button class="btn-ghost" type="button" id="pick">choose a file</button></p>
+      <p class="dropzone-formats"><code>GPX</code> <code>TCX</code> <code>KML</code> <code>KMZ</code> <code>GeoJSON</code></p>
+      <input type="file" id="file" accept=".gpx,.tcx,.kml,.kmz,.json,.geojson,.txt,.xml" hidden>
+    </div>
+
+    <div class="paste">
+      <label class="section-label" for="pasted">…or paste a map link, a list of coordinates, or an encoded polyline</label>
+      <textarea class="field" id="pasted" rows="3" spellcheck="false" autocomplete="off"
+        placeholder="https://www.google.com/maps/dir/…&#10;48.20817, 16.37381&#10;47.07071, 15.43949"></textarea>
+      <div class="group">
+        <button class="btn-primary" type="button" id="read">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M2.5 3.5h11v9h-11z"></path><path d="M2.5 6.5h11M6 6.5v6"></path></svg>
+          Read the route
+        </button>
+        <button class="btn-ghost" type="button" id="example">Example route</button>
+        <button class="btn-ghost" type="button" id="clear" hidden>Start again</button>
+      </div>
+    </div>
+  </section>
+
+  <p class="hint" id="hint" hidden></p>
+
+  <div class="card prompt" id="empty">
+    <p><strong>A sheet of paper does not need a signal, a battery or a network.</strong>
+    Give this a route and it prints one: an overview map with the path on it, a
+    scale bar and a north arrow, the numbers that matter, and a numbered list of
+    every turn — how far along it is, how far to the next one, and the
+    coordinates, so a phone that comes back to life can be told where to go.</p>
+
+    <p>Every sport app exports <strong>GPX</strong>, and Komoot, Strava,
+    AllTrails, RideWithGPS and Garmin all do. So do <strong>TCX</strong>,
+    <strong>GeoJSON</strong> and the <strong>KML</strong> or <strong>KMZ</strong>
+    that Google <em>My Maps</em> hands you. Those carry the path itself, every
+    vertex of it, and they make the best sheets.</p>
+
+    <p><strong>Google Maps directions and Waze do not export.</strong> A share
+    link from either carries the stops and not the road between them, so this
+    tool reads the stops, draws them joined by a dashed line, and says on the
+    sheet that the dashes are not a road. That is the honest limit of what those
+    two links contain — for a real path out of Google, build the route in My Maps
+    and export the KML.</p>
+  </div>
+
+  <section id="workbench" hidden>
+    <div class="toolbar">
+      <div class="group" id="pathGroup" hidden>
+        <label for="pathPick">Path</label>
+        <select class="field" id="pathPick"></select>
+      </div>
+
+      <div class="group">
+        <label for="grain">Instructions</label>
+        <select class="field" id="grain" data-tip="How sharp a bend has to be before it earns a line on the sheet. A city ride wants every corner; a motorway route wants junctions.">
+          <option value="auto" selected>Match the route</option>
+          <option value="fine">Every corner</option>
+          <option value="normal">The turns</option>
+          <option value="coarse">The junctions</option>
+        </select>
+      </div>
+
+      <div class="group">
+        <label for="detail">Detail pages</label>
+        <input class="field num narrow" type="number" id="detail" min="0" max="24" step="1" value="0"
+          data-tip="The route cut into equal lengths, one page each, drawn close enough to tell one junction from the next. Zero for the overview alone.">
+      </div>
+
+      <div class="group">
+        <label for="basemap">Map</label>
+        <select class="field" id="basemap" data-tip="Fetches map squares from tile.openstreetmap.org. Off, and this page opens no socket at all.">
+          <option value="off" selected>None — no network</option>
+          <option value="grey">Grey — best for printing</option>
+          <option value="colour">Colour</option>
+        </select>
+      </div>
+
+      <div class="group">
+        <label for="units">Units</label>
+        <select class="field" id="units">
+          <option value="metric" selected>Metric</option>
+          <option value="imperial">Miles &amp; feet</option>
+        </select>
+      </div>
+
+      <div class="group">
+        <label for="paper">Paper</label>
+        <select class="field" id="paper">
+          <option value="a4" selected>A4</option>
+          <option value="letter">US Letter</option>
+          <option value="a5">A5</option>
+        </select>
+        <select class="field" id="orientation" aria-label="Orientation">
+          <option value="portrait" selected>Portrait</option>
+          <option value="landscape">Landscape</option>
+        </select>
+      </div>
+    </div>
+
+    <p class="custody-note" id="custodyNote">
+      <span class="custody-dot" aria-hidden="true"></span>
+      <span id="custodyText">Nothing has left this page. With the map set to
+      <em>None</em> the tool opens no socket: the file is read here, the turns are
+      worked out here, and the PDF is written here byte by byte.</span>
+    </p>
+
+    <div class="bench">
+      <section class="preview-pane">
+        <div class="result-bar">
+          <p class="section-label">The map</p>
+          <div class="group">
+            <button class="btn-ghost preset" type="button" id="prevPanel" aria-label="Previous panel">‹</button>
+            <code class="pager-at" id="panelAt">overview</code>
+            <button class="btn-ghost preset" type="button" id="nextPanel" aria-label="Next panel">›</button>
+          </div>
+        </div>
+        <div class="sheet">
+          <div class="sheet-cap">
+            <code id="panelCap">—</code>
+            <code class="meta" id="panelMeta"></code>
+          </div>
+          <div class="map-stage">
+            <canvas id="map" width="900" height="640"></canvas>
+            <p class="map-busy" id="mapBusy" hidden>fetching map squares…</p>
+          </div>
+          <p class="map-credit" id="mapCredit" hidden></p>
+        </div>
+        <p class="sheet-note" id="mapNote"></p>
+      </section>
+
+      <section class="facts-pane">
+        <p class="section-label">The route</p>
+        <div class="sheet">
+          <div class="sheet-cap">
+            <code id="routeCap">—</code>
+            <code class="meta" id="routeMeta"></code>
+          </div>
+          <dl class="facts" id="facts"></dl>
+        </div>
+        <div id="notes"></div>
+      </section>
+    </div>
+
+    <div class="result-bar">
+      <p class="section-label">The instructions</p>
+      <div class="group">
+        <button class="btn-ghost" type="button" id="copyCues">Copy as text</button>
+        <button class="btn-primary" type="button" id="download">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M8 2v8M4.5 7.5 8 11l3.5-3.5M2.5 13.5h11"></path></svg>
+          Download PDF
+        </button>
+      </div>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-scroll">
+        <table class="cues">
+          <thead>
+            <tr>
+              <th scope="col" class="col-n">№</th>
+              <th scope="col" class="col-glyph"><span class="sr-only">Turn</span></th>
+              <th scope="col">Instruction</th>
+              <th scope="col" class="col-num">At</th>
+              <th scope="col" class="col-num">Then</th>
+              <th scope="col" class="col-coord">Coordinates</th>
+            </tr>
+          </thead>
+          <tbody id="cueBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="sheet-note" id="cueNote"></p>
+  </section>
+
+  <section class="colophon">
+    <h2 class="section-label">What this reads, and what it cannot</h2>
+    <dl class="ledger">
+      <dt>Carries the whole path</dt>
+      <dd><code>GPX</code> tracks, routes and waypoints · <code>TCX</code>
+        activities and courses, including Garmin's course points, which are real
+        turn instructions · <code>KML</code> and <code>KMZ</code>, including
+        Google <em>My Maps</em> exports · <code>GeoJSON</code> · a response from
+        the Google Directions, OSRM, Mapbox or GraphHopper routing APIs, whose
+        written instructions are used as they are · an encoded polyline pasted
+        on its own.</dd>
+
+      <dt>Carries only the stops</dt>
+      <dd>Links from <strong>Google Maps</strong>, <strong>Waze</strong>,
+        <strong>Apple Maps</strong>, <strong>OpenStreetMap</strong> and
+        <strong>Bing</strong>. None of the five publishes the road between the
+        stops, so the sheet draws a dashed line and labels it as not a road.
+        A <code>maps.app.goo.gl</code> short link cannot be opened here at all:
+        following it is a cross-origin redirect the browser forbids, and
+        resolving it on a server somewhere would hand your destination to a
+        stranger to save you a paste. Open it in Maps and copy the long address.</dd>
+
+      <dt>Does not read</dt>
+      <dd>Garmin's binary <code>FIT</code>. Every app that writes one also
+        exports GPX or TCX for the same ride.</dd>
+
+      <dt>Where the instructions come from</dt>
+      <dd>If the file has them, they are used and the street names come with
+        them. A recorded track has none, so they are worked out from the shape
+        of the path: the direction of travel is measured over a window either
+        side of each point, and where it changes by enough the tool says so,
+        with the angle it turned through and the compass heading it leaves on.
+        That is less than a routing engine knows — it can never name a road —
+        but it is all that can be had without sending your route to somebody
+        else, and next to a map it is enough to follow.</dd>
+
+      <dt>The one thing that leaves</dt>
+      <dd>With <strong>Map</strong> set to anything but <em>None</em>, this page
+        asks <code>tile.openstreetmap.org</code> for the squares of map the
+        route crosses. That request carries your IP address and, in the squares
+        it asks for, where you are going. Nothing is uploaded, nothing is kept,
+        and the tiles are held in memory for as long as the tab is open and no
+        longer. Set it to <em>None</em> and the page opens no socket at all.</dd>
+    </dl>
+  </section>
+</div>
+
+<script src="route-geo.js"></script>
+<script src="route-parse.js"></script>
+<script src="route-plan.js"></script>
+<script src="route-tiles.js"></script>
+<script src="route-pdf.js"></script>
+<script src="script.js"></script>
+<script src="../assets/preprint/js/controls.js"></script>
+<script src="../assets/share.js"></script>
+<script src="../assets/favourites.js"></script>
+</body>
+</html>
