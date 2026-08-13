@@ -41,12 +41,10 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-// Fit fills the drawing area: a small canvas scales all the way up to fill it,
-// a large one scales down to stay fully visible. The width is measured off the
-// page shell rather than hard-coded — #canvasWrap is width:fit-content, so it
-// reports the canvas, not the room available to it, and a hard-coded page max
-// silently goes stale the next time the layout changes (it did: the shell went
-// from 1040px to --pp-page-max, 1280px).
+// Fit scales the canvas up or down to fill the drawing area. The width is
+// measured from the page shell rather than hard-coded, because a hard-coded
+// value goes stale when the layout changes. #canvasWrap is width:fit-content,
+// so it reports the canvas rather than the space available to it.
 function computeFitZoom(w, h) {
   const shell = document.querySelector('.wrap');
   const avail = shell ? shell.clientWidth - 2 * parseFloat(getComputedStyle(shell).paddingLeft) : window.innerWidth;
@@ -135,10 +133,8 @@ function paintCell(x, y) {
   rect.setAttribute("height", 1);
   rect.setAttribute("fill", colorInput.value);
   rect.classList.add("px");
-  // Insert just before the grid overlay (rather than appendChild, which would
-  // paint on top of it) so the grid always stays visible above painted
-  // pixels — it's a drawing aid, not part of the artwork, and shouldn't be
-  // coverable by paint.
+  // Insert before the grid overlay rather than appending, so the grid stays
+  // visible above painted pixels. It is a drawing aid, not part of the artwork.
   svg.insertBefore(rect, gridOverlay);
 }
 
@@ -223,9 +219,8 @@ function exportSvg() {
 
 resizeBtn.addEventListener("click", applySize);
 
-// Presets are a shortcut for the width/height fields, not a separate mode:
-// they fill the fields in and apply, so the custom inputs always show the
-// canvas you're actually on.
+// Presets fill in the width and height fields and apply them, so the fields
+// always show the current canvas size.
 presetButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
     widthInput.value = btn.dataset.w;

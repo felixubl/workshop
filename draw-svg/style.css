@@ -1,6 +1,5 @@
-/* Tool-specific layout only — faces, buttons, tags, fields, the tool title and
-   the toolbar band all come from ../assets/base.css over the vendored system.
-   This file arranges this tool's own controls and nothing else. */
+/* Tool-specific layout only. Faces, buttons, tags, fields, the title and the
+   toolbar come from ../assets/base.css over the vendored system. */
 
 .dim-sep {
   color: var(--pp-faint);
@@ -24,19 +23,17 @@ input[type='number'].field {
   color: var(--pp-muted);
 }
 
-/* Compact controls take the small end of the cut scale: radius rises with
-   control size, so these sit below the 44px buttons beside them. */
+/* Compact controls take the small end of the cut scale, so their radius sits
+   below the 44px buttons beside them. */
 .btn-ghost.icon-only {
   width: var(--pp-target);
   padding: 0;
 }
 
-/* The drawing surface stays paper-light in both modes. This is the artwork's
-   ground rather than the page's: the default pen is near-black ink, and it
-   would vanish on a graphite sheet. Declared as --w-artwork-paper in site.css
-   rather than written here as a hex, so the deviation is visible to the
-   conformance check instead of hiding as a stray literal. 2px is the structure
-   weight — on this page the canvas is the one panel that matters. */
+/* The drawing surface stays light in both modes: this is the artwork's ground
+   rather than the page's, and the default pen is near-black. Declared as
+   --w-artwork-paper in site.css rather than as a literal here, so the
+   deviation is visible to the conformance check. */
 #canvasWrap {
   border: var(--pp-rule-structure) solid var(--pp-edge);
   background: var(--w-artwork-paper);
@@ -45,14 +42,9 @@ input[type='number'].field {
   display: flex;
 }
 
-/* The pixel grid. It used to be stroke="#3a3a3a" stroke-opacity="0.22" on the
-   path itself, which is ink pretending to be quiet — the system's whole point
-   about --pp-muted and --pp-faint is that a quiet colour is chosen, not ink
-   with the volume turned down. This is the hairline weight, held light with
-   the rest of the artwork ground rather than following the mode. Styled here
-   rather than on the element because a presentation attribute cannot read a
-   custom property, and the export strips both the overlay and the defs, so
-   nothing downstream depends on the attribute being there. */
+/* The pixel grid, at the hairline weight and held light with the rest of the
+   artwork ground rather than following the mode. Styled here rather than on
+   the element so it can be themed. */
 #pixelGrid path {
   stroke: var(--w-artwork-rule);
 }
@@ -61,8 +53,7 @@ input[type='number'].field {
   display: block;
   touch-action: none;
   cursor: var(--pp-cursor-cross);
-  /* Adjacent 1x1 px rects otherwise show faint anti-aliased seams between
-     them at fractional zoom levels, making solid brush strokes look broken
-     up. Crisp (non-antialiased) edges keep pixel-art fills perfectly solid. */
+  /* Adjacent 1x1 rects otherwise show anti-aliased seams at fractional zoom,
+     which makes solid strokes look broken. Crisp edges keep fills solid. */
   shape-rendering: crispEdges;
 }

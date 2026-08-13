@@ -1,33 +1,15 @@
-/* The printer.
- *
- * A bingo card is a page with a grid on it, which is about the least a PDF can
- * be asked to do — so this writes the file itself rather than pulling a
- * generator in. That is the same position the PDF Toolkit takes next door, for
- * the same reason: the whole site is checkable client-side code, and a tool
- * that ships a minified megabyte to draw twenty-five rectangles has stopped
- * being checkable.
- *
- * What it costs is the font. Nothing is embedded here — the pages ask for
- * Helvetica, which is one of the fourteen faces every PDF reader has had built
- * in since 1993, so the file stays a few kilobytes a page and opens anywhere.
- * The price of that bargain is the encoding: a base-14 font is addressed one
- * byte at a time through WinAnsi, so the alphabet is Latin-1 and no wider.
- * `toWinAnsi` below folds what it can (é survives, č becomes c) and reports
- * what it cannot, and the tool says so on the page before anyone presses a
- * button. Embedding a subset of a real face is the fix, and it is a font
- * subsetter's worth of work rather than a flag.
- */
+/* PDF writer for bingo cards. A card is a page with a grid on it, so this
+   writes the file directly rather than pulling in a generator. Same position
+   as the PDF Toolkit next door: the site is checkable client-side code, and
+   shipping a large library to draw twenty-five rectangles would defeat that. */
 
 ;(function (Bingo) {
   "use strict";
 
-  /* ── Metrics ───────────────────────────────────────────────────────────
-     Adobe's own AFM widths for Helvetica and Helvetica-Bold, in 1/1000 em,
-     indexed by WinAnsi byte from 0x20. They are needed because every piece of
-     text on a card is centred in a box it has to be measured against first,
-     and the reader's copy of Helvetica is the one doing the drawing — the
-     browser's idea of how wide a string is would be a different font's answer.
-     A zero is a code WinAnsi leaves undefined; nothing ever encodes to one. */
+  /* Metrics. Adobe's AFM widths for Helvetica and Helvetica-Bold, in 1/1000
+     em, indexed by WinAnsi byte from 0x20. Needed because every string on a
+     card is centred in a box and must be measured against the font that will
+     draw it, which is the reader's Helvetica rather than the browser's. */
 
   const W_REGULAR = [
     278, 278, 355, 556, 556, 889, 667, 222, 333, 333, 389, 584, 278, 333, 278, 278,
@@ -68,11 +50,10 @@
   // straddle the middle, not when its baseline does.
   const CAP = 0.718;
 
-  /* ── WinAnsi ───────────────────────────────────────────────────────────
-     The twenty-seven codes CP1252 puts in the C1 range, which is the only part
-     of WinAnsi that is not either ASCII or Latin-1. Typing an em dash or a
-     curly quote into the entry list is ordinary enough that losing them would
-     be noticed. */
+  /* WinAnsi. The twenty-seven codes CP1252 places in the C1 range, the only
+     part of WinAnsi that is neither ASCII nor Latin-1. Em dashes and curly
+     quotes are common enough in an entry list that losing them would be
+     noticed. */
   const C1 = {
     0x20ac: 0x80, 0x201a: 0x82, 0x0192: 0x83, 0x201e: 0x84, 0x2026: 0x85,
     0x2020: 0x86, 0x2021: 0x87, 0x02c6: 0x88, 0x2030: 0x89, 0x0160: 0x8a,
@@ -141,10 +122,9 @@
     return (units / 1000) * size;
   }
 
-  /* ── Setting text in a box ─────────────────────────────────────────────
-     Cells hold whatever somebody typed, so the type has to give way rather
-     than the box: wrap, and if that is still too tall, come down a step and
-     wrap again. */
+  /* Setting text in a box. Cells hold arbitrary input, so the type gives way
+     rather than the box: wrap, and if still too tall, reduce a step and wrap
+     again. */
 
   function breakWord(word, limit, size, bold) {
     // A single word wider than its cell — a URL, a compound noun, a hashtag.
@@ -211,27 +191,11 @@
     return lines.length ? lines : [""];
   }
 
-  /* Three passes, in the order a compositor would try them.
-   *
-   * First: come down in half-point steps looking for the largest size that
-   * fits with every word left whole. Most squares are three or four words and
-   * this is the only pass that runs.
-   *
-   * Second: if nothing fit that way above the floor, the square holds a token
-   * with no break in it — a URL, a hashtag, a compound somebody ran together —
-   * and shrinking to hold it whole would set the whole square at six point to
-   * accommodate one word. So the second pass goes back to the top and allows
-   * the word to be cut instead. Bigger type with a cut word beats type nobody
-   * can read across a table.
-   *
-   * The floor between the two is 45% of the ceiling, which is roughly where a
-   * square stops being scannable next to its neighbours.
-   *
-   * Third: below the floor, take whatever goes. If even the smallest type
-   * overflows, the last line kept ends in an ellipsis — a card with one
-   * crowded square is still a card, and a card with type running out over the
-   * rule is not.
-   */
+  /* Three passes. First, reduce in half-point steps to find the largest size
+     that fits with every word whole; most squares are three or four words and
+     only this pass runs. Second, if nothing fits above the floor, the square
+     holds an unbreakable token, so break it across lines. Third, if it still
+     does not fit, truncate with an ellipsis. */
   function fitBox(encoded, boxW, boxH, opts) {
     const bold = !!opts.bold;
     const max = opts.max || 13;
@@ -265,11 +229,9 @@
     return { size: min, lines: kept, leading };
   }
 
-  /* ── The content stream ────────────────────────────────────────────────
-     One page's drawing, as PDF operators. Coordinates are points from the
-     bottom-left corner, which is upside down from how a page is described, so
-     everything below takes a y that means what it says and the caller does the
-     subtracting once, at the top. */
+  /* The content stream: one page's drawing as PDF operators. Coordinates are
+     points from the bottom-left corner, so the caller converts once at the top
+     and everything below takes a y that means what it says. */
 
   class Content {
     constructor() { this.ops = []; }
@@ -331,9 +293,7 @@
     return out + ")";
   }
 
-  /* ── The card ──────────────────────────────────────────────────────────
-     Paper sizes in points. A4 is the default because this is an Austrian
-     workshop; Letter is there because half the web is not. */
+  /* The card. Paper sizes in points. A4 is the default; Letter is available. */
 
   const PAPER = {
     a4: { width: 595.28, height: 841.89, label: "A4" },
@@ -485,10 +445,9 @@
     };
   }
 
-  /* ── The file ──────────────────────────────────────────────────────────
-     Plain objects, a classic cross-reference table, nothing compressed. It is
-     a few kilobytes a page either way, and an uncompressed file is one anybody
-     can open in a text editor and check against this source. */
+  /* The file. Plain objects, a classic cross-reference table, nothing
+     compressed. It costs a few kilobytes a page and keeps the output readable
+     in a text editor. */
 
   class Sink {
     constructor() { this.parts = []; this.length = 0; }
@@ -575,9 +534,8 @@
     return sink.join();
   }
 
-  /* ── The one entry point ───────────────────────────────────────────────
-     `cards` is [{ number, cells: [{ text, free }] }] with text already plain
-     JS strings; everything is encoded here, once, on the way in. */
+  /* The single entry point. `cards` is [{ number, cells: [{ text, free }] }]
+     with plain JS strings; encoding happens here, once, on the way in. */
 
   function print(spec) {
     const geometry = layout({

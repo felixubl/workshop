@@ -47,11 +47,9 @@ const MAX_MISSES = 4000;
 let deal = null;
 let showing = 0;
 
-/* ── The list ──────────────────────────────────────────────────────────────
-   What the user types is lines; what a card needs is distinct squares. Blank
-   lines go, and so do repeats — two identical squares would make two cards
-   that look the same while the arithmetic below insisted they were different,
-   and a count that is not true of the paper is worse than no count. */
+/* The list. Input is lines; a card needs distinct squares. Blank lines and
+   repeats are removed: two identical squares would produce two cards that look
+   the same while the count below treated them as different. */
 
 function readItems() {
   const seen = new Set();
@@ -77,15 +75,10 @@ function article(size) {
   return size === 8 ? "An" : "A";
 }
 
-/* ── The arithmetic ────────────────────────────────────────────────────────
-   With n squares to choose from and k cells to fill, the number of cards is
-   the number of ways to fill the cells in order: n × (n−1) × … × (n−k+1). That
-   is a permutation and not a combination, because position is what a bingo
-   card is for — the same twenty-four squares dealt differently win on
-   different lines, so they are different cards.
-
-   The numbers leave doubles behind immediately (a 5×5 from thirty squares is
-   already past 10^30), so every count here is a BigInt and stays exact. */
+/* The arithmetic. With n squares and k cells, the number of cards is n x (n-1)
+   x ... x (n-k+1): a permutation rather than a combination, because position
+   matters on a bingo card. The same squares in a different order win on
+   different lines. */
 
 function permutations(n, k) {
   let p = 1n;
@@ -115,10 +108,8 @@ function readable(value) {
   return { short: `${mantissa} × 10${exponent}`, exact: value.toLocaleString() };
 }
 
-/* ── The shape of a card ───────────────────────────────────────────────────
-   An even grid has no middle square, so it cannot have a free one. The
-   checkbox stays where it is and stops applying, which is the honest state to
-   show: the setting is not wrong, the grid just has nowhere to put it. */
+/* The shape of a card. An even grid has no middle cell, so it cannot have a
+   free one. The checkbox stays in place and stops applying. */
 
 function readShape() {
   const size = Math.round(Number(sizeInput.value));
@@ -239,9 +230,8 @@ function showHint(message) {
   hint.hidden = !message;
 }
 
-/* ── Dealing ───────────────────────────────────────────────────────────────
-   mulberry32 seeded through xmur3, the same pair the Random Number Generator
-   uses, so a seed typed into either tool means a run that can be repeated. */
+/* Dealing. mulberry32 seeded through xmur3, the same pair the Random Number
+   Generator uses, so a seed typed into either tool reproduces its run. */
 
 function xmur3(str) {
   let h = 1779033703 ^ str.length;

@@ -33,12 +33,10 @@ const MAX_ROWS_SHOWN = 200;
 
 let lastRun = null;
 
-/* ── The generator ─────────────────────────────────────────────────────────
-   Math.random() cannot be seeded, so a reproducible run needs its own PRNG.
-   mulberry32 is a 32-bit state generator with a full 2^32 period and good
-   enough statistics for sampling work; xmur3 turns the seed *string* into the
-   32-bit state, so "banana" and "banana " start in genuinely different places
-   rather than in adjacent ones. */
+/* The generator. Math.random() cannot be seeded, so a reproducible run needs
+   its own PRNG. mulberry32 is a 32-bit state generator with a full 2^32 period
+   and statistics adequate for sampling; xmur3 hashes the seed string into that
+   32-bit state, so similar strings start in unrelated places. */
 
 function xmur3(str) {
   let h = 1779033703 ^ str.length;
@@ -67,12 +65,10 @@ function randomSeed() {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-/* ── Samplers ──────────────────────────────────────────────────────────────
-   Every sampler takes the uniform `rng` as its first argument and returns one
-   draw. Nothing here caches state between calls: the gamma sampler draws
-   normals of its own, and a shared spare would interleave the two streams and
-   make a seed mean different things depending on which distribution asked
-   first. */
+/* Samplers. Each takes the uniform rng as its first argument and returns one
+   draw. None caches state between calls: the gamma sampler draws its own
+   normals, and a shared spare would interleave the two streams and make a seed
+   depend on call order. */
 
 // Box-Muller. The rejection of exactly 0 matters: log(0) is -Infinity.
 function gaussian(rng) {
@@ -171,10 +167,9 @@ function binomial(rng, trials, prob) {
   return mirror ? trials - k : k;
 }
 
-/* ── Distributions ─────────────────────────────────────────────────────────
-   Each entry owns its own parameter fields, its own validation message, and a
-   `make` that binds those parameters into a sampler. `integer: true` means the
-   draws are counts, so the decimals control does not apply to them. */
+/* Distributions. Each entry owns its parameter fields, its validation message,
+   and a make() that binds those parameters into a sampler. integer: true means
+   the draws are counts, so the decimals control does not apply. */
 
 const DISTRIBUTIONS = [
   {
@@ -505,15 +500,9 @@ function renderStats(run, labels) {
   statsTable.innerHTML = `${head}<tbody>${body.join("")}</tbody>`;
 }
 
-/* ── The plots ─────────────────────────────────────────────────────────────
-   The tables say what was drawn, one number at a time. The histogram says what
-   the sample looks like, which is the thing a distribution is actually chosen
-   for, so it reads the whole sample rather than the first two hundred rows.
-
-   Drawn in SVG, in user units 600 wide, and stretched to whatever width the
-   sheet has. Only the horizontal axis stretches: the height attribute matches
-   the viewBox height, so the baseline stays a single crisp pixel however wide
-   the page is. */
+/* The plots. The tables list the values; the histogram shows the shape of the
+   sample, so it reads the whole sample rather than the first rows. Drawn in
+   SVG, 600 user units wide, stretched to the sheet width. */
 
 const PLOT_W = 600;
 const PLOT_H = 72;

@@ -1,10 +1,8 @@
-/* Tool-specific layout only — faces, buttons, fields, the tool title, the
-   toolbar band and the sheet come from ../assets/base.css over the vendored
-   system. What this file draws is the two things this tool invents: the count
-   panel, and a bingo card on screen. */
+/* Tool-specific layout only. Faces, buttons, fields, the title, the toolbar
+   and the table come from ../assets/base.css over the vendored system. This
+   file draws the count panel and the on-screen card. */
 
-/* Anything typed that ends up printed on paper goes in mono, the way a typed
-   parameter does everywhere else on this site: the field is the machine's
+/* Anything typed that ends up printed goes in mono: the field is the machine's
    register, and the card is where the type is set properly. */
 .field.num,
 .field.seed,
@@ -33,8 +31,8 @@
   width: 96px;
 }
 
-/* The presets sit inside a group that already has a gap, so they close up
-   against each other and read as one control rather than three buttons. */
+/* The presets sit in a group that already has a gap, so they close up against
+   each other and read as one control. */
 .group.presets {
   gap: 4px;
   margin-right: 4px;
@@ -52,10 +50,8 @@
   color: var(--pp-ink);
 }
 
-/* ── The bench ─────────────────────────────────────────────────────────────
-   The list and the count are one thought — you type a square and the number
-   moves — so they sit side by side and the count does not scroll away. Below
-   the measure where both would be cramped they stack, list first. */
+/* The list and the count are one unit: typing a square moves the number, so
+   they sit side by side. Below the measure they stack, list first. */
 .bench {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
@@ -69,9 +65,8 @@
   }
 }
 
-/* The list is the one field on the site that holds prose in bulk, and it is
-   still a field: same edge, same focus, mono because every line of it is going
-   to be set on a card and the count depends on where the line ends. */
+/* The list is the one field holding prose in bulk, and it is still a field:
+   same edge, same focus, mono because every line will be set on a card. */
 .field.list {
   display: block;
   width: 100%;
@@ -88,9 +83,8 @@
   margin-bottom: 0.85rem;
 }
 
-/* ── The count ─────────────────────────────────────────────────────────────
-   This is the answer to the question the tool exists to answer, so it is set
-   at display size on the sheet rather than as another row of figures. */
+/* The count is the tool's main answer, so it is set at display size rather
+   than as another row of figures. */
 .count-body {
   padding: 1rem 0.8rem 0.9rem;
 }
@@ -104,15 +98,14 @@
   line-height: 1.1;
   overflow-wrap: anywhere;
 }
-/* Nothing to count is a state, not a failure — the list is simply still short.
-   It steps back to the quiet ink rather than taking a plate. */
+/* An empty list is a state rather than a failure, so it takes the quiet ink
+   rather than a plate. */
 .count-big.is-none {
   color: var(--pp-faint);
 }
 
-/* The whole figure, under the readable one. It is evidence rather than
-   reading: it wraps anywhere, because the alternative is a sheet that scrolls
-   sideways for a number nobody is going to read left to right anyway. */
+/* The exact figure, under the readable one. It wraps anywhere, because the
+   alternative is a sheet that scrolls sideways. */
 .count-exact {
   margin: 0.5rem 0 0;
   font-family: var(--pp-font-mono);
@@ -149,9 +142,8 @@
   overflow-wrap: anywhere;
 }
 
-/* The band of settings that makes the cards, separated from the ones that
-   describe them. Same band, no bottom rule: the work it produces is directly
-   underneath and a rule there would cut the button off from its result. */
+/* The settings that produce the cards, separated from those that describe
+   them. No bottom rule: the result appears directly underneath. */
 .toolbar.make {
   border-bottom: 0;
   margin-bottom: 1.35rem;
@@ -187,9 +179,8 @@
   font-size: 1rem;
 }
 
-/* The card stands on the sheet the way it will stand on the page: white stock,
-   centred, with room around it. The stage is the paper the card is printed on,
-   so it keeps its own ground rather than taking the sheet's. */
+/* The card stands on the sheet as it will on the page: white stock, centred,
+   with room around it. The stage keeps its own ground rather than the sheet's. */
 .card-stage {
   display: flex;
   justify-content: center;
@@ -198,17 +189,9 @@
 }
 
 /* A bingo card. Square cells, one rule between them, a heavier edge around the
-   whole — the same three weights the printed page uses, so the preview is a
-   preview and not an interpretation.
-
-   The interior rules are the grid's own ground showing through a 1px gap
-   rather than borders on the cells. Borders would need the last column and the
-   last row turned off again, and which cells those are depends on --cols,
-   which is a number CSS will happily use for a track count and not for an
-   :nth-child step. The gap does not care how many columns there are.
-
-   The frame is an outline for the same kind of reason: it sits outside the
-   grid box, so a 2px edge does not come out of the first cell's width. */
+   whole, matching the three weights the printed page uses. The interior rules
+   are the grid's ground showing through a 1px gap rather than borders on the
+   cells, which would need the last row and column suppressed. */
 .bingo {
   display: grid;
   grid-template-columns: repeat(var(--cols, 5), 1fr);

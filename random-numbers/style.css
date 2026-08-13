@@ -1,9 +1,9 @@
-/* Tool-specific layout only — faces, buttons, fields, the tool title and the
-   toolbar band come from ../assets/base.css over the vendored system. This
-   file styles the controls this tool invents and the sheets it prints. */
+/* Tool-specific layout only. Faces, buttons, fields, the title and the toolbar
+   come from ../assets/base.css over the vendored system. This file styles the
+   controls this tool adds and the sheets it prints. */
 
-/* Numbers go in mono, in every field that takes one, so a typed parameter and
-   the drawn value it produces sit in the same register. */
+/* Numbers are set in mono in every field that takes one, so a typed parameter
+   and the value it produces share a register. */
 .field.num,
 .field.seed {
   font-family: var(--pp-font-mono);
@@ -19,8 +19,8 @@
   width: 132px;
 }
 
-/* A parameter name is a label inside a labelled group, so it drops one step
-   quieter than the group's own label rather than competing with it. */
+/* A parameter name is a label inside a labelled group, so it sits one step
+   quieter than the group's own label. */
 .group label.param {
   color: var(--pp-faint);
   margin-left: 4px;
@@ -42,10 +42,10 @@
   margin: 1.75rem 0 0.85rem;
 }
 
-/* The sheet itself is in ../assets/base.css. What stays here is what is true
-   of figures rather than of tables: they align right so the decimal points
-   stack, and they take tabular numerals so the columns hold still between
-   runs. The row's own name is not a figure, so it stays left and stays quiet. */
+/* The table itself is in ../assets/base.css. What stays here is true of
+   figures rather than tables: right-aligned so decimal points stack, and
+   tabular numerals so columns hold still between runs. The row name is not a
+   figure, so it stays left. */
 .sheet td {
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -60,8 +60,8 @@
   color: var(--pp-faint);
 }
 
-/* The plots. A sheet has no padding of its own, because a table brings its
-   own, so the figures inside one supply theirs. */
+/* The plots. A table brings its own padding, so the figures inside one supply
+   theirs. */
 .plots {
   padding: 0.9rem 0.8rem 0.8rem;
 }
@@ -74,7 +74,7 @@
   margin: 0;
 }
 
-/* Column names, so the plot is named the same way its column is. */
+/* Column names, so a plot is named the same way its column is. */
 .hist-name,
 .hist-axis {
   font-family: var(--pp-font-mono);
@@ -93,8 +93,8 @@
   gap: 1rem;
   margin-top: 0.4rem;
 }
-/* The ends of the range are read off the plot; the bin count is a note about
-   how it was drawn, so it sits back a step further. */
+/* The ends of the range are read from the plot; the bin count describes how it
+   was drawn, so it sits one step further back. */
 .hist-axis span:first-child,
 .hist-axis span:last-child {
   color: var(--pp-muted);
@@ -106,10 +106,9 @@
 .hist-plot {
   display: block;
 }
-/* Bars are the print: solid ink, no outline, because a histogram bar is a
-   filled area and an outline would only draw a box around it. The rug is the
-   sample underneath, so it steps back to the same weight as the figures in
-   the tables, and the baseline is the structure both stand on. */
+/* Bars are solid ink with no outline, because a histogram bar is a filled
+   area. The rug is the sample underneath, at the same weight as the figures in
+   the tables. */
 .hist-bar {
   fill: var(--pp-ink);
 }
@@ -126,12 +125,9 @@
   color: var(--pp-faint);
 }
 
-/* The seed a run actually used, offered back as a control: pressing it puts
-   the seed in the field so the run can be repeated.
-
-   It reads as a label but it is a <button> with a click handler, and pill
-   belongs to tags and nothing else. A thing you can press takes the cut scale,
-   at the small end because it is the smallest control on the page. */
+/* The seed a run used, offered back as a control: pressing it puts the seed in
+   the field. It is a button, not a tag, so it takes the cut scale at the small
+   end. */
 .seed-tag {
   padding: 0.1rem 0.5rem;
   background: transparent;
