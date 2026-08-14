@@ -17,11 +17,17 @@
    in the record rows below, and in the table, which is where the exact numbers
    always were.
 
-   Nothing here is identified by colour. The ramp says how many swaps and
-   nothing else; a language is named, on its row and on its switch. That is why
-   the switches carry no ink and why any number of them can be on at once — the
-   four inks that used to name languages, and the cap of four that came with
-   them, went out with the figure that needed them.
+   Colour does two different jobs here, one per figure, and this paragraph used
+   to describe a third arrangement that no longer exists — the file said the
+   switches carried no ink and that any number could be drawn at once, which
+   has not been true since the first figure went back to stacking languages.
+
+   In the first figure a segment is a DICTIONARY, so colour is an identity:
+   four inks, which is how many clear the colour-vision gates pairwise, and
+   therefore also the cap on how many can be drawn together. In the second a
+   segment is a DISTANCE, where the order is the meaning, so colour is an
+   ordinal ramp and names no language at all. Nothing in either is identified
+   by colour alone: a language is named on its switch and on its row.
 
    The counting is not done here. It was done once, offline, by
    tools/abecedarian-corpus.mjs, running the same engine this page runs; what
@@ -62,6 +68,9 @@ var CORPUS = (function () {
   var peaks = document.getElementById('peaks');
   var peakMeta = document.getElementById('peakMeta');
   var peakNote = document.getElementById('peakNote');
+  var mets = document.getElementById('mets');
+  var metMeta = document.getElementById('metMeta');
+  var metNote = document.getElementById('metNote');
   var field = document.getElementById('word');
 
   var byId = {};
@@ -724,6 +733,61 @@ var CORPUS = (function () {
       rows[i].classList.toggle('is-lit', isOn(rows[i].dataset.lang));
   }
 
+  /* ── Where words meet ────────────────────────────────────────────────────
+     One row per dictionary, in the same order and the same shape as the
+     records above: the biggest family of words sharing a root, printed whole
+     because it is nine words at the outside, and beside it the core the most
+     words come down to, as a count only.
+
+     The words of a root family are clickable and the core is not, and that is
+     not an oversight — a root family's words ARE the finding and pressing one
+     shows the working, where the core's four-out-of-185 would be a sample
+     pretending to be a list. The core string itself is not pressable either:
+     it is already what the word reduces to, so there is nothing further to
+     see, and an underline promising otherwise would be a lie. */
+  function drawMets() {
+    mets.textContent = '';
+    ORDER.forEach(function (l) {
+      var li = el('li', 'met');
+      li.dataset.lang = l.id;
+
+      var who = el('span', 'peak-who');
+      who.appendChild(el('span', 'peak-lang', l.name));
+      li.appendChild(who);
+
+      var top = l.rootTop[0];
+      var rootBox = el('span', 'met-key');
+      rootBox.appendChild(el('code', 'met-word', top.root.toLowerCase()));
+      rootBox.appendChild(el('span', 'met-n', '·' + top.n));
+      top.words.forEach(function (w) {
+        var b = el('button', 'peak-word', w);
+        b.type = 'button';
+        b.dataset.tip = 'Put ' + w + ' in the field and work it out';
+        b.addEventListener('click', function () { runWord(w); });
+        rootBox.appendChild(b);
+      });
+      /* The family can run past what is printed, and where it does the count
+         beside the root has already said so — these are the ones named. */
+      li.appendChild(rootBox);
+
+      var core = l.coreTop[0];
+      var coreBox = el('span', 'met-key met-core');
+      coreBox.appendChild(el('code', 'met-word', core.core.toLowerCase()));
+      coreBox.appendChild(el('span', 'met-n', '·' + grouped(core.n)));
+      li.appendChild(coreBox);
+
+      mets.appendChild(li);
+    });
+  }
+
+  /* Same rule as the records: every dictionary keeps its row whatever the
+     switches are set to, and only the weight follows them. */
+  function syncMets() {
+    var rows = mets.querySelectorAll('.met');
+    for (var i = 0; i < rows.length; i++)
+      rows[i].classList.toggle('is-lit', isOn(rows[i].dataset.lang));
+  }
+
   /* ── The numbers ─────────────────────────────────────────────────────────
      The figures' twin, and the reason a tooltip is allowed to be a
      convenience. Counts only, one number to a cell: the two figures work in
@@ -741,7 +805,7 @@ var CORPUS = (function () {
     var hr = el('tr');
     hr.appendChild(el('th', 'num-key', 'dictionary'));
     for (var h = 0; h <= MAXD; h++) hr.appendChild(el('th', 'num', String(h)));
-    ['with a distance', 'no distance', 'every word'].forEach(function (t) {
+    ['with a distance', 'no distance', 'every word', 'roots', 'cores'].forEach(function (t) {
       hr.appendChild(el('th', 'num num-wide', t));
     });
     thead.appendChild(hr);
@@ -756,6 +820,8 @@ var CORPUS = (function () {
       tr.appendChild(el('td', 'num num-sum', grouped(l.sortable)));
       tr.appendChild(el('td', 'num num-sum', grouped(l.unsortable)));
       tr.appendChild(el('td', 'num num-sum', grouped(l.words)));
+      tr.appendChild(el('td', 'num num-sum', grouped(l.roots)));
+      tr.appendChild(el('td', 'num num-sum', grouped(l.cores)));
       tb.appendChild(tr);
     });
 
@@ -768,8 +834,10 @@ var CORPUS = (function () {
       'Counts, one number to a cell, in the order the figures use. The columns ' +
       '0 to ' + MAXD + ' are how many of that dictionary’s words need exactly ' +
       'that many swaps — the figures fold seven and up into one step, and this ' +
-      'is where they are separate. The last three are the totals the figures ' +
-      'divide by.'));
+      'is where they are separate. Then the three totals the figures divide by, ' +
+      'and the two collapses: how many distinct roots those words have, and how ' +
+      'many distinct cores the costing ones come down to. Cores outnumber roots ' +
+      'in every one of them, which is the point of the section above.'));
   }
 
   tableBtn.addEventListener('click', function () {
@@ -779,7 +847,7 @@ var CORPUS = (function () {
     tableBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
 
-  function draw() { figA.draw(); figB.draw(); syncPeaks(); }
+  function draw() { figA.draw(); figB.draw(); syncPeaks(); syncMets(); }
 
   if (window.ResizeObserver) {
     var ro = new ResizeObserver(function () { draw(); });
@@ -826,6 +894,45 @@ var CORPUS = (function () {
     'the ramp. Every class present is drawn wide enough to see and those pixels ' +
     'come off the widest segment, which can afford them; the table rounds nothing.';
 
+  /* The two collapses, totalled across the survey. `lone` is how many roots
+     stand for exactly one word — spread[0], the first bucket — and the gap
+     between allCores and allRoots is the finding the section is about. */
+  var allRoots = LANGS.reduce(function (a, l) { return a + l.roots; }, 0);
+  var allCores = LANGS.reduce(function (a, l) { return a + l.cores; }, 0);
+  var allCosting = LANGS.reduce(function (a, l) { return a + l.costing; }, 0);
+  var costingRoots = LANGS.reduce(function (a, l) { return a + l.costingRoots; }, 0);
+  var lone = LANGS.reduce(function (a, l) { return a + l.spread[0]; }, 0);
+  var plural = LANGS.reduce(function (a, l) { return a + l.plural; }, 0);
+  /* The biggest of each kind anywhere in the survey, for the note to name. */
+  var bigRoot = LANGS.reduce(function (a, l) {
+    return l.rootTop[0].n > a.top.n ? { l: l, top: l.rootTop[0] } : a;
+  }, { l: LANGS[0], top: LANGS[0].rootTop[0] });
+  var bigCore = LANGS.reduce(function (a, l) {
+    return l.coreTop[0].n > a.top.n ? { l: l, top: l.coreTop[0] } : a;
+  }, { l: LANGS[0], top: LANGS[0].coreTop[0] });
+
+  metMeta.textContent = pct((lone / allRoots) * 100) + '% of roots are one word';
+  metNote.textContent =
+    'Two ways for words to land on the same thing, and they behave nothing ' +
+    'alike. Taking the repeats out merges almost nothing: ' + grouped(lone) +
+    ' of the survey’s ' + grouped(allRoots) + ' roots stand for a single word, ' +
+    'because collapsing repeats only ever joins spellings that differ in a ' +
+    'doubled letter and a dictionary rarely carries both. What turns up instead ' +
+    'is Roman numerals and name variants — the biggest family anywhere is ' +
+    bigRoot.top.root.toLowerCase() + ', ' + bigRoot.top.n + ' words of ' +
+    bigRoot.l.name + '. Going on to the core merges by the hundred: ' +
+    bigCore.top.core.toLowerCase() + ' is a core of ' + grouped(bigCore.top.n) + ' ' +
+    bigCore.l.name + ' words. And it still does not shrink the vocabulary — ' +
+    grouped(costingRoots) + ' roots come down to ' + grouped(allCores) + ' ' +
+    'different cores, MORE than there were roots, because ' + grouped(plural) +
+    ' of those roots have more than one shortest core and each is a word in its ' +
+    'own right. A core’s count is how many words hold it among their shortest, ' +
+    'so these families overlap on purpose: zebra is counted under ebra, zeba ' +
+    'and zebr alike, and they do not sum to the ' + grouped(allCosting) +
+    ' words that cost anything. Roots are of every sortable word; cores only of ' +
+    'the ones that cost something, since an already-sorted word comes down to ' +
+    'no letters at all.';
+
   peakMeta.textContent = 'the record is ' + worst.peak + ', in ' + worst.name;
   peakNote.textContent =
     'The words inside the ramp’s last step, one row per dictionary, all ' +
@@ -838,6 +945,7 @@ var CORPUS = (function () {
   drawPick();
   drawRampKey(keyB, true);
   drawPeaks();
+  drawMets();
   drawTable();
   draw();
 

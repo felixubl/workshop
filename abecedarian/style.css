@@ -418,7 +418,10 @@ section[data-when],
 /* An unstruck record row steps back to the muted ink, so the four the
    switches are on read first without the other nine going away. */
 .peak:not(.is-lit) .peak-lang,
-.peak:not(.is-lit) .peak-word {
+.peak:not(.is-lit) .peak-word,
+.met:not(.is-lit) .peak-lang,
+.met:not(.is-lit) .peak-word,
+.met:not(.is-lit) .met-word {
   color: var(--pp-muted);
 }
 
@@ -727,6 +730,69 @@ section[data-when],
   font-size: var(--pp-size-label);
   letter-spacing: var(--w-track-mono);
   color: var(--pp-faint);
+}
+
+/* ── Where words meet ──────────────────────────────────────────────────────
+   The same row form as the records below it, one dictionary to a line, and
+   deliberately so: both are per-dictionary findings and a reader who has
+   learned to scan one column has learned the other.
+
+   Three tracks rather than that list's three-of-a-different-shape: the name,
+   then the root family with its words printed out, then the core with only its
+   count. The asymmetry is the point — a root family is nine words and can be
+   shown whole, and naming four of the hundred and eighty-five words that come
+   down to "oe" would be four arbitrary words dressed as a finding. */
+.mets {
+  display: grid;
+  gap: 0.55rem 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.met {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.2rem 0.9rem;
+  align-items: baseline;
+}
+.met + .met {
+  padding-top: 0.55rem;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+@media (min-width: 620px) {
+  .met {
+    grid-template-columns: 8.5rem minmax(0, 1fr) 8.5rem;
+  }
+}
+/* The key of a family — a root or a core — is a string the machine made, so it
+   takes the mono face, and the count rides with it rather than in a track of
+   its own: they are one fact and splitting them would leave two columns that
+   only mean anything side by side. */
+.met-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.45rem;
+}
+.met-word {
+  font-family: var(--pp-font-mono);
+  font-size: 0.86rem;
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-ink);
+}
+.met-n {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+}
+/* The core column is a number about a family too big to print, so it is set
+   the way the record column is: right where a wide sheet lines them up, and
+   back in the flow where the row has stacked. */
+@media (min-width: 620px) {
+  .met-core {
+    justify-content: flex-end;
+  }
 }
 
 /* ── The far end, named ────────────────────────────────────────────────────

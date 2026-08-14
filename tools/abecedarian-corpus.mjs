@@ -16,9 +16,10 @@
    into eclipse-recon/data/ for the same reason.
 
    The sources are pinned to one commit of one repository, so all thirteen are
-   packaged identically and the run is repeatable. It takes about eight minutes
-   from a warm cache; Polish and Czech are half of that between them. Downloads
-   are cached in .dict-cache (git-ignored); --refresh re-fetches. */
+   packaged identically and the run is repeatable. It takes about three quarters
+   of an hour from a warm cache — eight minutes of that is the distances, and
+   the rest is the cores, which are a search apiece rather than a number.
+   Downloads are cached in .dict-cache (git-ignored); --refresh re-fetches. */
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -151,6 +152,13 @@ function survey(words) {
   const hist = new Map();
   let kept = 0, unsortable = 0, longest = 0;
 
+  /* How many words each root stands for, and a few of their spellings. Almost
+     every root stands for exactly one word: collapsing repeats only ever merges
+     spellings that differ in a doubled letter, and a dictionary rarely carries
+     both. The exceptions are worth printing, which is why the spellings are
+     kept and not just the count. */
+  const rootWords = new Map();
+
   /* The far end of the tail, kept as words rather than as a count. The page
      draws a column at ten swaps and cannot say which words are standing in it;
      these are them. Everything at the current record is held, and the list is
@@ -174,12 +182,84 @@ function survey(words) {
     if (d === undefined) { d = ABC.alphabetDistance(word); byRoot.set(root, d); }
     hist.set(d, (hist.get(d) || 0) + 1);
 
+    let held = rootWords.get(root);
+    if (held === undefined) { held = []; rootWords.set(root, held); }
+    held.push(raw);
+
     if (d > peak) { peak = d; peakWords = []; }
     if (d === peak) peakWords.push(raw);
   }
 
-  return { kept, unsortable, hist, roots: byRoot.size, longest, peak, peakWords };
+  return { kept, unsortable, hist, longest, peak, peakWords, byRoot, rootWords };
 }
+
+/* ── What the words come down to ───────────────────────────────────────────
+   The second question the page asks of a word, asked of every word: the core,
+   the shortest run of the root's letters that still costs the same.
+
+   Only of the words that cost something. An already-abecedarian word has a
+   distance of nought and its core is the empty string — true, and no more than
+   that, so counting five thousand words as sharing "" would be the arithmetic
+   answering a question nobody asked.
+
+   A word can have several cores and usually does, so these families overlap on
+   purpose: a core's count is how many words hold it among their shortest, and
+   zebra is counted under ebra, zeba and zebr alike. That is what "words that
+   come down to the same thing" means when the thing is not unique, and it is
+   why the counts do not sum to the number of words.
+
+   This is the expensive half of the survey — English alone is eighty seconds —
+   so it runs once per ROOT and multiplies by how many words that root stands
+   for, which is the same trick the distance itself uses. The allowance is the
+   page's, thirty times over: no dictionary root has ever come near it, and any
+   that did would be counted and reported rather than quietly cut off. */
+const CORE_ALLOWANCE = 30000;
+
+/* How many families to carry, and how many spellings to name inside each. One
+   family would print a fact with no scale beside it; the page draws three so a
+   reader can see whether the biggest is a cliff or a plateau. */
+const TOP_KEEP = 3;
+const WORDS_KEEP = 4;
+
+function cores(byRoot, rootWords) {
+  const held = new Map();               // core -> { words, spellings }
+  let costing = 0, costingRoots = 0, plural = 0, stopped = 0, slowest = 0, slowestRoot = '';
+
+  for (const [root, d] of byRoot) {
+    if (d === 0) continue;
+    const spellings = rootWords.get(root);
+    costing += spellings.length;
+    costingRoots++;
+
+    const t0 = Date.now();
+    const run = ABC.coreSearch(root);
+    while (run.step()) if (Date.now() - t0 > CORE_ALLOWANCE) break;
+    const s = run.state();
+    const ms = Date.now() - t0;
+    if (ms > slowest) { slowest = ms; slowestRoot = root; }
+    if (!s.done) { stopped++; continue; }
+    if (s.count > 1) plural++;
+
+    for (const core of s.cores) {
+      let fam = held.get(core);
+      if (fam === undefined) { fam = { words: 0, spellings: [] }; held.set(core, fam); }
+      fam.words += spellings.length;
+      if (fam.spellings.length < 4) fam.spellings.push(spellings[0]);
+    }
+  }
+
+  return { held, costing, costingRoots, plural, stopped, slowest, slowestRoot };
+}
+
+/* The biggest families, most words first. Ties broken by the shorter string
+   and then alphabetically, so a re-run of the same dictionary prints the same
+   list rather than whichever the Map happened to hold first. */
+function biggest(entries, keep) {
+  return entries
+    .sort((a, b) => b[1] - a[1] || a[0].length - b[0].length || (a[0] < b[0] ? -1 : 1))
+    .slice(0, keep);
+}
+
 
 const results = [];
 for (const lang of LANGS) {
@@ -188,12 +268,29 @@ for (const lang of LANGS) {
   const words = headwords(text);
   const r = survey(words);
   const sortable = r.kept - r.unsortable;
-  results.push({ ...lang, ...r, sortable });
+  const c = cores(r.byRoot, r.rootWords);
+
+  /* How many roots stand for one word, two, three, more. Kept as a short
+     distribution rather than a mean, because the mean of a distribution this
+     lopsided — nearly all ones — says nothing a reader wants. */
+  const spread = [0, 0, 0, 0];          // 1, 2, 3, 4-or-more
+  for (const held of r.rootWords.values())
+    spread[Math.min(held.length, 4) - 1]++;
+
+  const rootTop = biggest([...r.rootWords].map(([k, v]) => [k, v.length]), TOP_KEEP)
+    .map(([root, n]) => ({ root, n, words: r.rootWords.get(root).slice(0, WORDS_KEEP) }));
+  const coreTop = biggest([...c.held].map(([k, v]) => [k, v.words]), TOP_KEEP)
+    .map(([core, n]) => ({ core, n, words: c.held.get(core).spellings.slice(0, WORDS_KEEP) }));
+
+  results.push({ ...lang, ...r, sortable, ...c, spread, rootTop, coreTop });
   const max = Math.max(...r.hist.keys());
   process.stderr.write(
     `${lang.id}: ${words.length} entries -> ${r.kept} words, ` +
-    `${sortable} sortable (${r.roots} roots), max distance ${max}, ` +
-    `${((r.unsortable / r.kept) * 100).toFixed(1)}% unsortable, ` +
+    `${sortable} sortable (${r.byRoot.size} roots), max distance ${max}, ` +
+    `${((r.unsortable / r.kept) * 100).toFixed(1)}% unsortable | ` +
+    `${c.costing} costing words, ${c.costingRoots} roots, ${c.held.size} cores` +
+    `${c.stopped ? ', ' + c.stopped + ' CUT OFF' : ''} ` +
+    `(slowest ${c.slowest}ms on ${c.slowestRoot}), ` +
     `${((Date.now() - t0) / 1000).toFixed(1)}s\n`);
 }
 
@@ -213,6 +310,24 @@ for (const r of results) {
     throw new Error(`${r.id}: peak ${r.peak} is not the histogram's last column`);
   if (r.peakWords.length !== r.hist.get(r.peak))
     throw new Error(`${r.id}: ${r.peakWords.length} worst words, histogram says ${r.hist.get(r.peak)}`);
+
+  /* The two collapses have to account for the same words the histogram does.
+     Every sortable word has exactly one root, so the root families partition
+     them; the costing words are the sortable ones less the already-sorted
+     column. The CORE families are not a partition and are not checked as one —
+     a word with three cores is in three of them on purpose. */
+  const inFamilies = [...r.rootWords.values()].reduce((a, w) => a + w.length, 0);
+  if (inFamilies !== r.sortable)
+    throw new Error(`${r.id}: root families hold ${inFamilies}, expected ${r.sortable}`);
+  if (r.spread.reduce((a, b) => a + b, 0) !== r.byRoot.size)
+    throw new Error(`${r.id}: family spread counts ${r.spread} against ${r.byRoot.size} roots`);
+  if (r.costing !== r.sortable - r.hist.get(0))
+    throw new Error(`${r.id}: ${r.costing} costing words, expected ${r.sortable - r.hist.get(0)}`);
+  /* A cut-off search publishes a core it could not prove shortest, and one of
+     those in the tally would make every count downstream of it a guess. None
+     has ever happened; if one does, the survey stops rather than ships. */
+  if (r.stopped)
+    throw new Error(`${r.id}: ${r.stopped} roots were cut off at ${CORE_ALLOWANCE}ms`);
 }
 
 /* One shared x axis, so the four rows are the same length and the page can
@@ -224,6 +339,10 @@ const MAX = Math.max(...results.map((r) => Math.max(...r.hist.keys())));
    can say it is showing a handful. They come out in dictionary order, which is
    the order they were read in — arbitrary between ties, but not chosen. */
 const PEAK_KEEP = 6;
+
+const fam = (list, key) => '[' + list.map((f) =>
+  '{ ' + key + ': ' + JSON.stringify(f[key]) + ', n: ' + f.n +
+  ', words: ' + JSON.stringify(f.words) + ' }').join(',\n                ') + ']';
 
 const rows = results.map((r) => {
   const counts = [];
@@ -237,7 +356,15 @@ const rows = results.map((r) => {
     ',\n    peak: ' + r.peak +
     ', peakCount: ' + r.peakWords.length +
     ',\n    peakWords: ' + JSON.stringify(r.peakWords.slice(0, PEAK_KEEP)) +
-    ',\n    counts: [' + counts.join(', ') + '] }';
+    ',\n    counts: [' + counts.join(', ') + ']' +
+    ',\n    roots: ' + r.byRoot.size +
+    ', spread: [' + r.spread.join(', ') + ']' +
+    ',\n    costing: ' + r.costing +
+    ', costingRoots: ' + r.costingRoots +
+    ', cores: ' + r.held.size +
+    ', plural: ' + r.plural +
+    ',\n    rootTop: ' + fam(r.rootTop, 'root') +
+    ',\n    coreTop: ' + fam(r.coreTop, 'core') + ' }';
 });
 
 const out = `/* Written by tools/abecedarian-corpus.mjs — do not edit by hand.
@@ -245,8 +372,19 @@ const out = `/* Written by tools/abecedarian-corpus.mjs — do not edit by hand.
    Every headword of ${results.length} Hunspell spelling dictionaries, folded to A-Z, put
    through abecedarian/abc.js. counts[d] is how many of that dictionary's words
    need exactly d swaps of the alphabet; "unsortable" is how many no ordering
-   can sort at all, and words = sortable + unsortable. Sources are pinned to
-   wooorm/dictionaries @ ${PIN.slice(0, 7)}. */
+   can sort at all, and words = sortable + unsortable.
+
+   The two collapses. "roots" counts the distinct roots the sortable words have,
+   and spread[i] how many of those roots stand for i+1 words (the last bucket is
+   four or more) — nearly all stand for one. "costing" is the sortable words
+   less the already-abecedarian ones, over "costingRoots" roots, and "cores" is
+   how many distinct cores those roots come down to; "plural" is how many of the
+   roots have more than one shortest core, which is why cores can outnumber the
+   roots they came from. rootTop and coreTop are the biggest families, n words
+   apiece. A core family counts every word holding that core among its shortest,
+   so the families overlap and do not sum to the word count.
+
+   Sources are pinned to wooorm/dictionaries @ ${PIN.slice(0, 7)}. */
 
 var ABC_CORPUS = {
   pin: ${JSON.stringify(PIN.slice(0, 7))},

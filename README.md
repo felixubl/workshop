@@ -241,6 +241,20 @@ figure or another file rather than a rendering.
 
   Only 5,617 of the 2,210,779 words are already abecedarian — 0.254%.
 
+  The survey also asks what each of the two reductions merges, and they behave
+  nothing alike. Taking the repeats out merges almost nothing: nearly every root
+  in the survey stands for a single word, because collapsing repeats only ever
+  joins spellings that differ in a doubled letter and a dictionary rarely
+  carries both. What turns up instead is Roman numerals (`xi` covers *xi, xii,
+  xiii, xxi, xxii, xxiii*) and name variants (*Aaron, Aron, Arron*).
+
+  Going on to the core merges by the hundred — `oe` is a core of 185 English
+  words — and yet does not shrink the vocabulary at all: there are *more*
+  distinct cores in the survey than there are roots to make them, because about
+  half the roots have more than one shortest core and each of those is a word in
+  its own right. A core's count is how many words hold it among their shortest,
+  so the families overlap on purpose and do not sum to the word count.
+
   The two use different colour vocabularies, and that is the point rather than
   an oversight: what a segment *is* differs between them. In the first a
   segment is a dictionary, so colour is an identity — four inks, because four
