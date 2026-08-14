@@ -185,19 +185,21 @@
   <section class="corpus">
 
     <div class="result-bar">
-      <p class="section-label">What a dictionary costs</p>
+      <p class="section-label">What the words cost</p>
       <code class="meta" id="corpusMeta"></code>
     </div>
 
     <!-- The switches sit above the sheets rather than inside them, because
-         they scope both figures. They are the legend as well: the ink is on
-         the switch, so nothing on a figure is identified by colour alone.
+         they scope the first one and name what the second is drawing. They no
+         longer carry an ink: with both figures reading off one ordinal ramp,
+         nothing on this page is identified by colour, so a coloured square on
+         a switch would be a vocabulary pointing at nothing. A language is
+         named, and the name is enough.
 
-         With thirteen dictionaries and four inks they moved from meaning
-         "shown" to meaning "struck". Everything is drawn either way; the
-         switches decide which four are in colour and which are grey. -->
+         They also no longer cap at four. The cap existed because there were
+         four inks; a stack is a row, and rows are cheap. -->
     <div class="corpus-bar">
-      <div class="picks" id="corpusPick" role="group" aria-label="Which four dictionaries are struck in ink"></div>
+      <div class="picks" id="corpusPick" role="group" aria-label="Which dictionaries the first figure draws"></div>
       <button class="btn-ghost preset" type="button" id="tableBtn" aria-expanded="false" aria-controls="corpusTable">the numbers</button>
     </div>
 
@@ -207,59 +209,31 @@
           <svg id="chart" class="chart" role="img" tabindex="0"></svg>
           <div class="chart-tip" id="chartTip" hidden></div>
         </div>
-        <!-- What the readout says, for a reader who is driving the figure with
-             the arrow keys rather than a pointer. role="status" is already a
-             polite live region; the attribute would only repeat it. Both
-             figures announce through this one: only one of them is under a
-             pointer or a caret at a time. -->
+        <div class="ramp-key" id="rampKeyA" aria-hidden="true"></div>
+        <!-- What the readout says, for a reader driving a figure with the arrow
+             keys rather than a pointer. role="status" is already a polite live
+             region; the attribute would only repeat it. Both figures announce
+             through this one: only one of them is under a pointer or a caret at
+             a time. -->
         <p class="sr-only" id="chartLive" role="status"></p>
       </div>
     </div>
     <p class="sheet-note" id="chartNote"></p>
 
-    <!-- ── The same survey, from zero ───────────────────────────────────────
-         The figure above is a shape: it says two or three swaps and it says it
-         well. What it cannot say is anything about the ends. Its columns are
-         shares of the words that HAVE a distance, so the majority that have
-         none is off it entirely; and its axis is linear, so the seven German
-         words that need nine swaps are a fifth of a pixel.
-
-         This one is the same numbers against the other two questions. Every
-         share is of every word in the dictionary, so how many are abecedarian
-         at all can simply be read off. And the axis is logarithmic, so a decade
-         is a decade wherever it falls: 61% and 0.004% are the same distance
-         apart as 61% and 0.6%. Nothing here is new data — it is the same sixty
-         numbers, asked what the other figure cannot ask. -->
-    <div class="result-bar corpus-second">
-      <p class="section-label">The same survey, end to end</p>
-      <code class="meta" id="tailMeta"></code>
-    </div>
-
-    <div class="sheet">
-      <div class="sheet-body">
-        <div class="chart-wrap" id="tailWrap">
-          <svg id="tail" class="chart" role="img" tabindex="0"></svg>
-          <div class="chart-tip" id="tailTip" hidden></div>
-        </div>
-      </div>
-    </div>
-    <p class="sheet-note" id="tailNote"></p>
-
     <!-- ── One bar per dictionary ───────────────────────────────────────────
-         The two figures above answer "what shape" and "how far". This one
-         answers "what is a dictionary made of" — every word of it, in one bar,
-         split by what it costs.
+         The same form again, and the only thing that changes is what the bar
+         is a hundred per cent OF.
 
-         Distance is ORDINAL here, not an identity: 3 comes after 2 and that is
-         the point of it. So the segments take a one-hue ramp in lightness
-         steps rather than the four identity inks, and "none" — which is not a
-         distance — takes a neutral outside the ramp entirely, because giving
-         it a step would put it in a sequence it does not belong to.
+         Above, it is the words that have a distance, so the distribution fills
+         the bar and its shape can be read. Here it is every word the dictionary
+         holds, so the words no ordering sorts — most of every one of them — are
+         in the bar too, and what a reader sees is how little of a dictionary
+         the question even reaches.
 
-         Eight steps and not eleven. Past seven or eight classes a reader stops
-         being able to tell one shade of a hue from the next, so the ramp ends
-         at "7 or more"; the figure above already draws the tail distance by
-         distance, and the table has it exactly. -->
+         Two denominators, one form, one ramp. A logarithmic figure used to sit
+         between these two and carried the far tail distance by distance; it is
+         gone, and the tail lives in the ramp's last step, the record rows below
+         and the table. -->
     <div class="result-bar corpus-second">
       <p class="section-label">What a dictionary is made of</p>
       <code class="meta" id="stackMeta"></code>
@@ -274,7 +248,7 @@
         <!-- A ramp key, not a row of chips: the steps are a scale and are read
              as one strip with its two ends named. The neutral stands off to the
              side with a gap, because it is not on the scale. -->
-        <div class="ramp-key" id="rampKey" aria-hidden="true"></div>
+        <div class="ramp-key" id="rampKeyB" aria-hidden="true"></div>
       </div>
     </div>
     <p class="sheet-note" id="stackNote"></p>

@@ -251,61 +251,19 @@ section[data-when],
   margin-bottom: 0;
 }
 
-/* ── The dictionaries ──────────────────────────────────────────────────────
-   Four inks for four dictionaries, and they are not the site's plates.
+/* ── The switches ─────────────────────────────────────────────────────────
+   They used to be the legend, back when four inks named four languages. Two
+   things happened: the survey went to thirteen dictionaries, which four inks
+   cannot name, and then both figures became stacks read off one ordinal ramp,
+   which names distances and not languages.
 
-   The plates are a category vocabulary: plate 2 means media, plate 3 means
-   numbers and files, and they say so on the index. Pressing four series of a
-   figure out of them would have the marks claiming a meaning they do not have.
-   Beyond that, three plates is one short of four, and the two that would have
-   to stand side by side — the green and the red — are the classic pair a
-   red-green reader cannot separate: measured against each other they come out
-   at ΔE 5.9 under deuteranopia, where 8 is the bar.
+   So there is no identity colour left on this page, and the switches carry
+   none. A coloured square here would be a vocabulary pointing at nothing. A
+   language is named — on its switch, on its row, in the records and in the
+   table — and a name is the one label that never runs out.
 
-   So the figure takes its own four, chosen the way Eclipse Recon takes viridis
-   for its suitability field and for the same stated reason: the field is data,
-   not chrome. These four were searched for rather than picked, under five
-   constraints at once — inside the lightness band for the mode, chromatic
-   enough not to read as grey, at least 3:1 against the sheet, and every one of
-   the six pairs at least ΔE 8 apart under both protanopia and deuteranopia and
-   at least 15 apart under ordinary vision. All six pairs, not just the
-   neighbouring ones, because a dictionary can be switched off and any two of
-   the survivors can end up side by side. The set clears all of that: worst pair
-   12.0 under simulated colour blindness and 21.7 under ordinary vision in
-   light, 8.9 and 18.2 in dark.
-
-   And then it was searched again for the QUIETEST set that still clears it,
-   holding the loudest of the four down rather than the sum, so no one ink
-   shouts over the other three. The first set that passed was neon, and a neon
-   figure on this paper would be the chart announcing itself instead of its
-   data.
-
-   Dark is its own selection rather than the same hex on a dark ground: the
-   band is narrower there, so every one of the four moved.
-
-   Four inks and thirteen dictionaries, so an ink is a SLOT and not a language.
-   The classes below are numbered rather than named for that reason: a language
-   holds a slot while it is struck and gives it up when it is not, and a mark
-   asks its slot for its colour. Everything unstruck takes .ghost, which is the
-   page's own faint rule colour and carries no identity at all — that is the
-   point of it. */
-:root {
-  --abc-ink-0: #298805;
-  --abc-ink-1: #1299de;
-  --abc-ink-2: #5f4589;
-  --abc-ink-3: #cd5a97;
-}
-[data-mode='dark'] {
-  --abc-ink-0: #298c01;
-  --abc-ink-1: #4494c8;
-  --abc-ink-2: #814ec6;
-  --abc-ink-3: #d8559b;
-}
-.ink-0 { --abc-ink: var(--abc-ink-0); }
-.ink-1 { --abc-ink: var(--abc-ink-1); }
-.ink-2 { --abc-ink: var(--abc-ink-2); }
-.ink-3 { --abc-ink: var(--abc-ink-3); }
-.ghost { --abc-ink: var(--pp-line); }
+   The cap went with the inks. There were four of them, so four could be shown;
+   a stack is a row, rows are cheap, and any number can be on at once. */
 
 /* The switch row: the four dictionaries on the left, the table on the right.
    One row, above the sheet, because it scopes what is in the sheet. */
@@ -349,18 +307,20 @@ section[data-when],
   color: var(--pp-ink);
   border-color: var(--pp-edge);
 }
-/* Struck when the dictionary is drawn, an empty outline when it is not — the
-   same relationship the index's custody pips use, and it means the switch says
-   its own state without relying on the border weight alone. */
-.pick-ink {
+/* Filled when the dictionary is in the figure above, an empty outline when it
+   is not — the same relationship the index's custody pips use, and it means the
+   switch says its own state without relying on the border weight alone. Plain
+   ink, because the mark is a state and not an identity. */
+.pick-mark {
   width: 9px;
   height: 9px;
   flex: none;
-  border: var(--pp-rule-hairline) solid var(--abc-ink);
+  border: var(--pp-rule-line) solid var(--pp-line);
   background: transparent;
 }
-.pick.is-on .pick-ink {
-  background: var(--abc-ink);
+.pick.is-on .pick-mark {
+  border-color: var(--pp-edge);
+  background: var(--pp-edge);
 }
 /* An unstruck record row steps back to the muted ink, so the four the
    switches are on read first without the other nine going away. */
@@ -401,19 +361,18 @@ section[data-when],
   letter-spacing: var(--w-track-mono);
   fill: var(--pp-faint);
 }
-.ax-tick-y { text-anchor: end; }
 .ax-tick-x { text-anchor: middle; }
-/* The tick for the distance the field just answered, in ink. The figure and
-   the number above it are then reading the same word. */
-.ax-tick-x.is-at { fill: var(--pp-ink); }
 .ax-title { text-anchor: middle; }
 
-/* The reader's word, annotated onto the figure rather than plotted on it: a
-   hairline in ink, which no series ever wears, and the word itself at the top
-   of it. */
-.ax-mark {
+/* The reader's word, annotated onto both figures. It used to be a hairline
+   down a distance axis; there is no distance axis left, so it outlines the
+   band the word falls in, on every row, and the word is written once above the
+   first. An outline rather than a fill, because the fill is carrying a value
+   and must not move because somebody typed. */
+.seg-at {
+  fill: none;
   stroke: var(--pp-edge);
-  stroke-width: var(--pp-rule-hairline);
+  stroke-width: var(--pp-rule-line);
 }
 .ax-mark-label {
   text-anchor: middle;
@@ -423,9 +382,6 @@ section[data-when],
   fill: var(--pp-ink);
 }
 
-.bar {
-  fill: var(--abc-ink);
-}
 /* The hit target is the whole band, floor to ceiling. A 3px column is a
    pinpoint; a distance is something a reader can actually aim at. */
 .band {
@@ -474,9 +430,11 @@ section[data-when],
   gap: 0.4rem;
   color: var(--pp-muted);
 }
+/* A swatch rather than a stroke: it is showing a step of a ramp, and a 2px
+   line of a pale ochre against paper reads as nothing at all. */
 .tip-key {
-  width: 11px;
-  height: 2px;
+  width: 12px;
+  height: 9px;
   flex: none;
   background: var(--abc-ink);
 }
@@ -505,61 +463,22 @@ section[data-when],
   color: var(--pp-faint);
 }
 
-/* ── The second figure ─────────────────────────────────────────────────────
-   Points and a trace on a logarithmic axis. No fills, so the ink is on the
-   stroke rather than the body of the mark. */
-.trace {
-  fill: none;
-  stroke: var(--abc-ink);
-  stroke-width: 2;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-/* The ring is the sheet's own colour, not a border: it is what keeps two dots
-   on the same value from reading as one. */
-.dot {
-  fill: var(--abc-ink);
-  stroke: var(--pp-surface);
-  stroke-width: 2;
-}
-/* An unstruck dictionary: thinner, greyer, and behind. It is drawn so the
-   reader can see the family the four struck ones belong to — nine lines that
-   nearly agree is itself the finding — and it must never compete with them for
-   the eye. A ghost dot loses its ring too: at two and a half pixels the ring
-   would be most of the mark. */
-.trace.ghost {
-  stroke-width: 1.25;
-}
-.dot.ghost {
-  stroke: none;
-}
-/* The rule that stands the words no alphabet sorts apart from the distances.
-   Structural rather than a gridline, because it separates two kinds of thing
-   rather than measuring anything. */
-.ax-split {
-  stroke: var(--pp-hair);
-  stroke-width: var(--pp-rule-line);
-}
-.ax-tick-none {
-  fill: var(--pp-muted);
-}
-
 /* ── The ordinal ramp ──────────────────────────────────────────────────────
-   The third figure's colour, and it is a different job from the four inks.
+   Both figures' colour, and it is the only colour vocabulary left on the page.
 
-   The inks name languages: swapping two of them changes nothing but which
-   reader is confused. These name distances, where 3 comes after 2 and the
-   order IS the meaning — so they are one hue in monotone lightness steps, and
-   they were checked as a ramp rather than as a palette: lightness strictly
-   monotone, every adjacent gap at least 0.06, the end nearest the sheet still
-   clearing 2:1 against it, and one hue throughout (measured spread: 4° light,
-   1° dark). Eight steps is what those gates allow while the pale end stays off
-   the paper — eleven would need a lightness range that runs out of both ends of
-   the page — which is why the ramp stops at "7 or more".
+   It names distances, where 3 comes after 2 and the order IS the meaning — so
+   it is one hue in monotone lightness steps, and it was checked as a ramp
+   rather than as a palette: lightness strictly monotone, every adjacent gap at
+   least 0.06, the end nearest the sheet still clearing 2:1 against it, and one
+   hue throughout (measured spread: 4° light, 1° dark). Eight steps is what
+   those gates allow while the pale end stays off the paper — eleven would need
+   a lightness range that runs out of both ends of the page — which is why the
+   ramp stops at "7 or more".
 
-   Ochre, at hue 70, because the four inks sit at 140, 240, 300 and 350 and a
-   ramp that shared a hue with one of them would have the same colour meaning a
-   language in one figure and a distance in the next.
+   Ochre, at hue 70. That mattered more when four identity inks sat at 140,
+   240, 300 and 350 and a shared hue would have meant a language in one figure
+   and a distance in the next; those inks are gone now, but the hue is the one
+   that was validated and there is no reason to move it.
 
    Dark mode re-anchors rather than inverting: the step nearest the surface is
    still the one nearest zero, so the ramp always reads as "more ink, more
@@ -567,7 +486,7 @@ section[data-when],
 
    "None" is not on the ramp and never should be. It is not a distance, and
    giving it a step would file it in a sequence it does not belong to, so it
-   takes a neutral — the only colour in the figure that is not the hue. */
+   takes a neutral — the only colour in either figure that is not the hue. */
 :root {
   --abc-step-0: #d0a97d;
   --abc-step-1: #bc966a;
@@ -603,24 +522,12 @@ section[data-when],
 .seg {
   fill: var(--abc-ink);
 }
-/* The hovered row's segments lift by an outline in the sheet's own colour
-   rather than by a colour change: the fill is carrying a value and must not
-   move because a pointer arrived. */
-.seg.is-on {
-  stroke: var(--pp-edge);
-  stroke-width: var(--pp-rule-hairline);
-}
 .stack-name {
   text-anchor: end;
   font-family: var(--pp-font-mono);
   font-size: 0.78rem;
   letter-spacing: var(--w-track-mono);
   fill: var(--pp-muted);
-}
-/* A language struck in ink above is named in ink here too, so the eye can
-   carry a choice from one figure to the next. */
-.stack-name.is-lit {
-  fill: var(--pp-ink);
 }
 .stack-share {
   font-family: var(--pp-font-mono);
@@ -651,11 +558,7 @@ section[data-when],
 .ramp-strip {
   display: flex;
 }
-.ramp-strip i {
-  width: 20px;
-  height: 9px;
-  background: var(--abc-ink);
-}
+.ramp-strip i,
 .ramp-off i {
   width: 20px;
   height: 9px;
@@ -702,15 +605,6 @@ section[data-when],
   display: flex;
   align-items: center;
   gap: 0.45rem;
-}
-/* Struck, always. The switch's square is hollow when its dictionary is off,
-   because there the square carries a state; here it only names an ink, and a
-   row that is off is not shown at all. */
-.peak-ink {
-  width: 9px;
-  height: 9px;
-  flex: none;
-  background: var(--abc-ink);
 }
 .peak-lang {
   font-family: var(--pp-font-mono);
