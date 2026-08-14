@@ -197,6 +197,69 @@ var ABCTest = (function (ABC) {
          (p.alphabet ? ' via ' + p.alphabet : ''));
     });
 
+    /* ── What each letter of the root is carrying ───────────────────────────
+       Two claims. That taking a letter out can never RAISE the distance is the
+       one the page leans on, and it is checked on every root over five and six
+       letters rather than argued. That the audit reports what a plain
+       recomputation reports is the other, and it is what holds the shortcut
+       honest: carry() skips the search entirely for an already-sorted word,
+       and this is where that skip has to agree with doing the work. */
+    ['ABCDE', 'ABCDEF'].forEach(function (letters) {
+      var all = words(letters, letters.length);
+      var seen = {}, roots = 0, rose = 0, wrong = 0, first = '';
+      for (var i = 0; i < all.length; i++) {
+        var c = ABC.carry(all[i], letters);
+        if (c === null || seen[c.order]) continue;
+        seen[c.order] = true;
+        roots++;
+        for (var j = 0; j < c.letters.length; j++) {
+          var want = ABC.alphabetDistance(c.order.slice(0, j) + c.order.slice(j + 1), letters);
+          if (want > c.distance) rose++;
+          if (c.letters[j].without !== want || c.letters[j].drop !== c.distance - want) {
+            if (!wrong) first = c.order + ' minus ' + c.order[j] + ': audit ' +
+                                c.letters[j].without + ', recomputed ' + want;
+            wrong++;
+          }
+        }
+      }
+      ok('[' + letters + '] taking a letter out of a root never raises its distance',
+         rose === 0, rose ? rose + ' raised it' : roots + ' roots');
+      ok('[' + letters + '] the per-letter audit agrees with the distances recomputed one at a time',
+         wrong === 0, wrong ? wrong + ' wrong, first ' + first : roots + ' roots');
+    });
+
+    /* The letters that are carrying, spelled out, and the largest single drop.
+       vortex and billowy are both all-free and for different reasons: billowy
+       is already sorted and there is nothing to carry, vortex costs a swap
+       that no one letter of it accounts for. waltz and flummox are there
+       because a letter can be worth more than one swap. */
+    [['zebra', 2, 'EB', 1], ['sphinx', 2, 'SP', 1], ['claude', 3, 'AUDE', 1],
+     ['waltz', 2, 'WA', 2], ['flummox', 2, 'LUMO', 2],
+     ['vortex', 1, '', 0], ['billowy', 0, '', 0]].forEach(function (c) {
+      var got = ABC.carry(ABC.normalise(c[0]).word);
+      var load = '', big = 0;
+      got.letters.forEach(function (l) {
+        if (l.drop > 0) load += l.letter;
+        if (l.drop > big) big = l.drop;
+      });
+      ok('"' + c[0] + '" costs ' + c[1] + ', carried by ' +
+         (c[2] ? c[2].toLowerCase().split('').join(' and ') : 'no single letter'),
+         got.distance === c[1] && load === c[2] && big === c[3],
+         'distance ' + got.distance + ', carried by "' + load + '", largest drop ' + big);
+    });
+
+    /* Why the page says the drops are not shares. Every letter of vortex is
+       free on its own and the swap does not go away; two of them together are
+       what it costs. */
+    (function () {
+      var c = ABC.carry('VORTEX');
+      var free = c.letters.filter(function (l) { return l.drop === 0; }).length;
+      ok('free is not additive: no letter of vortex carries its swap, and v and e together do',
+         c.distance === 1 && free === 6 && ABC.alphabetDistance('ORTX') === 0,
+         'distance ' + c.distance + ', ' + free + ' of 6 free, without v and e ' +
+         ABC.alphabetDistance('ORTX'));
+    })();
+
     /* ── How many alphabets sort a word: n!/k!, so a share of 1/k! ───────── */
     (function () {
       var letters = 'ABCDEF', perms = permutations(letters), bad = 0;

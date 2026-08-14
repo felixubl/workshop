@@ -147,6 +147,33 @@
       </section>
     </div>
 
+    <!-- ── What each letter is carrying ──────────────────────────────────
+         The distance is one number over the whole word, and the obvious next
+         question is which of the letters is responsible for it. So each one
+         is taken out of the root and the word asked again.
+
+         The answer is not "all of them". zebra costs two swaps and only e and
+         b are carrying them: drop the z, the r or the a and it still costs
+         two. Nor is it a decomposition — the drops do not add up to the
+         distance and the note says so, because vortex costs a swap that not
+         one of its six letters accounts for on its own.
+
+         It is the only expensive thing on the page: one search per letter,
+         where everything else is one search. script.js runs it in slices. -->
+    <div data-when="sortable">
+      <div class="result-bar">
+        <p class="section-label">Which letters carry it</p>
+        <code class="meta" id="carryMeta"></code>
+      </div>
+      <div class="sheet">
+        <div class="sheet-body">
+          <div class="carry" id="carry" role="list"
+               aria-label="Each letter of the root, and what the word would cost without it"></div>
+        </div>
+      </div>
+      <p class="sheet-note" id="carryNote"></p>
+    </div>
+
     <div data-when="sortable">
       <div class="result-bar">
         <p class="section-label">Which alphabet this is</p>

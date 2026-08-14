@@ -291,6 +291,45 @@ var ABC = (function () {
     return factorial(letters.length) / factorial(order.length);
   }
 
+  /* ── What each letter is carrying ────────────────────────────────────────
+     The distance is one number over the whole root, and it is fair to ask
+     where it came from. Take a letter out of the root and ask again: the
+     answer can only fall or stay, never rise, because an alphabet that sorts
+     a word still sorts what is left of the word when a letter is deleted — a
+     subsequence of a sorted sequence is sorted. How far it falls is what that
+     letter was carrying, and a letter that changes nothing is one the word
+     could do without at no cost.
+
+     This is one question asked of each letter and not a division of the
+     distance into shares, which is a real distinction rather than a
+     disclaimer: vortex costs one swap, no single letter of it is carrying
+     that swap, and v and e together are. The drops do not add up to the
+     distance and are not meant to.
+
+     Kept out of profile(), which runs on every keystroke. This costs one
+     search per letter of the root — on the longest words in the dictionary
+     survey, something over a second — so a caller that must not block the
+     thread does them one at a time through carryAt(). */
+
+  function carryAt(order, i, letters) {
+    return alphabetDistance(order.slice(0, i) + order.slice(i + 1), letters);
+  }
+
+  function carry(word, letters) {
+    var order = letterOrder(word);
+    if (order === null) return null;
+    var base = alphabetDistance(order, letters);
+    var out = [];
+    for (var i = 0; i < order.length; i++) {
+      /* An already-sorted word has nothing to fall to: the distance is zero
+         and removal cannot raise it, so every letter is free and not one
+         search is needed to know it. */
+      var without = base === 0 ? 0 : carryAt(order, i, letters);
+      out.push({ letter: order[i], without: without, drop: base - without });
+    }
+    return { order: order, distance: base, letters: out };
+  }
+
   function profile(word, letters) {
     letters = letters || AZ;
     var r = solve(word, letters);
@@ -348,6 +387,8 @@ var ABC = (function () {
     minimalAlphabet: minimalAlphabet,
     alphabetDistance: alphabetDistance,
     validAlphabets: validAlphabets,
+    carryAt: carryAt,
+    carry: carry,
     profile: profile,
     normalise: normalise
   };

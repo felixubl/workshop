@@ -25,6 +25,9 @@ var swapNote = document.getElementById('swapNote');
 var reread = document.getElementById('reread');
 var readMeta = document.getElementById('readMeta');
 var rereadNote = document.getElementById('rereadNote');
+var carryEl = document.getElementById('carry');
+var carryMeta = document.getElementById('carryMeta');
+var carryNote = document.getElementById('carryNote');
 var seedEl = document.getElementById('seed');
 
 /* Thin spaces every three digits. A twenty-seven-digit number is evidence
@@ -36,6 +39,13 @@ function grouped(n) {
 
 function plural(n, one, many) {
   return n + ' ' + (n === 1 ? one : many);
+}
+
+/* "a", "a and b", "a, b and c" — letters read out in a sentence, where a
+   comma-joined list of one would read as a list that failed to fill. */
+function list(items) {
+  if (items.length <= 1) return items.join('');
+  return items.slice(0, -1).join(', ') + ' and ' + items[items.length - 1];
 }
 
 function el(tag, cls, text) {
@@ -128,11 +138,137 @@ function drawReread(p) {
       p.order.toLowerCase() + ' answers the same way.');
 }
 
+/* ── Which letters carry it ────────────────────────────────────────────────
+   Take each letter out of the root in turn and ask the same question again.
+   The distance can only fall or stay — an alphabet that sorts a word still
+   sorts what is left of the word when a letter is deleted — so where it falls,
+   that letter was carrying weight.
+
+   This is the only expensive thing on the page. One distance is a single
+   search and a real word answers in well under a millisecond; this asks once
+   per letter of the root, and on the longest words in the dictionary survey —
+   fourteen different letters — the set costs something over a second. That
+   cannot sit in front of a keystroke, so it runs in slices: letters are
+   measured until twelve milliseconds have gone, the browser gets the thread
+   back, and the row fills in from where it stopped. Short words finish inside
+   the first slice and never show a half-measured row at all.
+
+   carryRun is the token that abandons a run whose word has changed under it. */
+
+var carryRun = 0;
+var CARRY_SLICE = 12;
+
+function carryCell(letter, without, base) {
+  var cell = el('div', 'carry-cell');
+  cell.setAttribute('role', 'listitem');
+  var pending = without === null;
+  if (pending) cell.classList.add('is-wait');
+  else if (without < base) cell.classList.add('is-load');
+  cell.appendChild(el('span', 'carry-l', letter.toLowerCase()));
+  cell.appendChild(el('span', 'carry-n', pending ? '·' : String(without)));
+  cell.setAttribute('aria-label', pending
+    ? letter + ': not measured yet'
+    : letter + ': without it the word costs ' + plural(without, 'swap', 'swaps') +
+      (without < base ? ', ' + (base - without) + ' fewer' : ', the same'));
+  return cell;
+}
+
+function drawCarry(p) {
+  var run = ++carryRun;
+  var order = p.order, base = p.distance, word = p.word.toLowerCase();
+  var without = [], i;
+  for (i = 0; i < order.length; i++) without.push(null);
+  var next = 0;
+
+  /* Already sorted: the distance is nought, removing a letter cannot raise it,
+     so every letter is free and not one search is needed to know it. */
+  if (base === 0) { for (i = 0; i < order.length; i++) without[i] = 0; next = order.length; }
+
+  function say() {
+    var load = [], free = [], big = 0, done = next;
+    for (var j = 0; j < done; j++) {
+      if (without[j] < base) {
+        load.push(order[j].toLowerCase());
+        if (base - without[j] > big) big = base - without[j];
+      } else free.push(order[j].toLowerCase());
+    }
+
+    if (done < order.length) {
+      carryMeta.textContent = done + ' of ' + order.length + ' measured';
+      carryNote.textContent = 'Measuring — each letter is another search of the alphabet, ' +
+        'and this word has ' + order.length + ' of them to do.';
+      return;
+    }
+
+    carryMeta.textContent = base === 0 ? 'nothing to carry'
+      : load.length === 0 ? 'no single letter'
+      : load.length + ' of ' + plural(order.length, 'letter', 'letters');
+
+    /* The rule of the figure first, because the numbers under the letters mean
+       nothing without it, then what this particular word turned out to say. */
+    var note = 'Each letter of the root taken out in turn: the number under it is what the ' +
+      'word would cost without it. Removing a letter can never raise the distance — an alphabet ' +
+      'that sorts a word still sorts what is left of it — so a letter still showing the full ' +
+      base + ' is one the word does not need, and one showing less was carrying the difference. ';
+
+    if (base === 0) {
+      note = 'Nothing to carry: the ordinary alphabet already sorts ' + word +
+        ', and taking any letter out leaves it sorted.';
+    } else if (load.length === 0) {
+      note += 'Not one letter of ' + word + ' is carrying that ' + plural(base, 'swap', 'swaps') +
+        ' on its own — take any single one away and the cost is unchanged. The word is ' +
+        'still out of order, and it is pairs of these letters that put it there.';
+    } else {
+      note += free.length === 0
+        ? 'Here that is every letter of it: there is nothing in ' + word +
+          ' that could go for nothing.'
+        : 'Here that is ' + list(load) + '; ' + list(free) + ' ' +
+          (free.length === 1 ? 'is' : 'are') + ' free.';
+      if (big > 1) {
+        note += ' A letter can be worth more than one swap — the most any of these is holding ' +
+          'up is ' + big + '.';
+      }
+      if (free.length > 1) {
+        note += ' They are not shares of the ' + base + ' and do not add up to it: this is one ' +
+          'question asked of each letter on its own, and letters that are each free can still ' +
+          'cost a swap between them.';
+      }
+    }
+    carryNote.textContent = note;
+  }
+
+  function paint() {
+    carryEl.textContent = '';
+    for (var j = 0; j < order.length; j++)
+      carryEl.appendChild(carryCell(order[j], without[j], base));
+    carryEl.setAttribute('aria-busy', next < order.length ? 'true' : 'false');
+    say();
+  }
+
+  function step() {
+    if (run !== carryRun) return;
+    /* Date.now rather than performance.now: the budget is twelve milliseconds
+       and a millisecond of resolution is enough to spend it. The slice can
+       overrun by one search, which on the worst word is the same third of a
+       second the distance above it already cost. */
+    var t0 = Date.now();
+    while (next < order.length && Date.now() - t0 < CARRY_SLICE) {
+      without[next] = ABC.carryAt(order, next, ABC.AZ);
+      next++;
+    }
+    paint();
+    if (next < order.length) setTimeout(step, 0);
+  }
+
+  step();
+}
+
 function showNothing(message) {
   result.hidden = true;
   empty.hidden = false;
   hint.hidden = !message;
   if (message) hint.textContent = message;
+  carryRun++;                          // abandon an audit whose word has gone
   CORPUS.mark(null);
 }
 
@@ -185,6 +321,7 @@ function showWord(input) {
     fact(facts, 'again at', 'position ' + (b.again + 1));
     fact(facts, 'alphabets that sort it', '0 of 26!');
     whenSortable.forEach(function (n) { n.hidden = true; });
+    carryRun++;                        // no distance, so nothing to take apart
     /* The figure below plots distances, and this word has none. It joins the
        majority the figure counts but cannot draw. */
     CORPUS.mark(null);
@@ -224,6 +361,7 @@ function showWord(input) {
   drawStrip(p);
   drawSwaps(p);
   drawReread(p);
+  drawCarry(p);
   seedEl.textContent = grouped(p.seed);
   CORPUS.mark(p.distance, p.word.toLowerCase());
 }

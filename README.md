@@ -151,6 +151,19 @@ figure or another file rather than a rendering.
   letter recurs. The engine is a separate file from the page and also runs
   under node, against the same assertions.
 
+  The distance is one number over the whole word, so the page also asks which
+  of the letters is responsible for it: each one is taken out of the root in
+  turn and the word asked again. Removing a letter can never raise the answer —
+  an alphabet that sorts a word still sorts what is left of it — so where the
+  answer falls, that letter was carrying weight. Not all of them are. *zebra*
+  costs two swaps and only *e* and *b* are carrying them; drop the *z*, the *r*
+  or the *a* and it still costs two. It is not a decomposition and the page
+  says so: the drops do not add up to the distance, and *vortex* costs a swap
+  that not one of its six letters accounts for on its own. This is the only
+  expensive thing on the page — one search per letter where everything else is
+  one search, and something over a second on the longest words in the survey —
+  so it runs in twelve-millisecond slices and the row fills in as it goes.
+
   At the foot of the page the same question is asked of thirteen languages at
   once: every headword of thirteen Hunspell spelling dictionaries — 2,210,779
   words — run through that engine.

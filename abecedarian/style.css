@@ -219,6 +219,69 @@
   color: var(--pp-faint);
 }
 
+/* ── Which letters carry it ────────────────────────────────────────────────
+   The same figure-under-letter form as the re-read above, and deliberately:
+   both print the word out with a number under each letter, and a reader who
+   has learned to read one has learned to read the other. There the number is
+   where the letter sits; here it is what the word would cost without it.
+
+   A letter carrying nothing is set faint and keeps the hairline rule — it is
+   the absence of a claim rather than a claim of zero, and most letters of most
+   words are one. A letter that is carrying takes the ink, the weight and the
+   structural rule under it, so the answer can be read off the row at a glance
+   without reading a single number. */
+.carry {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.carry-cell {
+  display: grid;
+  justify-items: center;
+  gap: 0.1rem;
+  min-width: 1.8rem;
+  padding: 0.3rem 0.25rem;
+  border-bottom: var(--pp-rule-line) solid var(--pp-line);
+  font-family: var(--pp-font-mono);
+  line-height: 1;
+}
+.carry-cell.is-load {
+  border-bottom-width: var(--pp-rule-structure);
+  border-bottom-color: var(--pp-edge);
+  padding-bottom: calc(0.3rem - 1px);
+}
+.carry-l {
+  font-size: 1rem;
+  color: var(--pp-faint);
+}
+.carry-cell.is-load .carry-l {
+  color: var(--pp-ink);
+  font-weight: 700;
+}
+.carry-n {
+  font-size: 0.68rem;
+  color: var(--pp-faint);
+}
+.carry-cell.is-load .carry-n {
+  color: var(--pp-muted);
+}
+/* Not yet measured. A long word's audit arrives letter by letter, and a cell
+   that has not had its turn prints a middle dot rather than a nought: nought
+   is an answer this cell does not have yet. */
+.carry-cell.is-wait .carry-n {
+  opacity: 0.5;
+}
+
+/* Noticed while measuring the row above, and not caused by it: the meta over
+   the seed panel is "of 26! = 403,291,461,126,605,635,584,000,000", and a
+   thirty-five character run with no space in it has no break opportunity, so
+   below about 380px it pushed the whole page sideways by its overhang. The
+   same answer the seed itself already takes — break inside the number rather
+   than scroll the document — and it only ever applies when it has to. */
+.result-bar .meta {
+  overflow-wrap: anywhere;
+}
+
 /* The seed. Evidence rather than reading: twenty-seven digits nobody takes in
    at a glance, wrapping anywhere rather than forcing the sheet sideways. */
 .seed {
