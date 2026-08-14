@@ -159,10 +159,40 @@ figure or another file rather than a rendering.
   costs two swaps and only *e* and *b* are carrying them; drop the *z*, the *r*
   or the *a* and it still costs two. It is not a decomposition and the page
   says so: the drops do not add up to the distance, and *vortex* costs a swap
-  that not one of its six letters accounts for on its own. This is the only
-  expensive thing on the page — one search per letter where everything else is
-  one search, and something over a second on the longest words in the survey —
-  so it runs in twelve-millisecond slices and the row fills in as it goes.
+  that not one of its six letters accounts for on its own.
+
+  The page then takes the word down as far as it goes: past the *root* — the
+  word with its repeats removed — to the **core**, the shortest run of the
+  root's letters, in the root's order, that still costs the same. *zebra* is
+  two swaps and so is *ebra*; *deutsch* is three and so is *dutch*.
+
+  Its length is the invariant. *Which* letters usually is not, so the page
+  prints every core of that length rather than picking one, and they are
+  clickable: putting one in the field and watching the number at the top of the
+  page stay put is the demonstration. *vortex* costs one swap and seven
+  different pairs of its six letters each cost that same swap on their own.
+  Over random roots, 59% have more than one shortest core.
+
+  It has to be searched for. Dropping free letters one at a time leaves a word
+  you cannot shorten *by one*, which is not the same as the shortest one —
+  *hozrmw* peels down to *zrmw* when *ozm* costs the same two swaps. What keeps
+  that search small is the audit above it: every carrying letter is in every
+  core, since a run that has already left one out costs less than the whole
+  root does, so only the free letters are in question. Every root up to seven
+  letters agrees exactly with exhaustion over all its subsets — same length,
+  same count, same set — in at most 104 searches, and the survey's worst word
+  takes 29.
+
+  This is the only expensive thing on the page: one search per letter where
+  everything else is one search, and something over a second on the longest
+  words in the survey. So it runs in twelve-millisecond slices and fills in as
+  it goes. Underneath, finding the core is a largest-droppable-set problem and
+  there is no polynomial answer to those, so the engine publishes real cores at
+  every level and only claims none is shorter once it has ruled that out. A
+  page that runs out of patience — five seconds of searching, which no real
+  word comes near and a pasted alphabet does — therefore still has a true
+  answer, and says plainly that it is the shortest *reached* rather than the
+  shortest there is.
 
   At the foot of the page the same question is asked of thirteen languages at
   once: every headword of thirteen Hunspell spelling dictionaries — 2,210,779

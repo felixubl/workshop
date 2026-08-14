@@ -174,6 +174,30 @@
       <p class="sheet-note" id="carryNote"></p>
     </div>
 
+    <!-- ── The word inside the word ──────────────────────────────────────
+         The root is the word with its repeats taken out. This is the root
+         with everything the distance does not rest on taken out too: the
+         shortest run of its letters, in its own order, that still costs the
+         same. zebra is two swaps and so is ebra.
+
+         Its LENGTH is the fact. Which letters usually is not — vortex costs
+         one swap and seven different pairs of its letters cost that same one
+         swap on their own — so all of them are printed rather than one being
+         chosen, and they are clickable, because typing a core back into the
+         field and watching the number above stay put is the demonstration. -->
+    <div data-when="sortable">
+      <div class="result-bar">
+        <p class="section-label">The word inside the word</p>
+        <code class="meta" id="coreMeta"></code>
+      </div>
+      <div class="sheet">
+        <div class="sheet-body">
+          <div class="cores" id="cores"></div>
+        </div>
+      </div>
+      <p class="sheet-note" id="coreNote"></p>
+    </div>
+
     <div data-when="sortable">
       <div class="result-bar">
         <p class="section-label">Which alphabet this is</p>

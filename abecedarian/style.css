@@ -272,6 +272,51 @@
   opacity: 0.5;
 }
 
+/* ── The word inside the word ──────────────────────────────────────────────
+   Set in mono, unlike the record words at the foot of the page, and the
+   difference is deliberate: those are words a dictionary holds and are read as
+   words, these are strings the search made and are usually not words at all.
+   Mono is this page's voice for the machine talking.
+
+   Pressable, and marked as pressable the same way the record words are — an
+   underline rather than a box, because a box around each of eleven of them
+   would build a wall. */
+.cores {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.5rem;
+}
+.core-word {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: var(--pp-font-mono);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--pp-line);
+  text-decoration-thickness: var(--pp-rule-hairline);
+  text-underline-offset: 0.22em;
+}
+.core-word:hover {
+  text-decoration-color: var(--pp-edge);
+}
+.core-word:active {
+  transform: var(--w-press);
+}
+/* The count of the ones not printed, and the measuring line before any of them
+   are. Both are the page talking about the list rather than an item in it. */
+.core-more,
+.core-wait {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+}
+
 /* Noticed while measuring the row above, and not caused by it: the meta over
    the seed panel is "of 26! = 403,291,461,126,605,635,584,000,000", and a
    thirty-five character run with no space in it has no break opportunity, so

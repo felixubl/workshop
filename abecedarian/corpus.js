@@ -842,6 +842,14 @@ var CORPUS = (function () {
   draw();
 
   return {
+    /* Putting a word in the field and letting the ordinary input path answer
+       it. Shared with script.js rather than written twice: the record words
+       here and the cores up in the results are the same affordance, and the
+       fiddly parts — not focusing a field on a touch screen, not animating a
+       scroll for a reader who asked for no motion — should not have two
+       copies that can drift. */
+    runWord: runWord,
+
     /* Called by script.js when the field is answered, so both figures can
        outline the band that word falls in. */
     mark: function (distance, word) {
