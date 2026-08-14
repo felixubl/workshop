@@ -169,24 +169,35 @@
   <!-- ── The dictionaries ─────────────────────────────────────────────────
        What one word costs is a curiosity; what a language costs is a fact,
        and this is the only part of the page that stands without anything
-       typed into it. Four dictionaries, every headword through the same
-       engine, drawn as one figure.
+       typed into it. Thirteen dictionaries, every headword through the same
+       engine.
 
-       The counting happened once, offline, in tools/abecedarian-corpus.mjs.
-       Nothing is fetched: the answer is sixty numbers and they are in
+       Thirteen and not ninety-two, and not four. The engine reads A-Z, so
+       every dictionary in another script is out; of the Latin-script rest,
+       the ones kept are those where folding accents away does not throw out
+       so much of the language's own spelling that the survey stops being
+       about that language. tools/abecedarian-corpus.mjs names the ones that
+       failed that test and why.
+
+       The counting happened once, offline, in that same file. Nothing is
+       fetched: the answer is a couple of hundred numbers and they are in
        data/dictionaries.js, so the tool keeps its `local` rung. -->
   <section class="corpus">
 
     <div class="result-bar">
-      <p class="section-label">What four dictionaries cost</p>
+      <p class="section-label">What a dictionary costs</p>
       <code class="meta" id="corpusMeta"></code>
     </div>
 
-    <!-- The switches sit above the sheet rather than inside it, because they
-         scope what is in it. They are the legend as well: the ink is on the
-         switch, so nothing on the figure is identified by colour alone. -->
+    <!-- The switches sit above the sheets rather than inside them, because
+         they scope both figures. They are the legend as well: the ink is on
+         the switch, so nothing on a figure is identified by colour alone.
+
+         With thirteen dictionaries and four inks they moved from meaning
+         "shown" to meaning "struck". Everything is drawn either way; the
+         switches decide which four are in colour and which are grey. -->
     <div class="corpus-bar">
-      <div class="picks" id="corpusPick" role="group" aria-label="Which dictionaries the figure draws"></div>
+      <div class="picks" id="corpusPick" role="group" aria-label="Which four dictionaries are struck in ink"></div>
       <button class="btn-ghost preset" type="button" id="tableBtn" aria-expanded="false" aria-controls="corpusTable">the numbers</button>
     </div>
 

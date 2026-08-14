@@ -1,22 +1,24 @@
 #!/usr/bin/env node
-/* The dictionary survey behind the histogram at the foot of the Abecedarian
-   Distance page. Runs every headword of four spelling dictionaries through the
-   same engine the page uses — abecedarian/abc.js, not a copy of it — and writes
-   the tallies to abecedarian/data/dictionaries.js.
+/* The dictionary survey behind the figures at the foot of the Abecedarian
+   Distance page. Runs every headword of thirteen spelling dictionaries through
+   the same engine the page uses — abecedarian/abc.js, not a copy of it — and
+   writes the tallies to abecedarian/data/dictionaries.js.
 
        tools/abecedarian-corpus.mjs [--refresh]
 
    Why a build step and not a fetch. The tool is rated `local` on the index: it
-   opens no socket. Shipping four word lists to the browser to count them there
-   would be four megabytes to answer a question whose answer is sixty numbers,
-   and fetching them from somebody else's server would move the tool up a rung
-   for a chart. So the counting happens here, once, and the counts are committed
+   opens no socket. Shipping thirteen word lists to the browser to count them
+   there would be forty megabytes to answer a question whose answer is a couple
+   of hundred numbers, and fetching them from somebody else's server would move
+   the tool up a rung for a chart. So the counting happens here, once, and the
+   counts are committed
    — the same arrangement as the band crawler in crawl-vis.mjs, which computes
    into eclipse-recon/data/ for the same reason.
 
-   The sources are pinned to one commit of one repository, so the four are
-   packaged identically and the run is repeatable. Downloads are cached in
-   .dict-cache (git-ignored); --refresh re-fetches. */
+   The sources are pinned to one commit of one repository, so all thirteen are
+   packaged identically and the run is repeatable. It takes about eight minutes
+   from a warm cache; Polish and Czech are half of that between them. Downloads
+   are cached in .dict-cache (git-ignored); --refresh re-fetches. */
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -28,20 +30,56 @@ const ABC = require(path.join(ROOT, 'abecedarian/abc.js'));
 
 /* One repository, one commit, one packaging: wooorm/dictionaries takes the
    upstream Hunspell dictionary of each language and republishes it UTF-8 with
-   the same file names. Four lists that were built by four different projects
-   are at least *delivered* the same way, which is as close to like-for-like as
-   this comparison can honestly get. The upstream projects are credited by name
+   the same file names. Thirteen lists built by thirteen different projects are
+   at least *delivered* the same way, which is as close to like-for-like as this
+   comparison can honestly get — there is no standard dictionary across
+   languages, only a standard format, and the editorial policy behind each list
+   is its own. It shows in the entry counts: Turkish carries 371 009 and English
+   49 510, which is a difference in how the two spellcheckers are built rather
+   than in the size of the languages. The upstream projects are credited by name
    on the page; their licences travel with the packages, and nothing of theirs
    is redistributed here — only counts derived from them. */
 const PIN = '8cfea406b505e4d7df52d5a19bce525df98c54ab';
 const SOURCE = (lang) =>
   `https://raw.githubusercontent.com/wooorm/dictionaries/${PIN}/dictionaries/${lang}/index.dic`;
 
+/* Thirteen, and the list is a judgement rather than everything available.
+
+   The pin carries 92 dictionaries. Thirteen of those are in scripts this
+   engine cannot read: it works in A-Z, so Greek, Cyrillic, Hebrew, Korean,
+   Armenian, Georgian and the rest are not "few results", they are no results.
+   Generalising the engine to another alphabet is a real possibility — solve()
+   already takes the letters as a parameter — but the answers would not belong
+   on the same axis as these, because a 33-letter alphabet has a longer way to
+   travel than a 26-letter one.
+
+   Of the Latin-script rest, two were measured and dropped: the Galician .dic
+   does not parse as headwords (three quarters of it refused) and the
+   Vietnamese one holds 6 632 entries of which three quarters collapse into
+   each other the moment tone marks fold away — surveying that is not surveying
+   Vietnamese. Several more were left out for the same reason in milder form,
+   Catalan, Romanian, Hungarian and Basque among them, where folding costs
+   between 7 and 9 per cent of the dictionary's own distinctions.
+
+   What is left is thirteen where the fold is cheap enough to defend, ordered
+   by name because no other order is defensible. Czech is the dearest of them
+   at 7%, and German at 37% is dearer than any — both stay because their
+   spelling systems are the reason this tool folds at all, and the page says
+   what it cost. */
 const LANGS = [
+  { id: 'cs', name: 'Czech', dict: 'cs_CZ Hunspell' },
+  { id: 'da', name: 'Danish', dict: 'Stavekontrolden da_DK' },
+  { id: 'nl', name: 'Dutch', dict: 'OpenTaal nl_NL' },
   { id: 'en', name: 'English', dict: 'SCOWL / en_US Hunspell' },
-  { id: 'es', name: 'Spanish', dict: 'RLA es_ES Hunspell' },
   { id: 'fr', name: 'French', dict: 'Dicollecte / Grammalecte fr' },
   { id: 'de', name: 'German', dict: 'igerman98 de_DE Hunspell' },
+  { id: 'it', name: 'Italian', dict: 'Italian Writing Aids it_IT' },
+  { id: 'nb', name: 'Norwegian', dict: 'spell-norwegian nb_NO' },
+  { id: 'pl', name: 'Polish', dict: 'Polish Native Lang pl_PL' },
+  { id: 'pt', name: 'Portuguese', dict: 'pt_BR Hunspell (Moura)' },
+  { id: 'es', name: 'Spanish', dict: 'RLA es_ES Hunspell' },
+  { id: 'sv', name: 'Swedish', dict: 'sv_SE Hunspell (Andersson)' },
+  { id: 'tr', name: 'Turkish', dict: 'tr_TR Hunspell (Zafer)' },
 ];
 
 const CACHE = path.join(ROOT, '.dict-cache');
@@ -66,7 +104,7 @@ async function load(lang) {
    fields. The first line is a count, and igerman98 opens with a licence block
    indented with tabs. What is wanted is the headword: the dictionary's entries,
    not every form they generate — those are the words a dictionary prints in
-   bold, and asking the same of all four keeps the four comparable. */
+   bold, and asking the same of all thirteen is what keeps them comparable. */
 function headwords(text) {
   const out = [];
   const lines = text.split('\n');
@@ -204,7 +242,7 @@ const rows = results.map((r) => {
 
 const out = `/* Written by tools/abecedarian-corpus.mjs — do not edit by hand.
 
-   Every headword of four Hunspell spelling dictionaries, folded to A-Z, put
+   Every headword of ${results.length} Hunspell spelling dictionaries, folded to A-Z, put
    through abecedarian/abc.js. counts[d] is how many of that dictionary's words
    need exactly d swaps of the alphabet; "unsortable" is how many no ordering
    can sort at all, and words = sortable + unsortable. Sources are pinned to

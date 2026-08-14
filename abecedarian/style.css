@@ -281,23 +281,31 @@ section[data-when],
    data.
 
    Dark is its own selection rather than the same hex on a dark ground: the
-   band is narrower there, so every one of the four moved. */
+   band is narrower there, so every one of the four moved.
+
+   Four inks and thirteen dictionaries, so an ink is a SLOT and not a language.
+   The classes below are numbered rather than named for that reason: a language
+   holds a slot while it is struck and gives it up when it is not, and a mark
+   asks its slot for its colour. Everything unstruck takes .ghost, which is the
+   page's own faint rule colour and carries no identity at all — that is the
+   point of it. */
 :root {
-  --abc-en: #298805;
-  --abc-es: #1299de;
-  --abc-fr: #5f4589;
-  --abc-de: #cd5a97;
+  --abc-ink-0: #298805;
+  --abc-ink-1: #1299de;
+  --abc-ink-2: #5f4589;
+  --abc-ink-3: #cd5a97;
 }
 [data-mode='dark'] {
-  --abc-en: #298c01;
-  --abc-es: #4494c8;
-  --abc-fr: #814ec6;
-  --abc-de: #d8559b;
+  --abc-ink-0: #298c01;
+  --abc-ink-1: #4494c8;
+  --abc-ink-2: #814ec6;
+  --abc-ink-3: #d8559b;
 }
-.ink-en { --abc-ink: var(--abc-en); }
-.ink-es { --abc-ink: var(--abc-es); }
-.ink-fr { --abc-ink: var(--abc-fr); }
-.ink-de { --abc-ink: var(--abc-de); }
+.ink-0 { --abc-ink: var(--abc-ink-0); }
+.ink-1 { --abc-ink: var(--abc-ink-1); }
+.ink-2 { --abc-ink: var(--abc-ink-2); }
+.ink-3 { --abc-ink: var(--abc-ink-3); }
+.ghost { --abc-ink: var(--pp-line); }
 
 /* The switch row: the four dictionaries on the left, the table on the right.
    One row, above the sheet, because it scopes what is in the sheet. */
@@ -354,9 +362,11 @@ section[data-when],
 .pick.is-on .pick-ink {
   background: var(--abc-ink);
 }
-.pick-n {
-  font-size: var(--pp-size-label);
-  color: var(--pp-faint);
+/* An unstruck record row steps back to the muted ink, so the four the
+   switches are on read first without the other nine going away. */
+.peak:not(.is-lit) .peak-lang,
+.peak:not(.is-lit) .peak-word {
+  color: var(--pp-muted);
 }
 
 /* ── The figure ──────────────────────────────────────────────────────────── */
@@ -485,6 +495,15 @@ section[data-when],
 .tip-n {
   color: var(--pp-faint);
 }
+/* The range across every dictionary, which is what the grey lines are worth as
+   a number. Separated by a rule because it is not a fourteenth series: it is
+   the extent of the ones this readout has not named. */
+.tip-all {
+  margin-top: 0.15rem;
+  padding-top: 0.25rem;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+  color: var(--pp-faint);
+}
 
 /* ── The second figure ─────────────────────────────────────────────────────
    Points and a trace on a logarithmic axis. No fills, so the ink is on the
@@ -502,6 +521,17 @@ section[data-when],
   fill: var(--abc-ink);
   stroke: var(--pp-surface);
   stroke-width: 2;
+}
+/* An unstruck dictionary: thinner, greyer, and behind. It is drawn so the
+   reader can see the family the four struck ones belong to — nine lines that
+   nearly agree is itself the finding — and it must never compete with them for
+   the eye. A ghost dot loses its ring too: at two and a half pixels the ring
+   would be most of the mark. */
+.trace.ghost {
+  stroke-width: 1.25;
+}
+.dot.ghost {
+  stroke: none;
 }
 /* The rule that stands the words no alphabet sorts apart from the distances.
    Structural rather than a gridline, because it separates two kinds of thing
@@ -630,16 +660,26 @@ section[data-when],
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+/* The dictionary's name, which is the row's handle. Ink rather than faint,
+   because at thirteen rows it is what a reader is scanning for. */
 .corpus-table .num-key {
-  color: var(--pp-faint);
+  color: var(--pp-ink);
   white-space: nowrap;
   width: 1%;
 }
-.corpus-table .num-rule td {
-  border-top: var(--pp-rule-line) solid var(--pp-line);
+/* The three totals the figures divide by, fenced off from the eleven counts by
+   a rule down the side rather than by a colour: they are the same kind of
+   number, read for a different reason. */
+.corpus-table td.num-sum,
+.corpus-table th.num-wide {
+  color: var(--pp-muted);
 }
-.corpus-table .num-sum .num {
-  color: var(--pp-ink);
+.corpus-table td.num-sum:first-of-type,
+.corpus-table th.num-wide:first-of-type {
+  border-left: var(--pp-rule-line) solid var(--pp-line);
+}
+.table-note {
+  padding: 0 0.8rem 0.7rem;
 }
 
 /* The second figure's own band, which is a heading rather than the top of the
