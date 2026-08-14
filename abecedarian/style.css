@@ -514,6 +514,100 @@ section[data-when],
   fill: var(--pp-muted);
 }
 
+/* ── The far end, named ────────────────────────────────────────────────────
+   One row per dictionary: the ink and the name, the record, then the words
+   that hold it. Three tracks on a wide sheet so the records line up and can be
+   compared down the column; stacked below, where they cannot.
+
+   Not a table. Four rows of three fields is a list of four things, and giving
+   it a header row and rules would make the page look like it had two tables
+   when the second one is a caption for a figure. */
+.peaks {
+  display: grid;
+  gap: 0.55rem 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.peak {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.2rem 0.9rem;
+  align-items: baseline;
+}
+.peak + .peak {
+  padding-top: 0.55rem;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+@media (min-width: 620px) {
+  .peak {
+    grid-template-columns: 8.5rem 5.5rem minmax(0, 1fr);
+  }
+}
+.peak-who {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+/* Struck, always. The switch's square is hollow when its dictionary is off,
+   because there the square carries a state; here it only names an ink, and a
+   row that is off is not shown at all. */
+.peak-ink {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  background: var(--abc-ink);
+}
+.peak-lang {
+  font-family: var(--pp-font-mono);
+  font-size: 0.78rem;
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-ink);
+}
+/* The record wears the label face, because it is the machine's answer and the
+   same figure the axis above is ruled in. */
+.peak-d {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+}
+.peak-words {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.45rem;
+}
+/* A word, and a control. Set in the body face rather than mono, because it is
+   a word being read as a word — everywhere else on this page mono means the
+   machine is talking. The underline is what says it can be pressed; a box
+   around each of seventeen of them would build a wall. */
+.peak-word {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: var(--pp-font-body);
+  font-size: 0.92rem;
+  line-height: 1.35;
+  color: var(--pp-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--pp-line);
+  text-decoration-thickness: var(--pp-rule-hairline);
+  text-underline-offset: 0.22em;
+}
+.peak-word:hover {
+  text-decoration-color: var(--pp-edge);
+}
+.peak-word:active {
+  transform: var(--w-press);
+}
+.peak-more {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+}
+
 /* ── The numbers ───────────────────────────────────────────────────────────
    The figures' twin. One number to a cell, right-aligned on tabular figures so
    a column of counts can be read down as well as across.

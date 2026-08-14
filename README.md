@@ -170,6 +170,14 @@ figure or another file rather than a rendering.
   dictionary, 61% of English and around 80% of the other three — stand on that
   same axis, apart from the sequence, because they are not a distance.
 
+  Under both is the far end named: the worst word in each dictionary, and every
+  word tying for worst where the tie is short enough to print. English tops out
+  at eight swaps on three words, French at eight on ten, Spanish at seven on
+  seventeen, and German at ten on *Exportschiffbau* and *gastfreundlich*. Any
+  of them can be clicked, which puts it in the field at the top and works it
+  out — the words are findings rather than a shelf of examples, which is why
+  they sit at the end of the survey and not beside the field.
+
   Whatever is in the field is marked on the first figure, so a word can be read
   against its language.
 

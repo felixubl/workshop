@@ -43,6 +43,11 @@ var CORPUS = (function () {
   var tailMeta = document.getElementById('tailMeta');
   var tailNote = document.getElementById('tailNote');
 
+  var peaks = document.getElementById('peaks');
+  var peakMeta = document.getElementById('peakMeta');
+  var peakNote = document.getElementById('peakNote');
+  var field = document.getElementById('word');
+
   /* Which dictionaries are drawn, and where the reader's word sits. Both are
      state the figures read on every redraw. One set of switches drives both,
      so the two can never disagree about what is on screen. */
@@ -519,6 +524,69 @@ var CORPUS = (function () {
     else placeTail(tailHover);
   }
 
+  /* ── The far end, named ──────────────────────────────────────────────────
+     One row per dictionary: its record, and the words holding it.
+
+     Clicking a word answers it. The page's whole interface is the field at the
+     top, so the click writes there and hands the page back its own event — the
+     same path a keystroke takes, rather than a second way in that could drift
+     from the first — then brings the field into view, because a click at the
+     foot of a long page that changes something off-screen has not visibly done
+     anything. */
+  function runWord(word) {
+    if (!field) return;
+    field.value = word;
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    var top = document.querySelector('.toolbar');
+    if (top && top.scrollIntoView) {
+      var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      top.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'start' });
+    }
+    /* Same test script.js uses before focusing on load: a phone will not open
+       its keyboard for a script, so focusing there leaves a caret and no way
+       to type into it. */
+    if (!window.matchMedia || !window.matchMedia('(hover: none)').matches)
+      field.focus({ preventScroll: true });
+  }
+
+  function drawPeaks() {
+    peaks.textContent = '';
+    LANGS.forEach(function (l) {
+      var li = el('li', 'peak');
+      li.dataset.lang = l.id;
+
+      var who = el('span', 'peak-who');
+      who.appendChild(el('i', 'peak-ink ink-' + l.id));
+      who.appendChild(el('span', 'peak-lang', l.name));
+      li.appendChild(who);
+
+      li.appendChild(el('code', 'peak-d', l.peak + (l.peak === 1 ? ' swap' : ' swaps')));
+
+      var list = el('span', 'peak-words');
+      l.peakWords.forEach(function (w) {
+        var b = el('button', 'peak-word', w);
+        b.type = 'button';
+        b.dataset.tip = 'Put ' + w + ' in the field and work it out';
+        b.addEventListener('click', function () { runWord(w); });
+        list.appendChild(b);
+      });
+      /* Where more words tie than are carried, the count says so rather than
+         the list trailing off. Naming four of seventeen without saying
+         seventeen would read as the whole answer. */
+      if (l.peakCount > l.peakWords.length)
+        list.appendChild(el('span', 'peak-more',
+          'and ' + (l.peakCount - l.peakWords.length) + ' more'));
+      li.appendChild(list);
+
+      peaks.appendChild(li);
+    });
+  }
+
+  function syncPeaks() {
+    var rows = peaks.querySelectorAll('.peak');
+    for (var i = 0; i < rows.length; i++) rows[i].hidden = !on[rows[i].dataset.lang];
+  }
+
   /* ── The numbers ─────────────────────────────────────────────────────────
      The figures' twin, and the reason a tooltip is allowed to be a
      convenience. Counts only, one number to a cell: the two figures work in
@@ -591,7 +659,7 @@ var CORPUS = (function () {
     tableBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
 
-  function draw() { drawBars(); drawTail(); }
+  function draw() { drawBars(); drawTail(); syncPeaks(); }
 
   if (window.ResizeObserver) {
     var ro = new ResizeObserver(function () { draw(); });
@@ -627,7 +695,19 @@ var CORPUS = (function () {
     'swaps are 0.0042% and are drawn there. A point rather than a column, ' +
     'because a column measures from a baseline and a logarithmic axis has none.';
 
+  /* The record holder across all four, for the band above the rows. */
+  var worst = LANGS.reduce(function (a, l) { return l.peak > a.peak ? l : a; }, LANGS[0]);
+  peakMeta.textContent = 'the record is ' + worst.peak + ', in ' + worst.name;
+  peakNote.textContent =
+    'The words at the far end of the figure above, one row per dictionary. ' +
+    'Ties are the rule rather than the exception — three English words need ' +
+    'eight swaps, seventeen Spanish words need seven — so every word holding ' +
+    'the record is listed, up to six of them, in the order the dictionary ' +
+    'prints them. Click one to put it in the field at the top and see the ' +
+    'alphabet it needs.';
+
   drawPick();
+  drawPeaks();
   drawTable();
   draw();
 
