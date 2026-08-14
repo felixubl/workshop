@@ -291,6 +291,212 @@ var ABC = (function () {
     return factorial(letters.length) / factorial(order.length);
   }
 
+  /* ── What each letter is carrying ────────────────────────────────────────
+     The distance is one number over the whole root, and it is fair to ask
+     where it came from. Take a letter out of the root and ask again: the
+     answer can only fall or stay, never rise, because an alphabet that sorts
+     a word still sorts what is left of the word when a letter is deleted — a
+     subsequence of a sorted sequence is sorted. How far it falls is what that
+     letter was carrying, and a letter that changes nothing is one the word
+     could do without at no cost.
+
+     This is one question asked of each letter and not a division of the
+     distance into shares, which is a real distinction rather than a
+     disclaimer: vortex costs one swap, no single letter of it is carrying
+     that swap, and v and e together are. The drops do not add up to the
+     distance and are not meant to.
+
+     Kept out of profile(), which runs on every keystroke. This costs one
+     search per letter of the root — on the longest words in the dictionary
+     survey, something over a second — so a caller that must not block the
+     thread does them one at a time through carryAt(). */
+
+  function carryAt(order, i, letters) {
+    return alphabetDistance(order.slice(0, i) + order.slice(i + 1), letters);
+  }
+
+  function carry(word, letters) {
+    var order = letterOrder(word);
+    if (order === null) return null;
+    var base = alphabetDistance(order, letters);
+    var out = [];
+    for (var i = 0; i < order.length; i++) {
+      /* An already-sorted word has nothing to fall to: the distance is zero
+         and removal cannot raise it, so every letter is free and not one
+         search is needed to know it. */
+      var without = base === 0 ? 0 : carryAt(order, i, letters);
+      out.push({ letter: order[i], without: without, drop: base - without });
+    }
+    return { order: order, distance: base, letters: out };
+  }
+
+  /* ── The word inside the word ────────────────────────────────────────────
+     The root with everything the distance does not rest on taken out of it:
+     the shortest run of its letters, in its own order, that still costs the
+     same. zebra is two swaps and so is ebra; vortex is one swap and so is te.
+
+     Two facts make the search cheap on real words. Every load-bearing letter
+     is in every core — if leaving x out lowers the cost, then so does any set
+     that has already left x out — so only the FREE letters are in question,
+     and the audit above has just named them. And the sets that still cost the
+     full distance are an up-set: a set can only cost d if every set one letter
+     larger does, so each level generates the next level's candidates and most
+     of what could be tried never reaches a search.
+
+     Two shapes are answered before the search starts, and they are the two
+     that would otherwise cost the most: a root with no free letter at all is
+     its own core, and a root whose load-bearing letters already cost the full
+     distance has exactly those for its core and no other, since every core
+     contains them. Between them they dispose of a pasted alphabet.
+
+     The SIZE is the invariant; WHICH letters usually is not. vortex costs one
+     swap and seven different pairs of its six letters cost that same swap on
+     their own, so the search returns all of them rather than picking one.
+
+     Underneath it is still a largest-droppable-set problem, and there is no
+     polynomial answer to those. So it runs a step at a time and publishes as
+     it goes: after every level, state() holds real cores of one agreed length,
+     and `done` says whether anything shorter has been ruled out. A caller that
+     runs out of patience stops calling step() and still has a true answer, a
+     weaker one. Every root of up to seven letters agrees exactly with
+     exhaustion, in at most 104 searches; the dictionaries' worst word takes
+     29. What does not finish is a contrived one — the alphabet with its
+     second half reversed has 26 free letters and no short-circuit — and the
+     page bounds that with a clock rather than the engine guessing a number. */
+
+  function coreSearch(word, letters, budget) {
+    letters = letters || AZ;
+    var cap = budget === undefined ? Infinity : budget;
+
+    var order = letterOrder(word);
+    var s = {
+      order: order, distance: null, without: [], free: null,
+      size: null, cores: null, count: 0, searched: 0, done: false
+    };
+    var k = order === null ? 0 : order.length;
+    var keep = 0, level = null, queue = null, hits = null, at = 0, phase = 'root';
+
+    for (var i = 0; i < k; i++) s.without.push(null);
+
+    /* Nothing is worked out here: a constructor that solved the root would
+       cost a third of a second on the worst word, in front of whichever
+       keystroke made it. The first step() does it instead. */
+    if (order === null) s.done = true;
+
+    /* A set of free letters spelled back out, with every load-bearing letter
+       kept, in the root's own order. Bits of `mask` index s.free. */
+    function spell(mask) {
+      var take = keep, j, out = '';
+      for (j = 0; j < s.free.length; j++) if (mask & (1 << j)) take |= 1 << s.free[j];
+      for (j = 0; j < k; j++) if (take & (1 << j)) out += order[j];
+      return out;
+    }
+
+    /* Publish the level just confirmed. Everything in it is a genuine core of
+       one agreed length, so this is a true answer at every moment — `done` is
+       the separate claim that nothing shorter exists. */
+    function publish() {
+      s.cores = [];
+      for (var j = 0; j < level.length; j++) s.cores.push(spell(level[j]));
+      s.cores.sort();
+      s.size = s.cores[0].length;
+      s.count = s.cores.length;
+    }
+
+    function finish() {
+      publish();
+      s.done = true;
+    }
+
+    /* One level down. Every candidate is a level member with one more letter
+       dropped, kept only if all of ITS one-larger supersets are in this level
+       — anything else cannot cost the full distance and is not searched. */
+    function nextLevel() {
+      var f = s.free.length, have = {}, seen = {}, i, j, b, t, ok;
+      for (i = 0; i < level.length; i++) have[level[i]] = true;
+      queue = [];
+      for (i = 0; i < level.length; i++) {
+        for (j = 0; j < f; j++) {
+          if (!(level[i] & (1 << j))) continue;
+          t = level[i] & ~(1 << j);
+          if (seen[t]) continue;
+          seen[t] = true;
+          ok = true;
+          for (b = 0; b < f && ok; b++) if (!(t & (1 << b))) ok = have[t | (1 << b)] === true;
+          if (ok) queue.push(t);
+        }
+      }
+      hits = [];
+      at = 0;
+      if (!queue.length) finish();
+    }
+
+    function startLevels() {
+      var f;
+      keep = 0; s.free = [];
+      for (var j = 0; j < k; j++) {
+        if (s.without[j] < s.distance) keep |= 1 << j; else s.free.push(j);
+      }
+      f = s.free.length;
+      level = [(1 << f) - 1];              // the whole root, always a core
+      publish();
+      /* Nothing free — the root is its own core, and nextLevel finds no
+         candidate to try, which is the same answer for one less search. */
+      if (!f) { nextLevel(); return; }
+      /* The load-bearing letters on their own. Every core contains them, so if
+         they already cost the full distance they ARE the core and nothing
+         shorter or other exists. */
+      s.searched++;
+      if (alphabetDistance(spell(0), letters) === s.distance) {
+        level = [0];
+        finish();
+        return;
+      }
+      nextLevel();
+    }
+
+    function step() {
+      if (s.done) return false;
+      if (phase === 'root') {
+        s.distance = alphabetDistance(order, letters);
+        s.searched++;
+        /* Already sorted. Nothing carries it, and the shortest run of its
+           letters that still costs nothing is no letters at all. */
+        if (s.distance === 0) {
+          for (var j = 0; j < k; j++) s.without[j] = 0;
+          s.free = []; s.size = 0; s.cores = ['']; s.count = 1; s.done = true;
+          return false;
+        }
+        phase = 'audit';
+        return true;
+      }
+      if (phase === 'audit') {
+        s.without[at] = carryAt(order, at, letters);
+        s.searched++;
+        if (++at === k) { phase = 'levels'; startLevels(); }
+        return !s.done;
+      }
+      if (s.searched >= cap) return false;      // stopped, not finished
+      var t = queue[at++];
+      s.searched++;
+      if (alphabetDistance(spell(t), letters) === s.distance) hits.push(t);
+      if (at === queue.length) {
+        if (hits.length) { level = hits; publish(); nextLevel(); }
+        else finish();
+      }
+      return !s.done;
+    }
+
+    return { step: step, state: function () { return s; } };
+  }
+
+  /* The whole search in one go, for a caller that can afford to block. */
+  function core(word, letters, budget) {
+    var run = coreSearch(word, letters, budget);
+    while (run.step()) {}
+    return run.state();
+  }
+
   function profile(word, letters) {
     letters = letters || AZ;
     var r = solve(word, letters);
@@ -348,6 +554,10 @@ var ABC = (function () {
     minimalAlphabet: minimalAlphabet,
     alphabetDistance: alphabetDistance,
     validAlphabets: validAlphabets,
+    carryAt: carryAt,
+    carry: carry,
+    coreSearch: coreSearch,
+    core: core,
     profile: profile,
     normalise: normalise
   };

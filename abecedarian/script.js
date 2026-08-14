@@ -25,7 +25,18 @@ var swapNote = document.getElementById('swapNote');
 var reread = document.getElementById('reread');
 var readMeta = document.getElementById('readMeta');
 var rereadNote = document.getElementById('rereadNote');
+var carryEl = document.getElementById('carry');
+var carryMeta = document.getElementById('carryMeta');
+var carryNote = document.getElementById('carryNote');
+var coresEl = document.getElementById('cores');
+var coreMeta = document.getElementById('coreMeta');
+var coreNote = document.getElementById('coreNote');
 var seedEl = document.getElementById('seed');
+/* The one fact on the sheet that is not known by the time the sheet is drawn.
+   It is written as a placeholder with the rest and filled in when the search
+   below reaches it, because it belongs beside the root — the two are the same
+   kind of answer, the word with something taken out of it. */
+var coreFact = null;
 
 /* Thin spaces every three digits. A twenty-seven-digit number is evidence
    rather than reading, and ungrouped it cannot be checked against another
@@ -36,6 +47,13 @@ function grouped(n) {
 
 function plural(n, one, many) {
   return n + ' ' + (n === 1 ? one : many);
+}
+
+/* "a", "a and b", "a, b and c" — letters read out in a sentence, where a
+   comma-joined list of one would read as a list that failed to fill. */
+function list(items) {
+  if (items.length <= 1) return items.join('');
+  return items.slice(0, -1).join(', ') + ' and ' + items[items.length - 1];
 }
 
 function el(tag, cls, text) {
@@ -128,11 +146,257 @@ function drawReread(p) {
       p.order.toLowerCase() + ' answers the same way.');
 }
 
+/* ── Taking the word apart ─────────────────────────────────────────────────
+   Two panels off one search, because the second question continues the first.
+
+   WHICH LETTERS CARRY IT takes each letter out of the root in turn and asks
+   again. The distance can only fall or stay — an alphabet that sorts a word
+   still sorts what is left of it when a letter is deleted — so where it falls,
+   that letter was carrying weight.
+
+   THE WORD INSIDE THE WORD keeps going: the shortest run of the root's
+   letters that still costs the same. It is not simply the carrying letters,
+   and dropping the free ones one at a time is not sound either — that leaves
+   a word you cannot shorten by one letter, which is not the same as the
+   shortest, and hozrmw peels down to zrmw when ozm costs the same. It happens
+   to reach the right answer on all 65 record words of the survey below, which
+   is exactly the kind of luck not to build on. So abc.js searches, and the
+   letters the audit has just named are what keeps that search small.
+
+   This is the only expensive thing on the page. One distance is a single
+   search and a real word answers in well under a millisecond; the audit alone
+   asks once per letter, and on the longest words in the dictionary survey the
+   set costs something over a second. So it runs in slices: search until twelve
+   milliseconds have gone, hand the thread back, carry on where it stopped.
+   Short words finish inside the first slice and never show a pending state.
+
+   ALLOWANCE is the other end of it. The engine publishes true cores as it
+   goes and only claims none is shorter when it has ruled that out, so a page
+   that stops early still has an answer — a weaker one, which the note says.
+   Five seconds of searching is far past every real word (the dictionaries'
+   worst takes 29 searches) and stops a pasted alphabet from grinding.
+
+   searchRun is the token that abandons a run whose word has changed under it. */
+
+var searchRun = 0;
+var SEARCH_SLICE = 12;
+var SEARCH_ALLOWANCE = 5000;
+var CORES_SHOWN = 8;
+
+function carryCell(letter, without, base) {
+  var cell = el('div', 'carry-cell');
+  cell.setAttribute('role', 'listitem');
+  var pending = without === null;
+  if (pending) cell.classList.add('is-wait');
+  else if (without < base) cell.classList.add('is-load');
+  cell.appendChild(el('span', 'carry-l', letter.toLowerCase()));
+  cell.appendChild(el('span', 'carry-n', pending ? '·' : String(without)));
+  cell.setAttribute('aria-label', pending
+    ? letter + ': not measured yet'
+    : letter + ': without it the word costs ' + plural(without, 'swap', 'swaps') +
+      (without < base ? ', ' + (base - without) + ' fewer' : ', the same'));
+  return cell;
+}
+
+function drawReduction(p) {
+  var run = ++searchRun;
+  var order = p.order, base = p.distance, word = p.word.toLowerCase();
+  var search = ABC.coreSearch(p.word);
+  var s = search.state();
+  var without = s.without;
+  var spent = 0, more = true, gaveUp = false;
+
+  function measured() {
+    var n = 0;
+    for (var j = 0; j < order.length; j++) if (without[j] !== null) n++;
+    return n;
+  }
+
+  function sayCarry() {
+    var load = [], free = [], big = 0, done = measured();
+    for (var j = 0; j < order.length; j++) {
+      if (without[j] === null) continue;
+      if (without[j] < base) {
+        load.push(order[j].toLowerCase());
+        if (base - without[j] > big) big = base - without[j];
+      } else free.push(order[j].toLowerCase());
+    }
+
+    if (done < order.length) {
+      carryMeta.textContent = done + ' of ' + order.length + ' measured';
+      carryNote.textContent = 'Measuring — each letter is another search of the alphabet, ' +
+        'and this word has ' + order.length + ' of them to do.';
+      return;
+    }
+
+    carryMeta.textContent = base === 0 ? 'nothing to carry'
+      : load.length === 0 ? 'no single letter'
+      : load.length + ' of ' + plural(order.length, 'letter', 'letters');
+
+    /* The rule of the figure first, because the numbers under the letters mean
+       nothing without it, then what this particular word turned out to say. */
+    var note = 'Each letter of the root taken out in turn: the number under it is what the ' +
+      'word would cost without it. Removing a letter can never raise the distance — an alphabet ' +
+      'that sorts a word still sorts what is left of it — so a letter still showing the full ' +
+      base + ' is one the word does not need, and one showing less was carrying the difference. ';
+
+    if (base === 0) {
+      note = 'Nothing to carry: the ordinary alphabet already sorts ' + word +
+        ', and taking any letter out leaves it sorted.';
+    } else if (load.length === 0) {
+      note += 'Not one letter of ' + word + ' is carrying that ' + plural(base, 'swap', 'swaps') +
+        ' on its own — take any single one away and the cost is unchanged. The word is ' +
+        'still out of order, and it is pairs of these letters that put it there.';
+    } else {
+      note += free.length === 0
+        ? 'Here that is every letter of it: there is nothing in ' + word +
+          ' that could go for nothing.'
+        : 'Here that is ' + list(load) + '; ' + list(free) + ' ' +
+          (free.length === 1 ? 'is' : 'are') + ' free.';
+      if (big > 1) {
+        note += ' A letter can be worth more than one swap — the most any of these is holding ' +
+          'up is ' + big + '.';
+      }
+      if (free.length > 1) {
+        note += ' They are not shares of the ' + base + ' and do not add up to it: this is one ' +
+          'question asked of each letter on its own, and letters that are each free can still ' +
+          'cost a swap between them.';
+      }
+    }
+    carryNote.textContent = note;
+  }
+
+  /* ── The word inside the word ──────────────────────────────────────────
+     Every core the search has settled on, printed in full rather than one of
+     them being chosen: which letters is usually not unique, and naming one of
+     seven without saying seven would read as the whole answer. */
+  function sayCores() {
+    var settled = s.cores !== null && !more;
+
+    if (!settled) {
+      coreMeta.textContent = 'searching';
+      coreNote.textContent = 'Working out the shortest run of these letters that still costs ' +
+        'the same. Every letter the audit above found to be carrying has to be in it, which is ' +
+        'most of the search gone before it starts.';
+      coreFact.textContent = '…';
+      return;
+    }
+
+    if (base === 0) {
+      coreMeta.textContent = 'nothing to take out';
+      coreNote.textContent = 'The ordinary alphabet already sorts ' + word +
+        ', so there is nothing inside it to find: the shortest run of these letters costing ' +
+        'nothing is none of them.';
+      coreFact.textContent = '—';
+      return;
+    }
+
+    var one = s.cores[0].toLowerCase();
+    /* Stopped early, so the length is an upper bound and the meta says so
+       rather than printing a number a glancing reader would take as final.
+       The count is exact for THIS length and is left to the note, where the
+       sentence about being cut short is standing next to it. */
+    coreMeta.textContent = gaveUp
+      ? s.size + ' of ' + plural(order.length, 'letter', 'letters') + ' or fewer'
+      : s.size + ' of ' + plural(order.length, 'letter', 'letters') +
+        (s.count > 1 ? ' · ' + grouped(s.count) + ' ways' : '');
+    coreFact.textContent = (s.count > 1
+      ? one + ', or ' + grouped(s.count - 1) + (s.count === 2 ? ' other' : ' others')
+      : one) + (gaveUp ? ' (at most)' : '');
+
+    var note;
+    if (s.size === order.length) {
+      note = 'Nothing comes out. Every letter of the root is carrying, so ' + word +
+        ' is already the shortest run of its own letters that costs ' +
+        plural(base, 'swap', 'swaps') + '.';
+    } else {
+      note = 'The shortest run of the root’s letters, in the root’s order, that still costs ' +
+        'all ' + plural(base, 'swap', 'swaps') + ': ' + s.size + ' of the ' + order.length +
+        ', with ' + plural(order.length - s.size, 'letter', 'letters') + ' taken out. ';
+      /* The search publishes real cores at every level and only claims that
+         none is shorter once it has ruled that out. Stopping early therefore
+         leaves a true answer and a weaker claim — so the weaker claim is the
+         one made, rather than the confident sentence with a retraction stapled
+         to the end of it. */
+      note += gaveUp
+        ? 'The search was stopped after ' + grouped(s.searched) + ' tries rather than run on, ' +
+          'so ' + s.size + ' is the shortest it reached and not necessarily the shortest there ' +
+          'is. ' + (s.count === 1 ? 'One run of ' : grouped(s.count) + ' different runs of ') +
+          s.size + ' cost the same. Press one'
+        : (s.count === 1
+            ? 'There is exactly one way to do it. Press it'
+            : 'The length is the fact; which letters is not — ' + grouped(s.count) +
+              ' different runs of ' + s.size + ' cost the same, and none of them is the answer ' +
+              'more than the others are. Press one');
+      note += ' to put it in the field: the number at the top of the page does not move.';
+    }
+    coreNote.textContent = note;
+  }
+
+  function paintCarry() {
+    carryEl.textContent = '';
+    for (var j = 0; j < order.length; j++)
+      carryEl.appendChild(carryCell(order[j], without[j], base));
+    carryEl.setAttribute('aria-busy', measured() < order.length ? 'true' : 'false');
+  }
+
+  function paintCores() {
+    coresEl.textContent = '';
+    coresEl.setAttribute('aria-busy', more ? 'true' : 'false');
+    if (s.cores === null || more) {
+      coresEl.appendChild(el('span', 'core-wait', 'searching…'));
+      return;
+    }
+    if (base === 0) {
+      coresEl.appendChild(el('span', 'core-wait', 'nothing to take out'));
+      return;
+    }
+    s.cores.slice(0, CORES_SHOWN).forEach(function (w) {
+      var b = el('button', 'core-word', w.toLowerCase());
+      b.type = 'button';
+      b.dataset.tip = 'Put ' + w.toLowerCase() + ' in the field and work it out';
+      b.addEventListener('click', function () { CORPUS.runWord(w.toLowerCase()); });
+      coresEl.appendChild(b);
+    });
+    if (s.count > CORES_SHOWN)
+      coresEl.appendChild(el('span', 'core-more',
+        'and ' + grouped(s.count - CORES_SHOWN) + ' more'));
+  }
+
+  /* Only when something on the page would actually differ. A long search is
+     hundreds of slices and almost none of them change a letter of it; redrawing
+     both panels every time cost more than the searching did. */
+  var drawn = '';
+  function paint() {
+    var key = measured() + '/' + s.size + '/' + s.count + '/' + (more ? 1 : 0);
+    if (key === drawn) return;
+    drawn = key;
+    paintCarry(); sayCarry(); paintCores(); sayCores();
+  }
+
+  function step() {
+    if (run !== searchRun) return;
+    /* Date.now rather than performance.now: the slice is twelve milliseconds
+       and a millisecond of resolution is enough to spend it. A slice can
+       overrun by one search, which on the worst word is the same third of a
+       second the distance above it already cost. */
+    var t0 = Date.now();
+    while (more && Date.now() - t0 < SEARCH_SLICE) more = search.step();
+    spent += Date.now() - t0;
+    if (more && spent >= SEARCH_ALLOWANCE) { gaveUp = true; more = false; }
+    paint();
+    if (more) setTimeout(step, 0);
+  }
+
+  step();
+}
+
 function showNothing(message) {
   result.hidden = true;
   empty.hidden = false;
   hint.hidden = !message;
   if (message) hint.textContent = message;
+  searchRun++;                         // abandon a search whose word has gone
   CORPUS.mark(null);
 }
 
@@ -185,6 +449,7 @@ function showWord(input) {
     fact(facts, 'again at', 'position ' + (b.again + 1));
     fact(facts, 'alphabets that sort it', '0 of 26!');
     whenSortable.forEach(function (n) { n.hidden = true; });
+    searchRun++;                       // no distance, so nothing to take apart
     /* The figure below plots distances, and this word has none. It joins the
        majority the figure counts but cannot draw. */
     CORPUS.mark(null);
@@ -215,6 +480,8 @@ function showWord(input) {
      repeats taken out. */
   facts.textContent = '';
   fact(facts, 'root', p.order.toLowerCase());
+  fact(facts, 'core', '…');
+  coreFact = facts.lastChild;
   fact(facts, 'adjacent swaps instead', p.kendall + ' of a possible 325');
   fact(facts, 'alphabets that sort it',
        'one in ' + grouped(ABC.factorial(p.order.length)));
@@ -224,6 +491,7 @@ function showWord(input) {
   drawStrip(p);
   drawSwaps(p);
   drawReread(p);
+  drawReduction(p);
   seedEl.textContent = grouped(p.seed);
   CORPUS.mark(p.distance, p.word.toLowerCase());
 }
