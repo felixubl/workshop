@@ -1,6 +1,6 @@
 /* Written by tools/abecedarian-corpus.mjs — do not edit by hand.
 
-   Every headword of four Hunspell spelling dictionaries, folded to A-Z, put
+   Every headword of 13 Hunspell spelling dictionaries, folded to A-Z, put
    through abecedarian/abc.js. counts[d] is how many of that dictionary's words
    need exactly d swaps of the alphabet; "unsortable" is how many no ordering
    can sort at all, and words = sortable + unsortable. Sources are pinned to
@@ -10,16 +10,26 @@ var ABC_CORPUS = {
   pin: "8cfea40",
   maxDistance: 10,
   languages: [
+  { id: "cs", name: "Czech", dict: "cs_CZ Hunspell",
+    words: 240234, sortable: 68515, unsortable: 171719,
+    peak: 9, peakCount: 7,
+    peakWords: ["Schnurpfeilová","humpoláčtější","podhrábnutější","promáčknutější","rozplácnutější","zprůmyslňovat"],
+    counts: [614, 5220, 15736, 21384, 15921, 7151, 2066, 363, 53, 7, 0] },
+  { id: "da", name: "Danish", dict: "Stavekontrolden da_DK",
+    words: 140982, sortable: 35611, unsortable: 105371,
+    peak: 9, peakCount: 8,
+    peakWords: ["forudbetaling","hydropneumatisk","jordspekulant","lavindkomstgruppe","puborectalis","sprøjtemaling"],
+    counts: [621, 4729, 10222, 10083, 6315, 2678, 749, 190, 16, 8, 0] },
+  { id: "nl", name: "Dutch", dict: "OpenTaal nl_NL",
+    words: 151576, sortable: 35538, unsortable: 116038,
+    peak: 9, peakCount: 9,
+    peakWords: ["doorschakeling","krombaangeschut","laagproductief","omzwachteling","schudverlamming","sportafdeling"],
+    counts: [702, 4773, 9303, 10229, 6536, 2819, 916, 218, 33, 9, 0] },
   { id: "en", name: "English", dict: "SCOWL / en_US Hunspell",
     words: 47293, sortable: 18332, unsortable: 28961,
     peak: 8, peakCount: 3,
     peakWords: ["malnourished","motherfucking","phallocentrism"],
     counts: [543, 3288, 5651, 5199, 2566, 843, 204, 35, 3, 0, 0] },
-  { id: "es", name: "Spanish", dict: "RLA es_ES Hunspell",
-    words: 54537, sortable: 10485, unsortable: 44052,
-    peak: 7, peakCount: 17,
-    peakWords: ["birrectángulo","compungieras","conquistable","contradique","culteranismo","esquinzador"],
-    counts: [171, 1191, 3048, 3369, 1900, 652, 137, 17, 0, 0, 0] },
   { id: "fr", name: "French", dict: "Dicollecte / Grammalecte fr",
     words: 73293, sortable: 16542, unsortable: 56751,
     peak: 8, peakCount: 10,
@@ -29,7 +39,42 @@ var ABC_CORPUS = {
     words: 47707, sortable: 10300, unsortable: 37407,
     peak: 10, peakCount: 2,
     peakWords: ["Exportschiffbau","gastfreundlich"],
-    counts: [198, 1282, 2674, 3019, 1883, 855, 281, 76, 23, 7, 2] }
+    counts: [198, 1282, 2674, 3019, 1883, 855, 281, 76, 23, 7, 2] },
+  { id: "it", name: "Italian", dict: "Italian Writing Aids it_IT",
+    words: 94187, sortable: 12014, unsortable: 82173,
+    peak: 8, peakCount: 5,
+    peakWords: ["panturchismo","quaccherismo","strimpellando","trasduzione","turcheggiando"],
+    counts: [174, 1094, 2964, 3759, 2611, 1107, 265, 35, 5, 0, 0] },
+  { id: "nb", name: "Norwegian", dict: "spell-norwegian nb_NO",
+    words: 326679, sortable: 37873, unsortable: 288806,
+    peak: 10, peakCount: 2,
+    peakWords: ["storbymeldinga","sympatibølgjer"],
+    counts: [536, 4174, 9024, 10239, 8030, 4071, 1348, 364, 70, 15, 2] },
+  { id: "pl", name: "Polish", dict: "Polish Native Lang pl_PL",
+    words: 270045, sortable: 50355, unsortable: 219690,
+    peak: 9, peakCount: 19,
+    peakWords: ["Bałdrzychowskiej","Rychwałdzkiemu","Trybunalskiego","dyftongizując","grujecznikowaty","hektograficzny"],
+    counts: [680, 4189, 10129, 13696, 11441, 6615, 2651, 761, 174, 19, 0] },
+  { id: "pt", name: "Portuguese", dict: "pt_BR Hunspell (Moura)",
+    words: 251150, sortable: 29073, unsortable: 222077,
+    peak: 8, peakCount: 5,
+    peakWords: ["hidrofugante","improfundável","subordinável","supercozinha","transduzível"],
+    counts: [305, 2449, 7220, 9236, 6525, 2625, 621, 87, 5, 0, 0] },
+  { id: "es", name: "Spanish", dict: "RLA es_ES Hunspell",
+    words: 54537, sortable: 10485, unsortable: 44052,
+    peak: 7, peakCount: 17,
+    peakWords: ["birrectángulo","compungieras","conquistable","contradique","culteranismo","esquinzador"],
+    counts: [171, 1191, 3048, 3369, 1900, 652, 137, 17, 0, 0, 0] },
+  { id: "sv", name: "Swedish", dict: "sv_SE Hunspell (Andersson)",
+    words: 148068, sortable: 32124, unsortable: 115944,
+    peak: 9, peakCount: 6,
+    peakWords: ["börsutveckling","hydropneumatisk","klosterbyggnad","läskproducent","skolmyndighet","uppblomstrande"],
+    counts: [391, 2832, 6974, 9331, 7620, 3583, 1120, 229, 38, 6, 0] },
+  { id: "tr", name: "Turkish", dict: "tr_TR Hunspell (Zafer)",
+    words: 365028, sortable: 20200, unsortable: 344828,
+    peak: 8, peakCount: 15,
+    peakWords: ["coşturabilen","coşturabilme","doğurtabilen","doyurabilmek","hortumlandık","kabullenmiyor"],
+    counts: [369, 2285, 5757, 5977, 3829, 1454, 433, 81, 15, 0, 0] }
   ]
 };
 

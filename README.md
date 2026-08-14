@@ -151,53 +151,84 @@ figure or another file rather than a rendering.
   letter recurs. The engine is a separate file from the page and also runs
   under node, against the same assertions.
 
-  At the foot of the page the same question is asked of four languages at once:
-  every headword of the English, Spanish, French and German Hunspell
-  dictionaries — 222,830 words — run through that engine. One row of switches
-  drives two figures, because one axis cannot answer both questions the survey
-  raises.
+  At the foot of the page the same question is asked of thirteen languages at
+  once: every headword of thirteen Hunspell spelling dictionaries — 2,210,779
+  words — run through that engine.
+
+  There is no standard dictionary across languages. Every language has its own
+  authority and none of them publish a free machine-readable word list; what is
+  standard is the *format*, Hunspell, which is what LibreOffice, Firefox and
+  Chrome all spellcheck against. The sources are pinned to one commit of
+  [wooorm/dictionaries](https://github.com/wooorm/dictionaries), which
+  republishes 92 of them with identical packaging, so the delivery is uniform
+  even though the editorial policy behind each list is its own. That shows in
+  the entry counts — Turkish carries 371,009 headwords and English 49,510,
+  which is a difference in how two spellcheckers are built rather than in the
+  size of two languages — and it is why every share on the page is of that
+  dictionary's own total.
+
+  Thirteen of the 92 and not more, for two reasons. The engine reads A–Z, so
+  every dictionary in another script is out entirely; generalising it is
+  possible, since `solve()` already takes the alphabet as a parameter, but a
+  33-letter alphabet has further to travel than a 26-letter one and the answers
+  would not belong on the same axis. Of the Latin-script rest, some fold badly:
+  the Galician file does not parse as headwords at all, the Vietnamese one
+  loses three quarters of itself the moment tone marks fold away, and Catalan,
+  Romanian, Hungarian and Basque each lose 7–9% of their own distinctions.
+  `tools/abecedarian-corpus.mjs` names what was dropped and why.
+
+  One row of switches drives two figures, because one axis cannot answer both
+  questions the survey raises.
 
   The first is the shape: grouped columns, linear, shares of the words that
-  have a distance. It says that all four peak at two or three swaps and that
-  they are closer to each other than one might expect.
+  have a distance. All thirteen peak at two or three swaps.
 
-  The second is the ends: one point per distance, logarithmic, shares of *every*
-  word. On that axis the rare cases keep their size. Only 1,225 of the 222,830
-  words are already abecedarian — 0.55%, and it ranges from 1.1% of English
-  down to 0.31% of Spanish. The tails separate too: no Spanish word needs more
-  than seven swaps, English runs out at eight, and German alone reaches ten, on
-  two words out of 47,707. The words no ordering sorts at all — most of every
-  dictionary, 61% of English and around 80% of the other three — stand on that
-  same axis, apart from the sequence, because they are not a distance.
+  The second is the ends: one point per distance, logarithmic, shares of
+  *every* word. On that axis the rare cases keep their size. Only 5,617 of the
+  2,210,779 words are already abecedarian — 0.254%. The tails separate: no
+  Spanish word needs more than seven swaps, five languages stop at eight, and
+  German and Norwegian alone reach ten. And the words no ordering sorts at all
+  turn out to be the loosest figure in the survey rather than the tightest,
+  running from 61.2% of English to 94.5% of Turkish: a language that builds
+  long words by stacking endings on them puts nearly all of them out of reach.
+
+  Four of the thirteen are struck in ink and the rest are drawn in grey, and
+  the switches move the ink rather than hiding anything. There are four inks
+  because four is how many clear the colour-vision gates pairwise, and there is
+  no fifth. A language keeps its ink for as long as it is struck; picking a
+  fifth evicts whichever has been struck longest and hands the newcomer that
+  one freed slot, so the three that stay are never repainted.
 
   Under both is the far end named: the worst word in each dictionary, and every
-  word tying for worst where the tie is short enough to print. English tops out
-  at eight swaps on three words, French at eight on ten, Spanish at seven on
-  seventeen, and German at ten on *Exportschiffbau* and *gastfreundlich*. Any
-  of them can be clicked, which puts it in the field at the top and works it
-  out — the words are findings rather than a shelf of examples, which is why
-  they sit at the end of the survey and not beside the field.
+  word tying for worst where the tie is short enough to print — the record is
+  ten swaps, held by German's *Exportschiffbau* and *gastfreundlich* and
+  Norwegian's *storbymeldinga* and *sympatibølgjer*. Any of them can be
+  clicked, which puts it in the field at the top and works it out; the words
+  are findings rather than a shelf of examples, which is why they sit at the
+  end of the survey and not beside the field.
 
   Whatever is in the field is marked on the first figure, so a word can be read
   against its language.
 
   The counting is a build step, not a fetch:
   [`tools/abecedarian-corpus.mjs`](tools/abecedarian-corpus.mjs) surveys the
-  four lists offline and writes the tallies to
-  [`abecedarian/data/`](abecedarian/data/), which is sixty numbers rather than
-  four megabytes of word lists, and keeps the tool on `local`. The sources are
-  pinned to one commit of one repository so the four are packaged identically
-  and the run repeats. The four inks are not the site's plates: the plates are
-  the index's category vocabulary, and green beside red is the one pair a
-  red-green reader cannot separate. They were searched for instead, against the
-  lightness, chroma, contrast and colour-vision separation each needs, and then
-  searched again for the quietest set that still clears it.
+  thirteen lists offline — about eight minutes, Polish and Czech half of it —
+  and writes the tallies to [`abecedarian/data/`](abecedarian/data/), a couple
+  of hundred numbers rather than forty megabytes of word lists, which keeps the
+  tool on `local`. It asserts its own arithmetic before writing: that each
+  histogram sums to the sortable count, and that the record and the words
+  holding it match the histogram's last column. The four inks are not the
+  site's plates: the plates are the index's category vocabulary, and green
+  beside red is the one pair a red-green reader cannot separate. They were
+  searched for instead, against the lightness, chroma, contrast and
+  colour-vision separation each needs, and then searched again for the quietest
+  set that still clears it.
 
-  Under both figures is the table, which is their twin: counts only, one number
-  to a cell. The figures work in two different denominators, and a table that
-  printed a percentage would have to pick one of them and then explain which —
-  counts need no denominator, and every share either figure draws can be got
-  from them.
+  Under everything is the table, which is the figures' twin: a row per
+  dictionary, counts only, one number to a cell. The figures work in two
+  different denominators, and a table that printed a percentage would have to
+  pick one of them and then explain which — counts need no denominator, and
+  every share either figure draws can be got from them.
 
 Planned: CSV and spreadsheet toolkit, developer tools, archive and file tools,
 calendar and date tools.
