@@ -199,7 +199,20 @@ figure or another file rather than a rendering.
   fifth evicts whichever has been struck longest and hands the newcomer that
   one freed slot, so the three that stay are never repainted.
 
-  Under both is the far end named: the worst word in each dictionary, and every
+  A third figure gives each dictionary one bar and splits the whole of it —
+  every word — by what that word costs: none, nought, one, two and so on. The
+  bars are sorted by how much of the dictionary has a distance at all, English
+  at 38.8% down to Turkish at 5.53%, so the coloured band shortens down the
+  page and the figure reads as one falling shape rather than thirteen unrelated
+  bars. Distance is *ordinal* here rather than an identity, so the segments take
+  one hue in eight lightness steps instead of the four inks, ending at "7 or
+  more" because past about eight shades of a hue a reader cannot tell them
+  apart; "none" is not a distance and takes a neutral off the ramp entirely.
+  Every class present is drawn wide enough to see, and those pixels come off
+  "none" — which runs from 61% to 94% and can afford them — so the smallest
+  classes stay visible at a cost of a few per cent of the grey and nothing else.
+
+  Under all three is the far end named: the worst word in each dictionary, and every
   word tying for worst where the tie is short enough to print — the record is
   ten swaps, held by German's *Exportschiffbau* and *gastfreundlich* and
   Norwegian's *storbymeldinga* and *sympatibølgjer*. Any of them can be

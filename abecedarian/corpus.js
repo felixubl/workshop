@@ -49,6 +49,13 @@ var CORPUS = (function () {
   var tailMeta = document.getElementById('tailMeta');
   var tailNote = document.getElementById('tailNote');
 
+  var stackWrap = document.getElementById('stackWrap');
+  var stackSvg = document.getElementById('stack');
+  var stackTip = document.getElementById('stackTip');
+  var stackMeta = document.getElementById('stackMeta');
+  var rampKey = document.getElementById('rampKey');
+  var stackNote = document.getElementById('stackNote');
+
   var peaks = document.getElementById('peaks');
   var peakMeta = document.getElementById('peakMeta');
   var peakNote = document.getElementById('peakNote');
@@ -113,6 +120,7 @@ var CORPUS = (function () {
   var atWord = '';
   var hover = null;                      // band under the pointer, first figure
   var tailHover = null;                  // slot under the pointer, second
+  var stackHover = null;                 // { row, cls } under the pointer, third
 
   /* Thin spaces every three digits, as the seed and the fact list use. Its own
      copy rather than a shared one: this file loads before script.js and should
@@ -494,6 +502,229 @@ var CORPUS = (function () {
     if (tailHover !== null) placeTail(tailHover);
   }
 
+  /* ── Figure three: what a dictionary is made of ──────────────────────────
+     One bar per dictionary, the whole of it, split by what its words cost.
+
+     Sorted by how much of the dictionary has a distance at all, most first, so
+     the coloured band shortens down the page. That is the sort doing work
+     rather than looking tidy: it is the one ordering under which the figure
+     can be read as a single falling shape instead of thirteen unrelated bars,
+     and it puts the languages that stack endings — where a letter always comes
+     back — at the bottom together.
+
+     Distance is ordinal, so the segments take one hue in lightness steps and
+     "none" takes a neutral outside the ramp. Eight steps, ending at "7 or
+     more", because past about eight classes one shade of a hue stops being
+     tellable from the next.
+
+     Small values. Every non-zero segment is drawn at least MINSEG wide, and
+     the pixels that costs are taken off "none" — the segment that runs from
+     61% to 94% and can afford them. Without a floor, seven of the nine classes
+     are under a pixel for most of these languages and the bar would say a
+     dictionary has four classes in it. The distortion is bounded, always in
+     the same direction, and never more than a few per cent of the bar; the
+     note says so and the table rounds nothing. */
+
+  var ROW_H = 16, ROW_GAP = 9;
+  var RAMP = 8;                          // ramp steps: 0..6 then "7 or more"
+
+  /* Everything about this figure's spacing is a fraction of how much room
+     there is, because the minimum segment width is a promise made in pixels
+     and a phone has far fewer of them. At full width the floor costs about
+     five per cent of a bar; left at four pixels on a 380px screen it cost a
+     fifth, and thirteen bars all looked the same length. So the floor, the
+     gap between segments, the margins and even how many ticks the scale
+     prints all come down together. */
+  function stackMetrics(W) {
+    var tight = W < 560;
+    /* The name column does not shrink: "Portuguese" is ten characters of mono
+       and clipping a language's name to win eight pixels of bar is the wrong
+       trade. Only the right margin and the tick spacing give way. */
+    var left = 94, right = tight ? 34 : 52;
+    var barW = W - left - right;
+    return {
+      left: left, right: right, top: 12, bottom: 34, barW: barW,
+      minSeg: Math.max(1.5, Math.min(4, barW / 170)),
+      segGap: barW < 320 ? 1 : 2,
+      tick: tight ? 50 : 20
+    };
+  }
+
+  function stepOf(d) { return d < RAMP - 1 ? d : RAMP - 1; }
+  function stepName(i) { return i < RAMP - 1 ? String(i) : (RAMP - 1) + ' or more'; }
+
+  /* The classes of one dictionary, in bar order: the distances it reaches,
+     folded at the ramp's last step, then the words with no distance. */
+  function classesOf(l) {
+    var out = [];
+    for (var i = 0; i < RAMP; i++) {
+      var n = 0;
+      for (var d = 0; d <= MAXD; d++) if (stepOf(d) === i) n += l.counts[d];
+      if (n > 0) out.push({ step: i, count: n, none: false });
+    }
+    out.push({ step: -1, count: l.unsortable, none: true });
+    return out;
+  }
+
+  /* Most-sortable first. Computed once: the sort must not move under the
+     switches, or a reader who lit a language would watch the whole figure
+     reshuffle around it. */
+  var STACK_ORDER = LANGS.slice().sort(function (a, b) {
+    return (b.sortable / b.words) - (a.sortable / a.words);
+  });
+
+  /* Built once. The ramp does not change with the switches — it is a scale,
+     and a scale that moved would stop being one. */
+  function drawRampKey() {
+    rampKey.textContent = '';
+    var scale = el('span', 'ramp-scale');
+    scale.appendChild(el('span', 'ramp-end', '0'));
+    var strip = el('span', 'ramp-strip');
+    for (var i = 0; i < RAMP; i++) strip.appendChild(el('i', 'step-' + i));
+    scale.appendChild(strip);
+    scale.appendChild(el('span', 'ramp-end', (RAMP - 1) + ' or more swaps'));
+    rampKey.appendChild(scale);
+
+    var off = el('span', 'ramp-off');
+    off.appendChild(el('i', 'seg-none'));
+    off.appendChild(el('span', 'ramp-end', 'no distance'));
+    rampKey.appendChild(off);
+  }
+
+  function drawStack() {
+    if (!stackWrap) return;
+    var W = Math.max(280, Math.round(stackWrap.clientWidth));
+    var M = stackMetrics(W);
+    var rows = STACK_ORDER.length;
+    var H = M.top + rows * ROW_H + (rows - 1) * ROW_GAP + M.bottom;
+    var barW = M.barW;
+    var y0 = M.top;
+
+    stackSvg.textContent = '';
+    stackSvg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    stackSvg.setAttribute('width', W);
+    stackSvg.setAttribute('height', H);
+    stackSvg.setAttribute('aria-label',
+      'One bar per dictionary, the whole of it, split by how many swaps its ' +
+      'words need and by the words that need no alphabet at all. Sorted by how ' +
+      'much of each has a distance, from ' + STACK_ORDER[0].name + ' down to ' +
+      STACK_ORDER[rows - 1].name + '. The full figures are in the table below.');
+
+    /* The ruler behind the bars, at tens, and the scale under them. */
+    for (var v = 0; v <= 100; v += M.tick) {
+      var gx = M.left + (v / 100) * barW;
+      stackSvg.appendChild(node('line', {
+        class: v === 0 ? 'ax-base' : 'ax-grid',
+        x1: gx, x2: gx, y1: y0 - 4, y2: y0 + rows * ROW_H + (rows - 1) * ROW_GAP + 4
+      }));
+      var vt = node('text', { class: 'ax-tick ax-tick-x', x: gx, y: H - M.bottom + 20 });
+      vt.textContent = v + '%';
+      stackSvg.appendChild(vt);
+    }
+
+    STACK_ORDER.forEach(function (l, r) {
+      var top = y0 + r * (ROW_H + ROW_GAP);
+      var cls = classesOf(l);
+
+      /* Lay the row out in pixels, then buy every thin segment up to MINSEG
+         out of the one that has room. */
+      var px = cls.map(function (c) { return (c.count / l.words) * barW; });
+      var owed = 0;
+      for (var i = 0; i < px.length; i++)
+        if (px[i] < M.minSeg) { owed += M.minSeg - px[i]; px[i] = M.minSeg; }
+      px[px.length - 1] = Math.max(M.minSeg, px[px.length - 1] - owed);
+
+      var nm = node('text', { class: 'stack-name' + (isLit(l.id) ? ' is-lit' : ''),
+                              x: M.left - 10, y: top + ROW_H - 4 });
+      nm.textContent = l.name;
+      stackSvg.appendChild(nm);
+
+      var x = M.left, band = 0;
+      cls.forEach(function (c, i) {
+        var w = Math.max(1, px[i] - M.segGap);
+        var on = stackHover && stackHover.row === r && stackHover.i === i;
+        stackSvg.appendChild(node('rect', {
+          class: 'seg ' + (c.none ? 'seg-none' : 'step-' + c.step) + (on ? ' is-on' : ''),
+          x: x, y: top, width: w, height: ROW_H
+        }));
+        if (!c.none) band += px[i];
+        x += px[i];
+      });
+
+      /* The number the sort is by, printed where the colour stops. */
+      var lb = node('text', { class: 'stack-share', x: M.left + band + 6, y: top + ROW_H - 4 });
+      lb.textContent = pct((l.sortable / l.words) * 100) + '%';
+      stackSvg.appendChild(lb);
+
+      /* One hit target per row: a reader aims at a language, and the readout
+         gives the whole of it. Segments are far too thin to aim at. */
+      var hit = node('rect', {
+        class: 'band' + (stackHover && stackHover.row === r ? ' is-on' : ''),
+        x: M.left, y: top - ROW_GAP / 2, width: barW, height: ROW_H + ROW_GAP
+      });
+      hit.dataset.row = r;
+      stackSvg.appendChild(hit);
+    });
+
+    if (stackHover) placeStack(stackHover.row);
+  }
+
+  /* The readout is the whole row: every class of that dictionary with its
+     share and its count, which is what a reader hovering a language wants. */
+  function placeStack(r) {
+    var l = STACK_ORDER[r];
+    var cls = classesOf(l);
+    stackTip.textContent = '';
+    stackTip.appendChild(el('p', 'tip-head', l.name));
+    var dl = el('dl', 'tip-rows');
+    cls.forEach(function (c) {
+      var dt = el('dt', null);
+      dt.appendChild(el('i', 'tip-key ' + (c.none ? 'seg-none' : 'step-' + c.step)));
+      dt.appendChild(document.createTextNode(c.none ? 'no distance' : stepName(c.step) +
+        (c.step === 1 ? ' swap' : ' swaps')));
+      dl.appendChild(dt);
+      var dd = el('dd', null);
+      dd.appendChild(el('b', null, pct((c.count / l.words) * 100) + '%'));
+      dd.appendChild(el('span', 'tip-n', grouped(c.count)));
+      dl.appendChild(dd);
+    });
+    stackTip.appendChild(dl);
+    stackTip.hidden = false;
+
+    /* Out in the grey. The coloured band never passes 39% of any bar, so the
+       right half is always empty and a readout put there covers nothing the
+       reader is looking at — which beats sitting beside the row and hiding the
+       twelve rows either side of it. */
+    var W = stackWrap.clientWidth;
+    var M = stackMetrics(W);
+    var w = stackTip.offsetWidth;
+    stackTip.style.left = Math.max(0, Math.min(W - w, M.left + M.barW * 0.44)) + 'px';
+    var top = M.top + r * (ROW_H + ROW_GAP);
+    var h = stackTip.offsetHeight;
+    stackTip.style.top = Math.max(0, Math.min(stackWrap.clientHeight - h, top - h / 2)) + 'px';
+
+    live.textContent = l.name + ': ' + cls.map(function (c) {
+      return (c.none ? 'no distance' : stepName(c.step)) + ' ' + pct((c.count / l.words) * 100) + '%';
+    }).join(', ');
+  }
+
+  function stackRowAt(ev) {
+    var box = stackSvg.getBoundingClientRect();
+    var y = ev.clientY - box.top - stackMetrics(box.width).top + ROW_GAP / 2;
+    var r = Math.floor(y / (ROW_H + ROW_GAP));
+    return r >= 0 && r < STACK_ORDER.length ? r : null;
+  }
+
+  function setStackHover(r) {
+    if ((stackHover && stackHover.row) === r) return;
+    stackHover = r === null ? null : { row: r, i: -1 };
+    var bands = stackSvg.querySelectorAll('.band');
+    for (var i = 0; i < bands.length; i++)
+      bands[i].classList.toggle('is-on', stackHover !== null && Number(bands[i].dataset.row) === stackHover.row);
+    if (stackHover === null) { stackTip.hidden = true; live.textContent = ''; }
+    else placeStack(stackHover.row);
+  }
+
   /* ── The readouts ────────────────────────────────────────────────────────
      Everything they show is also in the table below, which is the rule: a
      tooltip may add convenience and may never be the only way to a number. */
@@ -755,6 +986,26 @@ var CORPUS = (function () {
   keys(chart, bandAt, setHover, 0, MAXD);
   keys(tailSvg, tailSlotAt, setTailHover, -1, MAXD);
 
+  /* The third figure walks rows rather than columns, so it gets its own
+     wiring rather than being bent into keys(): up and down are the natural
+     arrows for a stack of thirteen languages. */
+  stackSvg.addEventListener('pointermove', function (ev) { setStackHover(stackRowAt(ev)); });
+  stackSvg.addEventListener('pointerleave', function () { setStackHover(null); });
+  stackSvg.addEventListener('blur', function () { setStackHover(null); });
+  stackSvg.addEventListener('keydown', function (ev) {
+    var last = STACK_ORDER.length - 1;
+    var r = stackHover === null ? 0 : stackHover.row;
+    var k = ev.key;
+    if (k === 'ArrowUp' || k === 'ArrowLeft') r = Math.max(0, r - 1);
+    else if (k === 'ArrowDown' || k === 'ArrowRight') r = Math.min(last, r + 1);
+    else if (k === 'Home') r = 0;
+    else if (k === 'End') r = last;
+    else if (k === 'Escape') { setStackHover(null); return; }
+    else return;
+    ev.preventDefault();
+    setStackHover(r);
+  });
+
   tableBtn.addEventListener('click', function () {
     var open = tableBox.hidden;
     tableBox.hidden = !open;
@@ -762,12 +1013,13 @@ var CORPUS = (function () {
     tableBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
 
-  function draw() { drawBars(); drawTail(); syncPeaks(); }
+  function draw() { drawBars(); drawTail(); drawStack(); syncPeaks(); }
 
   if (window.ResizeObserver) {
     var ro = new ResizeObserver(function () { draw(); });
     ro.observe(wrap);
     ro.observe(tailWrap);
+    ro.observe(stackWrap);
   } else {
     window.addEventListener('resize', draw);
   }
@@ -806,6 +1058,23 @@ var CORPUS = (function () {
     'rather than a column, because a column measures from a baseline and a ' +
     'logarithmic axis has none.';
 
+  var topL = STACK_ORDER[0], botL = STACK_ORDER[STACK_ORDER.length - 1];
+  stackMeta.textContent = 'sorted by how much has a distance at all';
+  stackNote.textContent =
+    'Every word of every dictionary, in one bar each: how many need no ' +
+    'alphabet at all, and how many need nought, one, two and so on. The ramp ' +
+    'runs light to dark with the distance and ends at “' + (RAMP - 1) + ' or more”, ' +
+    'because past about eight shades of one hue a reader cannot tell them ' +
+    'apart — the figure above draws that tail distance by distance. Distance ' +
+    'is a position in a sequence, so it takes one hue in steps rather than the ' +
+    'four inks, which name languages; “none” is not a distance and takes a ' +
+    'neutral outside the ramp. Sorted by the coloured band, ' + topL.name + ' at ' +
+    'the top down to ' + botL.name + ' at the foot. Every class present is ' +
+    'drawn wide enough to see — a few pixels, scaled to the room there is — and ' +
+    'those pixels come off “none”, which runs from 61% to 94% and can afford ' +
+    'them. It costs the grey a few per cent of its length and nothing else, and ' +
+    'the table rounds nothing.';
+
   peakMeta.textContent = 'the record is ' + worst.peak + ', in ' + worst.name;
   peakNote.textContent =
     'The words at the far end of the figure above, one row per dictionary, all ' +
@@ -816,6 +1085,7 @@ var CORPUS = (function () {
     'and see the alphabet it needs.';
 
   drawPick();
+  drawRampKey();
   drawPeaks();
   drawTable();
   draw();

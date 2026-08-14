@@ -544,6 +544,130 @@ section[data-when],
   fill: var(--pp-muted);
 }
 
+/* ── The ordinal ramp ──────────────────────────────────────────────────────
+   The third figure's colour, and it is a different job from the four inks.
+
+   The inks name languages: swapping two of them changes nothing but which
+   reader is confused. These name distances, where 3 comes after 2 and the
+   order IS the meaning — so they are one hue in monotone lightness steps, and
+   they were checked as a ramp rather than as a palette: lightness strictly
+   monotone, every adjacent gap at least 0.06, the end nearest the sheet still
+   clearing 2:1 against it, and one hue throughout (measured spread: 4° light,
+   1° dark). Eight steps is what those gates allow while the pale end stays off
+   the paper — eleven would need a lightness range that runs out of both ends of
+   the page — which is why the ramp stops at "7 or more".
+
+   Ochre, at hue 70, because the four inks sit at 140, 240, 300 and 350 and a
+   ramp that shared a hue with one of them would have the same colour meaning a
+   language in one figure and a distance in the next.
+
+   Dark mode re-anchors rather than inverting: the step nearest the surface is
+   still the one nearest zero, so the ramp always reads as "more ink, more
+   swaps" whichever way the paper goes.
+
+   "None" is not on the ramp and never should be. It is not a distance, and
+   giving it a step would file it in a sequence it does not belong to, so it
+   takes a neutral — the only colour in the figure that is not the hue. */
+:root {
+  --abc-step-0: #d0a97d;
+  --abc-step-1: #bc966a;
+  --abc-step-2: #a88257;
+  --abc-step-3: #947045;
+  --abc-step-4: #815e33;
+  --abc-step-5: #6e4c20;
+  --abc-step-6: #5c3b0c;
+  --abc-step-7: #4a2a00;
+  --abc-none: color-mix(in srgb, var(--pp-ink) 15%, var(--pp-surface));
+}
+[data-mode='dark'] {
+  --abc-step-0: #725430;
+  --abc-step-1: #856642;
+  --abc-step-2: #987854;
+  --abc-step-3: #ac8b66;
+  --abc-step-4: #c09f79;
+  --abc-step-5: #d4b28c;
+  --abc-step-6: #e9c69f;
+  --abc-step-7: #fedbb3;
+  --abc-none: color-mix(in srgb, var(--pp-ink) 22%, var(--pp-surface));
+}
+.step-0 { --abc-ink: var(--abc-step-0); }
+.step-1 { --abc-ink: var(--abc-step-1); }
+.step-2 { --abc-ink: var(--abc-step-2); }
+.step-3 { --abc-ink: var(--abc-step-3); }
+.step-4 { --abc-ink: var(--abc-step-4); }
+.step-5 { --abc-ink: var(--abc-step-5); }
+.step-6 { --abc-ink: var(--abc-step-6); }
+.step-7 { --abc-ink: var(--abc-step-7); }
+.seg-none { --abc-ink: var(--abc-none); }
+
+.seg {
+  fill: var(--abc-ink);
+}
+/* The hovered row's segments lift by an outline in the sheet's own colour
+   rather than by a colour change: the fill is carrying a value and must not
+   move because a pointer arrived. */
+.seg.is-on {
+  stroke: var(--pp-edge);
+  stroke-width: var(--pp-rule-hairline);
+}
+.stack-name {
+  text-anchor: end;
+  font-family: var(--pp-font-mono);
+  font-size: 0.78rem;
+  letter-spacing: var(--w-track-mono);
+  fill: var(--pp-muted);
+}
+/* A language struck in ink above is named in ink here too, so the eye can
+   carry a choice from one figure to the next. */
+.stack-name.is-lit {
+  fill: var(--pp-ink);
+}
+.stack-share {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-mono);
+  fill: var(--pp-faint);
+}
+
+/* The key. One continuous strip with its ends named, because eight steps of
+   one hue are a scale and eight separate swatches would invite the reader to
+   look each one up instead of reading the direction. The neutral stands off
+   past a gap: it is not on the scale, and the gap is what says so. */
+.ramp-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1.4rem;
+  margin-top: 0.85rem;
+  padding-top: 0.7rem;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+.ramp-scale,
+.ramp-off {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.ramp-strip {
+  display: flex;
+}
+.ramp-strip i {
+  width: 20px;
+  height: 9px;
+  background: var(--abc-ink);
+}
+.ramp-off i {
+  width: 20px;
+  height: 9px;
+  background: var(--abc-ink);
+}
+.ramp-end {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+}
+
 /* ── The far end, named ────────────────────────────────────────────────────
    One row per dictionary: the ink and the name, the record, then the words
    that hold it. Three tracks on a wide sheet so the records line up and can be

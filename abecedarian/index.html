@@ -245,6 +245,40 @@
     </div>
     <p class="sheet-note" id="tailNote"></p>
 
+    <!-- ── One bar per dictionary ───────────────────────────────────────────
+         The two figures above answer "what shape" and "how far". This one
+         answers "what is a dictionary made of" — every word of it, in one bar,
+         split by what it costs.
+
+         Distance is ORDINAL here, not an identity: 3 comes after 2 and that is
+         the point of it. So the segments take a one-hue ramp in lightness
+         steps rather than the four identity inks, and "none" — which is not a
+         distance — takes a neutral outside the ramp entirely, because giving
+         it a step would put it in a sequence it does not belong to.
+
+         Eight steps and not eleven. Past seven or eight classes a reader stops
+         being able to tell one shade of a hue from the next, so the ramp ends
+         at "7 or more"; the figure above already draws the tail distance by
+         distance, and the table has it exactly. -->
+    <div class="result-bar corpus-second">
+      <p class="section-label">What a dictionary is made of</p>
+      <code class="meta" id="stackMeta"></code>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-body">
+        <div class="chart-wrap" id="stackWrap">
+          <svg id="stack" class="chart" role="img" tabindex="0"></svg>
+          <div class="chart-tip" id="stackTip" hidden></div>
+        </div>
+        <!-- A ramp key, not a row of chips: the steps are a scale and are read
+             as one strip with its two ends named. The neutral stands off to the
+             side with a gap, because it is not on the scale. -->
+        <div class="ramp-key" id="rampKey" aria-hidden="true"></div>
+      </div>
+    </div>
+    <p class="sheet-note" id="stackNote"></p>
+
     <!-- ── The far end, named ───────────────────────────────────────────────
          The figure above draws a point at ten swaps and cannot say what is
          standing in it. These are the words: the worst in each dictionary, and
