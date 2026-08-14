@@ -307,21 +307,6 @@ section[data-when],
   color: var(--pp-ink);
   border-color: var(--pp-edge);
 }
-/* Filled when the dictionary is in the figure above, an empty outline when it
-   is not — the same relationship the index's custody pips use, and it means the
-   switch says its own state without relying on the border weight alone. Plain
-   ink, because the mark is a state and not an identity. */
-.pick-mark {
-  width: 9px;
-  height: 9px;
-  flex: none;
-  border: var(--pp-rule-line) solid var(--pp-line);
-  background: transparent;
-}
-.pick.is-on .pick-mark {
-  border-color: var(--pp-edge);
-  background: var(--pp-edge);
-}
 /* An unstruck record row steps back to the muted ink, so the four the
    switches are on read first without the other nine going away. */
 .peak:not(.is-lit) .peak-lang,
@@ -362,6 +347,14 @@ section[data-when],
   fill: var(--pp-faint);
 }
 .ax-tick-x { text-anchor: middle; }
+/* The tick for the distance the field just answered, in ink, so the figure and
+   the number above it are reading the same word. */
+.ax-tick-x.is-at { fill: var(--pp-ink); }
+/* And the hairline down its band. */
+.ax-mark {
+  stroke: var(--pp-edge);
+  stroke-width: var(--pp-rule-hairline);
+}
 .ax-title { text-anchor: middle; }
 
 /* The reader's word, annotated onto both figures. It used to be a hairline
@@ -461,6 +454,63 @@ section[data-when],
   padding-top: 0.25rem;
   border-top: var(--pp-rule-hairline) solid var(--pp-hair);
   color: var(--pp-faint);
+}
+
+/* ── The four inks ─────────────────────────────────────────────────────────
+   The first figure's colour, and a different job from the ramp below it.
+
+   There a bar is a dictionary and a segment is a distance, so colour says how
+   many swaps and takes one hue in steps. Here a bar is a distance and a
+   segment is a DICTIONARY, so colour says which language — an identity, where
+   nothing follows from the order and a ramp would be inventing a sequence that
+   is not there. Two vocabularies, and each is right about its own segments.
+
+   These four were searched for rather than picked, under five constraints at
+   once: inside the lightness band for the mode, chromatic enough not to read
+   as grey, at least 3:1 against the sheet, and every one of the six pairs at
+   least ΔE 8 apart under both protanopia and deuteranopia and at least 15
+   apart under ordinary vision. All six pairs, not just neighbours, because any
+   two of them can end up adjacent in a stack. The set clears all of it: worst
+   pair 12.0 under simulated colour blindness and 21.7 under ordinary vision in
+   light, 8.9 and 18.2 in dark. Then searched again for the quietest set that
+   still clears it, because the first set that passed was neon.
+
+   Dark is its own selection rather than the same hex on a dark ground: the
+   band is narrower there, so every one of the four moved.
+
+   An ink is a SLOT, not a language — four inks cannot name thirteen. A
+   language holds a slot while it is drawn and gives it up when it is not, so
+   the classes are numbered rather than named. */
+:root {
+  --abc-ink-0: #298805;
+  --abc-ink-1: #1299de;
+  --abc-ink-2: #5f4589;
+  --abc-ink-3: #cd5a97;
+}
+[data-mode='dark'] {
+  --abc-ink-0: #298c01;
+  --abc-ink-1: #4494c8;
+  --abc-ink-2: #814ec6;
+  --abc-ink-3: #d8559b;
+}
+.ink-0 { --abc-ink: var(--abc-ink-0); }
+.ink-1 { --abc-ink: var(--abc-ink-1); }
+.ink-2 { --abc-ink: var(--abc-ink-2); }
+.ink-3 { --abc-ink: var(--abc-ink-3); }
+.ghost { --abc-ink: var(--pp-line); }
+
+/* Filled when the dictionary is in the figure above, an outline of its own ink
+   when it is not — the same relationship the index's custody pips use, and it
+   means the switch says its own state without leaning on the border weight. */
+.pick-ink {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border: var(--pp-rule-hairline) solid var(--abc-ink);
+  background: transparent;
+}
+.pick.is-on .pick-ink {
+  background: var(--abc-ink);
 }
 
 /* ── The ordinal ramp ──────────────────────────────────────────────────────

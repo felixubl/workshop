@@ -190,14 +190,13 @@
     </div>
 
     <!-- The switches sit above the sheets rather than inside them, because
-         they scope the first one and name what the second is drawing. They no
-         longer carry an ink: with both figures reading off one ordinal ramp,
-         nothing on this page is identified by colour, so a coloured square on
-         a switch would be a vocabulary pointing at nothing. A language is
-         named, and the name is enough.
+         they scope the first figure and name what the second is drawing. They
+         are its legend as well: in that figure a segment is a dictionary, so
+         the ink on the switch is the ink in the bar and nothing there is
+         identified by colour alone.
 
-         They also no longer cap at four. The cap existed because there were
-         four inks; a stack is a row, and rows are cheap. -->
+         Four at a time, because four is how many inks a red-green reader can
+         still tell apart pairwise and there is no fifth. -->
     <div class="corpus-bar">
       <div class="picks" id="corpusPick" role="group" aria-label="Which dictionaries the first figure draws"></div>
       <button class="btn-ghost preset" type="button" id="tableBtn" aria-expanded="false" aria-controls="corpusTable">the numbers</button>
@@ -209,7 +208,6 @@
           <svg id="chart" class="chart" role="img" tabindex="0"></svg>
           <div class="chart-tip" id="chartTip" hidden></div>
         </div>
-        <div class="ramp-key" id="rampKeyA" aria-hidden="true"></div>
         <!-- What the readout says, for a reader driving a figure with the arrow
              keys rather than a pointer. role="status" is already a polite live
              region; the attribute would only repeat it. Both figures announce

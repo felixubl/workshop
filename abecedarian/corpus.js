@@ -67,18 +67,52 @@ var CORPUS = (function () {
   var byId = {};
   LANGS.forEach(function (l) { byId[l.id] = l; });
 
-  /* Which dictionaries the first figure draws. A plain set now: with no ink to
-     hand out there is nothing to run short of, so a reader can put one language
-     in that figure or all thirteen. The last one on stays on, because a figure
-     with no rows is not a view of the data. */
-  var on = {};
-  ['en', 'es', 'fr', 'de'].forEach(function (id) { if (byId[id]) on[id] = true; });
-  if (!Object.keys(on).length) on[LANGS[0].id] = true;
+  /* ── Which dictionaries the first figure draws, and in what ink ──────────
+     The two figures cut the same numbers the other way up, and that decides
+     their colour.
 
-  function isOn(id) { return !!on[id]; }
+     In the second, a bar is a dictionary and a segment is a distance, so
+     colour says how many swaps: an ordinal ramp, one hue in steps.
+
+     In the first, a bar is a distance and a segment is a DICTIONARY, so colour
+     has to say which language — an identity, where nothing follows from the
+     order and a ramp would be inventing a sequence that does not exist. That
+     is a different job and it takes a different vocabulary. The two figures
+     are not inconsistent with each other; they are each right about their own
+     segments.
+
+     Identity means four, because four is how many inks clear the
+     colour-vision gates pairwise and there is no fifth. A language holds its
+     ink for as long as it is drawn, and picking a fifth evicts whichever has
+     been drawn longest and hands the newcomer that one freed slot, so the
+     three that stay are never repainted. */
+  var slots = ['en', 'es', 'fr', 'de'].map(function (id) { return byId[id] ? id : null; });
+  var order = [0, 1, 2, 3];              // slot indices, longest-drawn first
+  if (!slots.filter(Boolean).length) { slots[0] = LANGS[0].id; }
+
+  function slotOf(id) { return slots.indexOf(id); }
+  function isOn(id) { return slotOf(id) >= 0; }
+  function drawn() {
+    return slots.map(function (id) { return id ? byId[id] : null; }).filter(Boolean);
+  }
+  function inkClass(l) {
+    var i = slotOf(l.id);
+    return i < 0 ? 'ghost' : 'ink-' + i;
+  }
   function toggle(id) {
-    if (on[id] && Object.keys(on).length === 1) return;
-    if (on[id]) delete on[id]; else on[id] = true;
+    var at = slotOf(id);
+    if (at >= 0) {
+      /* The last one drawn stays drawn: an empty figure is not a view. */
+      if (drawn().length === 1) return;
+      slots[at] = null;
+      order = order.filter(function (i) { return i !== at; });
+      return;
+    }
+    var free = slots.indexOf(null);
+    if (free < 0) { free = order.shift(); slots[free] = null; }
+    else order = order.filter(function (i) { return i !== free; });
+    slots[free] = id;
+    order.push(free);
   }
 
   var atDistance = null;                 // the field's answer, or null
@@ -157,7 +191,7 @@ var CORPUS = (function () {
       var b = el('button', 'pick');
       b.type = 'button';
       b.dataset.lang = l.id;
-      b.appendChild(el('i', 'pick-mark'));
+      b.appendChild(el('i', 'pick-ink ' + inkClass(l)));
       b.appendChild(el('span', 'pick-name', l.name));
       b.dataset.tip = grouped(l.sortable) + ' of ' + grouped(l.words) + ' ' +
         l.name + ' words have a distance; ' + grouped(l.unsortable) + ' have none. ' +
@@ -178,9 +212,11 @@ var CORPUS = (function () {
   function syncPick() {
     var all = pick.querySelectorAll('.pick');
     for (var i = 0; i < all.length; i++) {
-      var state = isOn(all[i].dataset.lang);
+      var l = byId[all[i].dataset.lang];
+      var state = isOn(l.id);
       all[i].classList.toggle('is-on', state);
       all[i].setAttribute('aria-pressed', state ? 'true' : 'false');
+      all[i].querySelector('.pick-ink').className = 'pick-ink ' + inkClass(l);
     }
     syncPeaks();
   }
@@ -407,20 +443,204 @@ var CORPUS = (function () {
     return { draw: draw };
   }
 
-  var figA = figure({
-    wrap: wrapA, svg: svgA, tip: tipA,
-    withNone: false,
-    of: 'of the words that have a distance',
-    total: function (l) { return l.sortable; },
-    rows: function () { return ORDER.filter(function (l) { return isOn(l.id); }); },
-    label: function (list) {
-      return 'One bar per chosen dictionary — ' +
+  /* ── Figure one: one stacked bar per distance ────────────────────────────
+     x is the distance, and the bar standing on it is made of the dictionaries
+     that are switched on — each one contributing the share of ITS OWN words
+     that need exactly that many swaps.
+
+     Which means the bar's total is a sum of percentages and is not itself a
+     percentage of anything. Four dictionaries near 30% at three swaps make a
+     bar 120 tall, and that number is not a share of any set of words. The
+     figure is honest about it: the axis counts in points rather than per cent,
+     the note says what the total is, and what a reader is meant to read is a
+     SEGMENT — which is one language's share, exactly as it was when these
+     stood side by side, and can be read straight off the bar.
+
+     What the stacking buys is the shape. Side by side, four bars per band made
+     the eye compare four things at every one of eleven bands; stacked, the
+     outline of the whole run is the distribution and the segments are the
+     languages inside it. */
+
+  var DPAD = { top: 22, right: 8, bottom: 40, left: 46 };
+  var DPLOT_H = 236;
+  var DMIN = 3;                          // the floor under a thin segment
+  var DGAP = 2;                          // the surface gap between segments
+
+  function distanceFigure(cfg) {
+    var hover = null;
+
+    function draw() {
+      if (!cfg.wrap) return;
+      var W = Math.max(280, Math.round(cfg.wrap.clientWidth));
+      var plotW = W - DPAD.left - DPAD.right;
+      var H = DPAD.top + DPLOT_H + DPAD.bottom;
+      var y0 = DPAD.top + DPLOT_H;
+      var list = drawn();
+      var svg = cfg.svg;
+
+      /* The tallest stack sets the scale, and the scale counts in points
+         because that is what a sum of percentages is measured in. */
+      var high = 0;
+      for (var d = 0; d <= MAXD; d++) {
+        var t = 0;
+        list.forEach(function (l) { t += shareOf(l, d); });
+        if (t > high) high = t;
+      }
+      var top = Math.max(20, Math.ceil(high / 20) * 20);
+      var step = top > 140 ? 40 : 20;
+      var yOf = function (v) { return y0 - (v / top) * DPLOT_H; };
+
+      svg.textContent = '';
+      svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+      svg.setAttribute('width', W);
+      svg.setAttribute('height', H);
+      svg.setAttribute('aria-label',
+        'One bar per number of swaps, each made of ' +
         list.map(function (l) { return l.name; }).join(', ') +
-        ' — a hundred per cent of the words that have a distance, split by how ' +
-        'many swaps they need. Most need two or three. The full figures are in ' +
-        'the table below.';
+        ', every one contributing the share of its own words that need that ' +
+        'many. Most need two or three. The full figures are in the table below.');
+
+      for (var v = 0; v <= top; v += step) {
+        svg.appendChild(node('line', {
+          class: v === 0 ? 'ax-base' : 'ax-grid',
+          x1: DPAD.left, x2: W - DPAD.right, y1: yOf(v), y2: yOf(v)
+        }));
+        var yt = node('text', { class: 'ax-tick ax-tick-y', x: DPAD.left - 8, y: yOf(v) + 3.5 });
+        yt.textContent = String(v);
+        svg.appendChild(yt);
+      }
+
+      var bandW = plotW / (MAXD + 1);
+      var barW = Math.min(46, bandW * 0.62);
+
+      /* The reader's own word, back on an axis that can carry it: a hairline
+         down the band it belongs in, drawn under the bars so it never hides
+         one. */
+      if (atDistance !== null && atDistance <= MAXD) {
+        var mx = DPAD.left + bandW * (atDistance + 0.5);
+        svg.appendChild(node('line', { class: 'ax-mark', x1: mx, x2: mx, y1: DPAD.top - 4, y2: y0 }));
+        var mt = node('text', { class: 'ax-mark-label', x: mx, y: DPAD.top - 8 });
+        mt.textContent = atWord;
+        svg.appendChild(mt);
+      }
+
+      for (d = 0; d <= MAXD; d++) {
+        var cx = DPAD.left + bandW * (d + 0.5);
+        var x = cx - barW / 2;
+
+        /* Lay the stack out in pixels, floor the thin ones, and take what that
+           costs off the tallest segment — the same bargain the second figure
+           makes, for the same reason: at eight swaps a share of 0.02% is a
+           fifth of a pixel, and a segment that is not drawn reads as a
+           language that has no words there at all. */
+        var px = list.map(function (l) { return (shareOf(l, d) / top) * DPLOT_H; });
+        var owed = 0, big = 0, i;
+        for (i = 0; i < px.length; i++) if (px[i] > px[big]) big = i;
+        for (i = 0; i < px.length; i++)
+          if (px[i] > 0 && px[i] < DMIN) { owed += DMIN - px[i]; px[i] = DMIN; }
+        if (px[big] > DMIN) px[big] = Math.max(DMIN, px[big] - owed);
+
+        var yTop = y0;
+        list.forEach(function (l, k) {
+          if (l.counts[d] === 0) return;
+          var h = Math.max(1, px[k] - DGAP);
+          yTop -= px[k];
+          svg.appendChild(node('rect', {
+            class: 'seg ' + inkClass(l) + (hover === d ? ' is-on' : ''),
+            x: x, y: yTop, width: barW, height: h
+          }));
+        });
+
+        var xt = node('text', {
+          class: 'ax-tick ax-tick-x' + (d === atDistance ? ' is-at' : ''),
+          x: cx, y: y0 + 16
+        });
+        xt.textContent = String(d);
+        svg.appendChild(xt);
+
+        var hit = node('rect', {
+          class: 'band' + (hover === d ? ' is-on' : ''),
+          x: DPAD.left + bandW * d, y: DPAD.top, width: bandW, height: DPLOT_H
+        });
+        hit.dataset.d = d;
+        svg.appendChild(hit);
+      }
+
+      var xl = node('text', { class: 'ax-title', x: DPAD.left + plotW / 2, y: y0 + 36 });
+      xl.textContent = 'swaps of the alphabet';
+      svg.appendChild(xl);
+
+      if (hover !== null) place(hover);
     }
-  });
+
+    function place(d) {
+      var list = drawn();
+      cfg.tip.textContent = '';
+      cfg.tip.appendChild(el('p', 'tip-head', d + (d === 1 ? ' swap' : ' swaps')));
+      var dl = el('dl', 'tip-rows');
+      list.forEach(function (l) {
+        var dt = el('dt', null);
+        dt.appendChild(el('i', 'tip-key ' + inkClass(l)));
+        dt.appendChild(document.createTextNode(l.name));
+        dl.appendChild(dt);
+        var dd = el('dd', null);
+        dd.appendChild(el('b', null, pct(shareOf(l, d)) + '%'));
+        dd.appendChild(el('span', 'tip-n', grouped(l.counts[d])));
+        dl.appendChild(dd);
+      });
+      cfg.tip.appendChild(dl);
+      cfg.tip.hidden = false;
+
+      var W = cfg.wrap.clientWidth;
+      var bandW = (W - DPAD.left - DPAD.right) / (MAXD + 1);
+      var centre = DPAD.left + bandW * (d + 0.5);
+      var w = cfg.tip.offsetWidth;
+      var left = centre < W / 2 ? centre + bandW / 2 + 8 : centre - bandW / 2 - 8 - w;
+      cfg.tip.style.left = Math.max(0, Math.min(W - w, left)) + 'px';
+      cfg.tip.style.top = '0px';
+
+      live.textContent = d + (d === 1 ? ' swap: ' : ' swaps: ') +
+        list.map(function (l) { return l.name + ' ' + pct(shareOf(l, d)) + '%'; }).join(', ');
+    }
+
+    function bandAt(ev) {
+      var box = cfg.svg.getBoundingClientRect();
+      var bandW = (box.width - DPAD.left - DPAD.right) / (MAXD + 1);
+      var d = Math.floor((ev.clientX - box.left - DPAD.left) / bandW);
+      return d >= 0 && d <= MAXD ? d : null;
+    }
+
+    function setHover(d) {
+      if (d === hover) return;
+      hover = d;
+      draw();
+      if (hover === null) { cfg.tip.hidden = true; live.textContent = ''; }
+    }
+
+    cfg.svg.addEventListener('pointermove', function (ev) { setHover(bandAt(ev)); });
+    cfg.svg.addEventListener('pointerleave', function () { setHover(null); });
+    cfg.svg.addEventListener('blur', function () { setHover(null); });
+    cfg.svg.addEventListener('keydown', function (ev) {
+      var d = hover === null ? (atDistance === null ? 0 : atDistance) : hover;
+      var k = ev.key;
+      if (k === 'ArrowLeft') d = Math.max(0, d - 1);
+      else if (k === 'ArrowRight') d = Math.min(MAXD, d + 1);
+      else if (k === 'Home') d = 0;
+      else if (k === 'End') d = MAXD;
+      else if (k === 'Escape') { setHover(null); return; }
+      else return;
+      ev.preventDefault();
+      setHover(d);
+    });
+
+    return { draw: draw };
+  }
+
+  /* One language's share of its OWN words that have a distance. The same
+     number the side-by-side figure printed; only the arrangement changed. */
+  function shareOf(l, d) { return l.sortable ? (l.counts[d] / l.sortable) * 100 : 0; }
+
+  var figA = distanceFigure({ wrap: wrapA, svg: svgA, tip: tipA });
 
   var figB = figure({
     wrap: wrapB, svg: svgB, tip: tipB,
@@ -579,12 +799,15 @@ var CORPUS = (function () {
   meta.textContent = grouped(words) + ' words · ' + LANGS.length + ' spelling dictionaries';
   note.textContent =
     'Every headword of ' + LANGS.length + ' Hunspell spelling dictionaries, folded ' +
-    'to A–Z and run through the engine above. Each bar here is one dictionary’s ' +
-    'words that have a distance at all — ' + grouped(sortable) + ' of the ' +
-    grouped(words) + ' between them — split by how many swaps they need, so the ' +
-    'distribution fills the bar and its shape can be read. The switches choose ' +
-    'which dictionaries stand here, any number of them; the figure below draws ' +
-    'all ' + LANGS.length + ' and counts the rest of every one too. Sources are ' +
+    'to A–Z and run through the engine above. One bar per number of swaps, and ' +
+    'each bar is made of the dictionaries the switches are on — every one ' +
+    'contributing the share of its OWN words that need exactly that many. So a ' +
+    'segment is a percentage and can be read straight off the bar; the bar’s ' +
+    'total is those percentages added together and is not a share of anything, ' +
+    'which is why the axis counts in points. Four inks, because four is how ' +
+    'many a red-green reader can still tell apart, and picking a fifth ' +
+    'dictionary hands it the ink of whichever has been drawn longest. The ' +
+    'figure below takes all ' + LANGS.length + ' the other way up. Sources are ' +
     'pinned to wooorm/dictionaries @ ' + ABC_CORPUS.pin + '; each switch names its own.';
 
   stackMeta.textContent = grouped(zero) + ' already abecedarian · ' +
@@ -613,7 +836,6 @@ var CORPUS = (function () {
     'and see the alphabet it needs.';
 
   drawPick();
-  drawRampKey(keyA, false);
   drawRampKey(keyB, true);
   drawPeaks();
   drawTable();
