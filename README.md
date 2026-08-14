@@ -245,7 +245,8 @@ figure or another file rather than a rendering.
   nothing alike. Taking the repeats out merges almost nothing: nearly every root
   in the survey stands for a single word, because collapsing repeats only ever
   joins spellings that differ in a doubled letter and a dictionary rarely
-  carries both. What turns up instead is Roman numerals (`xi` covers *xi, xii,
+  carries both. A family is therefore a set of spellings rather than of
+  meanings: in English the biggest are Roman numerals (`xi` covers *xi, xii,
   xiii, xxi, xxii, xxiii*) and name variants (*Aaron, Aron, Arron*).
 
   Going on to the core merges by the hundred — `oe` is a core of 185 English

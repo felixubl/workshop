@@ -757,6 +757,12 @@ var CORPUS = (function () {
 
       var top = l.rootTop[0];
       var rootBox = el('span', 'met-key');
+      /* Which kind of family this is, on every row rather than as a header
+         over the column. Below 620px the row stacks and the two families sit
+         one above the other in identical form, where a column header is gone
+         and position says nothing — a reader would be looking at two strings
+         with counts and no way to tell a root from a core. */
+      rootBox.appendChild(el('span', 'met-tag', 'root'));
       rootBox.appendChild(el('code', 'met-word', top.root.toLowerCase()));
       rootBox.appendChild(el('span', 'met-n', '·' + top.n));
       top.words.forEach(function (w) {
@@ -772,6 +778,7 @@ var CORPUS = (function () {
 
       var core = l.coreTop[0];
       var coreBox = el('span', 'met-key met-core');
+      coreBox.appendChild(el('span', 'met-tag', 'core'));
       coreBox.appendChild(el('code', 'met-word', core.core.toLowerCase()));
       coreBox.appendChild(el('span', 'met-n', '·' + grouped(core.n)));
       li.appendChild(coreBox);
@@ -917,10 +924,11 @@ var CORPUS = (function () {
     'alike. Taking the repeats out merges almost nothing: ' + grouped(lone) +
     ' of the survey’s ' + grouped(allRoots) + ' roots stand for a single word, ' +
     'because collapsing repeats only ever joins spellings that differ in a ' +
-    'doubled letter and a dictionary rarely carries both. What turns up instead ' +
-    'is Roman numerals and name variants — the biggest family anywhere is ' +
-    bigRoot.top.root.toLowerCase() + ', ' + bigRoot.top.n + ' words of ' +
-    bigRoot.l.name + '. Going on to the core merges by the hundred: ' +
+    'doubled letter and a dictionary rarely carries both. So a family here is a ' +
+    'set of spellings rather than of meanings, which is what the rows show: the ' +
+    'biggest anywhere in the survey is ' + bigRoot.top.root.toLowerCase() + ', ' +
+    bigRoot.top.n + ' words of ' + bigRoot.l.name + '. Going on to the core ' +
+    'merges by the hundred: ' +
     bigCore.top.core.toLowerCase() + ' is a core of ' + grouped(bigCore.top.n) + ' ' +
     bigCore.l.name + ' words. And it still does not shrink the vocabulary — ' +
     grouped(costingRoots) + ' roots come down to ' + grouped(allCores) + ' ' +
