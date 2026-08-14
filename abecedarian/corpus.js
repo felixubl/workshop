@@ -143,6 +143,12 @@ var CORPUS = (function () {
     if (n >= 0.1) return n.toFixed(3);
     return n.toPrecision(2);
   }
+  /* "a", "a and b", "a, b and c" — for naming the holders of a record in a
+     sentence, where a comma-joined list of one reads as a list that failed. */
+  function listOf(items) {
+    if (items.length <= 1) return items.join('');
+    return items.slice(0, -1).join(', ') + ' and ' + items[items.length - 1];
+  }
   function el(tag, cls, text) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -910,13 +916,22 @@ var CORPUS = (function () {
   var costingRoots = LANGS.reduce(function (a, l) { return a + l.costingRoots; }, 0);
   var lone = LANGS.reduce(function (a, l) { return a + l.spread[0]; }, 0);
   var plural = LANGS.reduce(function (a, l) { return a + l.plural; }, 0);
-  /* The biggest of each kind anywhere in the survey, for the note to name. */
-  var bigRoot = LANGS.reduce(function (a, l) {
-    return l.rootTop[0].n > a.top.n ? { l: l, top: l.rootTop[0] } : a;
-  }, { l: LANGS[0], top: LANGS[0].rootTop[0] });
-  var bigCore = LANGS.reduce(function (a, l) {
-    return l.coreTop[0].n > a.top.n ? { l: l, top: l.coreTop[0] } : a;
-  }, { l: LANGS[0], top: LANGS[0].coreTop[0] });
+  /* The biggest of each kind anywhere in the survey, for the note to name.
+     Ties are named rather than broken: English xi and French xie both hold
+     nine, and calling one of them THE biggest would be picking by iteration
+     order and printing it as a finding. */
+  function topAcross(key) {
+    var best = 0;
+    LANGS.forEach(function (l) { if (l[key][0].n > best) best = l[key][0].n; });
+    return {
+      n: best,
+      held: LANGS.filter(function (l) { return l[key][0].n === best; })
+                 .map(function (l) { return l[key][0][key === 'rootTop' ? 'root' : 'core']
+                                            .toLowerCase() + ' in ' + l.name; })
+    };
+  }
+  var bigRoot = topAcross('rootTop');
+  var bigCore = topAcross('coreTop');
 
   metMeta.textContent = pct((lone / allRoots) * 100) + '% of roots are one word';
   metNote.textContent =
@@ -926,11 +941,10 @@ var CORPUS = (function () {
     'because collapsing repeats only ever joins spellings that differ in a ' +
     'doubled letter and a dictionary rarely carries both. So a family here is a ' +
     'set of spellings rather than of meanings, which is what the rows show: the ' +
-    'biggest anywhere in the survey is ' + bigRoot.top.root.toLowerCase() + ', ' +
-    bigRoot.top.n + ' words of ' + bigRoot.l.name + '. Going on to the core ' +
-    'merges by the hundred: ' +
-    bigCore.top.core.toLowerCase() + ' is a core of ' + grouped(bigCore.top.n) + ' ' +
-    bigCore.l.name + ' words. And it still does not shrink the vocabulary — ' +
+    'biggest anywhere in the survey is ' + bigRoot.n + ' words, ' +
+    listOf(bigRoot.held) + '. Going on to the core merges by the hundred — ' +
+    listOf(bigCore.held) + ' is a core of ' + grouped(bigCore.n) +
+    ' words. And it still does not shrink the vocabulary — ' +
     grouped(costingRoots) + ' roots come down to ' + grouped(allCores) + ' ' +
     'different cores, MORE than there were roots, because ' + grouped(plural) +
     ' of those roots have more than one shortest core and each is a word in its ' +
