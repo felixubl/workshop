@@ -166,8 +166,51 @@
     </div>
   </section>
 
+  <!-- ── The dictionaries ─────────────────────────────────────────────────
+       What one word costs is a curiosity; what a language costs is a fact,
+       and this is the only part of the page that stands without anything
+       typed into it. Four dictionaries, every headword through the same
+       engine, drawn as one figure.
+
+       The counting happened once, offline, in tools/abecedarian-corpus.mjs.
+       Nothing is fetched: the answer is sixty numbers and they are in
+       data/dictionaries.js, so the tool keeps its `local` rung. -->
+  <section class="corpus">
+
+    <div class="result-bar">
+      <p class="section-label">What four dictionaries cost</p>
+      <code class="meta" id="corpusMeta"></code>
+    </div>
+
+    <!-- The switches sit above the sheet rather than inside it, because they
+         scope what is in it. They are the legend as well: the ink is on the
+         switch, so nothing on the figure is identified by colour alone. -->
+    <div class="corpus-bar">
+      <div class="picks" id="corpusPick" role="group" aria-label="Which dictionaries the figure draws"></div>
+      <button class="btn-ghost preset" type="button" id="tableBtn" aria-expanded="false" aria-controls="corpusTable">the numbers</button>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-body">
+        <div class="chart-wrap" id="chartWrap">
+          <svg id="chart" class="chart" role="img" tabindex="0"></svg>
+          <div class="chart-tip" id="chartTip" hidden></div>
+        </div>
+        <!-- What the readout says, for a reader who is driving the figure with
+             the arrow keys rather than a pointer. role="status" is already a
+             polite live region; the attribute would only repeat it. -->
+        <p class="sr-only" id="chartLive" role="status"></p>
+      </div>
+    </div>
+    <p class="sheet-note" id="chartNote"></p>
+
+    <div class="sheet corpus-table" id="corpusTable" hidden></div>
+  </section>
+
 </div>
 <script src="abc.js"></script>
+<script src="data/dictionaries.js"></script>
+<script src="corpus.js"></script>
 <script src="script.js"></script>
 <script src="../assets/preprint/js/controls.js"></script>
 <script src="../assets/share.js"></script>

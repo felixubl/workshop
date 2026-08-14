@@ -17,3 +17,9 @@ DECISIONS.md
 .dem-cache/
 node_modules/
 .crawl-summary.txt
+
+# The dictionary survey's downloads. Same arrangement as the crawler above: the
+# four word lists are somebody else's to distribute and are only ever input, so
+# they stay out; what the survey PUBLISHES — abecedarian/data/ — is committed,
+# and tools/abecedarian-corpus.mjs re-fetches into here when the cache is cold.
+.dict-cache/

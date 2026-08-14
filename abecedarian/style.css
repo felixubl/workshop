@@ -251,3 +251,263 @@ section[data-when],
   margin-bottom: 0;
 }
 
+/* ── The dictionaries ──────────────────────────────────────────────────────
+   Four inks for four dictionaries, and they are not the site's plates.
+
+   The plates are a category vocabulary: plate 2 means media, plate 3 means
+   numbers and files, and they say so on the index. Pressing four series of a
+   figure out of them would have the marks claiming a meaning they do not have.
+   Beyond that, three plates is one short of four, and the two that would have
+   to stand side by side — the green and the red — are the classic pair a
+   red-green reader cannot separate: measured against each other they come out
+   at ΔE 5.9 under deuteranopia, where 8 is the bar.
+
+   So the figure takes its own four, chosen the way Eclipse Recon takes viridis
+   for its suitability field and for the same stated reason: the field is data,
+   not chrome. These four were searched for rather than picked, under five
+   constraints at once — inside the lightness band for the mode, chromatic
+   enough not to read as grey, at least 3:1 against the sheet, and every one of
+   the six pairs at least ΔE 8 apart under both protanopia and deuteranopia and
+   at least 15 apart under ordinary vision. All six pairs, not just the
+   neighbouring ones, because a dictionary can be switched off and any two of
+   the survivors can end up side by side. The set clears all of that: worst pair
+   12.0 under simulated colour blindness and 21.7 under ordinary vision in
+   light, 8.9 and 18.2 in dark.
+
+   And then it was searched again for the QUIETEST set that still clears it,
+   holding the loudest of the four down rather than the sum, so no one ink
+   shouts over the other three. The first set that passed was neon, and a neon
+   figure on this paper would be the chart announcing itself instead of its
+   data.
+
+   Dark is its own selection rather than the same hex on a dark ground: the
+   band is narrower there, so every one of the four moved. */
+:root {
+  --abc-en: #298805;
+  --abc-es: #1299de;
+  --abc-fr: #5f4589;
+  --abc-de: #cd5a97;
+}
+[data-mode='dark'] {
+  --abc-en: #298c01;
+  --abc-es: #4494c8;
+  --abc-fr: #814ec6;
+  --abc-de: #d8559b;
+}
+.ink-en { --abc-ink: var(--abc-en); }
+.ink-es { --abc-ink: var(--abc-es); }
+.ink-fr { --abc-ink: var(--abc-fr); }
+.ink-de { --abc-ink: var(--abc-de); }
+
+/* The switch row: the four dictionaries on the left, the table on the right.
+   One row, above the sheet, because it scopes what is in the sheet. */
+.corpus-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.85rem;
+}
+.picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+/* Same cut as a preset in base.css — this is a row of small controls acting as
+   one — with the ink added, since the switch is the legend too. */
+.pick {
+  height: var(--pp-target-compact);
+  padding: 0 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-sm);
+  background: transparent;
+  font-family: var(--pp-font-mono);
+  font-size: 0.76rem;
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+}
+.pick:hover {
+  border-color: var(--pp-edge);
+  color: var(--pp-ink);
+}
+.pick:active {
+  transform: var(--w-press);
+}
+.pick.is-on {
+  color: var(--pp-ink);
+  border-color: var(--pp-edge);
+}
+/* Struck when the dictionary is drawn, an empty outline when it is not — the
+   same relationship the index's custody pips use, and it means the switch says
+   its own state without relying on the border weight alone. */
+.pick-ink {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border: var(--pp-rule-hairline) solid var(--abc-ink);
+  background: transparent;
+}
+.pick.is-on .pick-ink {
+  background: var(--abc-ink);
+}
+.pick-n {
+  font-size: var(--pp-size-label);
+  color: var(--pp-faint);
+}
+
+/* ── The figure ──────────────────────────────────────────────────────────── */
+.chart-wrap {
+  position: relative;
+}
+.chart {
+  display: block;
+  max-width: 100%;
+  touch-action: pan-y;
+}
+.chart:focus-visible {
+  outline: var(--pp-rule-structure) solid var(--pp-edge);
+  outline-offset: 2px;
+}
+
+/* Solid hairlines one step off the sheet. A dashed grid reads as a threshold
+   or a projection; this one is only a ruler, and the baseline is the one line
+   the columns actually stand on, so it takes the heavier rule. */
+.ax-grid {
+  stroke: var(--pp-hair);
+  stroke-width: var(--pp-rule-hairline);
+}
+.ax-base {
+  stroke: var(--pp-line);
+  stroke-width: var(--pp-rule-line);
+}
+.ax-tick,
+.ax-title {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-mono);
+  fill: var(--pp-faint);
+}
+.ax-tick-y { text-anchor: end; }
+.ax-tick-x { text-anchor: middle; }
+/* The tick for the distance the field just answered, in ink. The figure and
+   the number above it are then reading the same word. */
+.ax-tick-x.is-at { fill: var(--pp-ink); }
+.ax-title { text-anchor: middle; }
+
+/* The reader's word, annotated onto the figure rather than plotted on it: a
+   hairline in ink, which no series ever wears, and the word itself at the top
+   of it. */
+.ax-mark {
+  stroke: var(--pp-edge);
+  stroke-width: var(--pp-rule-hairline);
+}
+.ax-mark-label {
+  text-anchor: middle;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-mono);
+  fill: var(--pp-ink);
+}
+
+.bar {
+  fill: var(--abc-ink);
+}
+/* The hit target is the whole band, floor to ceiling. A 3px column is a
+   pinpoint; a distance is something a reader can actually aim at. */
+.band {
+  fill: transparent;
+}
+.band.is-on {
+  fill: var(--w-wash-0);
+}
+
+/* The readout. Pinned to the band it describes and pulled inside the sheet at
+   the edges; the number leads and the dictionary follows, because the reader
+   arrived holding the dictionary and wants the figure. */
+.chart-tip {
+  position: absolute;
+  top: 0;
+  z-index: 5;
+  min-width: 11rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--pp-surface);
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-sm);
+  box-shadow: 0 2px 8px var(--pp-shadow);
+  pointer-events: none;
+}
+.tip-head {
+  margin: 0 0 0.3rem;
+  padding-bottom: 0.25rem;
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+}
+.tip-rows {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.15rem 0.7rem;
+  margin: 0;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-mono);
+}
+.tip-rows dt {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--pp-muted);
+}
+.tip-key {
+  width: 11px;
+  height: 2px;
+  flex: none;
+  background: var(--abc-ink);
+}
+.tip-rows dd {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+.tip-rows b {
+  font-weight: 700;
+  color: var(--pp-ink);
+}
+.tip-n {
+  color: var(--pp-faint);
+}
+
+/* The figure's twin. Everything the readout can say is in here without a
+   pointer, including the words no alphabet sorts, which have no place on an
+   axis of distances. */
+.corpus-table {
+  margin-top: var(--pp-space-3);
+}
+.corpus-table td {
+  font-variant-numeric: tabular-nums;
+  white-space: pre;
+}
+.corpus-table .num-key {
+  color: var(--pp-faint);
+  white-space: normal;
+}
+.corpus-table .num-sum td {
+  border-top: var(--pp-rule-line) solid var(--pp-line);
+}
+.corpus-table .num-sum + .num-sum td {
+  border-top: 0;
+}
+
+.corpus {
+  margin-top: var(--pp-space-5);
+}
+
