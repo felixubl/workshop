@@ -1,16 +1,23 @@
-/* Abecedarian Distance: the figure at the foot of the page. Draws the four
-   dictionary surveys in data/dictionaries.js as one grouped column chart, and
-   marks where the word currently in the field falls.
+/* Abecedarian Distance: the two figures at the foot of the page. Both draw the
+   four dictionary surveys in data/dictionaries.js, and the first marks where
+   the word currently in the field falls.
+
+   Two figures on one set of numbers, because one axis cannot answer both
+   questions. The first is a shape — grouped columns, linear, shares of the
+   words that have a distance — and it says "two or three swaps" at a glance.
+   The second is the ends — one point per distance, logarithmic, shares of
+   every word — and it says how few words are abecedarian to begin with and how
+   far the tail runs. Neither is a summary of the other.
 
    The counting is not done here. It was done once, offline, by
    tools/abecedarian-corpus.mjs, running the same engine this page runs; what
    ships is sixty numbers rather than four megabytes of word lists, and the tool
    still opens no socket. This file only draws them.
 
-   Redrawn at the container's pixel width rather than scaled from a fixed
-   viewBox, because a viewBox that stretches takes the type with it: a 10px
-   axis label becomes 6px on a phone and 14px on a desktop, and neither is the
-   size it was chosen at. */
+   Both are redrawn at the container's pixel width rather than scaled from a
+   fixed viewBox, because a viewBox that stretches takes the type with it: a
+   10px axis label becomes 6px on a phone and 14px on a desktop, and neither is
+   the size it was chosen at. */
 
 var CORPUS = (function () {
   'use strict';
@@ -21,21 +28,30 @@ var CORPUS = (function () {
 
   var pick = document.getElementById('corpusPick');
   var meta = document.getElementById('corpusMeta');
-  var wrap = document.getElementById('chartWrap');
-  var chart = document.getElementById('chart');
-  var tip = document.getElementById('chartTip');
-  var live = document.getElementById('chartLive');
   var note = document.getElementById('chartNote');
+  var live = document.getElementById('chartLive');
   var tableBtn = document.getElementById('tableBtn');
   var tableBox = document.getElementById('corpusTable');
 
+  var wrap = document.getElementById('chartWrap');
+  var chart = document.getElementById('chart');
+  var tip = document.getElementById('chartTip');
+
+  var tailWrap = document.getElementById('tailWrap');
+  var tailSvg = document.getElementById('tail');
+  var tailTip = document.getElementById('tailTip');
+  var tailMeta = document.getElementById('tailMeta');
+  var tailNote = document.getElementById('tailNote');
+
   /* Which dictionaries are drawn, and where the reader's word sits. Both are
-     state the chart reads on every redraw. */
+     state the figures read on every redraw. One set of switches drives both,
+     so the two can never disagree about what is on screen. */
   var on = {};
   LANGS.forEach(function (l) { on[l.id] = true; });
   var atDistance = null;                 // the field's answer, or null
   var atWord = '';
-  var hover = null;                      // the band under the pointer or caret
+  var hover = null;                      // band under the pointer, first figure
+  var tailHover = null;                  // slot under the pointer, second
 
   /* Thin spaces every three digits, as the seed and the fact list use. Its own
      copy rather than a shared one: this file loads before script.js and should
@@ -43,11 +59,15 @@ var CORPUS = (function () {
   function grouped(n) {
     return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   }
-  /* One decimal down to a tenth of a percent, two below that. The four
-     dictionaries sit within a couple of points of each other at the peak, and a
-     rounded whole number would print three of them as the same figure. */
+  /* Percentages run from 81 down to 0.004 here, so a fixed number of decimals
+     is either noise at the top or nothing at the bottom. Three significant
+     figures throughout, which is as much as counts of this size support. */
   function pct(n) {
-    return n >= 1 ? n.toFixed(1) : n.toFixed(2);
+    if (n === 0) return '0';
+    if (n >= 10) return n.toFixed(1);
+    if (n >= 1) return n.toFixed(2);
+    if (n >= 0.1) return n.toFixed(3);
+    return n.toPrecision(2);
   }
   function el(tag, cls, text) {
     var e = document.createElement(tag);
@@ -62,18 +82,19 @@ var CORPUS = (function () {
   }
 
   var shown = function () { return LANGS.filter(function (l) { return on[l.id]; }); };
-  /* Every share on this figure is a share of the words that HAVE a distance.
-     The ones no alphabet sorts are counted too — they are most of every
-     dictionary — but they are not a distance and cannot stand on this axis, so
-     they are printed as a number per language instead. */
-  var share = function (l, d) { return l.sortable ? (l.counts[d] / l.sortable) * 100 : 0; };
+  /* Two denominators, one per figure, and the difference between them is the
+     whole reason there are two figures. shareSortable is of the words that have
+     a distance; shareAll is of every word the dictionary holds. */
+  var shareSortable = function (l, d) { return l.sortable ? (l.counts[d] / l.sortable) * 100 : 0; };
+  var shareAll = function (l, d) { return l.words ? (l.counts[d] / l.words) * 100 : 0; };
+  var noneShare = function (l) { return l.words ? (l.unsortable / l.words) * 100 : 0; };
 
   /* ── The picker, which is also the legend ────────────────────────────────
      One control doing both jobs. A legend that cannot be switched off would sit
      beside four switches carrying the same four names and the same four inks,
      which is the same information printed twice; and a set of switches with no
-     ink on them would leave the figure identified by colour alone. So the ink
-     is on the switch. */
+     ink on them would leave the figures identified by colour alone. So the ink
+     is on the switch. One row, above both figures, because it scopes both. */
   function drawPick() {
     pick.textContent = '';
     LANGS.forEach(function (l) {
@@ -84,8 +105,8 @@ var CORPUS = (function () {
       b.appendChild(el('span', 'pick-name', l.name));
       b.appendChild(el('code', 'pick-n', grouped(l.sortable)));
       /* data-tip rather than title: the page draws its own tooltips, and the
-         count on the switch is the half of the dictionary the figure can draw,
-         which is worth saying somewhere other than the table. */
+         count on the switch is the half of the dictionary the first figure can
+         draw, which is worth saying beside it. */
       b.dataset.tip = grouped(l.sortable) + ' of ' + grouped(l.words) + ' ' +
         l.name + ' words have a distance; ' + grouped(l.unsortable) + ' have none. ' +
         l.dict + '.';
@@ -115,7 +136,7 @@ var CORPUS = (function () {
     }
   }
 
-  /* ── The figure ──────────────────────────────────────────────────────────
+  /* ── Figure one: the shape ───────────────────────────────────────────────
      Grouped columns: one band per distance, one column per dictionary that is
      switched on. Grouped rather than overlaid, because four translucent
      histograms laid over each other produce a fifth, sixth and seventh colour
@@ -136,7 +157,7 @@ var CORPUS = (function () {
     return { top: top, values: out };
   }
 
-  function draw() {
+  function drawBars() {
     if (!wrap) return;
     var W = Math.max(280, Math.round(wrap.clientWidth));
     var H = PAD.top + PLOT_H + PAD.bottom;
@@ -146,7 +167,7 @@ var CORPUS = (function () {
     var live4 = shown();
     var high = 0;
     live4.forEach(function (l) {
-      for (var d = 0; d <= MAXD; d++) high = Math.max(high, share(l, d));
+      for (var d = 0; d <= MAXD; d++) high = Math.max(high, shareSortable(l, d));
     });
     var scale = ticks(high);
     var yOf = function (v) { return y0 - (v / scale.top) * PLOT_H; };
@@ -162,8 +183,10 @@ var CORPUS = (function () {
     chart.setAttribute('width', W);
     chart.setAttribute('height', H);
     chart.setAttribute('aria-label',
-      'The distances needed by the words of ' + live4.map(function (l) { return l.name; }).join(', ') +
-      '. Most words need two or three swaps; the full figures are in the table below.');
+      'How far the alphabet has to move, for the words of ' +
+      live4.map(function (l) { return l.name; }).join(', ') +
+      ', as a share of the words that have a distance. Most need two or three ' +
+      'swaps. The full figures are in the table below.');
 
     /* Grid first, so every mark lands on top of it. Solid hairlines one step
        off the sheet: a dashed grid reads as a threshold, and this one is only
@@ -194,13 +217,14 @@ var CORPUS = (function () {
 
       live4.forEach(function (l, i) {
         if (l.counts[d] === 0) return;
-        var h = (share(l, d) / scale.top) * PLOT_H;
+        var h = (shareSortable(l, d) / scale.top) * PLOT_H;
         /* A hairline floor for the tail. Seven German words need nine swaps,
            which is 0.07% and a fifth of a pixel; drawn to scale it is not a
            short column, it is no column, and the reader would take the tail to
            end two bands earlier than it does. So a non-zero count gets at least
-           a hairline, and the note says the floor is there. Exact counts are in
-           the table, where nothing is rounded up to be visible. */
+           a hairline, and the note says the floor is there. The figure below
+           has no need of the trick — a log axis gives the tail its own room —
+           and the table rounds nothing up to be visible. */
         h = Math.max(h, 1);
         var x = x0 + i * (barW + GAP);
         /* A 4px rounded data-end, square where it meets the baseline — and no
@@ -244,14 +268,162 @@ var CORPUS = (function () {
     if (hover !== null) place(hover);
   }
 
-  /* ── The readout ─────────────────────────────────────────────────────────
-     Everything it shows is also in the table below, which is the rule: a
-     tooltip may add convenience and may never be the only way to a number. */
-  function place(d) {
+  /* ── Figure two: the ends ────────────────────────────────────────────────
+     One point per distance per dictionary, on a logarithmic axis, as a share of
+     every word rather than of the sortable ones.
+
+     Points and lines, not columns. A column says "this much" by its length from
+     a baseline, and a log axis has no baseline to measure from — zero is
+     infinitely far down it. A point says "here", which is all a log axis can
+     honestly support. */
+
+  var TPAD = { top: 16, right: 10, bottom: 42, left: 54 };
+  var TPLOT_H = 214;
+  var DECADES = [0.001, 0.01, 0.1, 1, 10, 100];
+  var LOW = 0.001, HIGH = 100;
+
+  function logY(v, y0) {
+    var t = (Math.log(v) - Math.log(LOW)) / (Math.log(HIGH) - Math.log(LOW));
+    return y0 - Math.max(0, Math.min(1, t)) * TPLOT_H;
+  }
+
+  /* Two zones: the words no alphabet sorts, then the eleven distances, with a
+     gap and a rule between them. "None" stands apart because it is not a
+     distance — putting it on the axis as though it were would be the figure
+     saying something the survey does not.
+
+     The none zone is measured rather than given a share of the width, because
+     what it has to hold is four dots side by side and that is a number of
+     pixels, not a fraction of the sheet. Given a share, it shrank with the
+     page and the four dots merged again at phone width. */
+  var LANE = 9;                            // one dot's lane in the none zone
+  function tailLayout(W, n) {
+    var plotW = W - TPAD.left - TPAD.right;
+    var noneW = Math.max(38, LANE * n + 10);
+    var gap = 14;
+    return {
+      noneW: noneW, gap: gap, lanes: n,
+      lane: Math.min(11, (noneW - 8) / Math.max(1, n)),
+      distW: (plotW - noneW - gap) / (MAXD + 1),
+      left: TPAD.left
+    };
+  }
+  /* Slot -1 is "none"; lane is which dictionary's dot within it. */
+  function tailX(slot, W, lane, n) {
+    var L = tailLayout(W, n || shown().length);
+    if (slot < 0) {
+      var i = lane === undefined ? (L.lanes - 1) / 2 : lane;
+      return L.left + L.noneW / 2 + (i - (L.lanes - 1) / 2) * L.lane;
+    }
+    return L.left + L.noneW + L.gap + L.distW * (slot + 0.5);
+  }
+
+  function drawTail() {
+    if (!tailWrap) return;
+    var W = Math.max(280, Math.round(tailWrap.clientWidth));
+    var H = TPAD.top + TPLOT_H + TPAD.bottom;
+    var y0 = TPAD.top + TPLOT_H;
     var live4 = shown();
-    tip.textContent = '';
-    var head = el('p', 'tip-head', d + (d === 1 ? ' swap' : ' swaps'));
-    tip.appendChild(head);
+    var L = tailLayout(W, live4.length);
+
+    /* The four "none" values sit between 61% and 81%, which is a fifth of a
+       decade — five pixels on this axis, and four dots eight pixels across
+       land on top of each other. So they are dealt sideways, one lane each.
+       Nothing is lost by it: the zone has no scale along it, because "none" is
+       a single category and not a position. The dots on the distances are never
+       moved sideways, where x means something. */
+
+    tailSvg.textContent = '';
+    tailSvg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    tailSvg.setAttribute('width', W);
+    tailSvg.setAttribute('height', H);
+    tailSvg.setAttribute('aria-label',
+      'The same survey as a share of every word, on a logarithmic axis, for ' +
+      live4.map(function (l) { return l.name; }).join(', ') +
+      '. Most words have no distance at all; few are already abecedarian; the ' +
+      'tail runs to ten swaps in German. The full figures are in the table below.');
+
+    DECADES.forEach(function (v) {
+      var y = logY(v, y0);
+      tailSvg.appendChild(node('line', {
+        class: v === LOW ? 'ax-base' : 'ax-grid',
+        x1: TPAD.left, x2: W - TPAD.right, y1: y, y2: y
+      }));
+      var t = node('text', { class: 'ax-tick ax-tick-y', x: TPAD.left - 8, y: y + 3.5 });
+      t.textContent = (v < 1 ? String(v) : String(v)) + '%';
+      tailSvg.appendChild(t);
+    });
+
+    /* The rule that keeps "none" out of the sequence. */
+    var split = L.left + L.noneW + L.gap / 2;
+    tailSvg.appendChild(node('line', {
+      class: 'ax-split', x1: split, x2: split, y1: TPAD.top, y2: y0
+    }));
+
+    live4.forEach(function (l, li) {
+      /* One polyline over the distances the dictionary actually reaches. The
+         line simply stops where the counts do, which is the tail's end drawn
+         rather than described: English runs out at eight, German at ten. */
+      var pts = [];
+      for (var d = 0; d <= MAXD; d++) {
+        if (l.counts[d] === 0) continue;
+        pts.push(tailX(d, W, undefined, live4.length) + ',' + logY(shareAll(l, d), y0));
+      }
+      if (pts.length > 1)
+        tailSvg.appendChild(node('polyline', { class: 'trace ink-' + l.id, points: pts.join(' ') }));
+
+      /* The dots carry a ring in the sheet's own colour, so where two
+         dictionaries land on the same value they stay two dots. */
+      for (var q = 0; q <= MAXD; q++) {
+        if (l.counts[q] === 0) continue;
+        tailSvg.appendChild(node('circle', {
+          class: 'dot ink-' + l.id,
+          cx: tailX(q, W, undefined, live4.length), cy: logY(shareAll(l, q), y0), r: 4
+        }));
+      }
+      tailSvg.appendChild(node('circle', {
+        class: 'dot dot-none ink-' + l.id,
+        cx: tailX(-1, W, li, live4.length), cy: logY(noneShare(l), y0), r: 4
+      }));
+    });
+
+    var slots = [-1];
+    for (var s = 0; s <= MAXD; s++) slots.push(s);
+    slots.forEach(function (slot) {
+      var centre = slot < 0 ? L.left + L.noneW / 2 : tailX(slot, W, undefined, live4.length);
+      var w = slot < 0 ? L.noneW : L.distW;
+      var t = node('text', {
+        class: 'ax-tick ax-tick-x' + (slot === atDistance ? ' is-at' : '') +
+               (slot < 0 ? ' ax-tick-none' : ''),
+        x: centre, y: y0 + 16
+      });
+      t.textContent = slot < 0 ? 'none' : String(slot);
+      tailSvg.appendChild(t);
+
+      var hit = node('rect', {
+        class: 'band' + (slot === tailHover ? ' is-on' : ''),
+        x: centre - w / 2, y: TPAD.top, width: w, height: TPLOT_H
+      });
+      hit.dataset.d = slot;
+      tailSvg.appendChild(hit);
+    });
+
+    var xl = node('text', {
+      class: 'ax-title', x: TPAD.left + (W - TPAD.left - TPAD.right) / 2, y: y0 + 36
+    });
+    xl.textContent = 'swaps of the alphabet';
+    tailSvg.appendChild(xl);
+
+    if (tailHover !== null) placeTail(tailHover);
+  }
+
+  /* ── The readouts ────────────────────────────────────────────────────────
+     Everything they show is also in the table below, which is the rule: a
+     tooltip may add convenience and may never be the only way to a number. */
+  function readout(box, host, slot, valueOf, countOf, headOf, pad, xOf) {
+    var live4 = shown();
+    box.textContent = '';
+    box.appendChild(el('p', 'tip-head', headOf(slot)));
     var dl = el('dl', 'tip-rows');
     live4.forEach(function (l) {
       var dt = el('dt', null);
@@ -261,28 +433,52 @@ var CORPUS = (function () {
       dt.appendChild(el('i', 'tip-key ink-' + l.id));
       dt.appendChild(document.createTextNode(l.name));
       dl.appendChild(dt);
+      var n = countOf(l, slot);
       var dd = el('dd', null);
-      dd.appendChild(el('b', null, pct(share(l, d)) + '%'));
-      dd.appendChild(el('span', 'tip-n', grouped(l.counts[d]) + (l.counts[d] === 1 ? ' word' : ' words')));
+      dd.appendChild(el('b', null, pct(valueOf(l, slot)) + '%'));
+      dd.appendChild(el('span', 'tip-n', grouped(n) + (n === 1 ? ' word' : ' words')));
       dl.appendChild(dd);
     });
-    tip.appendChild(dl);
-    tip.hidden = false;
+    box.appendChild(dl);
+    box.hidden = false;
 
-    /* Beside the band rather than over it, and on whichever side has the room:
-       a readout that covers the columns it is describing is answering a
-       question by hiding the answer. Then pulled back inside the sheet if it
-       would still hang off an edge. */
-    var W = wrap.clientWidth;
-    var bandW = (W - PAD.left - PAD.right) / (MAXD + 1);
-    var centre = PAD.left + bandW * (d + 0.5);
-    var w = tip.offsetWidth;
-    var clear = bandW / 2 + 8;
-    var left = d * 2 < MAXD ? centre + clear : centre - clear - w;
-    tip.style.left = Math.max(0, Math.min(W - w, left)) + 'px';
+    /* Beside the slot rather than over it, and on whichever side has the room:
+       a readout that covers the marks it is describing is answering a question
+       by hiding the answer. Then pulled back inside the sheet if it would still
+       hang off an edge. */
+    var W = host.clientWidth;
+    var centre = xOf(slot, W);
+    var w = box.offsetWidth;
+    var clear = 14;
+    var left = centre < (W / 2) ? centre + clear : centre - clear - w;
+    box.style.left = Math.max(0, Math.min(W - w, left)) + 'px';
 
-    live.textContent = d + (d === 1 ? ' swap: ' : ' swaps: ') +
-      live4.map(function (l) { return l.name + ' ' + pct(share(l, d)) + '%'; }).join(', ');
+    live.textContent = headOf(slot) + ': ' +
+      live4.map(function (l) { return l.name + ' ' + pct(valueOf(l, slot)) + '%'; }).join(', ');
+  }
+
+  function place(d) {
+    readout(tip, wrap, d,
+      shareSortable,
+      function (l, k) { return l.counts[k]; },
+      function (k) { return k + (k === 1 ? ' swap' : ' swaps'); },
+      PAD,
+      function (k, W) {
+        var bandW = (W - PAD.left - PAD.right) / (MAXD + 1);
+        return PAD.left + bandW * (k + 0.5);
+      });
+  }
+
+  function placeTail(slot) {
+    readout(tailTip, tailWrap, slot,
+      function (l, k) { return k < 0 ? noneShare(l) : shareAll(l, k); },
+      function (l, k) { return k < 0 ? l.unsortable : l.counts[k]; },
+      function (k) { return k < 0 ? 'no distance' : k + (k === 1 ? ' swap' : ' swaps'); },
+      TPAD,
+      function (k, W) {
+        var L = tailLayout(W, shown().length);
+        return k < 0 ? L.left + L.noneW / 2 : tailX(k, W, undefined, shown().length);
+      });
   }
 
   function bandAt(ev) {
@@ -290,6 +486,16 @@ var CORPUS = (function () {
     var x = ev.clientX - box.left - PAD.left;
     var bandW = (box.width - PAD.left - PAD.right) / (MAXD + 1);
     var d = Math.floor(x / bandW);
+    return d >= 0 && d <= MAXD ? d : null;
+  }
+
+  function tailSlotAt(ev) {
+    var box = tailSvg.getBoundingClientRect();
+    var L = tailLayout(box.width, shown().length);
+    var x = ev.clientX - box.left - L.left;
+    if (x < 0) return null;
+    if (x < L.noneW) return -1;
+    var d = Math.floor((x - L.noneW - L.gap) / L.distW);
     return d >= 0 && d <= MAXD ? d : null;
   }
 
@@ -303,16 +509,28 @@ var CORPUS = (function () {
     else place(hover);
   }
 
+  function setTailHover(slot) {
+    if (slot === tailHover) return;
+    tailHover = slot;
+    var bands = tailSvg.querySelectorAll('.band');
+    for (var i = 0; i < bands.length; i++)
+      bands[i].classList.toggle('is-on', Number(bands[i].dataset.d) === tailHover);
+    if (tailHover === null) { tailTip.hidden = true; live.textContent = ''; }
+    else placeTail(tailHover);
+  }
+
   /* ── The numbers ─────────────────────────────────────────────────────────
-     The figure's twin, and the reason the tooltip is allowed to be a
-     convenience. Every count in the survey is here, including the words no
-     alphabet sorts, which have no place on the axis above. */
+     The figures' twin, and the reason a tooltip is allowed to be a
+     convenience. Counts only, one number to a cell: the two figures work in
+     two different denominators, and a table that printed a percentage would
+     have to pick one of them and then explain which. Counts need no
+     denominator, and every share either figure draws can be got from them. */
   function drawTable() {
     var table = el('table');
     var thead = el('thead');
     var hr = el('tr');
-    hr.appendChild(el('th', null, 'swaps'));
-    LANGS.forEach(function (l) { hr.appendChild(el('th', null, l.name)); });
+    hr.appendChild(el('th', 'num-key', 'swaps'));
+    LANGS.forEach(function (l) { hr.appendChild(el('th', 'num', l.name)); });
     thead.appendChild(hr);
     table.appendChild(thead);
 
@@ -320,31 +538,19 @@ var CORPUS = (function () {
     for (var d = 0; d <= MAXD; d++) {
       var tr = el('tr');
       tr.appendChild(el('td', 'num-key', String(d)));
-      LANGS.forEach(function (l) {
-        var td = el('td', null, grouped(l.counts[d]));
-        td.title = pct(share(l, d)) + '% of ' + l.name + ' words that have a distance';
-        tr.appendChild(td);
-      });
+      LANGS.forEach(function (l) { tr.appendChild(el('td', 'num', grouped(l.counts[d]))); });
       tb.appendChild(tr);
     }
 
-    var totals = el('tr', 'num-sum');
-    totals.appendChild(el('td', 'num-key', 'with a distance'));
-    LANGS.forEach(function (l) { totals.appendChild(el('td', null, grouped(l.sortable))); });
-    tb.appendChild(totals);
-
-    var none = el('tr', 'num-sum');
-    none.appendChild(el('td', 'num-key', 'no distance'));
-    LANGS.forEach(function (l) {
-      none.appendChild(el('td', null,
-        grouped(l.unsortable) + '  (' + pct((l.unsortable / l.words) * 100) + '%)'));
+    [['with a distance', function (l) { return l.sortable; }],
+     ['no distance', function (l) { return l.unsortable; }],
+     ['every word', function (l) { return l.words; }]
+    ].forEach(function (row, i) {
+      var tr = el('tr', 'num-sum' + (i === 0 ? ' num-rule' : ''));
+      tr.appendChild(el('td', 'num-key', row[0]));
+      LANGS.forEach(function (l) { tr.appendChild(el('td', 'num', grouped(row[1](l)))); });
+      tb.appendChild(tr);
     });
-    tb.appendChild(none);
-
-    var all = el('tr', 'num-sum');
-    all.appendChild(el('td', 'num-key', 'words'));
-    LANGS.forEach(function (l) { all.appendChild(el('td', null, grouped(l.words))); });
-    tb.appendChild(all);
 
     table.appendChild(tb);
     var scroll = el('div', 'sheet-scroll');
@@ -354,23 +560,29 @@ var CORPUS = (function () {
   }
 
   /* ── Wiring ──────────────────────────────────────────────────────────────
-     Pointer and caret get the same readout, which is the whole of the
-     keyboard story here: the arrows walk the bands, Escape puts the readout
-     away, and anything the readout would have said is in the table anyway. */
-  chart.addEventListener('pointermove', function (ev) { setHover(bandAt(ev)); });
-  chart.addEventListener('pointerleave', function () { setHover(null); });
-  chart.addEventListener('blur', function () { setHover(null); });
-  chart.addEventListener('keydown', function (ev) {
-    var k = ev.key, d = hover === null ? (atDistance === null ? 0 : atDistance) : hover;
-    if (k === 'ArrowLeft') d = Math.max(0, d - 1);
-    else if (k === 'ArrowRight') d = Math.min(MAXD, d + 1);
-    else if (k === 'Home') d = 0;
-    else if (k === 'End') d = MAXD;
-    else if (k === 'Escape') { setHover(null); return; }
-    else return;
-    ev.preventDefault();
-    setHover(d);
-  });
+     Pointer and caret get the same readout, which is the whole of the keyboard
+     story here: the arrows walk the slots, Escape puts the readout away, and
+     anything the readout would have said is in the table anyway. */
+  function keys(svg, get, set, lo, hi) {
+    svg.addEventListener('pointermove', function (ev) { set(get(ev)); });
+    svg.addEventListener('pointerleave', function () { set(null); });
+    svg.addEventListener('blur', function () { set(null); });
+    svg.addEventListener('keydown', function (ev) {
+      var cur = svg === chart ? hover : tailHover;
+      var k = ev.key;
+      var d = cur === null ? (atDistance === null ? lo : atDistance) : cur;
+      if (k === 'ArrowLeft') d = Math.max(lo, d - 1);
+      else if (k === 'ArrowRight') d = Math.min(hi, d + 1);
+      else if (k === 'Home') d = lo;
+      else if (k === 'End') d = hi;
+      else if (k === 'Escape') { set(null); return; }
+      else return;
+      ev.preventDefault();
+      set(d);
+    });
+  }
+  keys(chart, bandAt, setHover, 0, MAXD);
+  keys(tailSvg, tailSlotAt, setTailHover, -1, MAXD);
 
   tableBtn.addEventListener('click', function () {
     var open = tableBox.hidden;
@@ -379,28 +591,48 @@ var CORPUS = (function () {
     tableBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
 
-  if (window.ResizeObserver) new ResizeObserver(function () { draw(); }).observe(wrap);
-  else window.addEventListener('resize', draw);
+  function draw() { drawBars(); drawTail(); }
+
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(function () { draw(); });
+    ro.observe(wrap);
+    ro.observe(tailWrap);
+  } else {
+    window.addEventListener('resize', draw);
+  }
 
   var words = LANGS.reduce(function (a, l) { return a + l.words; }, 0);
+  var sortable = LANGS.reduce(function (a, l) { return a + l.sortable; }, 0);
+  var zero = LANGS.reduce(function (a, l) { return a + l.counts[0]; }, 0);
   meta.textContent = grouped(words) + ' words · four spelling dictionaries';
   note.textContent =
     'Every headword of four Hunspell spelling dictionaries, folded to A–Z and run ' +
     'through the engine above. The columns are shares of the words that have a ' +
-    'distance at all; most words have none — a letter that leaves and comes back ' +
-    'defeats every ordering — and how many is in the table. Anything the tail ' +
-    'counts is drawn at least a hairline high, so a handful of words in a ' +
-    'dictionary of thousands does not vanish; the table rounds nothing. ' +
-    'Sources: SCOWL (English), ' +
-    'RLA (Spanish), Dicollecte (French) and igerman98 (German), as packaged by ' +
+    'distance at all — ' + grouped(sortable) + ' of the ' + grouped(words) + ' — and ' +
+    'anything the tail counts is drawn at least a hairline high, so a handful of ' +
+    'words in a dictionary of thousands does not vanish. The figure below drops ' +
+    'both of those conveniences. Sources: SCOWL (English), RLA (Spanish), ' +
+    'Dicollecte (French) and igerman98 (German), as packaged by ' +
     'wooorm/dictionaries @ ' + ABC_CORPUS.pin + '.';
+
+  tailMeta.textContent = grouped(zero) + ' already abecedarian · ' +
+    pct((zero / words) * 100) + '% of every word';
+  tailNote.textContent =
+    'The same sixty numbers, against the two questions the figure above cannot ' +
+    'take: how rare this is, and how far it runs. Every share is of every word ' +
+    'in the dictionary, so “none” — the words no ordering sorts — stands on the ' +
+    'same axis as the rest, apart from the sequence because it is not a ' +
+    'distance. The axis is logarithmic, so each ruled line is ten times the one ' +
+    'below and the far tail keeps its size: the two German words needing ten ' +
+    'swaps are 0.0042% and are drawn there. A point rather than a column, ' +
+    'because a column measures from a baseline and a logarithmic axis has none.';
 
   drawPick();
   drawTable();
   draw();
 
   return {
-    /* Called by script.js when the field is answered, so the figure can say
+    /* Called by script.js when the field is answered, so both figures can say
        where that word stands among the four dictionaries. */
     mark: function (distance, word) {
       atDistance = (distance === null || distance === undefined) ? null : distance;

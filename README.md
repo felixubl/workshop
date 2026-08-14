@@ -153,14 +153,25 @@ figure or another file rather than a rendering.
 
   At the foot of the page the same question is asked of four languages at once:
   every headword of the English, Spanish, French and German Hunspell
-  dictionaries — 222,830 words — run through that engine, drawn as one figure
-  with a column per dictionary per distance and a switch for each. The shapes
-  are close. Every one of the four peaks at two or three swaps, and the tails
-  differ: no Spanish word needs more than seven, and German alone reaches ten.
-  Most words of every language have no distance at all — 61% of English and
-  around 80% of the other three — and the figure says how many rather than
-  quietly dropping them. Whatever is in the field is marked on the figure, so a
-  word can be read against its language.
+  dictionaries — 222,830 words — run through that engine. One row of switches
+  drives two figures, because one axis cannot answer both questions the survey
+  raises.
+
+  The first is the shape: grouped columns, linear, shares of the words that
+  have a distance. It says that all four peak at two or three swaps and that
+  they are closer to each other than one might expect.
+
+  The second is the ends: one point per distance, logarithmic, shares of *every*
+  word. On that axis the rare cases keep their size. Only 1,225 of the 222,830
+  words are already abecedarian — 0.55%, and it ranges from 1.1% of English
+  down to 0.31% of Spanish. The tails separate too: no Spanish word needs more
+  than seven swaps, English runs out at eight, and German alone reaches ten, on
+  two words out of 47,707. The words no ordering sorts at all — most of every
+  dictionary, 61% of English and around 80% of the other three — stand on that
+  same axis, apart from the sequence, because they are not a distance.
+
+  Whatever is in the field is marked on the first figure, so a word can be read
+  against its language.
 
   The counting is a build step, not a fetch:
   [`tools/abecedarian-corpus.mjs`](tools/abecedarian-corpus.mjs) surveys the
@@ -168,11 +179,17 @@ figure or another file rather than a rendering.
   [`abecedarian/data/`](abecedarian/data/), which is sixty numbers rather than
   four megabytes of word lists, and keeps the tool on `local`. The sources are
   pinned to one commit of one repository so the four are packaged identically
-  and the run repeats. The figure's four inks are not the site's plates: the
-  plates are the index's category vocabulary, and green beside red is the one
-  pair a red-green reader cannot separate. They were searched for instead,
-  against the lightness, chroma, contrast and colour-vision separation each
-  needs, and then searched again for the quietest set that still clears it.
+  and the run repeats. The four inks are not the site's plates: the plates are
+  the index's category vocabulary, and green beside red is the one pair a
+  red-green reader cannot separate. They were searched for instead, against the
+  lightness, chroma, contrast and colour-vision separation each needs, and then
+  searched again for the quietest set that still clears it.
+
+  Under both figures is the table, which is their twin: counts only, one number
+  to a cell. The figures work in two different denominators, and a table that
+  printed a percentage would have to pick one of them and then explain which —
+  counts need no denominator, and every share either figure draws can be got
+  from them.
 
 Planned: CSV and spreadsheet toolkit, developer tools, archive and file tools,
 calendar and date tools.
