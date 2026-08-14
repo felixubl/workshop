@@ -486,25 +486,72 @@ section[data-when],
   color: var(--pp-faint);
 }
 
-/* The figure's twin. Everything the readout can say is in here without a
-   pointer, including the words no alphabet sorts, which have no place on an
-   axis of distances. */
+/* ── The second figure ─────────────────────────────────────────────────────
+   Points and a trace on a logarithmic axis. No fills, so the ink is on the
+   stroke rather than the body of the mark. */
+.trace {
+  fill: none;
+  stroke: var(--abc-ink);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+/* The ring is the sheet's own colour, not a border: it is what keeps two dots
+   on the same value from reading as one. */
+.dot {
+  fill: var(--abc-ink);
+  stroke: var(--pp-surface);
+  stroke-width: 2;
+}
+/* The rule that stands the words no alphabet sorts apart from the distances.
+   Structural rather than a gridline, because it separates two kinds of thing
+   rather than measuring anything. */
+.ax-split {
+  stroke: var(--pp-hair);
+  stroke-width: var(--pp-rule-line);
+}
+.ax-tick-none {
+  fill: var(--pp-muted);
+}
+
+/* ── The numbers ───────────────────────────────────────────────────────────
+   The figures' twin. One number to a cell, right-aligned on tabular figures so
+   a column of counts can be read down as well as across.
+
+   What went wrong before: base.css gives every sheet table a fixed layout, and
+   these cells carried a count and a percentage with a gap held open by
+   white-space: pre. Fixed tracks plus text that cannot wrap does not clip and
+   does not scroll — it simply overflows into the next column and prints on top
+   of it. The percentages are gone (they belong to a figure, which has an axis
+   to put them on), the layout is the table's own, and nothing in a cell can
+   collide with its neighbour. */
 .corpus-table {
   margin-top: var(--pp-space-3);
 }
-.corpus-table td {
+.corpus-table table {
+  table-layout: auto;
+}
+.corpus-table .num {
+  text-align: right;
   font-variant-numeric: tabular-nums;
-  white-space: pre;
+  white-space: nowrap;
 }
 .corpus-table .num-key {
   color: var(--pp-faint);
-  white-space: normal;
+  white-space: nowrap;
+  width: 1%;
 }
-.corpus-table .num-sum td {
+.corpus-table .num-rule td {
   border-top: var(--pp-rule-line) solid var(--pp-line);
 }
-.corpus-table .num-sum + .num-sum td {
-  border-top: 0;
+.corpus-table .num-sum .num {
+  color: var(--pp-ink);
+}
+
+/* The second figure's own band, which is a heading rather than the top of the
+   section, so it takes the space a sheet keeps above it. */
+.corpus-second {
+  margin-top: var(--pp-space-5);
 }
 
 .corpus {

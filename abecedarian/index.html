@@ -198,11 +198,41 @@
         </div>
         <!-- What the readout says, for a reader who is driving the figure with
              the arrow keys rather than a pointer. role="status" is already a
-             polite live region; the attribute would only repeat it. -->
+             polite live region; the attribute would only repeat it. Both
+             figures announce through this one: only one of them is under a
+             pointer or a caret at a time. -->
         <p class="sr-only" id="chartLive" role="status"></p>
       </div>
     </div>
     <p class="sheet-note" id="chartNote"></p>
+
+    <!-- ── The same survey, from zero ───────────────────────────────────────
+         The figure above is a shape: it says two or three swaps and it says it
+         well. What it cannot say is anything about the ends. Its columns are
+         shares of the words that HAVE a distance, so the majority that have
+         none is off it entirely; and its axis is linear, so the seven German
+         words that need nine swaps are a fifth of a pixel.
+
+         This one is the same numbers against the other two questions. Every
+         share is of every word in the dictionary, so how many are abecedarian
+         at all can simply be read off. And the axis is logarithmic, so a decade
+         is a decade wherever it falls: 61% and 0.004% are the same distance
+         apart as 61% and 0.6%. Nothing here is new data — it is the same sixty
+         numbers, asked what the other figure cannot ask. -->
+    <div class="result-bar corpus-second">
+      <p class="section-label">The same survey, end to end</p>
+      <code class="meta" id="tailMeta"></code>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-body">
+        <div class="chart-wrap" id="tailWrap">
+          <svg id="tail" class="chart" role="img" tabindex="0"></svg>
+          <div class="chart-tip" id="tailTip" hidden></div>
+        </div>
+      </div>
+    </div>
+    <p class="sheet-note" id="tailNote"></p>
 
     <div class="sheet corpus-table" id="corpusTable" hidden></div>
   </section>
