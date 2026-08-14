@@ -177,27 +177,51 @@ figure or another file rather than a rendering.
   Romanian, Hungarian and Basque each lose 7–9% of their own distinctions.
   `tools/abecedarian-corpus.mjs` names what was dropped and why.
 
-  One row of switches drives two figures, because one axis cannot answer both
-  questions the survey raises.
+  Two figures, and they cut the same numbers the other way up from each other.
 
-  The first is the shape: grouped columns, linear, shares of the words that
-  have a distance. All thirteen peak at two or three swaps.
+  The first has the distance on the x axis: one bar per number of swaps, and
+  each bar is made of the dictionaries the switches are on, every one
+  contributing the share of its *own* words that need exactly that many. So a
+  segment is a percentage and reads straight off the bar, and the outline of
+  the whole run is the distribution — all thirteen peak at two or three swaps.
+  The bar's total is those percentages added together and is not a share of
+  anything, which is why that axis counts in points rather than per cent.
 
-  The second is the ends: one point per distance, logarithmic, shares of
-  *every* word. On that axis the rare cases keep their size. Only 5,617 of the
-  2,210,779 words are already abecedarian — 0.254%. The tails separate: no
-  Spanish word needs more than seven swaps, five languages stop at eight, and
-  German and Norwegian alone reach ten. And the words no ordering sorts at all
-  turn out to be the loosest figure in the survey rather than the tightest,
-  running from 61.2% of English to 94.5% of Turkish: a language that builds
-  long words by stacking endings on them puts nearly all of them out of reach.
+  The second turns it over: one bar per dictionary, a hundred per cent of every
+  word it holds, so the words no ordering sorts are in the bar too — and what a
+  reader sees is how little of a dictionary the question even reaches. They are
+  the loosest figure in the survey, running from 61.2% of English to 94.5% of
+  Turkish: a language that builds long words by stacking endings on them puts
+  nearly all of them out of reach. Sorted by the coloured band, English at the
+  top down to Turkish at the foot, so the figure reads as one falling shape
+  rather than thirteen unrelated bars.
 
-  Four of the thirteen are struck in ink and the rest are drawn in grey, and
-  the switches move the ink rather than hiding anything. There are four inks
-  because four is how many clear the colour-vision gates pairwise, and there is
-  no fifth. A language keeps its ink for as long as it is struck; picking a
-  fifth evicts whichever has been struck longest and hands the newcomer that
-  one freed slot, so the three that stay are never repainted.
+  Only 5,617 of the 2,210,779 words are already abecedarian — 0.254%.
+
+  The two use different colour vocabularies, and that is the point rather than
+  an oversight: what a segment *is* differs between them. In the first a
+  segment is a dictionary, so colour is an identity — four inks, because four
+  is how many clear the colour-vision gates pairwise and there is no fifth. A
+  language keeps its ink while it is drawn; picking a fifth evicts whichever
+  has been drawn longest and hands over that one slot, so the survivors are
+  never repainted. In the second a segment is a distance, where 3 comes after 2
+  and the order *is* the meaning, so colour is an ordinal ramp: one hue in
+  eight monotone lightness steps, checked as a ramp rather than as a palette
+  (monotone lightness, every adjacent gap ≥ 0.06, the end nearest the sheet
+  clearing 2:1 against it, one hue throughout). Eight steps is what those gates
+  allow while the pale end stays off the paper, so it ends at "7 or more";
+  "none" is not a distance and takes a neutral off the ramp entirely.
+
+  In both, every segment present is drawn big enough to see and what that costs
+  comes off the largest one — in the second always "none", which runs from 61%
+  to 94% and can afford it — so the smallest classes stay visible. In the
+  second the floor, the gaps and the margins all scale with the width
+  available, because a minimum in pixels means something different on a phone.
+
+  A third, logarithmic figure used to sit between these two and carried the far
+  tail distance by distance. It is gone; the tail lives in the first figure's
+  own bands, in the second's last ramp step, in the record rows, and in the
+  table.
 
   Under both is the far end named: the worst word in each dictionary, and every
   word tying for worst where the tie is short enough to print — the record is
@@ -207,8 +231,8 @@ figure or another file rather than a rendering.
   are findings rather than a shelf of examples, which is why they sit at the
   end of the survey and not beside the field.
 
-  Whatever is in the field is marked on the first figure, so a word can be read
-  against its language.
+  Whatever is in the field is marked on both: a hairline down its band in the
+  first, an outline round the band it falls in on the second.
 
   The counting is a build step, not a fetch:
   [`tools/abecedarian-corpus.mjs`](tools/abecedarian-corpus.mjs) surveys the
@@ -217,12 +241,13 @@ figure or another file rather than a rendering.
   of hundred numbers rather than forty megabytes of word lists, which keeps the
   tool on `local`. It asserts its own arithmetic before writing: that each
   histogram sums to the sortable count, and that the record and the words
-  holding it match the histogram's last column. The four inks are not the
-  site's plates: the plates are the index's category vocabulary, and green
-  beside red is the one pair a red-green reader cannot separate. They were
-  searched for instead, against the lightness, chroma, contrast and
-  colour-vision separation each needs, and then searched again for the quietest
-  set that still clears it.
+  holding it match the histogram's last column. Neither the inks nor the ramp
+  are pressed from the site's plates: the plates are the index's category
+  vocabulary, and green beside red is the one pair a red-green reader cannot
+  separate. The inks were searched for against lightness, chroma, contrast and
+  colour-vision separation over all six pairs, then searched again for the
+  quietest set that still clears it; the ramp is an ochre at hue 70, which
+  keeps the scale clear of all four of them.
 
   Under everything is the table, which is the figures' twin: a row per
   dictionary, counts only, one number to a cell. The figures work in two

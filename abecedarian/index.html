@@ -185,19 +185,20 @@
   <section class="corpus">
 
     <div class="result-bar">
-      <p class="section-label">What a dictionary costs</p>
+      <p class="section-label">What the words cost</p>
       <code class="meta" id="corpusMeta"></code>
     </div>
 
     <!-- The switches sit above the sheets rather than inside them, because
-         they scope both figures. They are the legend as well: the ink is on
-         the switch, so nothing on a figure is identified by colour alone.
+         they scope the first figure and name what the second is drawing. They
+         are its legend as well: in that figure a segment is a dictionary, so
+         the ink on the switch is the ink in the bar and nothing there is
+         identified by colour alone.
 
-         With thirteen dictionaries and four inks they moved from meaning
-         "shown" to meaning "struck". Everything is drawn either way; the
-         switches decide which four are in colour and which are grey. -->
+         Four at a time, because four is how many inks a red-green reader can
+         still tell apart pairwise and there is no fifth. -->
     <div class="corpus-bar">
-      <div class="picks" id="corpusPick" role="group" aria-label="Which four dictionaries are struck in ink"></div>
+      <div class="picks" id="corpusPick" role="group" aria-label="Which dictionaries the first figure draws"></div>
       <button class="btn-ghost preset" type="button" id="tableBtn" aria-expanded="false" aria-controls="corpusTable">the numbers</button>
     </div>
 
@@ -207,43 +208,48 @@
           <svg id="chart" class="chart" role="img" tabindex="0"></svg>
           <div class="chart-tip" id="chartTip" hidden></div>
         </div>
-        <!-- What the readout says, for a reader who is driving the figure with
-             the arrow keys rather than a pointer. role="status" is already a
-             polite live region; the attribute would only repeat it. Both
-             figures announce through this one: only one of them is under a
-             pointer or a caret at a time. -->
+        <!-- What the readout says, for a reader driving a figure with the arrow
+             keys rather than a pointer. role="status" is already a polite live
+             region; the attribute would only repeat it. Both figures announce
+             through this one: only one of them is under a pointer or a caret at
+             a time. -->
         <p class="sr-only" id="chartLive" role="status"></p>
       </div>
     </div>
     <p class="sheet-note" id="chartNote"></p>
 
-    <!-- ── The same survey, from zero ───────────────────────────────────────
-         The figure above is a shape: it says two or three swaps and it says it
-         well. What it cannot say is anything about the ends. Its columns are
-         shares of the words that HAVE a distance, so the majority that have
-         none is off it entirely; and its axis is linear, so the seven German
-         words that need nine swaps are a fifth of a pixel.
+    <!-- ── One bar per dictionary ───────────────────────────────────────────
+         The same form again, and the only thing that changes is what the bar
+         is a hundred per cent OF.
 
-         This one is the same numbers against the other two questions. Every
-         share is of every word in the dictionary, so how many are abecedarian
-         at all can simply be read off. And the axis is logarithmic, so a decade
-         is a decade wherever it falls: 61% and 0.004% are the same distance
-         apart as 61% and 0.6%. Nothing here is new data — it is the same sixty
-         numbers, asked what the other figure cannot ask. -->
+         Above, it is the words that have a distance, so the distribution fills
+         the bar and its shape can be read. Here it is every word the dictionary
+         holds, so the words no ordering sorts — most of every one of them — are
+         in the bar too, and what a reader sees is how little of a dictionary
+         the question even reaches.
+
+         Two denominators, one form, one ramp. A logarithmic figure used to sit
+         between these two and carried the far tail distance by distance; it is
+         gone, and the tail lives in the ramp's last step, the record rows below
+         and the table. -->
     <div class="result-bar corpus-second">
-      <p class="section-label">The same survey, end to end</p>
-      <code class="meta" id="tailMeta"></code>
+      <p class="section-label">What a dictionary is made of</p>
+      <code class="meta" id="stackMeta"></code>
     </div>
 
     <div class="sheet">
       <div class="sheet-body">
-        <div class="chart-wrap" id="tailWrap">
-          <svg id="tail" class="chart" role="img" tabindex="0"></svg>
-          <div class="chart-tip" id="tailTip" hidden></div>
+        <div class="chart-wrap" id="stackWrap">
+          <svg id="stack" class="chart" role="img" tabindex="0"></svg>
+          <div class="chart-tip" id="stackTip" hidden></div>
         </div>
+        <!-- A ramp key, not a row of chips: the steps are a scale and are read
+             as one strip with its two ends named. The neutral stands off to the
+             side with a gap, because it is not on the scale. -->
+        <div class="ramp-key" id="rampKeyB" aria-hidden="true"></div>
       </div>
     </div>
-    <p class="sheet-note" id="tailNote"></p>
+    <p class="sheet-note" id="stackNote"></p>
 
     <!-- ── The far end, named ───────────────────────────────────────────────
          The figure above draws a point at ten swaps and cannot say what is
