@@ -113,6 +113,15 @@ function survey(words) {
   const hist = new Map();
   let kept = 0, unsortable = 0, longest = 0;
 
+  /* The far end of the tail, kept as words rather than as a count. The page
+     draws a column at ten swaps and cannot say which words are standing in it;
+     these are them. Everything at the current record is held, and the list is
+     emptied whenever the record breaks, so what comes out is every word that
+     ties for worst — the spelling as the dictionary prints it, not the folded
+     form, because a reader should recognise it. */
+  let peak = -1;
+  let peakWords = [];
+
   for (const raw of words) {
     const word = accept(raw);
     if (!word || seen.has(word)) continue;
@@ -126,9 +135,12 @@ function survey(words) {
     let d = byRoot.get(root);
     if (d === undefined) { d = ABC.alphabetDistance(word); byRoot.set(root, d); }
     hist.set(d, (hist.get(d) || 0) + 1);
+
+    if (d > peak) { peak = d; peakWords = []; }
+    if (d === peak) peakWords.push(raw);
   }
 
-  return { kept, unsortable, hist, roots: byRoot.size, longest };
+  return { kept, unsortable, hist, roots: byRoot.size, longest, peak, peakWords };
 }
 
 const results = [];
@@ -157,11 +169,23 @@ for (const r of results) {
     throw new Error(`${r.id}: histogram sums to ${summed}, expected ${r.sortable}`);
   if (r.sortable + r.unsortable !== r.kept)
     throw new Error(`${r.id}: ${r.sortable} + ${r.unsortable} != ${r.kept}`);
+  /* The worst words have to be the words in the last column of the histogram,
+     or the page would be printing one thing and drawing another. */
+  if (r.peak !== Math.max(...r.hist.keys()))
+    throw new Error(`${r.id}: peak ${r.peak} is not the histogram's last column`);
+  if (r.peakWords.length !== r.hist.get(r.peak))
+    throw new Error(`${r.id}: ${r.peakWords.length} worst words, histogram says ${r.hist.get(r.peak)}`);
 }
 
 /* One shared x axis, so the four rows are the same length and the page can
    read them as a matrix rather than as four ragged lists. */
 const MAX = Math.max(...results.map((r) => Math.max(...r.hist.keys())));
+
+/* How many of the worst words to carry. All of them, where "all" is two or
+   three; a handful where a dozen tie, with the true count beside it so the page
+   can say it is showing a handful. They come out in dictionary order, which is
+   the order they were read in — arbitrary between ties, but not chosen. */
+const PEAK_KEEP = 6;
 
 const rows = results.map((r) => {
   const counts = [];
@@ -172,6 +196,9 @@ const rows = results.map((r) => {
     ',\n    words: ' + r.kept +
     ', sortable: ' + r.sortable +
     ', unsortable: ' + r.unsortable +
+    ',\n    peak: ' + r.peak +
+    ', peakCount: ' + r.peakWords.length +
+    ',\n    peakWords: ' + JSON.stringify(r.peakWords.slice(0, PEAK_KEEP)) +
     ',\n    counts: [' + counts.join(', ') + '] }';
 });
 
