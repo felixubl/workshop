@@ -325,6 +325,35 @@
     </div>
     <p class="sheet-note" id="peakNote"></p>
 
+    <!-- ── Where words meet ─────────────────────────────────────────────────
+         The tool takes a word down in two steps, and this asks what each step
+         merges. They behave nothing alike.
+
+         Taking the repeats out merges almost nothing. It only ever joins
+         spellings differing in a doubled letter, and a dictionary rarely
+         carries both, so nearly every root in the survey stands for exactly
+         one word. A family is therefore a set of spellings and not of
+         meanings — in English it is Roman numerals and name variants — which
+         is why the words are printed here rather than only counted.
+
+         Going on to the core merges by the hundred — and still does not
+         shrink the vocabulary, because a root usually has more than one
+         shortest core and each of them is a word in its own right. There are
+         more distinct cores in the survey than there are roots to make them.
+         That is the finding, and it is the opposite of what "reducing" a
+         dictionary sounds like it should do. -->
+    <div class="result-bar corpus-second">
+      <p class="section-label">Where words meet</p>
+      <code class="meta" id="metMeta"></code>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-body">
+        <ul class="mets" id="mets"></ul>
+      </div>
+    </div>
+    <p class="sheet-note" id="metNote"></p>
+
     <div class="sheet corpus-table" id="corpusTable" hidden></div>
   </section>
 
