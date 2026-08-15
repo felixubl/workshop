@@ -239,3 +239,264 @@
 .page-card[data-src='0'] .page-cap .src { color: var(--pp-plate-1); }
 .page-card[data-src='1'] .page-cap .src { color: var(--pp-plate-2); }
 .page-card[data-src='2'] .page-cap .src { color: var(--pp-plate-3); }
+
+/* How many marks a card carries, in the caption beside the page number. It
+   takes the ink colour rather than a plate: a count is not a category. */
+.page-cap .marks {
+  margin-left: auto;
+  color: var(--pp-ink);
+}
+
+.page-cap .turn + .marks {
+  margin-left: 0;
+}
+
+/* The pens ---------------------------------------------------------------- */
+
+.viewer-pens {
+  flex-wrap: wrap;
+  gap: 10px;
+  font-family: var(--pp-font-mono);
+  font-size: 0.72rem;
+  color: var(--pp-muted);
+}
+
+.pen-label {
+  color: var(--pp-ink);
+  white-space: nowrap;
+}
+
+/* Says what the pen in hand will do, so the instruction changes with the
+   decision rather than sitting there as a permanent notice. */
+.pen-note {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--pp-faint);
+}
+
+.viewer-pens .btn-ghost:last-child {
+  margin-left: auto;
+}
+
+.pen.is-on {
+  background: var(--pp-tint);
+  border-color: var(--pp-edge);
+}
+
+.swatches {
+  display: flex;
+  gap: 4px;
+}
+
+/* A swatch is the colour itself, so the button is a frame around a field and
+   carries no label. The chosen one takes the ink edge, the same signal a
+   pressed pen takes. */
+.swatch {
+  width: 26px;
+  height: 22px;
+  padding: 2px;
+  background: var(--pp-surface);
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-sm);
+  cursor: var(--pp-cursor-point, pointer);
+}
+
+.swatch:hover {
+  border-color: var(--pp-edge);
+}
+
+.swatch:active {
+  transform: translate(1px, 1px);
+}
+
+.swatch.is-on {
+  border-color: var(--pp-edge);
+  box-shadow: inset 0 0 0 1px var(--pp-edge);
+}
+
+.swatch i {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Marks on the page being read. The layer sits over the canvas and is given
+   the canvas's own size and turn by the script, so a mark stays on the words
+   it was drawn over however the page is turned. */
+/* The blend belongs on the layer and not on the highlights inside it, which is
+   not a style choice. The layer is transformed — centred, and turned with the
+   page — and a transform makes a stacking context, so a child asking to
+   multiply would have multiplied against this layer's own empty backdrop and
+   come out as flat opaque paint over the canvas. Blending the whole layer
+   instead puts the canvas back in front of it. Blackouts survive the change
+   untouched: black multiplied by anything is black, which is exactly the claim
+   a blackout makes. */
+.mark-layer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  mix-blend-mode: multiply;
+}
+
+.mark-layer.is-drawing {
+  cursor: var(--pp-cursor-cross, crosshair);
+}
+
+.mark {
+  position: absolute;
+}
+
+.mark--censor {
+  background: #000;
+}
+
+/* The pen is a filter rather than a coat of paint, here and in the file: the
+   words underneath stay black. The multiply that does it is on .mark-layer,
+   for the reason given there. */
+
+.mark:hover {
+  outline: var(--pp-rule-structure) solid var(--pp-edge);
+  outline-offset: 1px;
+}
+
+/* The rectangle under the pointer, before the button comes up. */
+.mark-draft {
+  position: absolute;
+  border: var(--pp-rule-line) dashed var(--pp-edge);
+  background: var(--pp-tint);
+}
+
+/* The metadata sheet ------------------------------------------------------- */
+
+.meta-tools {
+  margin-bottom: 0.85rem;
+}
+
+.sheet-meta {
+  --w-sheet-min: 620px;
+}
+
+.sheet-meta td,
+.sheet-meta th {
+  vertical-align: top;
+}
+
+.sheet-meta .col-keep {
+  width: 52px;
+  text-align: center;
+}
+
+.sheet-meta td.col-keep {
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+}
+
+.sheet-meta .col-name {
+  width: 32%;
+}
+
+/* Sized to the longest word it holds plus the cell's padding, rather than
+   guessed. */
+.sheet-meta .col-note {
+  width: 118px;
+}
+
+.sheet-meta .th-keep {
+  font-size: var(--pp-size-label);
+}
+
+/* A group is a named rule rather than a box: the sheet already has an edge,
+   and a second frame inside it would be two boundaries around one thing. */
+.sheet-meta .grp-row td {
+  padding: 0.35rem 0.8rem;
+  background: var(--pp-sunk);
+  border-top: var(--pp-rule-line) solid var(--pp-line);
+  border-bottom: var(--pp-rule-line) solid var(--pp-line);
+  color: var(--pp-muted);
+}
+
+.sheet-meta tbody:first-of-type .grp-row td {
+  border-top: 0;
+}
+
+.grp-title {
+  color: var(--pp-ink);
+}
+
+.grp-blurb {
+  margin-left: 0.6rem;
+  color: var(--pp-faint);
+}
+
+.fld-name {
+  font-weight: 400;
+  text-align: left;
+}
+
+.fld-key {
+  display: block;
+  color: var(--pp-faint);
+}
+
+/* A field on its way out is struck through where it stands, so the table
+   reads as the file will be rather than as it is. */
+.fld.is-cut .fld-name,
+.fld.is-cut .val {
+  color: var(--pp-faint);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.val {
+  display: block;
+  max-height: 3.2em;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.val-blank {
+  color: var(--pp-faint);
+}
+
+/* Nothing to decide, so no switch: what the dash stands for is in the legend
+   under the sheet. */
+.fld.is-fixed .col-keep::after {
+  content: '\2014';
+  color: var(--pp-faint);
+}
+
+/* What a field gives away, in one word. Named .risk because core's .mark is
+   the system's own, and this page links core. */
+.risk {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.06rem 0.42rem;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-pill);
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  color: var(--pp-muted);
+  white-space: nowrap;
+}
+
+/* The reader's own pen over the lines that matter: a marker field rather than
+   a plate. A marked pill drops its edge, because the field is the boundary. */
+.risk.is-high,
+.legend .tag.is-marked {
+  border-color: transparent;
+  color: var(--pp-ink);
+}
+
+.legend {
+  margin: 0.9rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--pp-faint);
+}
+
+.meta-file.is-on {
+  background: var(--pp-tint);
+  border-color: var(--pp-edge);
+}

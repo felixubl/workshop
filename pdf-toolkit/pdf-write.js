@@ -106,6 +106,13 @@
       return new Ref(this.objects.length - 1, 0);
     }
 
+    // What a reference points at in this builder. Copying returns references,
+    // so anything that has to look inside what it just copied — a page's
+    // resources, on the way to adding one entry to them — comes back here.
+    value(v) {
+      return v instanceof Ref ? this.objects[v.num] : v;
+    }
+
     memoFor(doc) {
       let m = this.memo.get(doc);
       if (!m) { m = new Map(); this.memo.set(doc, m); }

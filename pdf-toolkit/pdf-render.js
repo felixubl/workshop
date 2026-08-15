@@ -17,6 +17,23 @@
 
   const { Name, Ref, Dict, PDFStream, Parser, EOF, PDFFont } = PDF;
 
+  // PDF's blend modes against the canvas operations that mean the same thing.
+  // The table is a rename rather than a reimplementation: every separable mode
+  // PDF names is one canvas already has. /Normal and /Compatible are the
+  // absence of a blend and are deliberately absent here, so they fall through
+  // to source-over along with anything this does not recognise.
+  //
+  // It earns its place on a tool that writes highlights: a pen is written as
+  // /BM /Multiply, and a renderer that drops the blend paints the pastel as
+  // opaque paint over exactly the words the pen was meant to leave readable.
+  const BLEND = {
+    Multiply: 'multiply', Screen: 'screen', Overlay: 'overlay',
+    Darken: 'darken', Lighten: 'lighten', ColorDodge: 'color-dodge',
+    ColorBurn: 'color-burn', HardLight: 'hard-light', SoftLight: 'soft-light',
+    Difference: 'difference', Exclusion: 'exclusion',
+    Hue: 'hue', Saturation: 'saturation', Color: 'color', Luminosity: 'luminosity',
+  };
+
   // --- matrices (a b c d e f), row-major as PDF writes them ------------------
 
   function mul(m, n) {
@@ -46,6 +63,7 @@
       this.dashPhase = 0;
       this.fillAlpha = 1;
       this.strokeAlpha = 1;
+      this.blend = 'source-over';
       this.font = null;
       this.fontSize = 0;
       this.charSpacing = 0;
@@ -371,11 +389,13 @@
 
       if (fill) {
         ctx.globalAlpha = gs.fillAlpha;
+        ctx.globalCompositeOperation = gs.blend;
         ctx.fillStyle = gs.fillPattern || gs.fillColor;
         ctx.fill(rule || 'nonzero');
       }
       if (stroke) {
         ctx.globalAlpha = gs.strokeAlpha;
+        ctx.globalCompositeOperation = gs.blend;
         ctx.strokeStyle = gs.strokeColor;
         // Line width is in user space, so scale it by the transform. A zero
         // width means "thinnest line the device can draw", not "invisible".
@@ -397,6 +417,7 @@
         this.pendingClip = null;
       }
       ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
       this.path = null;
     }
 
@@ -414,6 +435,9 @@
       if (!(g instanceof Dict)) return;
       const doc = this.doc, gs = this.gs;
 
+      const bm = doc.get(g, 'BM');
+      const wanted = Array.isArray(bm) ? doc.resolve(bm[0]) : bm;
+      if (wanted instanceof Name) gs.blend = BLEND[wanted.name] || 'source-over';
       const ca = doc.get(g, 'ca');
       if (typeof ca === 'number') gs.fillAlpha = Math.max(0, Math.min(1, ca));
       const CA = doc.get(g, 'CA');
@@ -595,10 +619,12 @@
       if (!style) return;
       const ctx = this.ctx;
       ctx.globalAlpha = this.gs.fillAlpha;
+      ctx.globalCompositeOperation = this.gs.blend;
       ctx.fillStyle = style;
       // `sh` paints the current clip region.
       ctx.fillRect(0, 0, this.opts.width || 10000, this.opts.height || 10000);
       ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
     }
 
     // Axial and radial shadings map onto canvas gradients directly. Function
@@ -788,6 +814,7 @@
         ctx.save();
         ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
         ctx.globalAlpha = stroke ? gs.strokeAlpha : gs.fillAlpha;
+        ctx.globalCompositeOperation = gs.blend;
         if (stroke || both) {
           ctx.strokeStyle = gs.strokeColor;
           const scale = Math.sqrt(Math.abs(m[0] * m[3] - m[1] * m[2])) || 1;
@@ -800,6 +827,7 @@
         }
         ctx.restore();
         ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
         return;
       }
 
@@ -823,10 +851,12 @@
         if (k > 0.2 && k < 5) ctx.scale(k, 1);
       }
       ctx.globalAlpha = stroke ? gs.strokeAlpha : gs.fillAlpha;
+      ctx.globalCompositeOperation = gs.blend;
       ctx.fillStyle = gs.fillColor;
       try { ctx.fillText(text, 0, 0); } catch { /* unrenderable */ }
       ctx.restore();
       ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
     }
 
     // A Type 3 glyph is a little content stream of its own.
@@ -936,6 +966,7 @@
 
       ctx.save();
       ctx.globalAlpha = gs.fillAlpha;
+      ctx.globalCompositeOperation = gs.blend;
       ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
       // Smoothing off would show the nearest-neighbour blockiness of a
       // downscaled scan; on, a thumbnail of a 3000px scan looks like the page.
@@ -951,6 +982,7 @@
       } catch { /* not drawable */ }
       ctx.restore();
       ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
     }
 
     inlineImage(parser, res) {
@@ -990,10 +1022,12 @@
         const m = mul([1 / drawable.width, 0, 0, -1 / drawable.height, 0, 1], gs.ctm);
         ctx.save();
         ctx.globalAlpha = gs.fillAlpha;
+        ctx.globalCompositeOperation = gs.blend;
         ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
         try { ctx.drawImage(drawable.canvas, 0, 0); } catch { /* skip */ }
         ctx.restore();
         ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
       }
     }
 
@@ -1001,6 +1035,7 @@
   }
 
   PDF.Renderer = Renderer;
+  PDF.BLEND_MODES = BLEND;
   PDF.mat = { mul, apply: applyM };
   PDF.rgbString = rgbString;
   PDF.cmykToRgb = cmykToRgb;
