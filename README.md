@@ -89,6 +89,43 @@ browser, and this prints a file the reader supplied.
   engine is written from scratch: no library parses, renders or writes
   anything.
 
+  Two pens mark up a page. A **highlighter** in six pastels is written as
+  `/BM /Multiply`, which is what a real highlighter does — the pen is a filter,
+  not a coat of paint, so the ink under it stays black and only the paper takes
+  the colour. A **blackout** is the opposite claim: opaque ink, *and the page's
+  own instructions rewritten with everything under it removed* — the glyphs,
+  any image lying wholly inside it, any drawing that does.
+
+  That second half is the whole point, and it is the part no screenshot can
+  show: a black rectangle painted over a name hides it from a reader and from
+  nobody else, because the characters are still in the file and the first text
+  extractor to come along hands them back. The rewrite is a second pass over
+  the content stream keeping the state the renderer keeps, since nothing in a
+  content stream says where a glyph lands — that follows from everything before
+  it. Runs of operators it does not change are copied through byte for byte, so
+  an inline image's binary stays intact and the diff between a page and its
+  redacted twin is only what actually went. A glyph goes when the blackouts
+  cover more than a third of its box; a grazed character stays and is painted
+  over, which is why the tool says to cover a little more than you need.
+
+  Marks live in the page's own entry rather than in a layer of their own, so
+  turning, moving and undo carry them without a code path each.
+
+  Alongside it, a metadata panel in the same spirit as the image cleaner: every
+  field the file discloses about whoever made it — title, author, the program
+  and version, the timestamps, the XMP packet beside the document, the file
+  identifier — each with what it gives away, and a switch per field.
+
+  Because "covered" and "deleted" look identical on screen and differ only in
+  the bytes, the claim is [checked against the saved
+  bytes](tools/verify/pdf-toolkit.html) rather than asserted: a blackout's word
+  must be absent from the file, a highlight's must survive, and the page must
+  carry exactly one set of instructions. That last one is a bug that happened —
+  the rewrite was correct and `/Contents` pointed at it, while the original
+  stream stayed in the file as an object nothing referred to, so the page
+  looked right and `strings` still found the words. The same assertions run
+  under node with `node pdf-toolkit/selftest.js`.
+
 - [Bingo Card Generator](bingo-cards/) — enter the squares and it counts the
   number of distinct cards that list can produce, exactly, at any number of
   digits. Request any number of cards and it generates that many, all

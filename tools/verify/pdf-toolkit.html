@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>verify — pdf toolkit</title>
+<!-- The toolkit's modules, and the assertions that hold them to their claims.
+     Both are the tool's own files rather than copies: a check that has drifted
+     from the thing it checks is worse than no check, and loading the same
+     bytes the page loads is the only way to guarantee it cannot drift.
+
+     The same file runs under node — `node pdf-toolkit/selftest.js` — off one
+     set of assertions. This page exists because the tool makes a claim a
+     reader cannot check by looking at it: that a blackout takes the words out
+     of the file rather than painting a bar over them. On screen the two are
+     identical. In the bytes they are not, and this is where the bytes are
+     looked at. -->
+<script src="/pdf-toolkit/pdf-lex.js"></script>
+<script src="/pdf-toolkit/pdf-filters.js"></script>
+<script src="/pdf-toolkit/pdf-doc.js"></script>
+<script src="/pdf-toolkit/pdf-write.js"></script>
+<script src="/pdf-toolkit/pdf-ops.js"></script>
+<script src="/pdf-toolkit/pdf-font.js"></script>
+<script src="/pdf-toolkit/pdf-fontmap.js"></script>
+<script src="/pdf-toolkit/pdf-render.js"></script>
+<script src="/pdf-toolkit/pdf-image.js"></script>
+<script src="/pdf-toolkit/pdf-marks.js"></script>
+<script src="/pdf-toolkit/pdf-redact.js"></script>
+<script src="/pdf-toolkit/pdf-meta.js"></script>
+<script src="/pdf-toolkit/selftest.js"></script>
+</head>
+<body style="margin:0;font:13px ui-monospace,monospace">
+<pre id="out">running…</pre>
+
+<script>
+var out = document.getElementById('out');
+var lines = [];
+function draw() { out.textContent = lines.join('\n'); }
+
+setTimeout(function () {
+  var t0 = Date.now();
+  var res = PDFTest.run(function (r) {
+    lines.push((r.pass ? 'PASS  ' : 'FAIL  ') + r.name + (r.detail ? '  ::  ' + r.detail : ''));
+    draw();
+  });
+  var failed = res.filter(function (r) { return !r.pass; }).length;
+  lines.push('');
+  lines.push((res.length - failed) + ' pass, ' + failed + ' fail, ' +
+             ((Date.now() - t0) / 1000).toFixed(1) + 's');
+  draw();
+}, 0);
+</script>
+</body>
+</html>
