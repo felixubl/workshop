@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PDF Toolkit — Felix' Workshop</title>
-<meta name="description" content="Merge, split, extract, reorder and rotate PDF pages, with every page shown as a real preview. Runs entirely in your browser: nothing is uploaded.">
+<meta name="description" content="Merge, split, extract, reorder and rotate PDF pages, black out text so it is deleted rather than covered, highlight in six pastel colours, and strip the metadata. Runs entirely in your browser: nothing is uploaded.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
@@ -104,6 +104,7 @@
         <div class="btn-row">
           <button class="btn-ghost" type="button" id="del" data-tip="Take the selected pages out of the document being built">Delete</button>
           <button class="btn-ghost" type="button" id="keepOnly" data-tip="Throw away everything except the selected pages">Keep only</button>
+          <button class="btn-ghost" type="button" id="clearMarks" data-tip="Lift every blackout and highlight off the selected pages">Marks</button>
         </div>
       </div>
       <div class="group">
@@ -118,12 +119,66 @@
     <div class="result-bar">
       <span class="section-label">Pages</span>
       <div class="result-right">
-        <button class="btn-ghost" type="button" id="view" data-tip="Read the pages full size, and turn, move, delete or mark them as you go" disabled>View full size</button>
+        <button class="btn-ghost" type="button" id="view" data-tip="Read the pages full size, and turn, move, delete, black out or highlight them as you go" disabled>View full size</button>
         <span class="tag" id="tally">nothing loaded</span>
       </div>
     </div>
 
     <div id="grid" class="page-grid"></div>
+
+    <!-- What the loaded files say about whoever made them, and what of it the
+         saved file will carry. Folded away by default: it is read before
+         saving rather than while the pages are being sorted. -->
+    <div class="result-bar">
+      <span class="section-label">Metadata</span>
+      <div class="result-right">
+        <span class="tag" id="metaTally"></span>
+        <button class="btn-ghost" type="button" id="metaToggle" aria-expanded="false" aria-controls="metaPanel" data-tip="Every field the loaded files carry, and a switch on each one this tool can drop">Show</button>
+      </div>
+    </div>
+
+    <section id="metaPanel" hidden>
+      <div class="toolbar meta-tools">
+        <div class="group" id="metaFiles" hidden>
+          <label>File</label>
+          <div class="btn-row" id="metaFileRow"></div>
+        </div>
+        <div class="group">
+          <label>Every field</label>
+          <div class="btn-row">
+            <button class="btn-ghost" type="button" id="metaCutAll">Remove all</button>
+            <button class="btn-ghost" type="button" id="metaKeepAll">Keep all</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet sheet-meta">
+        <div class="sheet-cap">
+          <code id="metaCapName"></code>
+          <code class="meta" id="metaCapNote"></code>
+        </div>
+        <div class="sheet-scroll">
+          <table id="metaTable">
+            <thead>
+              <tr>
+                <th class="col-keep" scope="col"><span class="th-keep">Keep</span></th>
+                <th class="col-name" scope="col">Field</th>
+                <th class="col-value" scope="col">Value</th>
+                <th class="col-note" scope="col">Risk</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+
+      <p class="legend">
+        <span class="tag is-marked mk--citron">identifying</span> names a person or the machine they
+        worked on. <span class="tag">telling</span> narrows it down: the program, the version, the
+        minute it was saved. A row with a dash instead of a switch is one this tool never carries
+        into the file it writes.
+      </p>
+      <p class="sheet-note" id="metaNote"></p>
+    </section>
 
     <div class="toolbar save-bar">
       <div class="group">
@@ -177,6 +232,20 @@
 
     <div class="modal__body viewer-stage" id="viewerStage"></div>
 
+    <!-- The pens. One is in hand at a time, and dragging across the page lays
+         down what it draws; a mark is lifted by clicking it. Off is a pen too,
+         so that reading a marked page cannot mark it by accident. -->
+    <div class="modal__bar viewer-pens">
+      <span class="pen-label">Pen</span>
+      <div class="btn-row">
+        <button class="btn-ghost pen is-on" type="button" id="penOff" aria-pressed="true" data-tip="Read without marking (V)">Off</button>
+        <button class="btn-ghost pen" type="button" id="penBlack" aria-pressed="false" data-tip="Drag over what must not leave the file. The text under it is deleted, not covered (B)">Blackout</button>
+      </div>
+      <div class="swatches" id="penTones" role="group" aria-label="Highlighters"></div>
+      <span class="pen-note" id="penNote"></span>
+      <button class="btn-ghost" type="button" id="markClear" data-tip="Lift every mark off this page">Clear page</button>
+    </div>
+
     <!-- Everything here acts on the page being shown, never on the selection:
          on a surface showing one page, that is the only reading that holds. -->
     <div class="modal__bar viewer-tools">
@@ -185,7 +254,7 @@
       <button class="btn-ghost" type="button" id="viewerEarlier" data-tip="Move this page one place earlier (Shift ←)">Earlier</button>
       <button class="btn-ghost" type="button" id="viewerLater" data-tip="Move this page one place later (Shift →)">Later</button>
       <button class="btn-ghost" type="button" id="viewerDel" data-tip="Take this page out of the document being built (Delete)">Delete</button>
-      <button class="btn-ghost viewer-mark" type="button" id="viewerSel" aria-pressed="false" data-tip="Mark this page to act on it back in the grid (Space)">Select</button>
+      <button class="btn-ghost viewer-mark" type="button" id="viewerSel" aria-pressed="false" data-tip="Pick this page up, to act on it back in the grid (Space)">Select</button>
     </div>
   </div>
 </div>
@@ -199,6 +268,9 @@
 <script src="pdf-fontmap.js"></script>
 <script src="pdf-render.js"></script>
 <script src="pdf-image.js"></script>
+<script src="pdf-marks.js"></script>
+<script src="pdf-redact.js"></script>
+<script src="pdf-meta.js"></script>
 <script src="script.js"></script>
 <script src="../assets/preprint/js/controls.js"></script>
 <script src="../assets/share.js"></script>

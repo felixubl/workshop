@@ -305,12 +305,14 @@
 
     // PDF space has y running up from the bottom left of the crop box; canvas
     // has y running down from the top left. This matrix reconciles the two and
-    // folds in the page's own /Rotate.
+    // folds in the page's own /Rotate, which is a turn clockwise: at 90 the
+    // foot of the page goes to the left edge, so the bottom left corner of the
+    // sheet is drawn at the top left of the canvas.
     let base;
     switch (rotate) {
-      case 90:  base = [0, 1, -1, 0, boxH, 0]; break;
+      case 90:  base = [0, -1, 1, 0, 0, boxW]; break;
       case 180: base = [-1, 0, 0, -1, boxW, boxH]; break;
-      case 270: base = [0, -1, 1, 0, 0, boxW]; break;
+      case 270: base = [0, 1, -1, 0, boxH, 0]; break;
       default:  base = [1, 0, 0, 1, 0, 0];
     }
     // Move the crop box origin to zero, rotate, then flip y and scale up.
