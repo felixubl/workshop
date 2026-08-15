@@ -1,0 +1,254 @@
+/* Fourier Bench. Only what this tool invents: the two canvases and their
+   captions, the pair of panes under the spectrogram, and the reading card.
+   The shell, toolbar, buttons, fields, tables and drop target are
+   ../assets/base.css over the vendored PREPRINT tokens, and no colour or
+   typeface is named here. */
+
+.readout {
+  font-family: var(--pp-font-mono);
+  font-size: 0.76rem;
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+  white-space: nowrap;
+}
+
+/* ── Getting started ──────────────────────────────────────────────────────── */
+
+.starts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  gap: 1.5rem;
+  margin-top: 1.6rem;
+}
+@media (max-width: 760px) {
+  .starts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.start .section-label {
+  margin-bottom: 0.5rem;
+}
+.start-say {
+  margin: 0 0 0.9rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--pp-muted);
+  max-width: 48ch;
+}
+.start-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.start-row label {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-label);
+  color: var(--pp-muted);
+}
+
+/* Once a sound is loaded the whole invitation folds to one row: still every
+   way in, no longer the only thing on the page. The prose goes, the drop
+   target keeps its dashed edge because it is still a target, and the signal
+   picker stays because comparing a recording against a square wave is the
+   quickest way to tell whether a strange-looking result is the sound or the
+   bench. `display: contents` on the pair lets both halves become items of the
+   row rather than of their own grid. */
+#intro.is-loaded {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem 1.1rem;
+  margin-bottom: 1.7rem;
+}
+#intro.is-loaded .dropzone {
+  flex: 1 1 15rem;
+  padding: 0.62rem 0.9rem;
+  text-align: left;
+  font-size: 0.86rem;
+}
+#intro.is-loaded .dropzone > p:first-child {
+  margin: 0;
+}
+#intro.is-loaded .dropzone .sheet-note,
+#intro.is-loaded .start .section-label,
+#intro.is-loaded .start-say {
+  display: none;
+}
+#intro.is-loaded .starts {
+  display: contents;
+}
+#intro.is-loaded .start {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Figures ──────────────────────────────────────────────────────────────
+   A canvas is a figure, not a panel: one hairline round it, the caption
+   under it in the machine's voice. Height is set on the element and width
+   follows the column, so the script only ever has to read a width. */
+
+.fig {
+  margin: 0 0 1.1rem;
+}
+.fig canvas {
+  display: block;
+  width: 100%;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  background: var(--pp-surface);
+  touch-action: none;
+}
+#gram {
+  height: 420px;
+  cursor: var(--pp-cursor-cross);
+}
+/* On a phone the column is narrow enough that a 420px picture is taller than
+   it is wide, which reads as a column of colour rather than as a sound over
+   time. The drawing takes its height from the box, so this is the only place
+   it is stated. */
+@media (max-width: 700px) {
+  #gram {
+    height: 280px;
+  }
+}
+.fig-cap {
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--pp-faint);
+}
+
+/* The waveform is not a figure of its own — it is the spectrogram's time axis
+   with the amplitude drawn on it, so it sits tight under the canvas above and
+   carries no caption. */
+.wave-row {
+  margin: -0.6rem 0 0.9rem;
+}
+#wave {
+  display: block;
+  width: 100%;
+  height: 80px;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  background: var(--pp-surface);
+}
+#slice {
+  height: 260px;
+}
+
+.trade {
+  display: block;
+  margin-bottom: 1.9rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+/* ── The moment ───────────────────────────────────────────────────────────── */
+
+.panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 17.5rem;
+  gap: 1.5rem;
+  align-items: start;
+  margin-bottom: 1.9rem;
+}
+@media (max-width: 860px) {
+  .panes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pane-narrow {
+    max-width: 26rem;
+  }
+}
+.pane .fig {
+  margin-bottom: 0;
+}
+
+.readout-card {
+  padding: 1rem 1.1rem 1.15rem;
+}
+.big {
+  margin: 0;
+  font-family: var(--pp-font-display);
+  font-weight: var(--pp-weight-display);
+  font-size: 2.1rem;
+  line-height: 1.05;
+  letter-spacing: var(--pp-track-head);
+}
+.big-sub {
+  margin: 0.2rem 0 0;
+  font-family: var(--pp-font-mono);
+  font-size: 0.8rem;
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-muted);
+}
+
+/* Fact rows: the name on the left in the label voice, the figure on the right
+   in the machine's. A hairline per row, none under the last. */
+.facts {
+  margin: 0.95rem 0 0;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+.facts div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.34rem 0;
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+.facts div:last-child {
+  border-bottom: 0;
+}
+.facts dt {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-label);
+  color: var(--pp-faint);
+}
+.facts dd {
+  margin: 0;
+  font-family: var(--pp-font-mono);
+  font-size: 0.8rem;
+  color: var(--pp-ink);
+  text-align: right;
+}
+
+/* ── Running text between the sheets ──────────────────────────────────────── */
+
+.sec {
+  margin-top: 2.6rem;
+}
+.prose {
+  max-width: var(--pp-measure);
+  margin: 0 0 1.2rem;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--pp-muted);
+}
+.notes p + p {
+  margin-top: 0.9rem;
+}
+.notes strong {
+  color: var(--pp-ink);
+}
+
+/* A partial the analysis could not fit into the harmonic series. Not an error
+   — a bell is mostly these — so it is set quiet rather than marked. */
+.sheet td.none {
+  color: var(--pp-faint);
+}
+/* The one number on the page that is a verdict rather than a measurement. */
+.sheet td.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.play-cell {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.sheet td .btn-ghost.preset {
+  height: 26px;
+}
