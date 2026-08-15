@@ -457,3 +457,30 @@ body:has(.lamp) {
   --w-lamp-inset: clamp(2.5rem, 6vw, 7rem);
   --w-lamp-drop: 56;
 }
+
+/* And under about 540px the index is a tool page in this one respect: the sign
+   grows until it takes the whole column, and there is no lane left beside it to
+   hang anything in. The fixture was hanging BEHIND the wordmark — shade, bulb,
+   rim and switch all out of sight behind an opaque board, with only the flex and
+   the top of the shade showing above it and the light appearing from nowhere
+   underneath. The hit area was still there and still worked, which is worse
+   rather than better: a control nobody can see is a control nobody can use, and
+   one that is technically clickable is just a trap that happens to have a prize
+   in it.
+
+   So it takes the same escape the tool pages take, up into the only clear band
+   on a full page — the header's own top padding — on the shorter flex. The lamp
+   itself does not shrink: half a drawing unit is already as thin as these
+   strokes can be drawn and hold a line, and a fixture that reads as a smudge on
+   the one screen where it is closest to the reader's eye is not a fix. What
+   moves is the ceiling.
+
+   The band has to be there on a short screen as well as a tall one, and 9vh is
+   not on a phone held in landscape; the masthead's top padding therefore takes a
+   floor that clears this fixture. That half is declared in index.html, where the
+   padding is. */
+@media (max-width: 540px) {
+  .masthead {
+    --w-lamp-drop: 56;
+  }
+}

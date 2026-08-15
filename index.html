@@ -35,6 +35,18 @@
     grid-template-columns: minmax(0, 1fr);
     gap: clamp(0.7rem, 2vw, 1.1rem);
   }
+  /* The top padding is also the lamp's band. Under 540px the sign takes the
+     whole column and the fixture hangs ABOVE it rather than beside it — see the
+     media query at the foot of assets/site.css — and the band it hangs in is
+     this padding. 9vh is enough of it on anything taller than about 710px and
+     not on a phone held in the hand, so at those widths it takes a floor
+     instead, and the floor is the height of that fixture. Nothing else on the
+     page moves: on a tall screen 9vh already clears the floor. */
+  @media (max-width: 540px) {
+    .masthead {
+      padding-top: clamp(4.5rem, 9vh, 5rem);
+    }
+  }
   /* Holds the site name. A flex row so a second item can be added later. */
   .shelf {
     display: flex;
