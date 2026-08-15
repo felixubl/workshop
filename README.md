@@ -22,7 +22,7 @@ would make both harder to read. It appears as five squares filled from the
 left plus one word. The key at the foot of the index defines all five; a card
 carries the rating and nothing more.
 
-No tool is above `fetch` today: seven never open a socket, four read public
+No tool is above `fetch` today: eight never open a socket, four read public
 data and keep nothing. `store` and `account` are defined ahead of the tools
 that will need them.
 
@@ -73,6 +73,53 @@ Raster and vector images, type, colour, audio and video.
   One render serves both the transport and the export, so the WAV cannot differ
   from what was heard. A song is a few kilobytes of integers, saved to a file
   rather than a server. Note entry wants a keyboard, and the page says so.
+
+- [Fourier Bench](fourier-bench/) — take a sound apart into the sinusoids it is
+  made of. Drop in a file, record through the microphone, or start from a
+  signal whose answer is already known. What comes back is a spectrogram with
+  the window in your hands, and a table of partials at one moment: frequency,
+  amplitude, harmonic number, note name and the cents it sits off that note.
+
+  The transform is written here —
+  [`fourier-bench/fourier.js`](fourier-bench/fourier.js) is a radix-2
+  Cooley–Tukey butterfly with the real-input packing that halves the work, five
+  windows, and the overlap-add that goes back the other way. No library parses,
+  transforms or rebuilds anything.
+
+  A bin is not a partial, and most of the arithmetic is about that gap. A
+  440 Hz tone read through 11 Hz bins has no bin of its own: it appears as a
+  hump a few bins wide whose tallest point is at 442 Hz and whose height is
+  short by up to 1.4 dB. So frequencies are interpolated — by a parabola
+  through the peak, and, where a partial holds still long enough for the two to
+  agree, by the phase it advanced between frames — and every amplitude is
+  divided by the window's measured response at the offset the partial actually
+  fell at. That is the difference between a table that is roughly right and one
+  that agrees with the closed forms to four decimal places.
+
+  A spectrogram cannot be checked by looking at it, so the analysis is run
+  backwards and the page plays the result. Splitting the spectrum into the bins
+  under the peaks and every other bin gives two sounds that add back to the
+  original at −152 dB, which is the arithmetic's own floor: whatever the sines
+  do not hold has to be somewhere, and that somewhere is audible. It is where
+  the breath, the bow, the hammer and the room went. Separately, the table of
+  partials is played back through one oscillator each with the spectrum thrown
+  away, and the page prints how far that lands from the original rather than
+  asking for trust. Both are exported as WAV.
+
+  The claims are asserted in
+  [`fourier-bench/selftest.js`](fourier-bench/selftest.js) against three things
+  that know nothing about this code: a naive O(n²) transform straight from the
+  definition, the window figures Harris published in 1978, and the series
+  Fourier published in 1822 — a square is odd harmonics at 4/πn and the bench
+  is wrong if it disagrees. Twenty-two assertions, in the browser at
+  [`tools/verify/fourier-bench.html`](tools/verify/fourier-bench.html) and
+  under node with `node fourier-bench/selftest.js`, off one set.
+
+  Where it does worst is on the page too. At an onset the sound changes inside
+  the frame measuring it, and no single spectrum describes a frame in which the
+  answer changed; shorten the frame and the onset sharpens while the partials
+  blur together. The line under the spectrogram prints that trade as a product
+  which does not depend on the frame size at all.
 
 Planned: image, SVG, font, colour, audio and video toolkits.
 

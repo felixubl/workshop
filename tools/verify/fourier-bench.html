@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>verify — fourier bench</title>
+<!-- The bench's modules, and the assertions that hold them to their claims.
+     Both are the tool's own files rather than copies: a check that has drifted
+     from the thing it checks is worse than no check, and loading the same
+     bytes the page loads is the only way to guarantee it cannot drift.
+
+     The same file runs under node — `node fourier-bench/selftest.js` — off one
+     set of assertions. This page exists because the tool's output is the one
+     kind that cannot be checked by looking at it. A spectrogram is a coloured
+     rectangle and a broken transform draws one exactly as convincing as a
+     working one; a table of frequencies and amplitudes is plausible whatever
+     is in it. So the numbers are checked against three things that know
+     nothing about this code: the definition of the transform, Harris's 1978
+     window measurements, and the series Fourier published in 1822. -->
+<script src="/fourier-bench/fourier.js"></script>
+<script src="/fourier-bench/partials.js"></script>
+<script src="/fourier-bench/synth.js"></script>
+<script src="/fourier-bench/signals.js"></script>
+<script src="/fourier-bench/selftest.js"></script>
+</head>
+<body style="margin:0;font:13px ui-monospace,monospace">
+<pre id="out">running…</pre>
+
+<script>
+var out = document.getElementById('out');
+var lines = [];
+function draw() { out.textContent = lines.join('\n'); }
+
+setTimeout(function () {
+  var t0 = Date.now();
+  var res = FBTest.run(function (r) {
+    lines.push((r.pass ? 'PASS  ' : 'FAIL  ') + r.name + (r.detail ? '  ::  ' + r.detail : ''));
+    draw();
+  });
+  var failed = res.filter(function (r) { return !r.pass; }).length;
+  lines.push('');
+  lines.push((res.length - failed) + ' pass, ' + failed + ' fail, ' +
+             ((Date.now() - t0) / 1000).toFixed(1) + 's');
+  draw();
+}, 0);
+</script>
+</body>
+</html>
