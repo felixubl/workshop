@@ -567,25 +567,30 @@
 <div class="page">
 
   <header class="masthead">
-    <!-- The bench lamp, drawn in assets/site.css. The span is the fixture and
-       hangs behind the page; the button is the switch and sits over the shade.
-       Everything after the cone is one group rotated about the lower knuckle, so
-       the throw is written straight down and swings with the head. -->
+    <!-- The ceiling lamp, drawn in assets/site.css and swung by
+       assets/lamp.js. The span is the fixture and hangs behind the page; the
+       button is the switch and sits over the shade, and swings with it. The
+       rose is the only part fixed to the ceiling: the flex turns under it, and
+       the head — the shade and the light it throws — turns again where the flex
+       ends, because a weight on a cord arrives after the cord does. -->
     <span class="lamp" aria-hidden="true">
-      <svg viewBox="-85 0 217 479" fill="none">
-        <g transform="rotate(12 74 58)">
-          <path class="lamp__cone" d="M37 142 111 142 143 470 5 470Z"></path>
-          <g class="lamp__rig">
-            <path d="M74 58V88"></path>
-            <path class="lamp__shade" d="M65 88 83 88 111 142 37 142Z"></path>
-            <path class="lamp__lip" d="M44 129 104 129 111 142 37 142Z"></path>
-            <path class="lamp__rim" d="M40 142H108"></path>
-          </g>
-        </g>
+      <span class="lamp__hang">
+        <span class="lamp__flex"></span>
+        <span class="lamp__head">
+          <span class="lamp__beam"></span>
+          <svg class="lamp__head-art" viewBox="-70 0 140 96" fill="none">
+            <circle class="lamp__bulb" cx="0" cy="70" r="13"></circle>
+            <g class="lamp__rig">
+              <path class="lamp__shade" d="M-16 0H16L62 62H-62Z"></path>
+              <path class="lamp__rim" d="M-64 62H64"></path>
+            </g>
+          </svg>
+        </span>
+      </span>
+      <svg class="lamp__rose" viewBox="-30 0 60 20" fill="none">
+        <path class="lamp__canopy" d="M-28 0H28V9H-28Z"></path>
         <g class="lamp__rig">
-          <path d="M112 0V20L74 58"></path>
-          <path class="lamp__joint" d="M112 14 118 20 112 26 106 20Z"></path>
-          <path class="lamp__joint" d="M74 52 80 58 74 64 68 58Z"></path>
+          <path class="lamp__grip" d="M-8 9H8L5 16H-5Z"></path>
         </g>
       </svg>
     </span>
@@ -646,7 +651,7 @@
             <a class="plate-open" href="draw-svg/"><h3>Pixel Art SVG Drawer</h3></a>
             <button class="pin" type="button" data-pin="draw-svg" aria-label="Pin Pixel Art SVG Drawer to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">Draw on a grid-snapped canvas, from an 8&times;8 sprite up to a full Game Boy screen, and export exactly what you drew as a real SVG.</p>
-            <code class="plate-dates">added 2026-07-23 · changed 2026-08-13</code>
+            <code class="plate-dates">added 2026-07-23 · changed 2026-08-15</code>
             <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</code>
           </div>
         </div>
@@ -656,7 +661,7 @@
             <a class="plate-open" href="metadata-cleaner/"><h3>Image Metadata Cleaner</h3></a>
             <button class="pin" type="button" data-pin="metadata-cleaner" aria-label="Pin Image Metadata Cleaner to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">See what a photo carries besides the photo &mdash; GPS, serial numbers, timestamps, the caption someone left in it &mdash; and choose field by field what to strip. The pixels are never re-encoded.</p>
-            <code class="plate-dates">added 2026-07-27 · changed 2026-08-13</code>
+            <code class="plate-dates">added 2026-07-27 · changed 2026-08-15</code>
             <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</code>
           </div>
         </div>
@@ -666,7 +671,7 @@
             <a class="plate-open" href="chiptune-tracker/"><h3>Chiptune Tracker</h3></a>
             <button class="pin" type="button" data-pin="chiptune-tracker" aria-label="Pin Chiptune Tracker to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">Write music for the NES sound chip in a pattern grid &mdash; two pulse channels, a triangle and noise &mdash; and export it as a WAV. The chip is arithmetic here, not samples.</p>
-            <code class="plate-dates">added 2026-08-13</code>
+            <code class="plate-dates">added 2026-08-13 · changed 2026-08-15</code>
             <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</code>
           </div>
         </div>
@@ -754,7 +759,7 @@
             <a class="plate-open" href="bingo-cards/"><h3>Bingo Card Generator</h3></a>
             <button class="pin" type="button" data-pin="bingo-cards" aria-label="Pin Bingo Card Generator to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">Type the squares and it counts every card that list can make &mdash; exactly, however many digits that takes. Ask for as many as you want and it prints them, one to a page.</p>
-            <code class="plate-dates">added 2026-08-09 · changed 2026-08-13</code>
+            <code class="plate-dates">added 2026-08-09 · changed 2026-08-15</code>
             <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</code>
           </div>
         </div>
@@ -764,7 +769,7 @@
             <a class="plate-open" href="route-sheet/"><h3>Route Sheet</h3></a>
             <button class="pin" type="button" data-pin="route-sheet" aria-label="Pin Route Sheet to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">Turn a GPX, a KML or a map link into a printable sheet: the path on a map, and every turn numbered &mdash; worked out from the shape of the track when the file does not say.</p>
-            <code class="plate-dates">added 2026-08-13</code>
+            <code class="plate-dates">added 2026-08-13 · changed 2026-08-15</code>
             <code class="plate-custody" data-custody="fetch"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>fetch</code>
           </div>
         </div>
@@ -810,7 +815,7 @@
             <a class="plate-open" href="random-numbers/"><h3>Random Number Generator</h3></a>
             <button class="pin" type="button" data-pin="random-numbers" aria-label="Pin Random Number Generator to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">Eleven distributions in up to ten dimensions. Every run prints the seed it used, so any set of numbers can be drawn again.</p>
-            <code class="plate-dates">added 2026-07-27 · changed 2026-08-13</code>
+            <code class="plate-dates">added 2026-07-27 · changed 2026-08-15</code>
             <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</code>
           </div>
         </div>
@@ -820,7 +825,7 @@
             <a class="plate-open" href="abecedarian/"><h3>Abecedarian Distance</h3></a>
             <button class="pin" type="button" data-pin="abecedarian" aria-label="Pin Abecedarian Distance to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say"><em>billowy</em> and <em>almost</em> are already in alphabetical order. Nearly every other word would be too, under some other alphabet &mdash; this finds the nearest one and counts the letters you had to swap to get there.</p>
-            <code class="plate-dates">added 2026-08-11 · changed 2026-08-14</code>
+            <code class="plate-dates">added 2026-08-11 · changed 2026-08-15</code>
             <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</code>
           </div>
         </div>
@@ -873,7 +878,7 @@
             <a class="plate-open" href="eclipse-recon/"><h3>Eclipse Recon</h3></a>
             <button class="pin" type="button" data-pin="eclipse-recon" aria-label="Pin Eclipse Recon to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">The path of totality from a satellite&rsquo;s point of view: exact timings for any point you target, the western ridge that might hide a low Sun, and the cloud outlook &mdash; good zones and bad, ranked.</p>
-            <code class="plate-dates">added 2026-08-10 · changed 2026-08-13</code>
+            <code class="plate-dates">added 2026-08-10 · changed 2026-08-15</code>
             <code class="plate-custody" data-custody="fetch"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>fetch</code>
           </div>
         </div>
@@ -883,7 +888,7 @@
             <a class="plate-open" href="eclipse-countdown/"><h3>Eclipse Countdown</h3></a>
             <button class="pin" type="button" data-pin="eclipse-countdown" aria-label="Pin Eclipse Countdown to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">Counts down to the next solar eclipse visible from a location you enter, draws the Sun as it will look from there and the Moon's shadow reaching the Earth from outside, and lists the time of every phase.</p>
-            <code class="plate-dates">added 2026-08-12 · changed 2026-08-13</code>
+            <code class="plate-dates">added 2026-08-12 · changed 2026-08-15</code>
             <code class="plate-custody" data-custody="fetch"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>fetch</code>
           </div>
         </div>
@@ -893,7 +898,7 @@
             <a class="plate-open" href="network-inspector/"><h3>Network Inspector</h3></a>
             <button class="pin" type="button" data-pin="network-inspector" aria-label="Pin Network Inspector to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">Everything your browser hands over before you touch anything, the requests it is making right now, and what a single lookup adds. The parts that send something are buttons you press.</p>
-            <code class="plate-dates">added 2026-08-04 · changed 2026-08-13</code>
+            <code class="plate-dates">added 2026-08-04 · changed 2026-08-15</code>
             <code class="plate-custody" data-custody="fetch"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>fetch</code>
           </div>
         </div>
@@ -969,6 +974,7 @@
 
 </div>
 <script src="assets/preprint/js/controls.js"></script>
+<script src="assets/lamp.js"></script>
 <script src="assets/favourites.js"></script>
 </body>
 </html>
