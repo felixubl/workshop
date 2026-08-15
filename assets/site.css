@@ -291,28 +291,30 @@ body {
 .lamp__shade {
   fill: var(--pp-paper);
 }
-/* The lip: the band of the shade's inside you can see through the mouth, and one
-   of the two parts that report the state. It is the shop's citron at full
-   strength — brighter than the throw below it, because a source is always
-   brighter than what it lands on — and it is the same ink as the wordmark's W
-   and the favicon, which is the point: one light, three places. */
-.lamp__lip {
-  fill: var(--w-mark-fill);
-  stroke: none;
-  transition: fill var(--pp-dur-fast) var(--pp-ease-out);
-}
-/* The bulb, hung in the mouth with its top half behind the shade — drawn before
-   the shade in the markup, which is what puts it there. It is the other half of
-   the state, and it is the half that carries dark mode: a lamp with no beam is
-   only an absence, and an absence is not a drawing. An outlined bulb under an
-   unlit shade says OFF the way no amount of missing light can. */
+/* THE FIXTURE DOES NOT CHANGE. Rose, flex, shade and rim are the same drawing in
+   either mode — the page's ink on the page's paper, and nothing else. What
+   changes is the light: the bulb, and the beam under it. The shade carried a
+   band of citron inside its mouth for a while, on the argument that you can see
+   the lit inside of a shade through the opening, and it was wrong for the reason
+   that argument skates over: it made the bottom third of the LAMP turn on and
+   off. A lamp is an object. Objects do not change colour when they are switched
+   on; the room does, and the bulb does, and that is the whole list.
+
+   The bulb, then, is the one part of the drawing that reports the state, and it
+   is hung in the mouth with its top half behind the shade — drawn before the
+   shade in the markup, which is what puts it there. It carries dark mode on its
+   own: a lamp with no beam is only an absence, and an absence is not a drawing.
+   An outlined bulb under an unlit shade says OFF the way missing light cannot.
+
+   Full-strength citron, the same ink as the wordmark's W and the favicon, which
+   is the point: one light, three places. Brighter than the throw below it,
+   because a source is always brighter than what it lands on. */
 .lamp__bulb {
   fill: var(--w-mark-fill);
   stroke: var(--pp-edge);
   stroke-width: 2;
   transition: fill var(--pp-dur-fast) var(--pp-ease-out);
 }
-[data-mode='dark'] .lamp__lip,
 [data-mode='dark'] .lamp__bulb {
   fill: var(--pp-surface);
 }
