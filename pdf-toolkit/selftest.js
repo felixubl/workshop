@@ -57,16 +57,61 @@ var PDFTest = (function (PDF) {
     return PDF.latin1ToBytes(out);
   }
 
-  function load() {
-    var doc = new PDF.PDFDocument(probe());
+  /* The same page carrying an XMP packet as well: the metadata written BESIDE
+     the document rather than into it, which duplicates the named fields in
+     XML and is the half a reader never sees. One word per field, so a cut can
+     be told from a survival by looking for it. */
+  function probeXMP() {
+    var xmp =
+      '<?xpacket begin="" id="W5M0MpCehiHzreSzNTczkc9d"?>\n' +
+      '<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF ' +
+      'xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">\n' +
+      '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" ' +
+      'xmlns:xmp="http://ns.adobe.com/xap/1.0/">\n' +
+      '<dc:creator><rdf:Seq><rdf:li>XMPGHOSTAUTHOR</rdf:li></rdf:Seq></dc:creator>\n' +
+      '<xmp:CreatorTool>XMPGHOSTTOOL</xmp:CreatorTool>\n' +
+      '</rdf:Description></rdf:RDF></x:xmpmeta><?xpacket end="w"?>';
+
+    var objs = [];
+    function add(s) { objs.push(s); return objs.length; }
+    var font = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+    var text = 'BT /F1 18 Tf 72 700 Td (KEEPME) Tj ET';
+    var cont = add('<< /Length ' + text.length + ' >>\nstream\n' + text + '\nendstream');
+    var meta = add('<< /Type /Metadata /Subtype /XML /Length ' + xmp.length +
+      ' >>\nstream\n' + xmp + '\nendstream');
+    var page = add('<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] ' +
+      '/Resources << /Font << /F1 ' + font + ' 0 R >> >> /Contents ' + cont + ' 0 R >>');
+    var pages = add('<< /Type /Pages /Kids [' + page + ' 0 R] /Count 1 >>');
+    var info = add('<< /Title (INFOTITLE) /Author (INFOAUTHOR) /Creator (INFOCREATOR) >>');
+    var cat = add('<< /Type /Catalog /Pages ' + pages + ' 0 R /Metadata ' + meta + ' 0 R >>');
+
+    var out = '%PDF-1.4\n', offs = [];
+    for (var i = 0; i < objs.length; i++) {
+      offs.push(out.length);
+      out += (i + 1) + ' 0 obj\n' + objs[i] + '\nendobj\n';
+    }
+    var xref = out.length;
+    out += 'xref\n0 ' + (objs.length + 1) + '\n0000000000 65535 f \n';
+    for (var j = 0; j < offs.length; j++) {
+      var pad = String(offs[j]);
+      while (pad.length < 10) pad = '0' + pad;
+      out += pad + ' 00000 n \n';
+    }
+    out += 'trailer\n<< /Size ' + (objs.length + 1) + ' /Root ' + cat + ' 0 R /Info ' +
+      info + ' 0 R /ID [<AABB> <AABB>] >>\nstartxref\n' + xref + '\n%%EOF\n';
+    return PDF.latin1ToBytes(out);
+  }
+
+  function load(bytes) {
+    var doc = new PDF.PDFDocument(bytes || probe());
     doc.parse();
     return doc;
   }
 
   /* The saved file as a latin1 string, so a word can be looked for in it the
      way a text extractor or `strings` would look. */
-  function save(marks, opts) {
-    var doc = load();
+  function save(marks, opts, source) {
+    var doc = load(source);
     var bytes = PDF.ops.assemble(
       [{ doc: doc, pageIndex: 0, rotate: doc.pages[0].rotate, marks: marks || [] }],
       opts || {});
@@ -151,6 +196,28 @@ var PDFTest = (function (PDF) {
        stripped.indexOf('JaneWhistleblower') < 0 && stripped.indexOf('QuarterlySecrets') < 0,
        'author ' + (stripped.indexOf('JaneWhistleblower') < 0 ? 'gone' : 'PRESENT') +
        ', title ' + (stripped.indexOf('QuarterlySecrets') < 0 ? 'gone' : 'PRESENT'));
+
+    /* One switch, not the whole panel. A cut-everything button that worked
+       while the individual switches did not would pass the assertion above and
+       still be useless, because the point of the panel is choosing. */
+    var oneCut = save([], { info: { Author: null } }, probeXMP());
+    ok('cutting one field cuts that field and leaves the others',
+       oneCut.indexOf('INFOAUTHOR') < 0 && oneCut.indexOf('INFOTITLE') >= 0 &&
+       oneCut.indexOf('INFOCREATOR') >= 0,
+       'author ' + (oneCut.indexOf('INFOAUTHOR') < 0 ? 'gone' : 'PRESENT') +
+       ', title and creator kept');
+
+    /* The XMP packet is the same facts written beside the document in XML, and
+       it goes whatever the switches say — which is why the panel prints what
+       is in it but offers no switch to keep it. Carrying it selectively would
+       be a way to cut a name from one place and leave it in another. */
+    ok('the XMP packet goes, with the names that were only in it',
+       oneCut.indexOf('XMPGHOSTAUTHOR') < 0 && oneCut.indexOf('XMPGHOSTTOOL') < 0 &&
+       oneCut.indexOf('xpacket') < 0,
+       'no packet, and neither name survives it');
+
+    ok('and the page itself is untouched by any of that',
+       oneCut.indexOf('KEEPME') >= 0, 'metadata is not content');
 
     ok('and the metadata reader finds those fields in the first place',
        (function () {
