@@ -66,13 +66,13 @@
 
   <section class="nb-intro">
     <p class="lede">A neuron is a function that multiplies each input by a weight, adds them up with a bias, and puts the total through one bend. That is the whole thing. Everything a network can do comes from stacking that.</p>
-    <p class="quiet">Start at the first lesson and work along. Every control stays live afterwards, so a lesson is a starting point rather than a mode: change the number of neurons, change the bend, break it on purpose.</p>
+    <p class="note">Start at the first lesson and work along. Every control stays live afterwards, so a lesson is a starting point rather than a mode: change the number of neurons, change the bend, break it on purpose.</p>
   </section>
 
   <section>
     <p class="section-label">Lessons</p>
     <div class="nb-lessons" id="lessons"></div>
-    <p class="hint" id="lessonSay" hidden></p>
+    <p class="note" id="lessonSay" hidden></p>
   </section>
 
   <section>
@@ -102,7 +102,7 @@
         </select>
       </div>
     </div>
-    <p class="hint" id="dsNote"></p>
+    <p class="note" id="dsNote"></p>
     <p class="nb-shape"><code id="dsShape"></code></p>
   </section>
 
@@ -114,13 +114,13 @@
         <div class="group">
           <button type="button" class="btn-ghost" id="addLayer">add a hidden layer</button>
         </div>
-        <p class="quiet" id="actNote"></p>
-        <p class="quiet" id="outputNote"></p>
+        <p class="note" id="actNote"></p>
+        <p class="note" id="outputNote"></p>
         <p class="hint" id="linearWarn" hidden>Every hidden layer here is the identity, which applies no bend at all. A stack of linear maps is just one linear map, so however many neurons you add this network can only draw a straight line. That is the point of an activation function.</p>
       </div>
       <figure class="nb-figure nb-net">
         <canvas id="netCanvas" height="240"></canvas>
-        <figcaption>Line thickness is the size of a weight, colour is its sign.</figcaption>
+        <figcaption>One line per weight. The thicker it is the larger the weight; blue is positive, red is negative.</figcaption>
       </figure>
     </div>
   </section>
@@ -150,7 +150,7 @@
         <button type="button" class="btn-ghost" id="reset">reset</button>
       </div>
     </div>
-    <p class="hint is-bad" id="status" hidden></p>
+    <p class="note" id="status" hidden></p>
 
     <div class="nb-readout">
       <div><span class="section-label">epoch</span><code id="rEpoch">0</code></div>
@@ -186,13 +186,13 @@
 
   <section>
     <p class="section-label">Neuron by neuron</p>
-    <p class="quiet" id="neuronNote"></p>
+    <p class="note" id="neuronNote"></p>
     <div id="neurons"></div>
   </section>
 
   <section>
     <p class="section-label">Your own data</p>
-    <p class="quiet">CSV, one row per example. Every column but the last is an input and must be a number; the last column is the answer. A numeric last column with many distinct values is treated as a regression, anything else as classes. Nothing is uploaded — the file is read in this tab.</p>
+    <p class="note">CSV, one row per example. Every column but the last is an input and must be a number; the last column is the answer. A numeric last column with many distinct values is treated as a regression, anything else as classes. Nothing is uploaded — the file is read in this tab.</p>
     <label class="dropzone" id="drop">
       <strong>Drop a CSV here</strong>
       or choose a file
