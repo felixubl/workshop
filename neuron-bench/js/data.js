@@ -169,15 +169,67 @@ var Data = (function () {
   /* ---- synthetic sets -----------------------------------------------------
      Each one exists to make a specific point, and the note says which. */
 
-  function xor() {
+  /* ---- the logic gates ----------------------------------------------------
+     Two bits in, one bit out, and the whole argument for a hidden layer in six
+     truth tables. Four of them one neuron settles; two of them it cannot touch,
+     and the difference is visible in the picture rather than only in the loss.
+
+     Each case is repeated, which is not padding. A gate has exactly four cases
+     and every one of them has to be seen. Hold a quarter of four rows back and
+     the network is asked to infer a corner nothing in the training half says
+     anything about — the corners are independent, so that is not a thing which
+     can be inferred, and the hold-back control turns into a coin toss. Repeated
+     cases mean a split takes copies and leaves every case on both sides, which
+     is what that control is actually for. */
+
+  const GATE_COPIES = 25;
+  const GATE_CORNERS = [[0, 0], [0, 1], [1, 0], [1, 1]];
+
+  const GATES = {
+    and: {
+      label: 'AND', y: [0, 0, 0, 1],
+      note: 'True only when both inputs are. One straight line puts that single corner on its own side, so one neuron settles it and the hidden layer can go.'
+    },
+    or: {
+      label: 'OR', y: [0, 1, 1, 1],
+      note: 'True when either input is. One line again, this time with the single false corner cut off. Same neuron, different two numbers.'
+    },
+    nand: {
+      label: 'NAND', y: [1, 1, 1, 0],
+      note: 'AND turned upside down, and still one line. Every other gate can be built out of NAND, but that is a fact about wiring: this network still only ever draws the one line.'
+    },
+    nor: {
+      label: 'NOR', y: [1, 0, 0, 0],
+      note: 'OR turned upside down. Separable, like the other three, and the neuron finds it as quickly.'
+    },
+    xor: {
+      label: 'XOR', y: [0, 1, 1, 0],
+      note: 'True when the inputs differ. The two true corners sit diagonally opposite, and no straight line puts that pair on one side, so no single neuron can ever get this right however long it trains. Two hidden units can.'
+    },
+    xnor: {
+      label: 'XNOR', y: [1, 0, 0, 1],
+      note: 'True when the inputs agree — XOR upside down, and out of reach of a single neuron for exactly the same reason. Whatever solves one solves the other with the output weights flipped.'
+    }
+  };
+
+  function logic(id) {
+    const gate = GATES[id];
+    const n = GATE_CORNERS.length * GATE_COPIES;
+    const X = new Float64Array(n * 2), Y = new Float64Array(n);
+    for (let r = 0; r < GATE_COPIES; r++) {
+      for (let c = 0; c < GATE_CORNERS.length; c++) {
+        const i = r * GATE_CORNERS.length + c;
+        X[i * 2] = GATE_CORNERS[c][0];
+        X[i * 2 + 1] = GATE_CORNERS[c][1];
+        Y[i] = gate.y[c];
+      }
+    }
     return stats(make({
-      id: 'xor', name: 'XOR',
-      note: 'Four points. No straight line separates the filled from the hollow, so no single neuron can ever get this right, however long it trains. Two hidden units can.',
-      task: 'binary',
-      featureNames: ['input A', 'input B'], targetName: 'class',
-      classNames: ['0', '1'],
-      X: new Float64Array([0, 0, 0, 1, 1, 0, 1, 1]),
-      Y: new Float64Array([0, 1, 1, 0])
+      id, name: gate.label,
+      note: gate.note + ` Each of the four cases appears ${GATE_COPIES} times, so holding rows back takes copies and never takes a case away.`,
+      task: 'binary', view: 'surface',
+      featureNames: ['input A', 'input B'], targetName: 'output',
+      classNames: ['0', '1'], X, Y
     }));
   }
 
@@ -405,8 +457,9 @@ var Data = (function () {
   }
 
   const SYNTHETIC = {
-    line: noisyLine, curve, xor, circles, moons, spiral
+    line: noisyLine, curve, circles, moons, spiral
   };
+  for (const id of Object.keys(GATES)) SYNTHETIC[id] = () => logic(id);
   const TREE = {
     ash: ashRegression, surface: treeSurface, 'two-species': twoSpecies, species: speciesMulti
   };
@@ -418,7 +471,7 @@ var Data = (function () {
   }
 
   return {
-    load, fromCsv, prepare, split, gather, stats, parseCsv,
+    load, logic, fromCsv, prepare, split, gather, stats, parseCsv,
     SPECIES, COMMON, HEIGHT_M, CROWN_M,
     catalogue: [
       { group: 'Vienna tree registry', items: [
@@ -430,10 +483,17 @@ var Data = (function () {
       { group: 'Made up, so the answer is known', items: [
         { id: 'line', label: 'Straight line' },
         { id: 'curve', label: 'A curve' },
-        { id: 'xor', label: 'XOR' },
         { id: 'moons', label: 'Two moons' },
         { id: 'circles', label: 'Rings' },
         { id: 'spiral', label: 'Spiral' }
+      ] },
+      { group: 'Logic gates', items: [
+        { id: 'and', label: 'AND' },
+        { id: 'or', label: 'OR' },
+        { id: 'nand', label: 'NAND' },
+        { id: 'nor', label: 'NOR' },
+        { id: 'xor', label: 'XOR' },
+        { id: 'xnor', label: 'XNOR' }
       ] }
     ]
   };

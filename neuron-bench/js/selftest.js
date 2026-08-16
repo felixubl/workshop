@@ -18,6 +18,10 @@
   'use strict';
 
   const M = typeof MLP !== 'undefined' ? MLP : require('./mlp.js');
+  /* data.js reads MLP off the global the way a browser hands it over, so under
+     node it has to be there before the file is asked for. */
+  const D = typeof Data !== 'undefined' ? Data
+    : (function () { globalThis.MLP = M; return require('./data.js'); })();
 
   function signature(net, X, n, xw) {
     const xs = new Float64Array(xw);
@@ -166,7 +170,60 @@
     }
 
     log('');
-    log('-- failures the lessons rely on --');
+    log('-- the logic gates --');
+    {
+      const ids = ['and', 'or', 'nand', 'nor', 'xor', 'xnor'];
+      const separable = { and: 1, or: 1, nand: 1, nor: 1 };
+
+      /* The reason the cases are repeated. Four rows and a hold-back leaves the
+         network to guess a corner nothing else in the set says anything about,
+         which is not a thing anybody can infer. */
+      let worstMissing = 0;
+      for (const id of ids) {
+        const ds = D.logic(id);
+        for (const frac of [0.25, 0.4, 0.6]) {
+          for (const seed of ['1', '2', '3', '4', '5', '6']) {
+            const parts = D.split(ds.n, frac, seed);
+            const seen = new Set();
+            for (const i of parts.train) seen.add(ds.X[i * 2] + ',' + ds.X[i * 2 + 1]);
+            worstMissing = Math.max(worstMissing, 4 - seen.size);
+          }
+        }
+      }
+      ok('a hold-back never takes a case away from a gate', worstMissing === 0,
+        `worst case ${worstMissing} of 4 missing`);
+
+      const settle = (ds, hidden, seed) => {
+        const layers = hidden
+          ? [{ units: hidden, act: 'tanh' }, { units: 1, act: 'sigmoid' }]
+          : [{ units: 1, act: 'sigmoid' }];
+        const net = M.create({ inputs: 2, layers, loss: 'bce', seed });
+        const order = new Uint32Array(ds.n);
+        for (let i = 0; i < ds.n; i++) order[i] = i;
+        const rand = M.rng('g' + seed);
+        for (let e = 0; e < 600; e++) {
+          M.trainEpoch(net, ds.X, ds.Y, ds.n, { lr: 0.5, batchSize: 20, momentum: 0.9, order, rand });
+        }
+        return M.evaluate(net, ds.X, ds.Y, ds.n).accuracy;
+      };
+
+      let worstFlat = 1, bestCurved = 0, bestFixed = 0;
+      for (const id of ids) {
+        const ds = D.logic(id);
+        const flat = Math.max(settle(ds, 0, 1), settle(ds, 0, 2), settle(ds, 0, 3));
+        if (separable[id]) worstFlat = Math.min(worstFlat, flat);
+        else {
+          bestCurved = Math.max(bestCurved, flat);
+          bestFixed = Math.max(bestFixed, settle(ds, 2, 1), settle(ds, 2, 2), settle(ds, 2, 3));
+        }
+      }
+      ok('one neuron settles AND, OR, NAND and NOR', worstFlat === 1, `worst of the four ${worstFlat}`);
+      ok('one neuron settles neither XOR nor XNOR', bestCurved <= 0.75, `best of the two ${bestCurved}`);
+      ok('two hidden units settle both', bestFixed === 1, `best of the two ${bestFixed}`);
+    }
+
+    log('');
+    log('-- failures a lesson would rely on --');
     {
       const rand = M.rng('fm');
       const n = 200, X = new Float64Array(n * 2), Y = new Float64Array(n);
