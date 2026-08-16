@@ -397,6 +397,59 @@ figure or another file rather than a rendering.
   pick one of them and then explain which — counts need no denominator, and
   every share either figure draws can be got from them.
 
+- [Neuron Bench](neuron-bench/) — build a neural network a neuron at a time and
+  watch what each one adds. It starts where the whole subject starts: one neuron
+  with an identity activation is a linear regression, and the page does not ask
+  to be believed about that. It fits the closed-form least squares line on
+  exactly the rows the network trains on and prints both answers side by side,
+  where they agree to every digit shown.
+
+  Then it takes that apart. A straight line cannot follow a curve, so the same
+  neuron visibly settles for the best straight line and stops. Four points
+  arranged as XOR cannot be split by any straight line, so one neuron sits at
+  50% and a loss of exactly ln 2 — the loss of a model that has given up — while
+  two hidden units solve it outright. A third lesson runs that same two-unit
+  network from a different seed and it stays stuck at 50% forever, because two
+  is the bare theoretical minimum for XOR and lands in a local minimum from many
+  starting points. Solvable in principle and solvable in practice are different
+  claims, and the page makes both.
+
+  Four of the eleven lessons are failures, on purpose, because most of what is
+  worth knowing here is a failure mode. Turn normalisation off and planting
+  years near 1990 against trunk circumferences near 100 cm produce gradients so
+  mismatched that no single learning rate works. Run ReLU at a learning rate of
+  4 and seven of eight units go permanently silent — a unit pushed negative for
+  every input has a gradient of exactly zero from then on — which the panels
+  show as seven blank squares and one doing all the work. Start every weight at
+  zero and all eight units receive identical gradients forever, so eight
+  neurons have the power of one and every panel is the same picture. Starve a
+  twelve-hundred-weight network of rows and the two loss curves separate:
+  training loss falling while held-out loss turns upward.
+
+  Underneath each plot is one panel per hidden unit, and the units of a layer
+  share a colour scale rather than each being stretched to its own range. That
+  is the difference between a picture and a lie: scaled individually, a unit
+  contributing nothing looks exactly as strong as the one carrying the layer,
+  and a dead unit looks busy. Above two inputs there is nothing to draw a
+  boundary on, which is the ordinary case rather than a special one, so the
+  panels become the unit's actual weights and the main plot becomes a confusion
+  matrix or a predicted-against-actual scatter.
+
+  The data is the Vienna [Baumkataster](https://www.data.gv.at/datasets/c91a4635-8b7d-43fe-9b27-d95dec8392a7?locale=en)
+  — 53,740 trees across the eight commonest species — reached for through four
+  problems: the ash regression this began as, a two-input surface, one pair of
+  species that genuinely overlap so that no network gets them fully apart, and a
+  four-way classification with no picture available. Six synthetic sets whose
+  right answer is known in advance sit alongside them, and any CSV can be
+  dropped in.
+
+  The network, the training, the plots and the solver are written from scratch.
+  Training runs in a Web Worker — the first on the site — so the tab stays live
+  and there is no ceiling on how large a network someone wants to try. The
+  gradient is checked against finite differences on every activation and loss
+  pairing the interface can produce, in
+  [`js/selftest.js`](neuron-bench/js/selftest.js), which also runs under node.
+
 Planned: CSV and spreadsheet toolkit, developer tools, archive and file tools,
 calendar and date tools.
 
