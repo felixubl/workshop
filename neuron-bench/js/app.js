@@ -190,7 +190,7 @@
       surface: 'Two inputs, so the network is a surface. Drag to turn it.',
       boundary: 'Where the network would put the boundary, banded by how sure it is.',
       scatter: 'More than two inputs, so there is no boundary to draw. This is what it predicted against what was true.',
-      confusion: 'More than two inputs, so there is no boundary to draw. Rows are the truth, columns the guess.',
+      confusion: 'More than two inputs, so there is no boundary to draw. Rows are the truth, columns the guess: blue down the diagonal is what it got right, red is everything it mistook for something else.',
       none: ''
     }[view];
 
@@ -264,7 +264,7 @@
     const hiddenCount = S.net.layers.length - 1;
     if (hiddenCount < 1) {
       const p = document.createElement('p');
-      p.className = 'hint';
+      p.className = 'note';
       p.textContent = 'No hidden layer. The output unit is the whole network — whatever it computes is what you see above.';
       host.appendChild(p);
       return;
@@ -533,10 +533,13 @@
     });
   }
 
+  /* One line under the training toolbar, and two voices in it. Progress is a
+     note; a failure is the page's one red line, the same .hint every other tool
+     on the site uses to say what went wrong. */
   function setStatus(text, bad) {
     const n = el('status');
     n.textContent = text || '';
-    n.classList.toggle('is-bad', !!bad);
+    n.className = bad ? 'hint' : 'note';
     n.hidden = !text;
   }
 

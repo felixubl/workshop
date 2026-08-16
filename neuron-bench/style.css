@@ -14,7 +14,7 @@ section + section { margin-top: var(--pp-space-5); }
 
 .nb-intro { max-width: var(--pp-measure); margin-bottom: var(--pp-space-5); }
 .nb-intro .lede { margin: 0 0 var(--pp-space-2); }
-.nb-intro .quiet { margin: 0; }
+.nb-intro .note { margin: 0; }
 
 /* ---- the lesson rail ---------------------------------------------------- */
 
@@ -25,11 +25,13 @@ section + section { margin-top: var(--pp-space-5); }
   margin-bottom: var(--pp-space-2);
 }
 
-#lessonSay { max-width: var(--pp-measure); }
+/* The measure, the ink and the rule all come from .note in base.css. What is
+   left here is where the note sits under the rail it belongs to. */
+#lessonSay { margin-bottom: 0; }
 
 /* ---- data ---------------------------------------------------------------- */
 
-#dsNote { max-width: var(--pp-measure); }
+#dsNote { margin-bottom: 0; }
 
 .nb-shape { margin: var(--pp-space-2) 0 0; }
 .nb-shape code {
@@ -53,7 +55,7 @@ section + section { margin-top: var(--pp-space-5); }
 }
 
 .nb-build-controls > * + * { margin-top: var(--pp-space-2); }
-.nb-build-controls .quiet { max-width: 46ch; margin-bottom: 0; }
+.nb-build-controls .note { max-width: 46ch; margin-bottom: 0; }
 
 .nb-layer-row { margin-bottom: 8px; }
 .nb-layer-row label {
@@ -83,13 +85,14 @@ section + section { margin-top: var(--pp-space-5); }
   #lossCanvas { height: 180px; }
 }
 
+/* A caption is the page explaining its own picture, so it is written in the
+   body face like the rest of the prose. Mono on this page means the machine
+   said it: the shape line, the readouts and the unit labels below. */
 .nb-figure figcaption {
-  margin-top: 8px;
-  font-family: var(--pp-font-mono);
-  font-size: var(--pp-size-label);
-  line-height: 1.5;
-  color: var(--pp-faint);
-  letter-spacing: var(--w-track-mono);
+  margin-top: 10px;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--pp-muted);
   max-width: var(--pp-measure);
 }
 
