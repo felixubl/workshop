@@ -1,0 +1,171 @@
+/* Neuron Bench.
+
+   Tool-specific layout only. Faces, buttons, fields, the title and the toolbar
+   come from ../assets/base.css over the vendored system. This file styles the
+   things this tool invents: the lesson rail, the layer editor, the plot frames
+   and the grid of per-neuron panels.
+
+   Every canvas here is sized in CSS rather than by its width attribute,
+   because the drawing code reads clientWidth/clientHeight to set up the device
+   pixel ratio. Changing a height below changes the plot; changing the
+   attribute in the HTML does nothing. */
+
+section + section { margin-top: var(--pp-space-5); }
+
+.nb-intro { max-width: var(--pp-measure); margin-bottom: var(--pp-space-5); }
+.nb-intro .lede { margin: 0 0 var(--pp-space-2); }
+.nb-intro .quiet { margin: 0; }
+
+/* ---- the lesson rail ---------------------------------------------------- */
+
+.nb-lessons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: var(--pp-space-2);
+}
+
+#lessonSay { max-width: var(--pp-measure); }
+
+/* ---- data ---------------------------------------------------------------- */
+
+#dsNote { max-width: var(--pp-measure); }
+
+.nb-shape { margin: var(--pp-space-2) 0 0; }
+.nb-shape code {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  color: var(--pp-faint);
+  letter-spacing: var(--w-track-mono);
+}
+
+/* ---- the builder --------------------------------------------------------- */
+
+.nb-build {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--pp-space-4);
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .nb-build { grid-template-columns: minmax(0, 1fr); }
+}
+
+.nb-build-controls > * + * { margin-top: var(--pp-space-2); }
+.nb-build-controls .quiet { max-width: 46ch; margin-bottom: 0; }
+
+.nb-layer-row { margin-bottom: 8px; }
+.nb-layer-row label {
+  min-width: 4.5rem;
+}
+.nb-layer-row input[type='number'] { width: 5.5rem; }
+
+/* ---- figures ------------------------------------------------------------- */
+
+.nb-figure { margin: 0; }
+
+.nb-figure canvas {
+  display: block;
+  width: 100%;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-md);
+  background: var(--pp-paper);
+  touch-action: none;
+}
+
+#mainCanvas { height: 420px; }
+#lossCanvas { height: 220px; }
+#netCanvas { height: 240px; }
+
+@media (max-width: 620px) {
+  #mainCanvas { height: 320px; }
+  #lossCanvas { height: 180px; }
+}
+
+.nb-figure figcaption {
+  margin-top: 8px;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  line-height: 1.5;
+  color: var(--pp-faint);
+  letter-spacing: var(--w-track-mono);
+  max-width: var(--pp-measure);
+}
+
+/* ---- readouts ------------------------------------------------------------
+   A row of label-over-value pairs. Mono throughout, because every one of them
+   is something the machine said. */
+
+.nb-readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pp-space-2) var(--pp-space-4);
+  padding: var(--pp-space-2) 0;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+
+.nb-readout .section-label { display: block; margin-bottom: 2px; }
+
+.nb-readout code {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-mono);
+  color: var(--pp-ink);
+  letter-spacing: var(--w-track-mono);
+}
+
+/* ---- the neuron grid ------------------------------------------------------ */
+
+.nb-layer + .nb-layer { margin-top: var(--pp-space-3); }
+.nb-layer .section-label { margin-bottom: 8px; }
+
+.nb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 10px;
+}
+
+.nb-cell { margin: 0; }
+
+.nb-cell canvas {
+  display: block;
+  width: 100%;
+  height: 104px;
+  background: var(--pp-paper);
+  border-radius: var(--pp-radius-sm);
+}
+
+.nb-cell figcaption {
+  margin-top: 4px;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  color: var(--pp-faint);
+  letter-spacing: var(--w-track-mono);
+}
+
+.nb-more {
+  margin: 8px 0 0;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  color: var(--pp-faint);
+}
+
+/* ---- pasted data ---------------------------------------------------------- */
+
+.nb-paste {
+  margin-top: var(--pp-space-3);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: var(--pp-measure);
+}
+
+.nb-paste textarea {
+  width: 100%;
+  resize: vertical;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-mono);
+  line-height: 1.5;
+  padding: 10px 12px;
+}
