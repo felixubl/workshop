@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fourier Bench — Felix' Workshop</title>
+<meta name="description" content="Take a sound apart into the sinusoids it is made of. A spectrogram with the window in your hands, a table of partials with frequencies, amplitudes and note names, and the decomposition proved by putting it back together and playing you what is missing.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
+<script src="../assets/preprint/js/mode.js"></script>
+<link rel="stylesheet" href="../assets/preprint/styles.css">
+<link rel="stylesheet" href="../assets/preprint/core.css">
+<link rel="stylesheet" href="../assets/preprint/controls.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <!-- The ceiling lamp, drawn in assets/site.css and swung by
+       assets/lamp.js. The span is the fixture and hangs behind the page; the
+       button is the switch and sits over the shade, and swings with it. The
+       rose is the only part fixed to the ceiling: the flex turns under it, and
+       the head — the shade and the light it throws — turns again where the flex
+       ends, because a weight on a cord arrives after the cord does. -->
+    <span class="lamp" aria-hidden="true">
+      <span class="lamp__hang">
+        <span class="lamp__flex"></span>
+        <span class="lamp__head">
+          <span class="lamp__beam"></span>
+          <svg class="lamp__head-art" viewBox="-70 0 140 96" fill="none">
+            <circle class="lamp__bulb" cx="0" cy="70" r="13"></circle>
+            <g class="lamp__rig">
+              <path class="lamp__shade" d="M-16 0H16L62 62H-62Z"></path>
+              <path class="lamp__rim" d="M-64 62H64"></path>
+            </g>
+          </svg>
+        </span>
+      </span>
+      <svg class="lamp__rose" viewBox="-30 0 60 20" fill="none">
+        <path class="lamp__canopy" d="M-28 0H28V9H-28Z"></path>
+        <g class="lamp__rig">
+          <path class="lamp__grip" d="M-8 9H8L5 16H-5Z"></path>
+        </g>
+      </svg>
+    </span>
+    <button class="lamp-switch" type="button" data-mode-toggle aria-label="Switch colour mode"></button>
+
+    <div>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <div class="title-row">
+        <h1 class="tool-title">Fourier Bench</h1>
+        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
+          <span data-share-label>copy link</span>
+        </button>
+        <button class="share-btn pin-btn" type="button" data-pin="fourier-bench" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="spine"></div>
+
+  <div class="toolbar">
+    <div class="group">
+      <button class="btn-primary" type="button" id="play" disabled>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"></path></svg>
+        <span id="playLabel">Play</span>
+      </button>
+      <label for="hear" class="sr-only">What to play</label>
+      <select id="hear" data-tip="Which of the four signals the transport plays and the waveform draws">
+        <option value="source">the sound</option>
+        <option value="sines">sines only</option>
+        <option value="residual">residual only</option>
+        <option value="additive">rebuilt from the table</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <label for="win" data-tip="The shape each frame is multiplied by before its transform. Lower sidelobes cost a wider main lobe; the table at the foot of the page has the measured figures.">Window</label>
+      <select id="win">
+        <option value="hann">Hann</option>
+        <option value="hamming">Hamming</option>
+        <option value="blackman">Blackman</option>
+        <option value="blackman-harris" selected>Blackman–Harris</option>
+        <option value="rectangular">Rectangular</option>
+      </select>
+      <label for="size" data-tip="Samples per frame. Longer frames separate closer partials and blur the moment they happened at; this is the whole trade and it cannot be won.">Frame</label>
+      <select id="size">
+        <option value="256">256</option>
+        <option value="512">512</option>
+        <option value="1024">1024</option>
+        <option value="2048">2048</option>
+        <option value="4096" selected>4096</option>
+        <option value="8192">8192</option>
+        <option value="16384">16384</option>
+      </select>
+      <label for="overlap" data-tip="How far the frame advances between transforms">Hop</label>
+      <select id="overlap">
+        <option value="2">½ frame</option>
+        <option value="4" selected>¼ frame</option>
+        <option value="8">⅛ frame</option>
+      </select>
+      <label for="padx" data-tip="Transform the frame at a length longer than the window. This does not resolve anything new — it draws the same curve at more points.">Pad</label>
+      <select id="padx">
+        <option value="1" selected>none</option>
+        <option value="2">×2</option>
+        <option value="4">×4</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <label for="floor" data-tip="How far below the loudest bin in a frame a peak still counts. Raise it on a noisy sound; lower it to see what is hiding.">Floor</label>
+      <select id="floor">
+        <option value="-40">−40 dB</option>
+        <option value="-60" selected>−60 dB</option>
+        <option value="-80">−80 dB</option>
+        <option value="-100">−100 dB</option>
+      </select>
+      <label class="checkbox" data-tip="Draw the frequency axis by octaves rather than by hertz"><input type="checkbox" id="logf" checked> Log</label>
+    </div>
+  </div>
+
+  <p class="hint" id="hint" hidden></p>
+
+  <!-- ── Nothing loaded ─────────────────────────────────────────────────── -->
+  <section id="intro">
+    <!-- A label rather than a div: base.css clips the file input instead of
+       hiding it, so it keeps its place in the tab order and opens the picker
+       on Space. Dragging must never be the only way in. -->
+    <label class="dropzone" id="drop">
+      <input type="file" id="file" accept="audio/*,.wav,.mp3,.ogg,.flac,.m4a,.aac,.opus">
+      <p><strong>Drop a sound here</strong>, or press to choose a file</p>
+      <p class="sheet-note">WAV, MP3, FLAC, OGG, M4A &mdash; whatever this browser can decode. Nothing is uploaded: the file is decoded, analysed and rebuilt by this tab alone.</p>
+    </label>
+
+    <div class="starts">
+      <div class="start">
+        <p class="section-label">Or record</p>
+        <p class="start-say">Sing, whistle, or play something into the microphone. The recording stays in this tab.</p>
+        <button class="btn-ghost" type="button" id="rec">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="5"></circle></svg>
+          <span id="recLabel">Record</span>
+        </button>
+      </div>
+
+      <div class="start">
+        <p class="section-label">Or start from a signal whose answer is known</p>
+        <p class="start-say" id="sigSays">A square wave's partials were worked out in 1822. If the bench disagrees with Fourier, the bench is wrong.</p>
+        <div class="start-row">
+          <label for="sig" class="sr-only">Signal</label>
+          <select id="sig"></select>
+          <label for="sighz">Hz</label>
+          <input class="field" type="number" id="sighz" value="220" min="20" max="8000" step="1" style="width: 6rem">
+          <button class="btn-ghost" type="button" id="make">Generate</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── The work ───────────────────────────────────────────────────────── -->
+  <section id="work" hidden>
+
+    <div class="result-bar">
+      <p class="section-label" id="srcName">Spectrogram</p>
+      <code class="readout" id="srcMeta"></code>
+    </div>
+
+    <figure class="fig">
+      <canvas id="gram" height="420"></canvas>
+      <figcaption class="fig-cap">
+        <span id="gramCap">Press anywhere to read the spectrum at that moment.</span>
+      </figcaption>
+    </figure>
+
+    <div class="wave-row">
+      <canvas id="wave" height="80"></canvas>
+    </div>
+
+    <code class="readout trade" id="trade"></code>
+
+    <!-- The moment. Everything below is about one frame. -->
+    <div class="panes">
+      <div class="pane">
+        <div class="result-bar">
+          <p class="section-label">The spectrum at that moment</p>
+          <code class="readout" id="sliceAt"></code>
+        </div>
+        <figure class="fig">
+          <canvas id="slice" height="260"></canvas>
+          <figcaption class="fig-cap" id="sliceCap"></figcaption>
+        </figure>
+      </div>
+
+      <div class="pane pane-narrow">
+        <p class="section-label">What it is</p>
+        <div class="card readout-card" id="f0Card">
+          <p class="big" id="f0Note">—</p>
+          <p class="big-sub" id="f0Hz"></p>
+          <dl class="facts" id="f0Facts"></dl>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-bar">
+      <p class="section-label">Partials</p>
+      <code class="readout" id="partCount"></code>
+    </div>
+    <div class="sheet">
+      <div class="sheet-scroll">
+        <table id="partTable">
+          <thead>
+            <tr>
+              <th style="width: 3.5rem">n</th>
+              <th style="width: 7rem">Frequency</th>
+              <th style="width: 6rem">Note</th>
+              <th style="width: 6rem">Off note</th>
+              <th style="width: 6rem">Level</th>
+              <th style="width: 6.5rem">Amplitude</th>
+              <th style="width: 7rem" id="thTruth">Off harmonic</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="sheet-note" id="partNote"></p>
+
+    <!-- ── The proof ────────────────────────────────────────────────────── -->
+    <h2 class="section-label sec">Put back together</h2>
+    <p class="prose">
+      A spectrogram cannot be checked by looking at it: a broken transform draws
+      one just as convincing as a working one. So the analysis is run backwards.
+      Each row below is a sound this page can play, and the last column is how
+      far it lands from the sound that went in.
+    </p>
+
+    <div class="sheet">
+      <div class="sheet-scroll">
+        <table id="proofTable">
+          <thead>
+            <tr>
+              <th style="width: 11rem">Signal</th>
+              <th>What it is</th>
+              <th style="width: 7.5rem">Against the input</th>
+              <th style="width: 8.5rem"></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="sheet-note" id="proofNote"></p>
+
+    <!-- ── The window ───────────────────────────────────────────────────── -->
+    <h2 class="section-label sec">The window</h2>
+    <p class="prose">
+      Cutting a sound into frames is multiplying it by a shape, and every shape
+      lies about the sound in its own way. A rectangle — cutting with scissors
+      and no shape at all — smears one steady sine across the whole band. The
+      others trade a wider main lobe, which is coarser frequency resolution, for
+      lower sidelobes, which is less of one partial appearing where another one
+      isn't. Every figure here is measured from the array actually in use rather
+      than quoted from a table, so it cannot drift from the code.
+    </p>
+    <div class="sheet">
+      <div class="sheet-scroll">
+        <table id="winTable">
+          <thead>
+            <tr>
+              <th style="width: 10rem">Window</th>
+              <th style="width: 7rem">Main lobe</th>
+              <th style="width: 8rem">Highest sidelobe</th>
+              <th style="width: 7rem">Noise bandwidth</th>
+              <th>What it is for</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <h2 class="section-label sec">What this page is doing</h2>
+    <div class="prose notes">
+      <p>
+        <strong>The transform is written here.</strong> No library parses, transforms
+        or rebuilds anything: <a href="fourier.js">fourier.js</a> is a radix-2
+        Cooley–Tukey butterfly over two arrays of doubles, with the real-input
+        packing that halves the work, the five windows, and the overlap-add that
+        goes back the other way. <a href="partials.js">partials.js</a> turns bins
+        into partials, <a href="synth.js">synth.js</a> turns partials back into
+        sound. The assertions are in <a href="selftest.js">selftest.js</a> and
+        they run in a browser at
+        <a href="../tools/verify/fourier-bench.html">tools/verify/fourier-bench.html</a>.
+      </p>
+      <p>
+        <strong>A bin is not a partial.</strong> A 440 Hz tone read through
+        11.7 Hz bins has no bin of its own: it appears as a hump a few bins wide
+        whose tallest point is at 442 Hz and whose height is short of the true
+        amplitude by up to 1.4 dB. Every frequency in the table is interpolated
+        — by a parabola through the peak and its neighbours, and, where the
+        partial holds still long enough for the two to agree, by the phase it
+        advanced between frames, which is far the more accurate of the two.
+        Every amplitude is divided by the window's known response at the offset
+        the partial actually fell at. Those two corrections are the difference
+        between a table that is roughly right and one that agrees with the
+        closed forms to four decimal places.
+      </p>
+      <p>
+        <strong>The residual is the honest part.</strong> Splitting the spectrum
+        into the bins under the peaks and every other bin gives two sounds that
+        add back to the original exactly, so whatever the sines do not hold has
+        to be somewhere and that somewhere is audible. It is where the breath,
+        the bow, the hammer and the room went. A sound that is mostly residual
+        is not a failure of the analysis — it is a sound that is mostly not
+        sinusoids, and white noise is the extreme case.
+      </p>
+      <p>
+        <strong>Where it does worst is worth knowing.</strong> A sound that starts
+        abruptly, a struck note, a consonant: at an onset the sound changes
+        inside the frame that is measuring it, and no single spectrum describes
+        a frame in which the answer changed. Shorten the frame and the onset
+        sharpens while the partials blur together, which is the trade in the
+        line under the spectrogram and the one thing about Fourier analysis that
+        no amount of arithmetic gets around.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      Runs entirely in this tab. Nothing is uploaded, and nothing is kept after
+      the page is closed.
+    </p>
+  </footer>
+</div>
+
+<script src="fourier.js"></script>
+<script src="partials.js"></script>
+<script src="synth.js"></script>
+<script src="signals.js"></script>
+<script src="script.js"></script>
+<script src="../assets/preprint/js/controls.js"></script>
+<script src="../assets/lamp.js"></script>
+<script src="../assets/share.js"></script>
+<script src="../assets/favourites.js"></script>
+</body>
+</html>

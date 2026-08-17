@@ -18,25 +18,30 @@
 <body>
 <div class="wrap tool-head">
   <header>
-    <!-- The bench lamp, drawn in assets/site.css. The span is the fixture and
-       hangs behind the page; the button is the switch and sits over the shade.
-       Everything after the cone is one group rotated about the lower knuckle, so
-       the throw is written straight down and swings with the head. -->
+    <!-- The ceiling lamp, drawn in assets/site.css and swung by
+       assets/lamp.js. The span is the fixture and hangs behind the page; the
+       button is the switch and sits over the shade, and swings with it. The
+       rose is the only part fixed to the ceiling: the flex turns under it, and
+       the head — the shade and the light it throws — turns again where the flex
+       ends, because a weight on a cord arrives after the cord does. -->
     <span class="lamp" aria-hidden="true">
-      <svg viewBox="-85 0 217 479" fill="none">
-        <g transform="rotate(12 74 58)">
-          <path class="lamp__cone" d="M37 142 111 142 143 470 5 470Z"></path>
-          <g class="lamp__rig">
-            <path d="M74 58V88"></path>
-            <path class="lamp__shade" d="M65 88 83 88 111 142 37 142Z"></path>
-            <path class="lamp__lip" d="M44 129 104 129 111 142 37 142Z"></path>
-            <path class="lamp__rim" d="M40 142H108"></path>
-          </g>
-        </g>
+      <span class="lamp__hang">
+        <span class="lamp__flex"></span>
+        <span class="lamp__head">
+          <span class="lamp__beam"></span>
+          <svg class="lamp__head-art" viewBox="-70 0 140 96" fill="none">
+            <circle class="lamp__bulb" cx="0" cy="70" r="13"></circle>
+            <g class="lamp__rig">
+              <path class="lamp__shade" d="M-16 0H16L62 62H-62Z"></path>
+              <path class="lamp__rim" d="M-64 62H64"></path>
+            </g>
+          </svg>
+        </span>
+      </span>
+      <svg class="lamp__rose" viewBox="-30 0 60 20" fill="none">
+        <path class="lamp__canopy" d="M-28 0H28V9H-28Z"></path>
         <g class="lamp__rig">
-          <path d="M112 0V20L74 58"></path>
-          <path class="lamp__joint" d="M112 14 118 20 112 26 106 20Z"></path>
-          <path class="lamp__joint" d="M74 52 80 58 74 64 68 58Z"></path>
+          <path class="lamp__grip" d="M-8 9H8L5 16H-5Z"></path>
         </g>
       </svg>
     </span>
@@ -233,6 +238,7 @@
 <script src="js/precomp.js"></script>
 <script src="js/app.js"></script>
 <script src="../assets/preprint/js/controls.js"></script>
+<script src="../assets/lamp.js"></script>
 <script src="../assets/share.js"></script>
 <script src="../assets/favourites.js"></script>
 </body>

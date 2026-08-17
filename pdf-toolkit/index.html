@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PDF Toolkit — Felix' Workshop</title>
-<meta name="description" content="Merge, split, extract, reorder and rotate PDF pages, with every page shown as a real preview. Runs entirely in your browser: nothing is uploaded.">
+<meta name="description" content="Merge, split, extract, reorder and rotate PDF pages, black out text so it is deleted rather than covered, highlight in six pastel colours, and strip the metadata. Runs entirely in your browser: nothing is uploaded.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
@@ -19,25 +19,30 @@
 <body>
 <div class="wrap">
   <header>
-    <!-- The bench lamp, drawn in assets/site.css. The span is the fixture and
-       hangs behind the page; the button is the switch and sits over the shade.
-       Everything after the cone is one group rotated about the lower knuckle, so
-       the throw is written straight down and swings with the head. -->
+    <!-- The ceiling lamp, drawn in assets/site.css and swung by
+       assets/lamp.js. The span is the fixture and hangs behind the page; the
+       button is the switch and sits over the shade, and swings with it. The
+       rose is the only part fixed to the ceiling: the flex turns under it, and
+       the head — the shade and the light it throws — turns again where the flex
+       ends, because a weight on a cord arrives after the cord does. -->
     <span class="lamp" aria-hidden="true">
-      <svg viewBox="-85 0 217 479" fill="none">
-        <g transform="rotate(12 74 58)">
-          <path class="lamp__cone" d="M37 142 111 142 143 470 5 470Z"></path>
-          <g class="lamp__rig">
-            <path d="M74 58V88"></path>
-            <path class="lamp__shade" d="M65 88 83 88 111 142 37 142Z"></path>
-            <path class="lamp__lip" d="M44 129 104 129 111 142 37 142Z"></path>
-            <path class="lamp__rim" d="M40 142H108"></path>
-          </g>
-        </g>
+      <span class="lamp__hang">
+        <span class="lamp__flex"></span>
+        <span class="lamp__head">
+          <span class="lamp__beam"></span>
+          <svg class="lamp__head-art" viewBox="-70 0 140 96" fill="none">
+            <circle class="lamp__bulb" cx="0" cy="70" r="13"></circle>
+            <g class="lamp__rig">
+              <path class="lamp__shade" d="M-16 0H16L62 62H-62Z"></path>
+              <path class="lamp__rim" d="M-64 62H64"></path>
+            </g>
+          </svg>
+        </span>
+      </span>
+      <svg class="lamp__rose" viewBox="-30 0 60 20" fill="none">
+        <path class="lamp__canopy" d="M-28 0H28V9H-28Z"></path>
         <g class="lamp__rig">
-          <path d="M112 0V20L74 58"></path>
-          <path class="lamp__joint" d="M112 14 118 20 112 26 106 20Z"></path>
-          <path class="lamp__joint" d="M74 52 80 58 74 64 68 58Z"></path>
+          <path class="lamp__grip" d="M-8 9H8L5 16H-5Z"></path>
         </g>
       </svg>
     </span>
@@ -104,6 +109,7 @@
         <div class="btn-row">
           <button class="btn-ghost" type="button" id="del" data-tip="Take the selected pages out of the document being built">Delete</button>
           <button class="btn-ghost" type="button" id="keepOnly" data-tip="Throw away everything except the selected pages">Keep only</button>
+          <button class="btn-ghost" type="button" id="clearMarks" data-tip="Lift every blackout and highlight off the selected pages">Marks</button>
         </div>
       </div>
       <div class="group">
@@ -118,12 +124,76 @@
     <div class="result-bar">
       <span class="section-label">Pages</span>
       <div class="result-right">
-        <button class="btn-ghost" type="button" id="view" data-tip="Read the pages full size, and turn, move, delete or mark them as you go" disabled>View full size</button>
+        <button class="btn-ghost" type="button" id="view" data-tip="Read the pages full size, and turn, move, delete, black out or highlight them as you go" disabled>View full size</button>
         <span class="tag" id="tally">nothing loaded</span>
       </div>
     </div>
 
     <div id="grid" class="page-grid"></div>
+
+    <!-- What the loaded files say about whoever made them, and what of it the
+         saved file will carry. Folded away by default: it is read before
+         saving rather than while the pages are being sorted. -->
+    <div class="result-bar">
+      <span class="section-label">Metadata</span>
+      <div class="result-right">
+        <span class="tag" id="metaTally"></span>
+        <button class="btn-ghost" type="button" id="metaToggle" aria-expanded="false" aria-controls="metaPanel" data-tip="Every field the loaded files carry, and a switch on each one this tool can drop">Show</button>
+      </div>
+    </div>
+
+    <section id="metaPanel" hidden>
+      <div class="toolbar meta-tools">
+        <div class="group" id="metaFiles" hidden>
+          <label>File</label>
+          <div class="btn-row" id="metaFileRow"></div>
+        </div>
+        <div class="group">
+          <label>Every field</label>
+          <div class="btn-row">
+            <button class="btn-ghost" type="button" id="metaCutAll">Remove all</button>
+            <button class="btn-ghost" type="button" id="metaKeepAll">Keep all</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet sheet-meta">
+        <div class="sheet-cap">
+          <code id="metaCapName"></code>
+          <code class="meta" id="metaCapNote"></code>
+        </div>
+        <div class="sheet-scroll">
+          <table id="metaTable">
+            <thead>
+              <tr>
+                <th class="col-keep" scope="col"><span class="th-keep">Keep</span></th>
+                <th class="col-name" scope="col">Field</th>
+                <th class="col-value" scope="col">Value</th>
+                <th class="col-note" scope="col">Risk</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+
+      <p class="legend">
+        <span class="tag is-marked mk--citron">identifying</span> names a person or the machine they
+        worked on. <span class="tag">telling</span> narrows it down: the program, the version, the
+        minute it was saved. A row with a dash instead of a switch is one this tool never carries
+        into the file it writes.
+      </p>
+      <p class="sheet-note" id="metaNote"></p>
+      <!-- The one claim on this page a reader cannot check by looking at it.
+           A blackout that covers and a blackout that deletes look identical on
+           screen and differ only in the bytes, so the assertions that read
+           those bytes are linked rather than described. -->
+      <p class="sheet-note">
+        A blackout deletes the words under it rather than covering them, and
+        that is the difference no screenshot can show —
+        <a href="../tools/verify/pdf-toolkit.html">the checks that read the saved bytes</a>
+        run in this browser, against the files this page loads.
+      </p>
+    </section>
 
     <div class="toolbar save-bar">
       <div class="group">
@@ -177,6 +247,20 @@
 
     <div class="modal__body viewer-stage" id="viewerStage"></div>
 
+    <!-- The pens. One is in hand at a time, and dragging across the page lays
+         down what it draws; a mark is lifted by clicking it. Off is a pen too,
+         so that reading a marked page cannot mark it by accident. -->
+    <div class="modal__bar viewer-pens">
+      <span class="pen-label">Pen</span>
+      <div class="btn-row">
+        <button class="btn-ghost pen is-on" type="button" id="penOff" aria-pressed="true" data-tip="Read without marking (V)">Off</button>
+        <button class="btn-ghost pen" type="button" id="penBlack" aria-pressed="false" data-tip="Drag over what must not leave the file. The text under it is deleted, not covered (B)">Blackout</button>
+      </div>
+      <div class="swatches" id="penTones" role="group" aria-label="Highlighters"></div>
+      <span class="pen-note" id="penNote"></span>
+      <button class="btn-ghost" type="button" id="markClear" data-tip="Lift every mark off this page">Clear page</button>
+    </div>
+
     <!-- Everything here acts on the page being shown, never on the selection:
          on a surface showing one page, that is the only reading that holds. -->
     <div class="modal__bar viewer-tools">
@@ -185,7 +269,7 @@
       <button class="btn-ghost" type="button" id="viewerEarlier" data-tip="Move this page one place earlier (Shift ←)">Earlier</button>
       <button class="btn-ghost" type="button" id="viewerLater" data-tip="Move this page one place later (Shift →)">Later</button>
       <button class="btn-ghost" type="button" id="viewerDel" data-tip="Take this page out of the document being built (Delete)">Delete</button>
-      <button class="btn-ghost viewer-mark" type="button" id="viewerSel" aria-pressed="false" data-tip="Mark this page to act on it back in the grid (Space)">Select</button>
+      <button class="btn-ghost viewer-mark" type="button" id="viewerSel" aria-pressed="false" data-tip="Pick this page up, to act on it back in the grid (Space)">Select</button>
     </div>
   </div>
 </div>
@@ -199,8 +283,12 @@
 <script src="pdf-fontmap.js"></script>
 <script src="pdf-render.js"></script>
 <script src="pdf-image.js"></script>
+<script src="pdf-marks.js"></script>
+<script src="pdf-redact.js"></script>
+<script src="pdf-meta.js"></script>
 <script src="script.js"></script>
 <script src="../assets/preprint/js/controls.js"></script>
+<script src="../assets/lamp.js"></script>
 <script src="../assets/share.js"></script>
 <script src="../assets/favourites.js"></script>
 </body>

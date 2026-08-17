@@ -80,10 +80,11 @@ input[type='number'] {
 }
 
 /* Layout shell shared by every page. The top pad is the header's rather than
-   the wrap's, so the header's box starts at the very top of the page: the bench
-   lamp hangs off that edge and is clipped by that box, and a header inset from
-   the top would leave the lamp starting in mid-air and its light stopping short
-   of the spine. Nothing else moves — the pad is the same, one element down. */
+   the wrap's, so the header's box starts at the very top of the page: the
+   ceiling lamp hangs off that edge and is clipped by that box, and a header
+   inset from the top would leave the rose screwed to nothing and the light
+   stopping short of the spine. Nothing else moves — the pad is the same, one
+   element down. */
 .wrap {
   max-width: var(--pp-page-max);
   margin: 0 auto;
@@ -256,11 +257,12 @@ header {
   margin: 0 0 1rem;
 }
 
-/* The mode control is the workshop's own bench lamp, drawn in assets/site.css
+/* The mode control is the workshop's own ceiling lamp, drawn in assets/site.css
    in place of either of the system's two. It hangs off the top edge of whatever
    element holds it: the masthead on the index, the header on a tool page. Both
    are the element whose top edge IS the top of the page, which is the one thing
-   a hanging fixture needs from its container. */
+   a hanging fixture needs from its container — and both are what the lamp turns
+   about and is clipped by, so this rule is load-bearing twice over. */
 .masthead,
 .wrap > header {
   position: relative;

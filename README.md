@@ -22,7 +22,7 @@ would make both harder to read. It appears as five squares filled from the
 left plus one word. The key at the foot of the index defines all five; a card
 carries the rating and nothing more.
 
-No tool is above `fetch` today: seven never open a socket, four read public
+No tool is above `fetch` today: eight never open a socket, four read public
 data and keep nothing. `store` and `account` are defined ahead of the tools
 that will need them.
 
@@ -74,6 +74,53 @@ Raster and vector images, type, colour, audio and video.
   from what was heard. A song is a few kilobytes of integers, saved to a file
   rather than a server. Note entry wants a keyboard, and the page says so.
 
+- [Fourier Bench](fourier-bench/) — take a sound apart into the sinusoids it is
+  made of. Drop in a file, record through the microphone, or start from a
+  signal whose answer is already known. What comes back is a spectrogram with
+  the window in your hands, and a table of partials at one moment: frequency,
+  amplitude, harmonic number, note name and the cents it sits off that note.
+
+  The transform is written here —
+  [`fourier-bench/fourier.js`](fourier-bench/fourier.js) is a radix-2
+  Cooley–Tukey butterfly with the real-input packing that halves the work, five
+  windows, and the overlap-add that goes back the other way. No library parses,
+  transforms or rebuilds anything.
+
+  A bin is not a partial, and most of the arithmetic is about that gap. A
+  440 Hz tone read through 11 Hz bins has no bin of its own: it appears as a
+  hump a few bins wide whose tallest point is at 442 Hz and whose height is
+  short by up to 1.4 dB. So frequencies are interpolated — by a parabola
+  through the peak, and, where a partial holds still long enough for the two to
+  agree, by the phase it advanced between frames — and every amplitude is
+  divided by the window's measured response at the offset the partial actually
+  fell at. That is the difference between a table that is roughly right and one
+  that agrees with the closed forms to four decimal places.
+
+  A spectrogram cannot be checked by looking at it, so the analysis is run
+  backwards and the page plays the result. Splitting the spectrum into the bins
+  under the peaks and every other bin gives two sounds that add back to the
+  original at −152 dB, which is the arithmetic's own floor: whatever the sines
+  do not hold has to be somewhere, and that somewhere is audible. It is where
+  the breath, the bow, the hammer and the room went. Separately, the table of
+  partials is played back through one oscillator each with the spectrum thrown
+  away, and the page prints how far that lands from the original rather than
+  asking for trust. Both are exported as WAV.
+
+  The claims are asserted in
+  [`fourier-bench/selftest.js`](fourier-bench/selftest.js) against three things
+  that know nothing about this code: a naive O(n²) transform straight from the
+  definition, the window figures Harris published in 1978, and the series
+  Fourier published in 1822 — a square is odd harmonics at 4/πn and the bench
+  is wrong if it disagrees. Twenty-two assertions, in the browser at
+  [`tools/verify/fourier-bench.html`](tools/verify/fourier-bench.html) and
+  under node with `node fourier-bench/selftest.js`, off one set.
+
+  Where it does worst is on the page too. At an onset the sound changes inside
+  the frame measuring it, and no single spectrum describes a frame in which the
+  answer changed; shorten the frame and the onset sharpens while the partials
+  blur together. The line under the spectrogram prints that trade as a product
+  which does not depend on the frame size at all.
+
 Planned: image, SVG, font, colour, audio and video toolkits.
 
 ### Documents
@@ -88,6 +135,43 @@ browser, and this prints a file the reader supplied.
   rotate PDF pages, with a preview of every page that can be dragged. The PDF
   engine is written from scratch: no library parses, renders or writes
   anything.
+
+  Two pens mark up a page. A **highlighter** in six pastels is written as
+  `/BM /Multiply`, which is what a real highlighter does — the pen is a filter,
+  not a coat of paint, so the ink under it stays black and only the paper takes
+  the colour. A **blackout** is the opposite claim: opaque ink, *and the page's
+  own instructions rewritten with everything under it removed* — the glyphs,
+  any image lying wholly inside it, any drawing that does.
+
+  That second half is the whole point, and it is the part no screenshot can
+  show: a black rectangle painted over a name hides it from a reader and from
+  nobody else, because the characters are still in the file and the first text
+  extractor to come along hands them back. The rewrite is a second pass over
+  the content stream keeping the state the renderer keeps, since nothing in a
+  content stream says where a glyph lands — that follows from everything before
+  it. Runs of operators it does not change are copied through byte for byte, so
+  an inline image's binary stays intact and the diff between a page and its
+  redacted twin is only what actually went. A glyph goes when the blackouts
+  cover more than a third of its box; a grazed character stays and is painted
+  over, which is why the tool says to cover a little more than you need.
+
+  Marks live in the page's own entry rather than in a layer of their own, so
+  turning, moving and undo carry them without a code path each.
+
+  Alongside it, a metadata panel in the same spirit as the image cleaner: every
+  field the file discloses about whoever made it — title, author, the program
+  and version, the timestamps, the XMP packet beside the document, the file
+  identifier — each with what it gives away, and a switch per field.
+
+  Because "covered" and "deleted" look identical on screen and differ only in
+  the bytes, the claim is [checked against the saved
+  bytes](tools/verify/pdf-toolkit.html) rather than asserted: a blackout's word
+  must be absent from the file, a highlight's must survive, and the page must
+  carry exactly one set of instructions. That last one is a bug that happened —
+  the rewrite was correct and `/Contents` pointed at it, while the original
+  stream stayed in the file as an object nothing referred to, so the page
+  looked right and `strings` still found the words. The same assertions run
+  under node with `node pdf-toolkit/selftest.js`.
 
 - [Bingo Card Generator](bingo-cards/) — enter the squares and it counts the
   number of distinct cards that list can produce, exactly, at any number of
@@ -435,7 +519,7 @@ Three CSS layers, in this order:
 |---|---|---|
 | the system | [`assets/preprint/`](assets/preprint/) | **vendored verbatim, do not edit.** `tools/sync-preprint` re-copies it from `~/code/preprint`; `tools/push` in the system updates every consumer. |
 | shared chrome | [`assets/base.css`](assets/base.css) | the classes every tool reuses, built only from `--pp-*` tokens |
-| workshop deviations | [`assets/site.css`](assets/site.css) | the complete list: halftone screen, the tilt, the bench lamp, the drawing surface's ground |
+| workshop deviations | [`assets/site.css`](assets/site.css) | the complete list: halftone screen, the tilt, the ceiling lamp, the drawing surface's ground |
 
 Two of the four scripts come from the system:
 
@@ -450,26 +534,43 @@ Two of the four scripts come from the system:
   existed. A `MutationObserver` picks up controls added after load. Use
   `data-tip` rather than `title`.
 
-The mode control is the workshop's own, and it is the **bench lamp**: a fixture
-on a jointed arm hung off the top edge of the page, throwing a cone of light
-across the sheet down to the spine. Light mode is the lamp on; dark mode is the
-lamp off and the room with it. It replaces both of the system's mode controls —
-the swatch and the pull cord — because once the light itself is drawn, a cord
-reaching for an undrawn light is the smaller half of the same idea. It is drawn
-entirely in [`assets/site.css`](assets/site.css) and has no script: the switch
-is a `[data-mode-toggle]` button sitting over the shade, and `mode.js` answers
-it. The drawing is a separate, inert `span` at `z-index: -1`, so the cone passes
-*behind* the wordmark instead of washing over it, and it is clipped by whatever
-element holds it — `.masthead` on the index, `header` on a tool page — which is
-what lands the light exactly on the spine at every width.
+The mode control is the workshop's own, and it is the **ceiling lamp**: a
+pendant hung on a flex from the top edge of the page, throwing its light down
+the sheet to the spine. Light mode is the lamp on; dark mode is the lamp off and
+the room with it. It replaces both of the system's mode controls — the swatch
+and the pull cord — because once the light itself is drawn, a cord reaching for
+an undrawn light is the smaller half of the same idea.
 
-Two scripts are the workshop's own. [`assets/share.js`](assets/share.js) backs
-the `[data-share]` button beside each tool title, which copies that tool's
-address. [`assets/favourites.js`](assets/favourites.js) backs the pin: a
-`[data-pin]` button toggles its tool in a `localStorage` list under
-`workshop-pinned`. The script only sets a class; the sorting is two CSS rules,
-because a pinned tool moves to the front of its category and its category to
-the front of the page. The index and the tool pages read the same list.
+It is drawn in [`assets/site.css`](assets/site.css). The drawing is an inert
+`span` at `z-index: -1`, so the light passes *behind* the wordmark instead of
+washing over it, and the switch is a separate `[data-mode-toggle]` button over
+the shade, which `mode.js` answers. The beam is not drawn to length: it is a
+long box aimed well past the spine and cut there by the header's own
+`overflow: clip` — `.masthead` on the index, `header` on a tool page — which is
+what lands the light on the line at every width and at every angle.
+
+**It swings.** Take hold of the shade and pull, and the fixture follows the hand
+and then goes on swinging when it is let go: a real pendulum, integrated at
+frame rate, so the period comes out of the drawing's own size — √(L/g), and the
+half-size lamp on a phone swings half again as fast. The shade is hinged on the
+end of the flex and lags it slightly, the way a weight on a cord does; the beam
+is rigidly attached to the shade, so the pool of light on the spine slides and
+lengthens as the lamp leans. The swing is bounded by the room the page has for
+the LIGHT, measured at the press, so the beam never runs off the edge of the
+header. A press that does not move is a click and flips the mode as before,
+plus the shove the finger actually gave it — off-centre, so the rim rocks the
+lamp and the middle does not.
+
+Three scripts are the workshop's own. [`assets/lamp.js`](assets/lamp.js) is the
+swing and nothing else: the mode still belongs to `mode.js`, and with the file
+missing or under `prefers-reduced-motion` the lamp simply hangs straight and the
+switch still works. [`assets/share.js`](assets/share.js) backs the
+`[data-share]` button beside each tool title, which copies that tool's address.
+[`assets/favourites.js`](assets/favourites.js) backs the pin: a `[data-pin]`
+button toggles its tool in a `localStorage` list under `workshop-pinned`. The
+script only sets a class; the sorting is two CSS rules, because a pinned tool
+moves to the front of its category and its category to the front of the page.
+The index and the tool pages read the same list.
 
 The one vendored file the workshop rewrites is
 [`tokens/fonts.css`](assets/preprint/tokens/fonts.css), which self-hosts the
@@ -485,15 +586,18 @@ declares must not change.
    `../assets/site.css`. Put only tool-specific layout in the tool's own
    `style.css`.
 3. At the end of `<body>`, load the tool's `script.js`, then
-   `../assets/preprint/js/controls.js`, `../assets/share.js` and
-   `../assets/favourites.js`. The tool's script goes first, so anything it
-   builds at startup is in the DOM when the controls are drawn.
+   `../assets/preprint/js/controls.js`, `../assets/lamp.js`,
+   `../assets/share.js` and `../assets/favourites.js`. The tool's script goes
+   first, so anything it builds at startup is in the DOM when the controls are
+   drawn.
 4. Give the page the shared header: a `.back-link` and a `.title-row` holding
    `h1.tool-title` plus the `[data-share]` and `[data-pin]` buttons, which key
    off the folder name. Copy the `.lamp` span and the `.lamp-switch` button
    from another tool as the first children of `<header>`: the lamp hangs off
    that element's top edge and is clipped by it, which is why the page's top
-   padding belongs to the header and not to `.wrap`.
+   padding belongs to the header and not to `.wrap`. Copy the span whole — the
+   rose, the flex, the head and the beam are four elements that turn about two
+   points, and `assets/lamp.js` measures the geometry off them.
 5. Add a card to the root [index.html](index.html), inside the `section.area`
    for the tool's domain. The section carries the register class, so the card
    does not. Add a `div` in that section's `.plates` with `data-tool`, holding

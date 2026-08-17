@@ -17,7 +17,7 @@
 
   /* The workshop's own light, at full strength. Three objects wear it and no
      fourth may: the favicon, the W it is drawn from, and the filament in the
-     bench lamp that lights the page. They are one idea — the shop's light — and
+     ceiling lamp that lights the page. They are one idea — the shop's light — and
      the citron is what it is made of, which is why the marker's translucent
      token is wrong for all three. --w-mark-edge gives the citron a boundary
      wherever it lands on paper, since citron on eggshell measures 1.3:1 and
@@ -40,9 +40,22 @@
 
      The fixture shrinks going down because it has to clear the sign. Above
      1200px the wordmark stops growing and leaves room beside it; below that the
-     sign takes the width and the lamp has to hang in the air above it instead. */
+     sign takes the width and the lamp has to hang in the air above it instead.
+
+     The inset is where the flex comes through the ceiling, measured from the
+     right edge of whatever holds it, and it is now the room the lamp swings in
+     as well as the place it hangs. It was 0.5rem at a phone's width when the
+     fixture could only hang still; a lamp that can be pushed needs air on the
+     side it is pushed toward, and the script reads that air off the page and
+     will not let the shade reach the edge of it. */
   --w-lamp-unit: clamp(0.48px, 0.48px + (100vw - 700px) * 0.00104, 1px);
-  --w-lamp-inset: clamp(0.5rem, 14vw - 3rem, 8rem);
+  --w-lamp-inset: clamp(4rem, 15vw, 14rem);
+
+  /* How far the flex lets the shade down, in drawing units. It is the one part
+     of the fixture a surface is expected to change: everything else about the
+     lamp is the same lamp wherever it hangs, and how much cord is paid out is
+     the same decision as how high the ceiling is. */
+  --w-lamp-drop: 116;
 
   /* The rotation, declared once. Used on the wordmark and on every card. Cards
      take a third of it, derived rather than typed, so the ratio holds if the
@@ -87,61 +100,177 @@ body {
   background-attachment: fixed;
 }
 
-/* ── the bench lamp ─────────────────────────────────────────────────────────
+/* ── the ceiling lamp ───────────────────────────────────────────────────────
    The workshop's mode control, and the site's own in place of either of the
    system's two. The swatch shows the mode and the pull cord is the gesture of
-   reaching for it; this is neither. It is the fixture itself — a lamp on a jointed
-   arm, hung off the top edge of the page, throwing a cone across the sheet — and
-   the reader clicks it the way they would slap the switch on a bench lamp. Light
-   mode is the lamp ON. Dark mode is the lamp OFF and the room with it.
+   reaching for it; this is neither. It is the fixture itself — a lamp hung on a
+   flex from the ceiling over the bench, throwing its light down the sheet — and
+   the reader hits it the way they would hit the switch on a lamp they work
+   under. Light mode is the lamp ON. Dark mode is the lamp OFF and the room with
+   it.
 
-   That is why it replaces the cord here rather than joining it. Two mode controls
-   on one page is drift; the cord depicts reaching for a light that is never drawn,
-   and once the light IS drawn the cord is the smaller half of the same idea.
+   That is why it replaces the cord here rather than joining it. Two mode
+   controls on one page is drift; the cord depicts reaching for a light that is
+   never drawn, and once the light IS drawn the cord is the smaller half of the
+   same idea.
 
-   No script of its own. `[data-mode-toggle]` is the system's hook and js/mode.js
-   already answers it, sets the accessible name to the destination and stores the
-   choice, so the whole control is this file plus one attribute. Without
-   JavaScript the button is inert, which is what every mode control in the family
-   does.
+   It hangs rather than reaching in from the side, and that is the change this
+   whole file turns on. The old fixture was a bench lamp on a jointed arm coming
+   through the top corner: a rigid thing, bolted to somewhere off the page, and
+   a rigid thing has nothing to say when it is pushed. Hung from a flex it is a
+   pendulum, so the answer to a shove is already written — by gravity, at a
+   period the drawing's own size sets — and `assets/lamp.js` only has to
+   integrate it. Everything below is arranged so that the script can.
 
-   Two elements rather than one, and the reason is paint order. The drawing sits
-   BELOW the page's content so the cone passes behind the wordmark instead of
-   tinting it — a lit sign is an opaque object standing in the light, and light
-   that washed over the front of it would be fog. A button cannot be under the
-   page and over it at once, so the drawing is an inert span at z-index -1 and the
-   switch is a plain target above it, wired to the drawing with :has(). */
+   THE PIVOT IS AN ELEMENT. `.lamp` is a box of no width, pinned to the top of
+   the header and stretched to its foot, so its top corner IS the point in the
+   ceiling the flex comes through and its height IS the drop from there to the
+   spine. Every part hangs off that corner in drawing units, and the two numbers
+   the script needs — where that point is on the page, and how far the mouth of
+   the shade is below it — are measured back off the DOM rather than agreed
+   twice. The script carries no drawing numbers at all, which is what lets this
+   file redraw the lamp without a matching edit over there.
+
+   THE LIGHT IS NOT DRAWN TO LENGTH, and this is the bug the rebuild started
+   from. The throw used to be a path in the same viewBox as the fixture, so it
+   scaled with the fixture: a lamp at 48% size threw a beam at 48% length, and
+   below about 900px of page the light stopped in mid-air well short of the
+   spine — the one thing a beam must never do, because a beam that ends in
+   nothing is not light, it is a shape. The beam is now its own box, longer than
+   any header can be, aimed past the spine and CUT there by the header's own
+   `overflow: clip`. Landing on the line stops being a length that has to be
+   right at every width and becomes a consequence of the geometry, which is also
+   what makes it keep landing while the lamp swings: a tilted beam is a longer
+   throw, and there is always more of it than the page needs.
+
+   Three elements rather than one, and the reason is paint order. The drawing
+   sits BELOW the page's content so the light passes behind the wordmark instead
+   of tinting it — a lit sign is an opaque object standing in the light, and
+   light that washed over the front of it would be fog. A button cannot be under
+   the page and over it at once, so the drawing is an inert span at z-index -1,
+   and the switch is a plain target above it that carries no paint of its own.
+   The switch swings with the fixture, because it is the shade you are reaching
+   for and a hit area that stayed behind while the shade left would be a control
+   you can miss by using it. */
 .lamp,
 .lamp-switch {
   position: absolute;
-  /* Both are anchored by their RIGHT edge to the same inset, and the rig is
-     drawn hard against the right edge of its own viewBox. That is what keeps the
-     switch over the shade at every size without a second set of numbers. */
+  /* One inset for both, and it is the axis of the fixture rather than an edge
+     of it: `.lamp` has no width, so `right` puts its only vertical through that
+     point, and the switch is pulled back by half its own width to sit on the
+     same line. Two elements, one number, nothing to keep in step. */
   right: var(--w-lamp-inset);
   top: 0;
 }
 
 /* The drawing. Behind everything on the page, and never a click target: the
-   switch below is the only thing the hand can reach. */
+   switch is the only thing the hand can reach. Stretched from the ceiling to
+   the foot of the header so the beam has a height to be measured against. */
 .lamp {
+  bottom: 0;
+  width: 0;
   z-index: -1;
-  /* Straight off the svg's viewBox in the page, times the unit. The multiply
-     happens HERE and not on :root, because a custom property that resolves a
-     var() at the root is inherited already resolved, and a surface that wants a
-     smaller fixture would never be heard. */
-  width: calc(217 * var(--w-lamp-unit));
-  height: calc(479 * var(--w-lamp-unit));
   pointer-events: none;
+
+  /* The throw, as a box rather than a path. `--w-lamp-reach` is longer than any
+     header this site can produce, including one swung 40 degrees off vertical,
+     which is the whole trick: nothing here is measured to the spine, it is aimed
+     past it and stopped there.
+
+     The spread is a sixth, which is a hair over 9 degrees off the axis — a
+     worklight rather than a floodlight. It is written as a fraction OF THE REACH
+     so the angle is a constant: lengthen the throw and the far end widens in
+     step. The mouth width is in drawing units instead, because that end of the
+     beam is a part of the fixture and has to keep up with it. */
+  --w-lamp-reach: 130vh;
+  --w-lamp-beam-mouth: calc(58 * var(--w-lamp-unit));
+  --w-lamp-beam-width: calc(2 * (var(--w-lamp-beam-mouth) + var(--w-lamp-reach) / 6));
 }
-.lamp svg {
+
+/* Both halves of the fixture and the switch turn about the same point by the
+   same number, so there is no arrangement of dropped frames in which the light
+   comes off the lamp. `.lamp__hang` is the flex, turning at the ceiling;
+   `.lamp__head` is the shade and its light, hinged where the flex ends and
+   carrying a second, much smaller angle of its own. That second hinge is the
+   difference between a signboard on a stick and a thing with weight in it: a
+   shade is a mass on the end of a cord, and a mass takes a moment to notice
+   that the cord has changed direction. The script gives it that moment. */
+.lamp__hang,
+.lamp__head {
+  position: absolute;
+  left: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+}
+/* The two angles, and the only two numbers `assets/lamp.js` writes. It sets them
+   on the header — the nearest element that holds the drawing AND the switch —
+   and they arrive here by inheritance. Both are read with a fallback rather than
+   declared anywhere, because a declaration on the fixture would SHADOW the
+   inherited value and the lamp would hang straight however hard it was pushed.
+   The fallback is what holds it straight with no script, on a page where the
+   script failed to load, and under reduced motion, where it declines to run. */
+.lamp__hang {
+  top: 0;
+  transform: rotate(var(--w-lamp-swing, 0deg));
+}
+.lamp__head {
+  top: calc(var(--w-lamp-drop) * var(--w-lamp-unit));
+  transform: rotate(var(--w-lamp-tilt, 0deg));
+}
+/* Only while it is moving. A layer held for the life of the page to serve four
+   seconds of swing is a promise the compositor keeps in memory. */
+[data-swinging] .lamp__hang,
+[data-swinging] .lamp__head {
+  will-change: transform;
+}
+
+/* The two drawings, each placed and sized in its own viewBox units times the
+   drawing unit. That is the same contract the old fixture had and it is worth
+   restating: every number in the markup is the number the drawing was drawn
+   with, and these two boxes are the only numbers this file and the page have to
+   agree on. Both hang from the top of whatever turns them — the rose from the
+   ceiling, the head from the end of the flex — so neither carries an offset. */
+.lamp__rose,
+.lamp__head-art {
+  position: absolute;
   display: block;
-  width: 100%;
-  height: 100%;
+  top: 0;
+}
+.lamp__rose {
+  left: calc(-30 * var(--w-lamp-unit));
+  width: calc(60 * var(--w-lamp-unit));
+  height: calc(20 * var(--w-lamp-unit));
+}
+.lamp__head-art {
+  left: calc(-70 * var(--w-lamp-unit));
+  width: calc(140 * var(--w-lamp-unit));
+  height: calc(96 * var(--w-lamp-unit));
+}
+
+/* The flex. A line and nothing else, so it is a box and not a path: an SVG here
+   would be a viewBox wrapped around a rectangle. It runs from under the rose's
+   grip to the top of the shade, and the rose is painted after it so the grip
+   closes over the end rather than the cord appearing to pass through the
+   ceiling. */
+.lamp__flex {
+  position: absolute;
+  top: calc(14 * var(--w-lamp-unit));
+  left: calc(-1 * var(--w-lamp-unit));
+  width: calc(2 * var(--w-lamp-unit));
+  /* The drop, less the 14 units the rose's grip takes. One number says how far
+     the shade hangs and every other part of the fixture is placed off it — which
+     is what lets a surface with a lower ceiling shorten the flex without moving
+     anything else, and lets the script measure a period out of the result. */
+  height: calc((var(--w-lamp-drop) - 14) * var(--w-lamp-unit));
+  background: var(--pp-edge);
 }
 
 /* The rig: two drawing units of stroke everywhere except the rim, because the
-   lamp is a piece of equipment rather than a diagram of one. Round joins — the
-   arm meets the shade at an acute angle and a miter there grows a spike. */
+   lamp is a piece of equipment rather than a diagram of one. Round joins, so the
+   shade's shoulders stay shoulders at the half size a phone draws them — a miter
+   on a two-unit stroke there is a barb about a pixel long, and a pixel is all it
+   takes to read as a mistake. */
 .lamp__rig {
   fill: none;
   stroke: var(--pp-edge);
@@ -149,32 +278,45 @@ body {
   stroke-linejoin: round;
   stroke-linecap: square;
 }
-/* The knuckles are the wordmark's nail and the plate's pin: a square turned 45
-   degrees. One mark does hardware everywhere on this site. */
-.lamp__joint {
+/* The rose: the one part that does not move, and the reason the rest reads as
+   hanging. A filled slab against the ceiling, at the wordmark's own weight, with
+   a small stroked grip under it for the flex to come out of. The old fixture had
+   nothing at this end — the arm simply left the page — and a line that leaves the
+   page is a line that is going somewhere, which is why the lamp read as floating
+   in dark mode where the beam was not there to anchor it. */
+.lamp__canopy {
   fill: var(--pp-edge);
 }
-/* The shade is drawn, not blocked in. It is a trapezoid and a rim, and both of
-   those are lines, so it stays a line drawing in either mode — paper fill, ink
-   outline. Filling the whole of it citron was tried and it read as a yellow
-   triangle on a stick rather than as a lamp: the light does not come out of the
-   OUTSIDE of a shade. */
+.lamp__grip,
 .lamp__shade {
   fill: var(--pp-paper);
 }
-/* The lip: the band of the shade's inside you can actually see through the
-   mouth, and the one part of the fixture that reports the state. It is the
-   shop's citron at full strength — brighter than the throw below it, because a
-   source is always brighter than what it lands on — and it is the same ink as
-   the wordmark's W and the favicon, which is the point: one light, three
-   places. Off, it empties to paper with the rest of the shade. */
-.lamp__lip {
+/* THE FIXTURE DOES NOT CHANGE. Rose, flex, shade and rim are the same drawing in
+   either mode — the page's ink on the page's paper, and nothing else. What
+   changes is the light: the bulb, and the beam under it. The shade carried a
+   band of citron inside its mouth for a while, on the argument that you can see
+   the lit inside of a shade through the opening, and it was wrong for the reason
+   that argument skates over: it made the bottom third of the LAMP turn on and
+   off. A lamp is an object. Objects do not change colour when they are switched
+   on; the room does, and the bulb does, and that is the whole list.
+
+   The bulb, then, is the one part of the drawing that reports the state, and it
+   is hung in the mouth with its top half behind the shade — drawn before the
+   shade in the markup, which is what puts it there. It carries dark mode on its
+   own: a lamp with no beam is only an absence, and an absence is not a drawing.
+   An outlined bulb under an unlit shade says OFF the way missing light cannot.
+
+   Full-strength citron, the same ink as the wordmark's W and the favicon, which
+   is the point: one light, three places. Brighter than the throw below it,
+   because a source is always brighter than what it lands on. */
+.lamp__bulb {
   fill: var(--w-mark-fill);
-  stroke: none;
+  stroke: var(--pp-edge);
+  stroke-width: 2;
   transition: fill var(--pp-dur-fast) var(--pp-ease-out);
 }
-[data-mode='dark'] .lamp__lip {
-  fill: var(--pp-paper);
+[data-mode='dark'] .lamp__bulb {
+  fill: var(--pp-surface);
 }
 /* The rim: the heaviest line on the fixture, and what stops the shade reading as
    a triangle — a shade is sheet metal rolled to an edge. Stated in drawing units
@@ -185,39 +327,80 @@ body {
   stroke-width: 5;
   stroke-linecap: butt;
 }
+
 /* The throw. A marker field in the shape of a beam, which is the marker doing
    exactly its job — a translucent field laid over paper with type above it — in
    the one shape that says where it came from. Hard edges, because a soft one
    would be the blur this system does not own: a printed light has a boundary,
-   and this one is cut at the spine, where the bench begins. */
-.lamp__cone {
-  fill: var(--w-lamp-throw);
+   and this one is cut at the spine, where the bench begins.
+
+   A trapezoid clipped out of a long box, rather than a box with a gradient or a
+   path drawn to size. The clip is in the element's own coordinates, so it turns
+   with the head and stays exactly as wide as the mouth it leaves; the header
+   cuts the far end off at the spine in the PAGE's coordinates, so the lit patch
+   on the bench lengthens and slides as the lamp swings, the way a patch of light
+   on a floor does. Neither of those is animated: both are what the geometry does
+   when one number changes. */
+.lamp__beam {
+  position: absolute;
+  top: calc(62 * var(--w-lamp-unit));
+  left: calc(var(--w-lamp-beam-width) / -2);
+  width: var(--w-lamp-beam-width);
+  height: var(--w-lamp-reach);
+  background: var(--w-lamp-throw);
+  clip-path: polygon(
+    calc(50% - var(--w-lamp-beam-mouth)) 0,
+    calc(50% + var(--w-lamp-beam-mouth)) 0,
+    100% 100%,
+    0 100%);
   transition: opacity var(--pp-dur-fast) var(--pp-ease-out);
 }
 /* Out the moment the switch is hit, while the room takes the system's mode
    duration to catch up. That order is the point: a bulb stops instantly and the
    eye is what adjusts slowly. */
-[data-mode='dark'] .lamp__cone {
+[data-mode='dark'] .lamp__beam {
   opacity: 0;
 }
 
 /* The switch: a plain target over the shade, drawing nothing. It is sized to the
-   system's prominent-narrow target and sits where the shade is, so the thing
-   under the finger is the thing that moves. */
+   system's prominent-narrow target and rides the swing, turning about the ceiling
+   point like everything else, so it is over the shade wherever the shade has got
+   to.
+
+   `--w-lamp-grip` is the drop from the ceiling to the middle of the head, less
+   half the target to centre the box on it — and the same number, negated, is how
+   far ABOVE the box the pivot is. Writing it once is what guarantees the switch
+   turns about the ceiling and not about itself.
+
+   `touch-action: none` is what makes the drag possible on a phone at all: the
+   gesture starts as a drag and so does a scroll, and without this the browser
+   claims the stream and the lamp dies in the reader's hand. `user-select: none`
+   for the same reason on a desktop, where the drag would otherwise select the
+   header's text behind it. */
 .lamp-switch {
+  --w-lamp-grip: calc((var(--w-lamp-drop) + 36) * var(--w-lamp-unit) - var(--pp-target-prominent-narrow) / 2);
   z-index: 5;
   width: var(--pp-target-prominent-narrow);
   height: var(--pp-target-prominent-narrow);
-  /* 70 in from the rig's right edge and 114 down is the middle of the shade,
-     read off the same viewBox the drawing uses; then back by half the target to
-     centre it. These two are the only numbers the switch and the drawing have to
-     agree on. */
-  margin-right: calc(70 * var(--w-lamp-unit) - var(--pp-target-prominent-narrow) / 2);
-  margin-top: calc(114 * var(--w-lamp-unit) - var(--pp-target-prominent-narrow) / 2);
+  margin-right: calc(-1 * var(--pp-target-prominent-narrow) / 2);
+  margin-top: var(--w-lamp-grip);
   padding: 0;
   border: 0;
   background: transparent;
+  transform: rotate(var(--w-lamp-swing, 0deg));
+  transform-origin: 50% calc(-1 * var(--w-lamp-grip));
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
+/* Held. The drawn `grab` pointer is the one state the fixture does not report
+   itself: the press moves the whole lamp a pixel, the swing answers the hand,
+   and neither of those says "this was a thing you could have taken hold of"
+   before it is taken hold of. The pointer does. */
+.lamp-switch:active {
+  cursor: var(--pp-cursor-grab);
+}
+
 /* Two states, and both live on the drawing rather than on the button, which is
    why they are reached through :has() — the switch is the target and the fixture
    is the thing that answers.
@@ -247,23 +430,57 @@ body:has(.lamp) {
   transition: background-color var(--pp-dur-mode) ease, color var(--pp-dur-mode) ease;
 }
 
-/* Clipped at the foot, which is the spine on either surface. The cone is drawn
-   long and cut, rather than drawn to length, so it lands on that edge at every
-   viewport instead of at one. `clip` rather than `hidden`, so no scroll
-   container is created and nothing inside starts scrolling; `.tip` and `.pop`
-   are both position: fixed and escape it, which is why a header may be clipped
-   without taking its own tooltips and pickers with it. */
+/* Clipped at the foot, which is the spine on either surface, and at the sides,
+   which is where the page runs out. Both matter now that the fixture moves: the
+   beam is drawn past the spine and cut on it, and the swing is bounded by the
+   script so the shade never reaches these edges to be cut by them. `clip` rather
+   than `hidden`, so no scroll container is created and nothing inside starts
+   scrolling; `.tip` and `.pop` are both position: fixed and escape it, which is
+   why a header may be clipped without taking its own tooltips and pickers with
+   it. */
 .masthead,
 .wrap > header {
   overflow: clip;
   overflow-clip-margin: 0;
 }
 
-/* A tool page is a bench, not a shop front: the same fixture, hung lower down
-   the scale, because the room between the top of the page and the spine is a
-   header rather than a masthead. Flush to the content column, where the pull
-   cord used to hang. */
+/* A tool page is a bench, not a shop front: the same fixture, half the size, on
+   a much shorter flex. The room between the top of the page and the spine is a
+   header rather than a masthead — a third of the drop — and it is a busy one,
+   with a back link and a title and two buttons already in it. A lamp let down to
+   the middle of that hangs in front of the work, so it is kept up near the
+   ceiling where the header's own top padding leaves the only clear band on the
+   page. Same object, lower ceiling, shorter cord, and it swings faster for it,
+   which is what a shorter pendulum does. */
 .wrap > header {
   --w-lamp-unit: 0.5px;
-  --w-lamp-inset: 0px;
+  --w-lamp-inset: clamp(2.5rem, 6vw, 7rem);
+  --w-lamp-drop: 56;
+}
+
+/* And under about 540px the index is a tool page in this one respect: the sign
+   grows until it takes the whole column, and there is no lane left beside it to
+   hang anything in. The fixture was hanging BEHIND the wordmark — shade, bulb,
+   rim and switch all out of sight behind an opaque board, with only the flex and
+   the top of the shade showing above it and the light appearing from nowhere
+   underneath. The hit area was still there and still worked, which is worse
+   rather than better: a control nobody can see is a control nobody can use, and
+   one that is technically clickable is just a trap that happens to have a prize
+   in it.
+
+   So it takes the same escape the tool pages take, up into the only clear band
+   on a full page — the header's own top padding — on the shorter flex. The lamp
+   itself does not shrink: half a drawing unit is already as thin as these
+   strokes can be drawn and hold a line, and a fixture that reads as a smudge on
+   the one screen where it is closest to the reader's eye is not a fix. What
+   moves is the ceiling.
+
+   The band has to be there on a short screen as well as a tall one, and 9vh is
+   not on a phone held in landscape; the masthead's top padding therefore takes a
+   floor that clears this fixture. That half is declared in index.html, where the
+   padding is. */
+@media (max-width: 540px) {
+  .masthead {
+    --w-lamp-drop: 56;
+  }
 }
