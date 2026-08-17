@@ -102,13 +102,26 @@
     Enter a place or a pair of coordinates. This finds the next solar eclipse
     visible from there, counts down to its next phase, and lists the times of
     all of them. The disc shows the Sun as it will look from that spot, drawn
-    with the zenith up for the moment on the clock, and beside it the same
-    moment from outside: the Moon, its shadow, and where that shadow falls.
+    with the zenith up for the moment on the clock. Every other eclipse on file
+    is there to be picked instead, partial ones included.
   </div>
+
+  <!-- The catalogue as it stands at this place: every eclipse on file with
+       the Sun it leaves there, drawn from the same elements the report uses.
+       Outside the report because it is the way back into it — an eclipse that
+       misses this place has nothing to count down to, and still belongs on the
+       sheet. -->
+  <section class="choose" id="choose" hidden>
+    <div class="sheet-cap">
+      <code>every eclipse on file</code>
+      <code class="meta" id="chooseCap"></code>
+    </div>
+    <ul class="picks" id="picks"></ul>
+  </section>
 
   <section id="report" hidden>
     <div class="result-bar">
-      <p class="section-label">Next eclipse here</p>
+      <p class="section-label" id="reportLabel">Next eclipse here</p>
       <div class="group">
         <code class="where-cap" id="whereCap"></code>
       </div>
@@ -134,15 +147,6 @@
         <dl class="stats" id="stats"></dl>
       </div>
     </div>
-
-    <!-- The same instant from outside: Moon, cone, Earth, and the reader on
-         it. Everything in it is read off the Besselian elements, so it moves
-         with the clock and with the preview. -->
-    <figure class="system">
-      <svg id="sys" class="sys" viewBox="0 0 340 128" role="img"
-        aria-label="The Moon's shadow cone reaching the Earth, seen from the side"></svg>
-      <figcaption class="sheet-note" id="sysCap"></figcaption>
-    </figure>
 
     <!-- The horizon: Recon's terrain question, asked only about the piece of
          sky this eclipse actually crosses, and printed upright — a track that
@@ -181,11 +185,6 @@
       </div>
     </div>
     <p class="sheet-note" id="note"></p>
-
-    <section class="later" id="later" hidden>
-      <p class="section-label">Also on file</p>
-      <ul class="later-list" id="laterList"></ul>
-    </section>
   </section>
 
   <p class="sheet-note colophon">

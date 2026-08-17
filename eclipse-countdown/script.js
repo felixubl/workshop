@@ -21,11 +21,11 @@
 
   var ui = {};
   ['place', 'find', 'here', 'whereForm', 'hint', 'alts', 'altsRow', 'empty',
-   'report', 'whereCap', 'disc', 'discState', 'discNote', 'play', 'playLabel',
+   'choose', 'chooseCap', 'picks',
+   'report', 'reportLabel', 'whereCap', 'disc', 'discState', 'discNote',
+   'play', 'playLabel',
    'clockLabel', 'clockTime', 'clockAt', 'stats', 'phaseRows', 'phaseZone',
-   'note', 'later', 'laterList',
-   'horizon', 'hzStatus', 'hzBody', 'hzAsk', 'hzGo',
-   'sys', 'sysCap'].forEach(function (id) {
+   'note', 'horizon', 'hzStatus', 'hzBody', 'hzAsk', 'hzGo'].forEach(function (id) {
     ui[id] = document.getElementById(id);
   });
 
@@ -34,6 +34,8 @@
     geo: null,       // the observer in geocentric form, cached per position
     ecl: null,       // the eclipse being counted down to
     circ: null,      // its local circumstances there
+    pickId: null,    // the eclipse the reader picked, if they picked one
+    picksKey: '',    // the place the strip of eclipses was drawn for
     targets: [],     // the moments the clock counts to
     stateWord: '',   // last word the disc said, so aria only changes with it
     preview: null    // {started, segs} while the eclipse is being played
@@ -227,118 +229,6 @@
   }
 
 
-  /* The system, seen from outside: the Moon, its shadow, and the Earth the
-     shadow falls on, at the same instant the disc draws. Every distance is
-     read from the elements. The Earth's radius is the unit. The Moon sits
-     where both cones have the Moon's own radius, which the elements agree on
-     to about a tenth of a percent. The cone edges are the real cones: the
-     penumbra opening to l1 at the fundamental plane, the umbra closing to a
-     point at l2/tan f2. Whether that point falls before or after the Earth's
-     surface is what makes the eclipse total or annular. The axis sits its true
-     distance from the Earth's centre. One distortion: along-axis distance is
-     compressed, and the caption states the factor. The Moon is 57 Earth radii
-     away and the Earth is one radius across, so a true side view would be 23
-     times longer than tall. Heights stay true, so the cone's taper is
-     exaggerated by the same factor, which is what makes it visible. The Sun is
-     not drawn; an arrow marks its direction. */
-
-  var MOON_R = 0.2725076;      // Moon radius, in Earth radii
-  var SYS = { w: 340, h: 128, cx: 246, cy: 64, re: 30 };
-
-  function paintSystem(at) {
-    if (!ui.sys) return;
-    var ecl = state.ecl;
-    if (!ecl) { ui.sys.innerHTML = ''; ui.sysCap.textContent = ''; return; }
-    var day = Date.UTC(ecl.date[0], ecl.date[1] - 1, ecl.date[2]);
-    var t = (at - day) / 3600000 + ecl.deltaT / 3600;
-    if (!isFinite(t) || Math.abs(t - ecl.t0) > 5) return;
-    var el = Bessel.elements(ecl, t);
-
-    // how far the axis passes from the Earth's centre, and the Moon's own
-    // distance — the penumbral solution, the umbral one agreeing with it
-    var off = Math.hypot(el.x, el.y);
-    var zMoon = (el.l1 - MOON_R) / ecl.tanF1;
-    var zTip = el.l2 / ecl.tanF2;          // where the umbral cone closes
-    var zoom = (SYS.cx - 46) / (zMoon * SYS.re);   // the along-axis squeeze
-
-    function X(z) { return SYS.cx - z * SYS.re * zoom; }
-    function Y(v) { return SYS.cy - v * SYS.re; }
-    var axisY = Y(off);
-    // cone half-width at a distance z along the axis, in Earth radii
-    function pen(z) { return el.l1 - z * ecl.tanF1; }
-    function umb(z) { return el.l2 - z * ecl.tanF2; }
-
-    var far = zMoon * 1.02, near = -3.2;   // the frame, in axis units
-    var g = [];
-    // the Sun's direction: it is 400 times the Moon's distance further out
-    g.push('<g class="sys-ray">' +
-      [-0.55, 0, 0.55].map(function (k) {
-        var y = axisY + k * SYS.re * 1.6;
-        return '<line x1="6" y1="' + y.toFixed(1) + '" x2="26" y2="' +
-               y.toFixed(1) + '"/>';
-      }).join('') +
-      '<path d="M26 ' + axisY.toFixed(1) + ' l-5 -3 v6z"/></g>');
-    g.push('<text class="sys-tag" x="6" y="' + (axisY + 26).toFixed(1) +
-           '">sunlight</text>');
-
-    // the penumbra, as the pair of edges it is
-    [1, -1].forEach(function (sgn) {
-      g.push('<line class="sys-pen" x1="' + X(zMoon).toFixed(1) + '" y1="' +
-        (axisY - sgn * MOON_R * SYS.re).toFixed(1) + '" x2="' + X(near).toFixed(1) +
-        '" y2="' + (axisY - sgn * pen(near) * SYS.re).toFixed(1) + '"/>');
-    });
-    // the umbra: solid to its point, then opening again beyond it
-    g.push('<path class="sys-umb" d="M' + X(zMoon).toFixed(1) + ',' +
-      (axisY - MOON_R * SYS.re).toFixed(1) + 'L' + X(zTip).toFixed(1) + ',' +
-      axisY.toFixed(1) + 'L' + X(zMoon).toFixed(1) + ',' +
-      (axisY + MOON_R * SYS.re).toFixed(1) + 'Z"/>');
-    if (zTip > near) {                      // the antumbra, where there is one
-      [1, -1].forEach(function (sgn) {
-        g.push('<line class="sys-anti" x1="' + X(zTip).toFixed(1) + '" y1="' +
-          axisY.toFixed(1) + '" x2="' + X(near).toFixed(1) + '" y2="' +
-          (axisY + sgn * Math.abs(umb(near)) * SYS.re).toFixed(1) + '"/>');
-      });
-    }
-    // the axis itself, and the two bodies
-    g.push('<line class="sys-axis" x1="' + X(far).toFixed(1) + '" y1="' +
-      axisY.toFixed(1) + '" x2="' + X(near).toFixed(1) + '" y2="' +
-      axisY.toFixed(1) + '"/>');
-    g.push('<circle class="sys-earth" cx="' + SYS.cx + '" cy="' + SYS.cy +
-      '" r="' + SYS.re + '"/>');
-    g.push('<circle class="sys-moon" cx="' + X(zMoon).toFixed(1) + '" cy="' +
-      axisY.toFixed(1) + '" r="' + (MOON_R * SYS.re).toFixed(1) + '"/>');
-
-    /* The reader, on the Earth, in the plane the drawing is a slice of: the
-       observer's own fundamental-frame coordinates, projected onto the line
-       from the Earth's centre to the axis. */
-    if (state.geo && off > 1e-6) {
-      var sit = Bessel.situation(ecl, t, state.geo, state.at.lon);
-      var v = (sit.ob.xi * el.x + sit.ob.eta * el.y) / off;
-      g.push('<circle class="sys-you" cx="' + X(sit.ob.zeta).toFixed(1) +
-        '" cy="' + Y(v).toFixed(1) + '" r="2.6"/>');
-    }
-    g.push('<text class="sys-tag" x="' + X(zMoon).toFixed(1) + '" y="' +
-      (axisY - MOON_R * SYS.re - 6).toFixed(1) + '" text-anchor="middle">Moon</text>');
-    g.push('<text class="sys-tag" x="' + SYS.cx + '" y="' +
-      (SYS.cy + SYS.re + 14) + '" text-anchor="middle">Earth</text>');
-    ui.sys.innerHTML = g.join('');
-
-    // the caption states the one distortion, and what the cone is doing
-    var tipKm = Math.round(zTip * 6378.137);
-    ui.sysCap.innerHTML = 'The Moon is ' +
-      Math.round(zMoon * 6378.137).toLocaleString() + ' km away here, and its ' +
-      'shadow closes to a point ' + Math.abs(tipKm).toLocaleString() + ' km ' +
-      (tipKm < 0 ? 'past the Earth’s centre — which is why the tip lands on the ' +
-        'ground as a spot a few tens of kilometres wide, and why totality is ' +
-        'counted in minutes.' : 'short of the Earth’s centre, so the ground ' +
-        'meets the cone beyond its point: the Moon cannot quite cover the Sun, ' +
-        'and a ring is left.') +
-      ' Heights are true and the Earth’s radius is the unit; distance along ' +
-      'the axis is squeezed ' + Math.round(1 / zoom) + '×, so the cone’s taper ' +
-      'is exaggerated by the same amount. The Sun is 400 Moon-distances further ' +
-      'left again.';
-  }
-
   /* ================= words for a state ================= */
 
   function stateOf(f) {
@@ -393,6 +283,9 @@
 
   function clockOf(date, tz) {
     return fmt(date, tz, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+  function shortDay(date, tz) {
+    return fmt(date, tz, { day: 'numeric', month: 'short', year: 'numeric' });
   }
   function dayOf(date, tz) {
     return fmt(date, tz, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
@@ -458,6 +351,92 @@
     return out;
   }
 
+  /* ================= the strip of eclipses ================= */
+
+  /* The Sun this eclipse leaves here, at its deepest, in the disc's own three
+     inks and nothing else: plate 2 for the Sun, plate 3 for the Moon off its
+     face, the overprint for the covered part. An eclipse that never reaches
+     this place draws a whole Sun, which is what stands in that sky. */
+  function pickDisc(id, f) {
+    var art = '';
+    if (f) {
+      var r = f.sep * SUN_PX;
+      var mx = (-r * Math.sin(f.theta)).toFixed(1);
+      var my = (-r * Math.cos(f.theta)).toFixed(1);
+      var mr = (f.ratio * SUN_PX).toFixed(1);
+      art = '<circle class="moon-off" cx="' + mx + '" cy="' + my + '" r="' + mr + '"/>' +
+        '<g clip-path="url(#pk-' + id + ')"><circle class="moon-body" cx="' + mx +
+        '" cy="' + my + '" r="' + mr + '"/></g>';
+    }
+    return '<svg class="pick-disc" viewBox="-72 -72 144 144" aria-hidden="true">' +
+      '<defs><clipPath id="pk-' + id + '"><circle cx="0" cy="0" r="' + SUN_PX + '"/></clipPath></defs>' +
+      '<rect class="sky" x="-72" y="-72" width="144" height="144"/>' +
+      '<circle class="sun" cx="0" cy="0" r="' + SUN_PX + '"/>' + art + '</svg>';
+  }
+
+  /* One eclipse as a card: the date it happens here, what it does here, and
+     how deep it goes. A card for an eclipse that misses the place is dead,
+     because there is nothing there to count down to. */
+  function pickCard(row) {
+    var ecl = row.ecl, circ = row.circ;
+    var when = circ ? shortDay(circ.dateMax, state.at.tz)
+      : shortDay(new Date(Date.UTC(ecl.date[0], ecl.date[1] - 1, ecl.date[2])), 'UTC');
+    var what = circ ? TYPE_WORD[circ.type] : 'not here';
+    var more;
+    // a graze rounds to nothing, and "0% covered" says the wrong thing
+    var deep = circ && (circ.obscuration < 0.005 ? '<1%'
+      : Math.round(circ.obscuration * 100) + '%');
+    if (!circ) more = 'misses this place';
+    else if (!circ.visible) more = deep + ', Sun down';
+    else more = deep + ' covered' +
+      (circ.duration ? ' · ' + lasting(circ.duration) : '');
+    return '<li><button class="pick" type="button" data-id="' + ecl.id + '"' +
+      (circ ? '' : ' disabled') + ' aria-pressed="false">' +
+      pickDisc(ecl.id, circ ? frameAt(ecl, circ.dateMax.getTime()) : null) +
+      '<code class="pick-when">' + when + '</code>' +
+      '<span class="pick-what">' + what + '</span>' +
+      '<span class="pick-more">' + more + '</span>' +
+      '</button></li>';
+  }
+
+  /* The cards depend on the place and nothing else, so a new pick only moves
+     the mark: rebuilding would throw away where the reader had scrolled to. */
+  function renderPicks(rows, pickIndex) {
+    ui.choose.hidden = !rows.length;
+    if (!rows.length) { state.picksKey = ''; return; }
+    var seen = rows.filter(function (r) { return r.circ && r.circ.visible; }).length;
+    ui.chooseCap.textContent = rows.length + ' still to come · ' + seen +
+      ' above the horizon here';
+    var key = coordWord(state.at.lat, state.at.lon) + '/' + rows.length;
+    if (key !== state.picksKey) {
+      state.picksKey = key;
+      ui.picks.innerHTML = rows.map(pickCard).join('');
+    }
+    var cards = ui.picks.querySelectorAll('.pick');
+    for (var i = 0; i < cards.length; i++) {
+      var on = i === pickIndex;
+      cards[i].classList.toggle('is-on', on);
+      cards[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+      // the marker is the system's, and it goes behind the date, never behind
+      // the card: it works small and fails big
+      var when = cards[i].querySelector('.pick-when');
+      when.classList.toggle('mk', on);
+      when.classList.toggle('mk--citron', on);
+    }
+    scrollPickIntoView(cards[pickIndex]);
+  }
+
+  /* A card picked from a link, or one the reader scrolled away from, is
+     brought back into the strip — sideways only, so the page stays put. */
+  function scrollPickIntoView(card) {
+    if (!card) return;
+    var box = card.parentNode;
+    var left = box.offsetLeft, right = left + box.offsetWidth;
+    if (left >= ui.picks.scrollLeft &&
+        right <= ui.picks.scrollLeft + ui.picks.clientWidth) return;
+    ui.picks.scrollLeft = left - (ui.picks.clientWidth - box.offsetWidth) / 2;
+  }
+
   function renderReport(pickIndex, rows) {
     var row = rows[pickIndex];
     var ecl = row.ecl, circ = row.circ;
@@ -466,6 +445,8 @@
     ui.report.hidden = false;
     ui.empty.hidden = true;
     ui.whereCap.textContent = coordWord(state.at.lat, state.at.lon);
+    ui.reportLabel.textContent = pickIndex === firstVisible(rows)
+      ? 'Next eclipse here' : 'The eclipse you picked';
 
     var ring = circ.type === 'annular';
     var stats = [
@@ -496,46 +477,48 @@
       notes.push('The Moon’s full shadow misses this spot: the Sun is never completely ' +
         'covered here, at most ' + Math.round(circ.obscuration * 100) + '%.');
     }
-    if (circ.sunAltApparent < 8 && circ.sunAltApparent > UNDER) {
-      notes.push('The Sun is ' + (circ.sunAltApparent < 0.5 ? 'on the horizon'
-        : 'only ' + Math.round(circ.sunAltApparent) + '° up') + ' at maximum, towards ' +
-        compass(circ.sunAz) + '. Check that horizon for buildings or terrain.');
-    }
-    if (circ.c4 && circ.c4.alt + Bessel.refraction(circ.c4.alt) < UNDER) {
-      notes.push('The Sun sets before the eclipse ends: the last phases are below the horizon.');
-    }
-    if (circ.c1 && circ.c1.alt + Bessel.refraction(circ.c1.alt) < UNDER) {
-      notes.push('The Sun rises with the eclipse already under way: the first phases are ' +
-        'below the horizon.');
+    /* Where the Sun is for it. An eclipse with no part of it above the
+       horizon has nothing to say about rising or setting, so that one line
+       replaces all three. */
+    if (!circ.visible) {
+      notes.push('None of this eclipse is above the horizon here: the Sun is down ' +
+        'for all of it, and the disc draws it where it stands, behind the ground.');
+    } else {
+      if (circ.sunAltApparent < 8 && circ.sunAltApparent > UNDER) {
+        notes.push('The Sun is ' + (circ.sunAltApparent < 0.5 ? 'on the horizon'
+          : 'only ' + Math.round(circ.sunAltApparent) + '° up') + ' at maximum, towards ' +
+          compass(circ.sunAz) + '. Check that horizon for buildings or terrain.');
+      }
+      if (circ.c4 && circ.c4.alt + Bessel.refraction(circ.c4.alt) < UNDER) {
+        notes.push('The Sun sets before the eclipse ends: the last phases are below the horizon.');
+      }
+      if (circ.c1 && circ.c1.alt + Bessel.refraction(circ.c1.alt) < UNDER) {
+        notes.push('The Sun rises with the eclipse already under way: the first phases are ' +
+          'below the horizon.');
+      }
     }
     notes.push(circ.type === 'total'
       ? 'Only totality is safe to view without a solar filter, and only while it lasts.'
       : 'A partially eclipsed Sun needs a solar filter at all times.');
     ui.note.innerHTML = notes.join(' ');
 
-    var later = rows.filter(function (r, i) { return i !== pickIndex; });
-    ui.later.hidden = !later.length;
-    ui.laterList.innerHTML = later.map(function (r) {
-      var when = dayOf(new Date(Date.UTC(r.ecl.date[0], r.ecl.date[1] - 1, r.ecl.date[2])), 'UTC');
-      var what;
-      if (!r.circ) what = 'not visible here';
-      else if (!r.circ.visible) what = TYPE_WORD[r.circ.type].toLowerCase() + ', below the horizon here';
-      else what = TYPE_WORD[r.circ.type].toLowerCase() + ', ' +
-        Math.round(r.circ.obscuration * 100) + '% covered' +
-        (r.circ.duration ? ' for ' + lasting(r.circ.duration) : '');
-      return '<li><code>' + when + '</code><span>' + what + '</span></li>';
-    }).join('');
   }
 
   function renderNothing(rows) {
     state.ecl = null; state.circ = null; state.targets = [];
     ui.report.hidden = true;
     ui.empty.hidden = false;
-    ui.empty.innerHTML = 'No eclipse on file is visible from ' +
-      '<strong>' + escapeHtml(state.at.name) + '</strong>. The catalogue holds ' +
-      rows.length + ' still to come (' +
-      rows.map(function (r) { return '<code>' + r.ecl.id + '</code>'; }).join(', ') +
-      '). More can be added by pasting the Besselian elements from a NASA page ' +
+    var reached = rows.filter(function (r) { return r.circ; }).length;
+    ui.empty.innerHTML = (reached
+      ? 'No eclipse on file is above the horizon at '
+      : 'No eclipse on file reaches ') +
+      '<strong>' + escapeHtml(state.at.name) + '</strong>. ' +
+      (reached
+        ? reached + ' of the ' + rows.length + ' still to come reach it with the ' +
+          'Sun already down; pick one from the strip above to see what it does there.'
+        : rows.length === 1 ? 'The one still to come passes it by.'
+          : 'All ' + rows.length + ' still to come pass it by.') +
+      ' More can be added by pasting the Besselian elements from a NASA page ' +
       'into <a href="../eclipse-recon/">Eclipse Recon</a>, which this tool reads.';
   }
 
@@ -556,7 +539,6 @@
       var step = previewAt(state.preview, through);
       var pf = frameAt(state.ecl, step.at);
       paint(pf);
-      paintSystem(step.at);
       sayState(pf);
       ui.clockLabel.textContent = 'preview, running at ×' + step.rate;
       ui.clockTime.textContent = clockOf(new Date(step.at), state.at.tz);
@@ -568,7 +550,6 @@
     var t = Date.now();
     var f = frameAt(state.ecl, t);
     paint(f);
-    paintSystem(t);
     sayState(f);
     markRow(t);
 
@@ -1034,24 +1015,55 @@
     state.stateWord = '';
     if (!keepField) ui.place.value = at.name;
     try { localStorage.setItem(STORE, JSON.stringify(at)); } catch (err) { /* private mode */ }
-    var q = '?at=' + at.lat.toFixed(4) + ',' + at.lon.toFixed(4) +
-            '&name=' + encodeURIComponent(at.name) + (at.tz ? '&tz=' + encodeURIComponent(at.tz) : '');
-    try { history.replaceState(null, '', q); } catch (err) { /* file:// */ }
     locate();
   }
 
-  /* Pick the eclipse to count down to: the first one still to come that is
-     actually visible from there, rather than merely dated in the future. */
+  /* The link says both halves of the question: where, and which eclipse — but
+     only once the reader has picked one, so an unpicked link still means "the
+     next one there". */
+  function syncUrl() {
+    var at = state.at;
+    if (!at) return;
+    var q = '?at=' + at.lat.toFixed(4) + ',' + at.lon.toFixed(4) +
+            '&name=' + encodeURIComponent(at.name) +
+            (at.tz ? '&tz=' + encodeURIComponent(at.tz) : '') +
+            (state.pickId ? '&ecl=' + state.pickId : '');
+    try { history.replaceState(null, '', q); } catch (err) { /* file:// */ }
+  }
+
+  /* The first eclipse still to come that can actually be seen from there,
+     rather than one merely dated in the future. */
+  function firstVisible(rows) {
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].circ && rows[i].circ.visible) return i;
+    }
+    return -1;
+  }
+
+  /* The eclipse the report is about: the one the reader picked, as long as it
+     still reaches this place, and otherwise the next one visible here. A
+     picked eclipse only has to arrive; whether the Sun is up for it is then
+     the report's business to say. */
+  function chosenIndex(rows) {
+    if (state.pickId) {
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i].ecl.id === state.pickId && rows[i].circ) return i;
+      }
+    }
+    return firstVisible(rows);
+  }
+
   function locate() {
     var rows = survey(state.at.lat, state.at.lon).filter(function (r) {
       return r.over > Date.now();
     });
-    var pick = -1;
-    for (var i = 0; i < rows.length; i++) {
-      if (rows[i].circ && rows[i].circ.visible) { pick = i; break; }
-    }
+    var pick = chosenIndex(rows);
+    // a pick the new place cannot honour is not a pick any more
+    if (state.pickId && (pick < 0 || rows[pick].ecl.id !== state.pickId)) state.pickId = null;
     ui.whereCap.textContent = coordWord(state.at.lat, state.at.lon);
     stopPreview(true);
+    syncUrl();
+    renderPicks(rows, pick);
     if (pick < 0) { resetHorizon(); renderNothing(rows); return; }
     renderReport(pick, rows);
     // the skyline belongs to a place and an eclipse; either changing voids it,
@@ -1151,6 +1163,7 @@
   function restore() {
     var params = new URLSearchParams(location.search);
     var at = null;
+    state.pickId = params.get('ecl');
     var coords = asCoords(params.get('at') || '');
     if (coords) {
       at = { lat: coords.lat, lon: coords.lon,
@@ -1175,6 +1188,12 @@
     lookUp(q);
   });
   ui.here.addEventListener('click', askTheBrowser);
+  ui.picks.addEventListener('click', function (e) {
+    var card = e.target.closest ? e.target.closest('.pick') : null;
+    if (!card || card.disabled) return;
+    state.pickId = card.dataset.id;
+    locate();
+  });
   ui.play.addEventListener('click', function () {
     if (state.preview) stopPreview(); else startPreview();
   });
