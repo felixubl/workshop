@@ -38,6 +38,77 @@
   margin-right: 4px;
 }
 
+/* ── The image ─────────────────────────────────────────────────────────── */
+
+/* Everything that only exists once a file has been chosen, in one box so a
+   single [hidden] governs the lot. The drawn <select> inside is wrapped by
+   controls.js after this script has run, which is the other reason: hiding the
+   real element would leave its replacement on the page. */
+.mark-set {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* The file, named and shown. A tag by the system's reading — a label rather
+   than a control — so it takes the pill, and the one control on it is the
+   dismiss. */
+.mark-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: 15rem;
+  padding: 0.18rem 0.3rem 0.18rem 0.28rem;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-pill);
+}
+.mark-thumb {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  border-radius: var(--pp-radius-sm);
+  /* A logo saved with a transparent surround needs something behind it, and the
+     something is the stock the card is drawn on — the same as a cell's, so the
+     thumbnail and the preview agree about what the picture will look like. */
+  background: var(--pp-surface);
+}
+.mark-name {
+  font-family: var(--pp-font-mono);
+  font-size: 0.72rem;
+  letter-spacing: var(--w-track-label);
+  color: var(--pp-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mark-drop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--pp-radius-sm);
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--pp-faint);
+}
+.mark-drop:hover {
+  background: var(--pp-tint);
+  color: var(--pp-ink);
+}
+.mark-drop:active {
+  transform: var(--w-press);
+}
+
+.field.mark-where {
+  font-family: var(--pp-font-mono);
+  font-size: 0.86rem;
+}
+
 .card.prompt {
   font-size: 0.94rem;
   line-height: 1.62;
@@ -182,10 +253,49 @@
 /* The card stands on the sheet as it will on the page: white stock, centred,
    with room around it. The stage keeps its own ground rather than the sheet's. */
 .card-stage {
+  position: relative;
   display: flex;
   justify-content: center;
   padding: 1.25rem 0.8rem 1.4rem;
   background: var(--w-wash-0);
+}
+
+/* The card and the band a corner image stands in, which is the part of the page
+   the preview can honestly show. The band only exists when there is something
+   to put in it, so a card with no image sits exactly where it always did. */
+.card-page {
+  position: relative;
+  width: min(100%, 460px);
+}
+.card-page[data-mark^='t'] {
+  padding-top: 58px;
+}
+.card-page[data-mark^='b'] {
+  padding-bottom: 58px;
+}
+
+/* On the page the mark hangs off the frame's own edge, above the grid or below
+   it, so it does here too. The stage is not the page — it has no heading and no
+   footer — so this says which corner and roughly how big, and the PDF is where
+   it lands for real. */
+.stage-mark {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  background: var(--pp-surface);
+}
+.stage-mark[data-where='tl'] { top: 0; left: 0; }
+.stage-mark[data-where='tr'] { top: 0; right: 0; }
+.stage-mark[data-where='bl'] { bottom: 0; left: 0; }
+.stage-mark[data-where='br'] { bottom: 0; right: 0; }
+
+/* A picture in the free square, filling the cell the way it will on paper. */
+.cell-mark {
+  width: 100%;
+  height: 100%;
+  padding: 6%;
+  object-fit: contain;
 }
 
 /* A bingo card. Square cells, one rule between them, a heavier edge around the

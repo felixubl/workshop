@@ -97,6 +97,31 @@
         <option value="letter">US Letter</option>
       </select>
     </div>
+
+    <div class="group">
+      <label id="markLabel">Image</label>
+      <button class="btn-ghost" type="button" id="markPick" aria-describedby="markLabel"
+        data-tip="A logo, a badge or a QR code, printed on every card. In a corner it comes out about 22 mm across; in the free square it fills the cell. Read in this tab like everything else here, and never uploaded.">Choose a file</button>
+      <input type="file" id="markFile" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" hidden>
+      <span class="mark-set" id="markSet" hidden>
+        <span class="mark-chip">
+          <img class="mark-thumb" id="markThumb" alt="">
+          <span class="mark-name" id="markName"></span>
+          <button class="mark-drop" type="button" id="markClear" aria-label="Remove the image">×</button>
+        </span>
+        <select class="field mark-where" id="markWhere" aria-label="Where the image goes on the card">
+          <option value="free">Free square</option>
+          <option value="tl">Top left</option>
+          <option value="tr">Top right</option>
+          <option value="bl">Bottom left</option>
+          <option value="br">Bottom right</option>
+        </select>
+      </span>
+    </div>
+
+    <div class="group">
+      <label class="checkbox" data-tip="Every card prints one small line at the foot saying where it was made, and the same line sits in the PDF's properties. Turning this off removes both. :("><input type="checkbox" id="credit" checked> Workshop line</label>
+    </div>
   </div>
 
   <div class="bench">
@@ -191,7 +216,10 @@
         <code class="pager-note">a preview of the page</code>
       </div>
       <div class="card-stage">
-        <div class="bingo" id="preview" role="table" aria-label="Bingo card preview"></div>
+        <div class="card-page" id="cardPage">
+          <img class="stage-mark" id="stageMark" alt="" hidden>
+          <div class="bingo" id="preview" role="table" aria-label="Bingo card preview"></div>
+        </div>
       </div>
     </div>
     <p class="sheet-note" id="dealNote"></p>
