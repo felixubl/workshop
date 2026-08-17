@@ -1,7 +1,8 @@
 /* Eclipse Recon: the pre-surveyed band. The crawler (tools/crawl-vis.mjs, run
-   by a scheduled GitHub Action) walks the umbral band and precomputes, for
-   every 60-80 m pixel, the fraction of totality the local horizon allows. This
-   module reads those tiles so the browser does not repeat the work. */
+   by hand) walks the umbral band and precomputes, for every 60-80 m pixel, the
+   fraction of totality the local horizon allows. This module reads those tiles
+   so the browser does not repeat the work, and computes anything the crawler
+   has not reached, so a partial survey is a speed-up rather than a dependency. */
 
 var Precomp = (function () {
   'use strict';

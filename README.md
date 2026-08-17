@@ -511,10 +511,11 @@ in this category, which follows from the definition.
   stored in IndexedDB and does not expire, so finer passes and return visits
   only pay for new ground. Forecasts are not stored.
 
-  A GitHub Action ([`tools/crawl-vis.mjs`](tools/crawl-vis.mjs)) crawls the
-  whole band at the same resolution and commits results to
-  [`eclipse-recon/data/`](eclipse-recon/data/), which Pages serves to every
-  visitor. The workflow disables its own schedule when the queue empties. The
+  The same survey can be run over a whole band offline:
+  [`tools/crawl-vis.mjs`](tools/crawl-vis.mjs) walks it at that resolution and
+  writes [`eclipse-recon/data/`](eclipse-recon/data/), which Pages serves to
+  every visitor. It ran on a schedule until 2026-08-17 and is now a script you
+  start yourself; the two bands already in the repo are about 96% surveyed. The
   browser and the crawler run the same formulas. Nothing in the code is
   specific to one eclipse: a catalogue record is a set of elements and a date,
   and another eclipse can be loaded by pasting the Polynomial Besselian
