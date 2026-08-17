@@ -92,8 +92,10 @@ browser, and this prints a file the reader supplied.
 - [Bingo Card Generator](bingo-cards/) — enter the squares and it counts the
   number of distinct cards that list can produce, exactly, at any number of
   digits. Request any number of cards and it generates that many, all
-  different, from a seed so the same set can be reproduced. The PDF is one card
-  per page and is written here without a library.
+  different, from a seed so the same set can be reproduced. A logo or a QR code
+  can be given the free square or a corner of the page, and the line at the
+  foot saying where the cards were made can be switched off. The PDF is one
+  card per page and is written here without a library.
 
 - [Route Sheet](route-sheet/) — a route in, a printable sheet out: an overview
   map with the path on it, a scale bar and a north arrow, and every turn

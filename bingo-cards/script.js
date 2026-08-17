@@ -5,6 +5,16 @@ const sizePresets = document.getElementById("sizePresets");
 const freeToggle = document.getElementById("freeSpace");
 const freeLabelInput = document.getElementById("freeLabel");
 const paperSelect = document.getElementById("paper");
+const creditToggle = document.getElementById("credit");
+const markPick = document.getElementById("markPick");
+const markFile = document.getElementById("markFile");
+const markSet = document.getElementById("markSet");
+const markThumb = document.getElementById("markThumb");
+const markName = document.getElementById("markName");
+const markClear = document.getElementById("markClear");
+const markWhere = document.getElementById("markWhere");
+const stageMark = document.getElementById("stageMark");
+const cardPage = document.getElementById("cardPage");
 const itemsInput = document.getElementById("items");
 const itemsNote = document.getElementById("itemsNote");
 const exampleBtn = document.getElementById("example");
@@ -44,8 +54,23 @@ const MAX_CARDS = 500;
 // so it ends the search rather than the tab.
 const MAX_MISSES = 4000;
 
+// The half of the footer that says where the cards were made, and the half the
+// checkbox takes away. bingo-pdf.js holds the same string for the file's
+// properties, which the same checkbox strips; the two have to stay in step.
+const CREDIT = "workshop.fubl.org/bingo-cards";
+
 let deal = null;
 let showing = 0;
+
+/* The picture. A logo, a badge, a QR code: chosen once and carried by every
+   card, either filling the free square or standing in a corner of the page.
+
+   It is deliberately not part of `deal`. Nothing about it changes which squares
+   land where, so swapping the file or moving it to another corner redraws the
+   preview and the PDF from the deal already on screen, rather than dealing a
+   new set of cards to look at the same list. */
+
+let mark = null;
 
 /* The list. Input is lines; a card needs distinct squares. Blank lines and
    repeats are removed: two identical squares would produce two cards that look
@@ -230,6 +255,87 @@ function showHint(message) {
   hint.hidden = !message;
 }
 
+/* ── The picture ───────────────────────────────────────────────────────── */
+
+// What the file will weigh once it is inside the PDF, which is the only figure
+// about it worth showing: the samples are re-encoded on the way in, so the size
+// on disk says nothing about the size of the download.
+function weigh(image) {
+  const bytes = image.colour.data.length + (image.mask ? image.mask.data.length : 0);
+  return bytes < 1024
+    ? `${bytes} bytes`
+    : bytes < 1024 * 1024
+      ? `${Math.round(bytes / 1024)} kB`
+      : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// A picture bound for the free square needs a free square to land in, and both
+// the grid and the checkbox can take one away after the file was chosen. So it
+// is said where either of them moves, rather than at the download, where the
+// setting that caused it is off the screen.
+function markTrouble() {
+  if (!mark || markWhere.value !== "free") return "";
+  const shape = readShape();
+  if (!shape.valid || shape.free) return "";
+  return shape.odd
+    ? "The image is set to fill the free square, and the free square is switched off."
+    : `The image is set to fill the free square, and ${article(shape.size).toLowerCase()} ${shape.size} × ${shape.size} grid has no centre to put it in.`;
+}
+
+function renderMark() {
+  markSet.hidden = !mark;
+  markPick.textContent = mark ? "Change" : "Choose a file";
+  if (mark) {
+    markThumb.src = mark.url;
+    markName.textContent = mark.name;
+    markName.dataset.tip = `${mark.name} — ${mark.weight} of the PDF, however many cards it prints on`;
+  } else {
+    // The blob URL behind these has just been revoked, and an <img> left
+    // pointing at a revoked URL is a decoded bitmap nothing will ever show.
+    markThumb.removeAttribute("src");
+    stageMark.removeAttribute("src");
+  }
+  if (deal) renderCard();
+  showHint(markTrouble());
+}
+
+async function loadMark(file) {
+  if (!file) return;
+  markPick.disabled = true;
+  markPick.textContent = "Reading…";
+  let failed = "";
+  try {
+    const image = await Bingo.pdf.readImage(file);
+    const first = !mark;
+    if (mark) URL.revokeObjectURL(mark.url);
+    mark = { name: file.name, url: URL.createObjectURL(file), image, weight: weigh(image) };
+    // The first file chosen is placed for the reader: in the free square when
+    // the card has one, in a corner when it does not. After that the placement
+    // is theirs and is left where they put it. The drawn listbox reads the real
+    // <select>, and only a change event tells it the value moved underneath it.
+    if (first) {
+      markWhere.value = readShape().free ? "free" : "tr";
+      markWhere.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  } catch {
+    failed = "That file could not be read as an image. PNG, JPEG, WebP, GIF and SVG all work.";
+  }
+  markPick.disabled = false;
+  renderMark();
+  // renderMark says what is wrong with where the picture goes. A picture that
+  // never arrived has no "where" yet, and is the more immediate news, so it is
+  // said after and wins the line.
+  if (failed) showHint(failed);
+}
+
+// The picture as the printer wants it. Placement is read live rather than from
+// the deal, and a free square that is not there needs no guard: the printer
+// draws into the cells it is given, and a card without a free one has no cell
+// to draw into.
+function currentMark() {
+  return mark ? { image: mark.image, where: markWhere.value } : null;
+}
+
 /* Dealing. mulberry32 seeded through xmur3, the same pair the Random Number
    Generator uses, so a seed typed into either tool reproduces its run. */
 
@@ -331,7 +437,7 @@ function build() {
     wanted = ceiling;
     wantedInput.value = String(wanted);
   }
-  showHint(capped);
+  showHint([capped, markTrouble()].filter(Boolean).join(" "));
 
   const seed = seedInput.value.trim() || randomSeed();
   const rng = mulberry32(xmur3(seed));
@@ -383,10 +489,20 @@ function renderDeal() {
 function renderCard() {
   const { shape, cards } = deal;
   const cells = cards[showing];
+  const where = mark ? markWhere.value : "";
 
   pagerAt.textContent = `${showing + 1} / ${cards.length}`;
   prevBtn.disabled = showing === 0;
   nextBtn.disabled = showing === cards.length - 1;
+
+  stageMark.hidden = !where || where === "free";
+  if (stageMark.hidden) {
+    delete cardPage.dataset.mark;
+  } else {
+    stageMark.src = mark.url;
+    stageMark.dataset.where = where;
+    cardPage.dataset.mark = where;
+  }
 
   preview.style.setProperty("--cols", String(shape.size));
   preview.textContent = "";
@@ -394,7 +510,15 @@ function renderCard() {
     const box = document.createElement("div");
     box.className = cell.free ? "bingo-cell is-free" : "bingo-cell";
     box.setAttribute("role", "cell");
-    box.textContent = cell.text;
+    if (cell.free && where === "free") {
+      const picture = document.createElement("img");
+      picture.className = "cell-mark";
+      picture.src = mark.url;
+      picture.alt = mark.name;
+      box.appendChild(picture);
+    } else {
+      box.textContent = cell.text;
+    }
     preview.appendChild(box);
   }
 }
@@ -414,14 +538,22 @@ function slug(text, fallback) {
 
 function downloadPdf() {
   if (!deal) return;
+  // The picture and the workshop line are read from the controls rather than
+  // from the deal, for the same reason: neither changes which squares landed
+  // where, so neither is worth re-dealing a set of cards over.
+  const picture = currentMark();
+  const credit = creditToggle.checked;
   const bytes = Bingo.pdf.print({
     cards: deal.cards.map((cells) => ({ cells })),
     columns: deal.shape.size,
     rows: deal.shape.size,
     title: deal.heading,
     subtitle: deal.subtitle,
-    footer: `seed ${deal.seed} · workshop.fubl.org/bingo-cards`,
+    footer: credit ? `seed ${deal.seed} · ${CREDIT}` : `seed ${deal.seed}`,
+    credit,
     paper: deal.paper,
+    image: picture && picture.image,
+    where: picture && picture.where,
   });
 
   const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
@@ -487,7 +619,7 @@ function markPresets() {
 function refresh() {
   markPresets();
   renderCount();
-  showHint("");
+  showHint(markTrouble());
 }
 
 sizePresets.addEventListener("click", (event) => {
@@ -506,7 +638,28 @@ for (const control of [sizeInput, freeToggle, freeLabelInput, headingInput, subt
 }
 itemsInput.addEventListener("input", () => {
   renderCount();
-  showHint("");
+  showHint(markTrouble());
+});
+
+markPick.addEventListener("click", () => markFile.click());
+
+markFile.addEventListener("change", () => {
+  const file = markFile.files && markFile.files[0];
+  // Cleared before the read, so choosing the same file twice still counts as a
+  // change and a reader who picked the wrong one can pick it again.
+  markFile.value = "";
+  loadMark(file);
+});
+
+markClear.addEventListener("click", () => {
+  if (mark) URL.revokeObjectURL(mark.url);
+  mark = null;
+  renderMark();
+});
+
+markWhere.addEventListener("change", () => {
+  if (deal) renderCard();
+  showHint(markTrouble());
 });
 
 exampleBtn.addEventListener("click", () => {
