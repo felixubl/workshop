@@ -486,7 +486,8 @@ in this category, which follows from the definition.
   browser and the crawler run the same formulas. Nothing in the code is
   specific to one eclipse: a catalogue record is a set of elements and a date,
   and another eclipse can be loaded by pasting the Polynomial Besselian
-  Elements block from its NASA/GSFC page.
+  Elements block from its NASA/GSFC page. The shipped catalogue is every solar
+  eclipse from 2026 to 2035, read off those pages.
 
   The map is drawn from elevation alone, with water as the palest tone and land
   darkening in altitude steps. Scores use viridis rather than the site's
@@ -498,10 +499,14 @@ in this category, which follows from the definition.
   it look like? A clock counts down to each phase beside a drawing of the Sun
   at the moment on the clock, with the Moon at its true separation and position
   angle and the horizon at true scale, so a Sun that sets mid-eclipse is drawn
-  setting. Beside it, the same instant seen from outside: the Moon, its shadow
-  cone, the Earth, and a marker for the reader, all from the same elements and
-  moving with the clock. Below, every phase with its local time, UT and Sun
-  altitude. A preview plays the whole eclipse in 15 seconds.
+  setting. Below, every phase with its local time, UT and Sun altitude. A
+  preview plays the whole eclipse in 15 seconds.
+
+  Above that sits every eclipse on file as a strip of cards, each drawing the
+  Sun that eclipse leaves at your own place — total, annular, a graze, or
+  nothing at all where the shadow misses. Picking one moves the whole report to
+  it, and the pick travels in the link. The catalogue holds every solar eclipse
+  from 2026 to 2035, partial ones included.
 
   A horizon check reads the skyline in the strip of sky the eclipse crosses and
   draws it upright: the quarter hour either side of totality, with the ground
