@@ -709,9 +709,15 @@
       drag = { x: e.clientX, y: e.clientY, yaw: S.yaw, pitch: S.pitch };
       c.setPointerCapture(e.pointerId);
     });
+    /* The face nearest the reader follows the pointer, which is the only thing
+       a drag on an object can sensibly mean. Yaw is subtracted for it: in
+       draw.js the horizontal turn is a rotation of the (x, y) plane by +yaw and
+       the near corner is the one with the larger ry, so raising yaw carries the
+       near face LEFT while the far face swings right. Pitch is added, which
+       already tips the near edge down as the pointer goes down. */
     c.addEventListener('pointermove', (e) => {
       if (!drag) return;
-      S.yaw = drag.yaw + (e.clientX - drag.x) * 0.01;
+      S.yaw = drag.yaw - (e.clientX - drag.x) * 0.01;
       S.pitch = Math.max(-0.2, Math.min(1.4, drag.pitch + (e.clientY - drag.y) * 0.006));
       scheduleDraw();
     });
