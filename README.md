@@ -428,6 +428,36 @@ figure or another file rather than a rendering.
   twelve-hundred-weight network of rows and the two loss curves separate:
   training loss falling while held-out loss turns upward.
 
+  Thirteen activations, grouped in the menu by what they do to a total rather
+  than by when they were invented, and each drawn beside the layer that uses
+  it: the function solid, its slope dashed. The pair of lines is the lesson.
+  Sigmoid's slope lying flat against the axis at both ends is saturation; the
+  step's slope lying flat at zero everywhere is why the 1950s perceptron cannot
+  be trained by descent at all; ReLU's slope stepping from nothing to one at the
+  origin is the dead unit waiting to happen. Most of the rest are answers the
+  field has given to those — ELU curving down to −1 instead of lying flat,
+  softplus rounding the corner off, SiLU and GELU fading a unit in rather than
+  switching it on. Three are not sigmoid-shaped at all: an absolute value, a
+  Gaussian bump and a sine. The first settles XOR with a single hidden unit,
+  because |A − B| is XOR outright, where no single bend of any kind can — and
+  being the bare minimum it starts dead about a third of the time, exactly like
+  the two-unit case above it. Those even activations are also the one place a
+  zero bias is a mistake: a fold or a bump with no offset is the same shape in
+  the same place in every unit of the layer, eight neurons with the power of
+  one, so they start with their centres spread instead.
+
+  The bench also remembers what you managed. It keeps a record book — the
+  lowest loss this browser has driven each set to, with the network, the rate
+  and the epoch that did it, and a dashed line across the loss plot at that
+  level while you try to beat it. The awkward part is honesty about comparison,
+  because a loss is a score against a question rather than a score. A record
+  therefore belongs to a set together with the three things that decide what its
+  number means — whether the inputs were normalised, how much was held back, and
+  the seed that chose which rows those were — and changing any of them starts a
+  new record instead of pretending the old one still applies, which is why the
+  same set can hold two. It is a personal best and not a leaderboard: there is
+  no server behind this page, and the book is in this browser's storage.
+
   Underneath each plot is one panel per hidden unit, and the units of a layer
   share a colour scale rather than each being stretched to its own range. That
   is the difference between a picture and a lie: scaled individually, a unit

@@ -44,11 +44,39 @@ section + section { margin-top: var(--pp-space-5); }
 .nb-build-controls > * + * { margin-top: var(--pp-space-2); }
 .nb-build-controls .note { max-width: 46ch; margin-bottom: 0; }
 
-.nb-layer-row { margin-bottom: 8px; }
-.nb-layer-row label {
-  min-width: 4.5rem;
+/* Five things on one line, in half a page: the layer's name, how many units,
+   which bend, the bend drawn, and the way out. Everything here is trimmed to
+   make that one line — the select gives up its usual 12rem for it, and shrinks
+   further before the row is allowed to break, because a row whose last control
+   has fallen underneath it reads as a mistake. Below the point where the
+   builder is a single column there is no trimming left, and it breaks. */
+.nb-layer-row {
+  margin-bottom: 8px;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
-.nb-layer-row input[type='number'] { width: 5.5rem; }
+.nb-layer-row label {
+  min-width: 3.6rem;
+}
+.nb-layer-row input[type='number'] { width: 4rem; }
+.nb-layer-row .picker { flex: 0 1 7rem; min-width: 5rem; }
+.nb-layer-row .select-trigger { min-width: 0; width: 100%; }
+
+@media (max-width: 620px) {
+  .nb-layer-row { flex-wrap: wrap; }
+}
+
+/* The activation, drawn small beside the menu that picks it. Sized here rather
+   than on the element, like every other canvas on the page: the drawing code
+   reads clientWidth and clientHeight to set up the pixel ratio. */
+.nb-act-face {
+  display: block;
+  flex: none;
+  width: 60px;
+  height: 34px;
+  border-radius: var(--pp-radius-sm);
+  background: var(--pp-paper);
+}
 
 /* ---- figures ------------------------------------------------------------- */
 
@@ -114,6 +142,67 @@ section + section { margin-top: var(--pp-space-5); }
   color: var(--pp-ink);
   letter-spacing: var(--w-track-mono);
 }
+
+/* ---- the record book ------------------------------------------------------
+   A row per record, ruled like a table but built as a list, because a record
+   is one thing said five ways rather than five columns of comparable values.
+   The one under the current conditions is marked in plate 3, the same blue the
+   system paints every selection in. */
+
+.nb-records {
+  list-style: none;
+  margin: var(--pp-space-2) 0 0;
+  padding: 0;
+}
+
+/* Two lines to a record, and always two: the set, the number and the network
+   that reached it, then the conditions it was reached under underneath. Left
+   to wrap as one paragraph the two run together, and "batch 256 normalised"
+   reads as a single phrase that means nothing. */
+.nb-record {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px var(--pp-space-3);
+  padding: var(--pp-space-2) 0;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+
+.nb-record-set {
+  flex: 1 1 10rem;
+  color: var(--pp-ink);
+}
+
+.nb-record-loss {
+  flex: 0 0 auto;
+  min-width: 5.5rem;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-mono);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-ink);
+}
+
+.nb-record-how,
+.nb-record-when {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+}
+
+.nb-record-how { flex: 2 1 20rem; }
+.nb-record-when { flex: 1 0 100%; }
+
+.nb-record-forget { margin-left: auto; }
+
+.nb-record.is-current {
+  border-left: 2px solid var(--pp-plate-3);
+  padding-left: 10px;
+}
+.nb-record.is-current .nb-record-how,
+.nb-record.is-current .nb-record-when { color: var(--pp-muted); }
+
+.nb-records-say { margin-top: var(--pp-space-3); }
 
 /* ---- the neuron grid ------------------------------------------------------ */
 

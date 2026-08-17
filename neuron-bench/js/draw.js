@@ -602,12 +602,17 @@ var Draw = (function () {
     }
 
     let lo = Infinity, hi = -Infinity;
+    const best = o && o.best != null && Number.isFinite(o.best) && o.best > 0 ? o.best : null;
     for (const pt of history) {
       for (const v of [pt.trainLoss, pt.testLoss]) {
         if (v == null || !Number.isFinite(v) || v <= 0) continue;
         if (v < lo) lo = v; if (v > hi) hi = v;
       }
     }
+    /* The record goes into the range as well as onto the picture. A mark drawn
+       off the bottom of the plot would be worse than no mark: the run would
+       look as though it had already passed it. */
+    if (best != null) { if (best < lo) lo = best; if (best > hi) hi = best; }
     const logScale = Number.isFinite(lo) && Number.isFinite(hi) && hi / lo > 20;
     if (!Number.isFinite(lo)) { lo = 0; hi = 1; }
     const yl = logScale ? Math.log10(lo) : Math.min(0, lo);
@@ -647,6 +652,12 @@ var Draw = (function () {
 
     g.save();
     g.beginPath(); g.rect(box.x, box.y - 2, box.w, box.h + 4); g.clip();
+    if (best != null) {
+      const y = Math.round(sy(best)) + 0.5;
+      g.strokeStyle = p.c; g.lineWidth = 1.5; g.setLineDash([2, 3]);
+      g.beginPath(); g.moveTo(box.x, y); g.lineTo(box.x + box.w, y); g.stroke();
+      g.setLineDash([]);
+    }
     for (const [key, colour, dash] of [['trainLoss', p.a, []], ['testLoss', p.b, [5, 3]]]) {
       let started = false;
       g.strokeStyle = colour; g.lineWidth = 2; g.setLineDash(dash);
@@ -664,7 +675,8 @@ var Draw = (function () {
     frame(g, box, p);
     legend(g, box, p, [
       { colour: p.a, label: 'training', kind: 'line' },
-      o && o.hasTest ? { colour: p.b, label: 'held out', kind: 'dash' } : null
+      o && o.hasTest ? { colour: p.b, label: 'held out', kind: 'dash' } : null,
+      best != null ? { colour: p.c, label: 'your best', kind: 'dash' } : null
     ]);
   }
 
@@ -861,10 +873,81 @@ var Draw = (function () {
     return hit;
   }
 
+  /* ---- 8: the bend itself --------------------------------------------------
+     A thumbnail of one activation, drawn beside the layer that uses it. The
+     solid curve is what the unit does to its total; the dashed one is the
+     slope of that curve, which is the only thing training can see. Half of
+     what this page has to say is in the difference between those two lines —
+     the sigmoid's dashed curve flat against the axis at either end is
+     saturation, and the step's dashed line flat at zero everywhere is why a
+     perceptron cannot be trained by descent at all.
+
+     No axis labels, no ticks: at this size they would be furniture. The two
+     hairlines are z = 0 and f = 0, which is all the reading it needs. */
+
+  function activation(canvas, key) {
+    const { g, w, h } = fit(canvas);
+    const p = palette();
+    const act = MLP.ACT[key];
+    if (!act) return;
+
+    const zr = [-3, 3];
+    const steps = 160;
+    const fs = new Float64Array(steps + 1), ds = new Float64Array(steps + 1);
+    let lo = 0, hi = 0;
+    for (let i = 0; i <= steps; i++) {
+      const z = zr[0] + ((zr[1] - zr[0]) * i) / steps;
+      const a = act.f(z);
+      fs[i] = a;
+      ds[i] = act.df(z, a);
+      for (const v of [fs[i], ds[i]]) {
+        if (!Number.isFinite(v)) continue;
+        if (v < lo) lo = v; if (v > hi) hi = v;
+      }
+    }
+    const yr = pad(lo, hi, 0.12);
+
+    const box = { x: 1, y: 1, w: w - 2, h: h - 2 };
+    const sx = (z) => box.x + ((z - zr[0]) / (zr[1] - zr[0])) * box.w;
+    const sy = (v) => box.y + box.h - ((v - yr[0]) / (yr[1] - yr[0])) * box.h;
+
+    g.strokeStyle = p.hair;
+    g.lineWidth = 1;
+    g.beginPath();
+    g.moveTo(box.x, Math.round(sy(0)) + 0.5); g.lineTo(box.x + box.w, Math.round(sy(0)) + 0.5);
+    g.moveTo(Math.round(sx(0)) + 0.5, box.y); g.lineTo(Math.round(sx(0)) + 0.5, box.y + box.h);
+    g.stroke();
+
+    g.save();
+    g.beginPath(); g.rect(box.x, box.y, box.w, box.h); g.clip();
+    for (const [values, colour, width, dash] of [[ds, p.faint, 1, [3, 2]], [fs, p.a, 2, []]]) {
+      g.strokeStyle = colour; g.lineWidth = width; g.setLineDash(dash);
+      g.beginPath();
+      let started = false;
+      for (let i = 0; i <= steps; i++) {
+        const v = values[i];
+        if (!Number.isFinite(v)) { started = false; continue; }
+        const x = sx(zr[0] + ((zr[1] - zr[0]) * i) / steps), y = sy(v);
+        /* The step's jump is drawn as the vertical it is, rather than as a gap:
+           at this size a gap reads as a rendering fault, and the riser is how
+           every printed plot of a step function has ever shown it. Only a value
+           that is not a number lifts the pen. */
+        if (!started) { g.moveTo(x, y); started = true; } else g.lineTo(x, y);
+      }
+      g.stroke();
+      g.setLineDash([]);
+    }
+    g.restore();
+
+    g.strokeStyle = p.line;
+    g.lineWidth = 1;
+    g.strokeRect(0.5, 0.5, w - 1, h - 1);
+  }
+
   return {
     fit, palette, invalidateColours, ticks,
     regression1D, boundary2D, surface3D, layerField, neuronPanel, neuronWeights, loss, network,
-    predictedVsActual, confusion,
+    predictedVsActual, confusion, activation,
     predict, denorm, shortName, classColour
   };
 })();

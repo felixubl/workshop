@@ -57,44 +57,117 @@ var MLP = (function () {
      `df` takes both the pre-activation z and the activation a, because some
      derivatives are far cheaper from a (sigmoid, tanh) and others need z
      (relu at exactly 0). Passing both costs nothing and keeps every entry the
-     same shape. */
+     same shape.
+
+     Two fields beyond the maths. `gain` is what 'auto' initialisation
+     multiplies 1/sqrt(fanIn) by: sqrt(2) for anything that throws half its
+     input away, which would otherwise halve the variance with it, and 1 —
+     plain Xavier — for anything that keeps both signs. `family` is the shelf
+     the menu puts it on, and nothing else reads it.
+
+     Every f here has to stay finite for any z a diverging network can produce,
+     which is why the large-z branches exist: a NaN would take the whole run
+     with it, and the tool would rather show a bad answer than no answer. */
+
+  const GELU_C = Math.sqrt(2 / Math.PI);
+  const GELU_A = 0.044715;
 
   const ACT = {
     identity: {
-      label: 'identity',
+      label: 'identity', family: 'plain', linear: true,
       f: (z) => z,
       df: () => 1,
       note: 'No bend. A layer of these can only ever be a linear map, however many you stack.'
     },
+    step: {
+      label: 'step', family: 'plain',
+      f: (z) => (z > 0 ? 1 : 0),
+      df: () => 0,
+      note: 'The 1950s perceptron. Included to be instructive: its gradient is zero everywhere, so gradient descent cannot train it at all.'
+    },
     sigmoid: {
-      label: 'sigmoid',
+      label: 'sigmoid', family: 'squash',
       f: (z) => 1 / (1 + Math.exp(-z)),
       df: (z, a) => a * (1 - a),
       note: 'Squashes to (0,1). Saturates: once a unit is far from zero its gradient is nearly nothing.'
     },
     tanh: {
-      label: 'tanh',
+      label: 'tanh', family: 'squash',
       f: (z) => Math.tanh(z),
       df: (z, a) => 1 - a * a,
       note: 'Squashes to (-1,1), centred on zero, which usually trains faster than sigmoid.'
     },
     relu: {
-      label: 'ReLU',
+      label: 'ReLU', family: 'hinge', gain: Math.SQRT2,
       f: (z) => (z > 0 ? z : 0),
       df: (z) => (z > 0 ? 1 : 0),
       note: 'A hinge at zero. Cheap and rarely saturates upward, but a unit pushed negative for every input is dead and stays dead.'
     },
     leaky: {
-      label: 'leaky ReLU',
+      label: 'leaky ReLU', family: 'hinge', gain: Math.SQRT2,
       f: (z) => (z > 0 ? z : 0.01 * z),
       df: (z) => (z > 0 ? 1 : 0.01),
       note: 'A hinge that keeps a sliver of slope on the left, so a unit that goes negative can still come back.'
     },
-    step: {
-      label: 'step',
-      f: (z) => (z > 0 ? 1 : 0),
-      df: () => 0,
-      note: 'The 1950s perceptron. Included to be instructive: its gradient is zero everywhere, so gradient descent cannot train it at all.'
+    elu: {
+      label: 'ELU', family: 'hinge', gain: Math.SQRT2,
+      f: (z) => (z > 0 ? z : Math.expm1(z)),
+      /* exp(z) - 1 differentiates to exp(z), which is a + 1 */
+      df: (z, a) => (z > 0 ? 1 : a + 1),
+      note: 'A hinge whose left half curves down to −1 rather than lying flat. A unit on the negative side keeps a little slope to climb back on, and its output stays near zero on average, which the next layer prefers.'
+    },
+    softplus: {
+      label: 'softplus', family: 'hinge', gain: Math.SQRT2,
+      /* log(1+e^z) is z to full precision long before e^z overflows */
+      f: (z) => (z > 30 ? z : Math.log1p(Math.exp(z))),
+      df: (z) => 1 / (1 + Math.exp(-z)),
+      note: 'ReLU with the corner rounded off: smooth everywhere and never exactly zero, so no unit can die. It also never switches fully off, which gives up the one thing the hard hinge is liked for.'
+    },
+    silu: {
+      label: 'SiLU (swish)', family: 'gate', gain: Math.SQRT2,
+      f: (z) => z / (1 + Math.exp(-z)),
+      df: (z) => {
+        const s = 1 / (1 + Math.exp(-z));
+        return s * (1 + z * (1 - s));
+      },
+      note: 'The input times its own sigmoid, so a unit fades in instead of switching on, and dips a little below zero just left of the origin. That dip makes it non-monotonic, which sounds like a mistake and trains better than ReLU.'
+    },
+    gelu: {
+      label: 'GELU', family: 'gate', gain: Math.SQRT2,
+      /* The tanh approximation from the original paper rather than the exact
+         erf form: it is what the transformers actually run, and it is a closed
+         form we can differentiate exactly, which the finite-difference check
+         in the self-test insists on. */
+      f: (z) => {
+        if (z > 15) return z;
+        if (z < -15) return 0;
+        return 0.5 * z * (1 + Math.tanh(GELU_C * (z + GELU_A * z * z * z)));
+      },
+      df: (z) => {
+        if (z > 15) return 1;
+        if (z < -15) return 0;
+        const t = Math.tanh(GELU_C * (z + GELU_A * z * z * z));
+        return 0.5 * (1 + t) + 0.5 * z * (1 - t * t) * GELU_C * (1 + 3 * GELU_A * z * z);
+      },
+      note: 'The one in the transformers. It scales each input by roughly the chance a standard normal lands below it, so small values are damped rather than cut off. Drawn here by the usual tanh approximation.'
+    },
+    abs: {
+      label: 'absolute value', family: 'fold', even: true,
+      f: (z) => Math.abs(z),
+      df: (z) => (z > 0 ? 1 : z < 0 ? -1 : 0),
+      note: 'A fold rather than a bend: both halves rise. |A − B| is XOR outright, so one unit of this can settle it alone where no single bend of any kind can — and being the bare minimum it also starts dead about a third of the time, which two units never do.'
+    },
+    gauss: {
+      label: 'Gaussian bump', family: 'fold', even: true,
+      f: (z) => Math.exp(-z * z),
+      df: (z, a) => -2 * z * a,
+      note: 'A bump rather than a step: the unit answers to a band and ignores everything either side of it. Two such bands crossing make a patch, which is how a radial basis network covers a space — by pieces that are somewhere rather than halves that go on forever.'
+    },
+    sin: {
+      label: 'sine', family: 'fold', gain: 3,
+      f: (z) => Math.sin(z),
+      df: (z) => Math.cos(z),
+      note: 'Periodic, so one unit carries a whole ripple rather than one bend, and a wave takes startlingly few neurons. It starts from larger weights than the others for that to be true at all, and every hill being as good as the next it settles into a bad one just as readily.'
     }
   };
 
@@ -163,8 +236,9 @@ var MLP = (function () {
 
      `init` is a teaching control as much as a setting. 'zeros' shows why
      symmetric initialisation makes every unit in a layer learn the same thing
-     forever; 'big' shows saturation. 'auto' picks He for rectifiers and Xavier
-     otherwise, which is what anyone would actually want. */
+     forever; 'big' shows saturation. 'auto' reads the gain off the activation —
+     He for the rectifiers, Xavier for the rest — which is what anyone would
+     actually want. */
 
   function create(spec) {
     const layers = [];
@@ -181,11 +255,22 @@ var MLP = (function () {
       let scale;
       if (mode === 'zeros') scale = 0;
       else if (mode === 'big') scale = 8;
-      else scale = (act === 'relu' || act === 'leaky')
-        ? Math.sqrt(2 / fanIn)          // He
-        : Math.sqrt(1 / fanIn);         // Xavier
+      else scale = ((ACT[act] && ACT[act].gain) || 1) * Math.sqrt(1 / fanIn);
 
       for (let i = 0; i < W.length; i++) W[i] = gauss(rand) * scale;
+
+      /* Biases start at zero, which is the usual thing and right for anything
+         one-sided: a hinge at the origin still faces two ways depending on the
+         sign of its weights. An even activation does not. A fold or a bump is
+         symmetric about z = 0, so a layer of them with every bias at zero is a
+         layer of the same shape drawn at the same place in different widths —
+         eight neurons with the power of about one, which is the failure the
+         'all zeros' setting exists to show. So their centres are spread
+         instead, by one unit of z, which is where a normalised input puts
+         them. */
+      if (mode === 'auto' && ACT[act] && ACT[act].even) {
+        for (let j = 0; j < b.length; j++) b[j] = gauss(rand);
+      }
 
       layers.push({
         units, fanIn, W, b, act,
