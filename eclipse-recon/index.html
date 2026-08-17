@@ -18,21 +18,16 @@
 <body>
 <div class="wrap tool-head">
   <header>
-    <!-- The neon, in place of the ceiling lamp: the workshop's mode control,
-         drawn in assets/site.css and struck by assets/neon.js. One element does
-         what three used to, because a tube is an object in the room rather than a
-         light thrown on the work: it is the fixture, it carries its own paint, and
-         it is its own hit area. Lit is dark mode. -->
+    <!-- The neon: the workshop's mode control, and the only thing on the page
+         that is not printed. Five tubes on the ceiling, of which a narrow screen
+         shows two — drawn in assets/site.css, struck by assets/neon.js. Lit is
+         dark mode. -->
     <button class="neon" type="button" data-mode-toggle aria-label="Switch colour mode">
-      <svg class="neon__art" viewBox="-60 0 120 52" fill="none" aria-hidden="true">
-        <path class="neon__mount" d="M-34 2h68v5h-68z"></path>
-        <path class="neon__stem" d="M-24 7v11M24 7v11"></path>
-        <path class="neon__cap" d="M-27.5 16h7v9h-7zM20.5 16h7v9h-7z"></path>
-        <g class="neon__glass">
-          <path class="neon__glow" d="M-24 25v3a5 5 0 0 0-5 5 5 5 0 0 0 5 5h48a5 5 0 0 0 5-5 5 5 0 0 0-5-5v-3"></path>
-          <path class="neon__core" d="M-24 25v3a5 5 0 0 0-5 5 5 5 0 0 0 5 5h48a5 5 0 0 0 5-5 5 5 0 0 0-5-5v-3"></path>
-        </g>
-      </svg>
+      <span class="neon__tube"></span>
+      <span class="neon__tube"></span>
+      <span class="neon__tube"></span>
+      <span class="neon__tube"></span>
+      <span class="neon__tube"></span>
     </button>
 
     <div>

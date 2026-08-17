@@ -643,31 +643,33 @@ Two of the four scripts come from the system:
   existed. A `MutationObserver` picks up controls added after load. Use
   `data-tip` rather than `title`.
 
-The mode control is the workshop's own, and it is the **neon**: a tube mounted
-on the top edge of the page, glowing citron when the room is dark and hanging as
-unlit glass when it is light. It replaces both of the system's mode controls —
-the swatch and the pull cord — because once the light itself is drawn, a cord
-reaching for an undrawn light is the smaller half of the same idea. It replaced
-a ceiling lamp on a flex, which had done the same job by throwing a beam down
-the sheet; the light stayed citron and everything else about the fixture
-changed.
+The mode control is the workshop's own, and it is the **neon**: a row of tubes
+on the ceiling, which is the top edge of the page. Nothing holds them up and no
+fixture is drawn around them, because a ceiling fitting does not hang. They glow
+citron when the room is dark and sit as unlit glass when it is light, and a
+wider screen gets more of them — two on a phone, five across a desk, one added
+at each of three widths. Five are in the markup and the count is three CSS
+rules; nothing is added by script.
 
-It is drawn in [`assets/site.css`](assets/site.css), and it is one element: a
-`[data-mode-toggle]` button holding the drawing, sitting *over* the page rather
-than behind it. That is the difference between the two fixtures. A lamp lights
-the work, so its beam had to pass behind the wordmark to avoid fogging it, which
-took an inert drawing at `z-index: -1`, a transparent switch above it and a beam
-between them. A tube is an object in the room with a lit surface of its own, and
-an object stands in front of the work — one element, its own paint, its own hit
-area. Lit is dark mode, which inverts what the lamp meant: a lamp lights a
-bench, and a sign only reads as a sign in a dark shop.
+It replaces both of the system's mode controls — the swatch and the pull cord —
+because once the light itself is drawn, a cord reaching for an undrawn light is
+the smaller half of the same idea. It also replaced a ceiling lamp of this
+site's own, which threw a beam down the sheet from a pendant on a flex and swung
+when you pulled it. The light stayed citron; everything else went, including 410
+lines of pendulum.
+
+Lit is dark mode, which inverts what the lamp meant: a lamp lights a bench, and
+a tube in a shop only reads as lit when the room is dark. The whole row is one
+`[data-mode-toggle]` button, drawn in [`assets/site.css`](assets/site.css),
+sitting over the page rather than behind it — the glow is a `box-shadow`, which
+is the one place on this site a shadow is light rather than elevation.
 
 **It strikes.** A neon does not switch on, it strikes: the gas takes a moment to
-settle and stutters two or three times on the way up. Three hard dips over about
-300 ms, in `steps(1, end)` so each level holds rather than sliding, and it
-settles lit. It strikes only when the mode it has arrived at is the lit one, so
-there is nothing on the way back — a tube going off does not flicker — and
-nothing at all under `prefers-reduced-motion`.
+settle and stutters on the way up. Three hard dips over about 300 ms, in
+`steps(1, end)` so each level holds rather than sliding, and it settles lit. It
+strikes only when the mode it has arrived at is the lit one, so there is nothing
+on the way back — a tube going off does not flicker — and nothing at all under
+`prefers-reduced-motion`.
 
 Three scripts are the workshop's own. [`assets/neon.js`](assets/neon.js) is the
 strike and nothing else — forty lines deciding when to add one class: the mode
@@ -700,10 +702,10 @@ declares must not change.
    drawn.
 4. Give the page the shared header: a `.back-link` and a `.title-row` holding
    `h1.tool-title` plus the `[data-share]` and `[data-pin]` buttons, which key
-   off the folder name. Copy the `.neon` button from another tool as the first
-   child of `<header>`: the fixture is mounted on that element's top edge and
-   positioned against it, which is why the page's top padding belongs to the
-   header and not to `.wrap`.
+   off the folder name. Copy the `.neon` button and its five spans from another
+   tool as the first child of `<header>`: the tubes are positioned against that
+   element's top edge, which is why the page's top padding belongs to the header
+   and not to `.wrap`.
 5. Add a card to the root [index.html](index.html), inside the `section.area`
    for the tool's domain. The section carries the register class, so the card
    does not. Add a `div` in that section's `.plates` with `data-tool`, holding
