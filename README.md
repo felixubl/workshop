@@ -518,7 +518,12 @@ in this category, which follows from the definition.
   browser and the crawler run the same formulas. Nothing in the code is
   specific to one eclipse: a catalogue record is a set of elements and a date,
   and another eclipse can be loaded by pasting the Polynomial Besselian
-  Elements block from its NASA/GSFC page.
+  Elements block from its NASA/GSFC page. The shipped catalogue is every solar
+  eclipse from 2026 to 2035, partial ones included, and its elements are
+  computed from JPL DE440s by
+  [`tools/eclipse-elements.py`](tools/eclipse-elements.py) rather than copied
+  from those pages, which carry an older ephemeris and a 1990s prediction of the
+  Earth's rotation.
 
   The map is drawn from elevation alone, with water as the palest tone and land
   darkening in altitude steps. Scores use viridis rather than the site's
@@ -530,10 +535,14 @@ in this category, which follows from the definition.
   it look like? A clock counts down to each phase beside a drawing of the Sun
   at the moment on the clock, with the Moon at its true separation and position
   angle and the horizon at true scale, so a Sun that sets mid-eclipse is drawn
-  setting. Beside it, the same instant seen from outside: the Moon, its shadow
-  cone, the Earth, and a marker for the reader, all from the same elements and
-  moving with the clock. Below, every phase with its local time, UT and Sun
-  altitude. A preview plays the whole eclipse in 15 seconds.
+  setting. Below, every phase with its local time, UT and Sun altitude. A
+  preview plays the whole eclipse in 15 seconds.
+
+  Above that sits every eclipse on file as a strip of cards, each drawing the
+  Sun that eclipse leaves at your own place — total, annular, a graze, or
+  nothing at all where the shadow misses. Picking one moves the whole report to
+  it, and the pick travels in the link. The catalogue holds every solar eclipse
+  from 2026 to 2035, partial ones included.
 
   A horizon check reads the skyline in the strip of sky the eclipse crosses and
   draws it upright: the quarter hour either side of totality, with the ground
@@ -541,6 +550,23 @@ in this category, which follows from the definition.
   of as well as its height, because a block 40 km away is a mountain range and
   a block 150 m away is a roof. Once read, that skyline replaces the flat
   horizon in the drawing above.
+
+  Because people take eye protection off during totality, the timing is treated
+  as a correctness problem rather than a display problem. The elements come from
+  a modern ephemeris and the reduction is checked against it: reducing the
+  shipped elements and root-solving the apparent separation of the two discs
+  straight out of DE440s agree to under 40 ms at every contact, at fifteen sites
+  across nine eclipses ([`tools/eclipse-check.py`](tools/eclipse-check.py)).
+  What that accuracy does *not* include is stated in the tool: delta-T, the
+  Earth's rotation years from now, which is worth about a second this decade and
+  a few by the mid-2030s and shifts the whole clock; and the Moon's limb, which
+  is mountains rather than a circle and moves second and third contact a second
+  or two either way. The umbral cone uses the smaller lunar radius the
+  predictions have always used, which makes printed totality about three seconds
+  shorter than the mean limb would give. The horizon check reads the ground
+  under the reader as well as the skyline, so from then on the times are for
+  their altitude rather than for sea level. The page says, next to the clock,
+  that filters come off at the last bead of sunlight and not on a timer.
 
   It holds no eclipse data or arithmetic of its own: the catalogue, engine and
   terrain reader are Recon's files
