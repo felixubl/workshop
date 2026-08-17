@@ -622,23 +622,13 @@ running text, Cousine for machine output, three press plates instead of an
 accent colour, hard offset casts instead of soft shadows, and one dark mode
 across every surface via `data-mode`.
 
-The three plates are the workshop's own: **hot pink `#ff2e6e`, acid green
-`#c6f232`, electric blue `#2b8cff`**, the colours the site was built on and, as
-of 2026-08-17, the colours it is back on. They re-point the system's plate
-tokens in [`assets/site.css`](assets/site.css) rather than sitting beside them,
-which is what those tokens are for — a plate carries no fixed meaning in the
-system, only a position, so every register, cast, link and state follows from
-three declarations. Their text companions are separate and darker, because acid
-green measures 1.26:1 on paper and can never be type there; each was measured
-against paper, surface and sunk in both modes, worst case 4.92:1.
-
 Three CSS layers, in this order:
 
 | layer | file | rule |
 |---|---|---|
 | the system | [`assets/preprint/`](assets/preprint/) | **vendored verbatim, do not edit.** `tools/sync-preprint` re-copies it from `~/code/preprint`; `tools/push` in the system updates every consumer. |
 | shared chrome | [`assets/base.css`](assets/base.css) | the classes every tool reuses, built only from `--pp-*` tokens |
-| workshop deviations | [`assets/site.css`](assets/site.css) | the complete list: the palette, halftone screen, the tilt, the neon and its switch, the drawing surface's ground |
+| workshop deviations | [`assets/site.css`](assets/site.css) | the complete list: halftone screen, the tilt, the ceiling lamp, the drawing surface's ground |
 
 Two of the four scripts come from the system:
 
@@ -653,52 +643,37 @@ Two of the four scripts come from the system:
   existed. A `MutationObserver` picks up controls added after load. Use
   `data-tip` rather than `title`.
 
-The mode control is the workshop's own, and it is the **neon**: a row of tubes
-on the ceiling, which is the top edge of the page. Nothing holds them up and no
-fixture is drawn around them, because a ceiling fitting does not hang. They glow
-citron when the room is dark and sit as unlit glass when it is light, and a
-wider screen gets more of them — two on a phone, five across a desk, one added
-at each of three widths. Five are in the markup and the count is three CSS
-rules; nothing is added by script.
+The mode control is the workshop's own, and it is the **ceiling lamp**: a
+pendant hung on a flex from the top edge of the page, throwing its light down
+the sheet to the spine. Light mode is the lamp on; dark mode is the lamp off and
+the room with it. It replaces both of the system's mode controls — the swatch
+and the pull cord — because once the light itself is drawn, a cord reaching for
+an undrawn light is the smaller half of the same idea.
 
-It replaces both of the system's mode controls — the swatch and the pull cord —
-because once the light itself is drawn, a cord reaching for an undrawn light is
-the smaller half of the same idea. It also replaced a ceiling lamp of this
-site's own, which threw a beam down the sheet from a pendant on a flex and swung
-when you pulled it. The light stayed citron; everything else went, including 410
-lines of pendulum.
+It is drawn in [`assets/site.css`](assets/site.css). The drawing is an inert
+`span` at `z-index: -1`, so the light passes *behind* the wordmark instead of
+washing over it, and the switch is a separate `[data-mode-toggle]` button over
+the shade, which `mode.js` answers. The beam is not drawn to length: it is a
+long box aimed well past the spine and cut there by the header's own
+`overflow: clip` — `.masthead` on the index, `header` on a tool page — which is
+what lands the light on the line at every width and at every angle.
 
-Lit is dark mode, which inverts what the lamp meant: a lamp lights a bench, and
-a tube in a shop only reads as lit when the room is dark. The whole row is one
-`[data-mode-toggle]` button, drawn in [`assets/site.css`](assets/site.css),
-sitting over the page rather than behind it — the glow is a `box-shadow`, which
-is the one place on this site a shadow is light rather than elevation.
+**It swings.** Take hold of the shade and pull, and the fixture follows the hand
+and then goes on swinging when it is let go: a real pendulum, integrated at
+frame rate, so the period comes out of the drawing's own size — √(L/g), and the
+half-size lamp on a phone swings half again as fast. The shade is hinged on the
+end of the flex and lags it slightly, the way a weight on a cord does; the beam
+is rigidly attached to the shade, so the pool of light on the spine slides and
+lengthens as the lamp leans. The swing is bounded by the room the page has for
+the LIGHT, measured at the press, so the beam never runs off the edge of the
+header. A press that does not move is a click and flips the mode as before,
+plus the shove the finger actually gave it — off-centre, so the rim rocks the
+lamp and the middle does not.
 
-The site name is **light rather than an object**. It was a bordered board
-nailed to the page at a tilt until 2026-08-17; it is now the letters and nothing
-else, set in Hepta Slab at weight 250 — the display face is variable from 100 to
-900, so the mark can be drawn thin without a second family. On paper it is
-printed in ink, and in the dark the same letters are lit: a pale core with the
-plate colour at three distances behind it. The W stays the odd letter out, acid
-green with a hot pink edge and an electric blue cast on paper, and a lit green
-tube in the dark, where an outline and a drop are no longer what holds a shape.
-
-Built tools **light their own edges** in the dark: a card's border takes its
-category's colour and blooms, with the hard cast still under it. A coming-soon
-plate has no cast and gets no tube, which reads correctly — nothing is running
-in there yet.
-
-**It strikes.** A neon does not switch on, it strikes: the gas takes a moment to
-settle and stutters on the way up. Three hard dips over about 300 ms, in
-`steps(1, end)` so each level holds rather than sliding, and it settles lit. It
-strikes only when the mode it has arrived at is the lit one, so there is nothing
-on the way back — a tube going off does not flicker — and nothing at all under
-`prefers-reduced-motion`.
-
-Three scripts are the workshop's own. [`assets/neon.js`](assets/neon.js) is the
-strike and nothing else — forty lines deciding when to add one class: the mode
-belongs to `mode.js`, and with the file missing the tube switches on without the
-stutter and everything still works. [`assets/share.js`](assets/share.js) backs the
+Three scripts are the workshop's own. [`assets/lamp.js`](assets/lamp.js) is the
+swing and nothing else: the mode still belongs to `mode.js`, and with the file
+missing or under `prefers-reduced-motion` the lamp simply hangs straight and the
+switch still works. [`assets/share.js`](assets/share.js) backs the
 `[data-share]` button beside each tool title, which copies that tool's address.
 [`assets/favourites.js`](assets/favourites.js) backs the pin: a `[data-pin]`
 button toggles its tool in a `localStorage` list under `workshop-pinned`. The
@@ -720,16 +695,18 @@ declares must not change.
    `../assets/site.css`. Put only tool-specific layout in the tool's own
    `style.css`.
 3. At the end of `<body>`, load the tool's `script.js`, then
-   `../assets/preprint/js/controls.js`, `../assets/neon.js`,
+   `../assets/preprint/js/controls.js`, `../assets/lamp.js`,
    `../assets/share.js` and `../assets/favourites.js`. The tool's script goes
    first, so anything it builds at startup is in the DOM when the controls are
    drawn.
 4. Give the page the shared header: a `.back-link` and a `.title-row` holding
    `h1.tool-title` plus the `[data-share]` and `[data-pin]` buttons, which key
-   off the folder name. Copy the `.neon` button and its five spans from another
-   tool as the first child of `<header>`: the tubes are positioned against that
-   element's top edge, which is why the page's top padding belongs to the header
-   and not to `.wrap`.
+   off the folder name. Copy the `.lamp` span and the `.lamp-switch` button
+   from another tool as the first children of `<header>`: the lamp hangs off
+   that element's top edge and is clipped by it, which is why the page's top
+   padding belongs to the header and not to `.wrap`. Copy the span whole — the
+   rose, the flex, the head and the beam are four elements that turn about two
+   points, and `assets/lamp.js` measures the geometry off them.
 5. Add a card to the root [index.html](index.html), inside the `section.area`
    for the tool's domain. The section carries the register class, so the card
    does not. Add a `div` in that section's `.plates` with `data-tool`, holding
