@@ -622,13 +622,23 @@ running text, Cousine for machine output, three press plates instead of an
 accent colour, hard offset casts instead of soft shadows, and one dark mode
 across every surface via `data-mode`.
 
+The three plates are the workshop's own: **hot pink `#ff2e6e`, acid green
+`#c6f232`, electric blue `#2b8cff`**, the colours the site was built on and, as
+of 2026-08-17, the colours it is back on. They re-point the system's plate
+tokens in [`assets/site.css`](assets/site.css) rather than sitting beside them,
+which is what those tokens are for — a plate carries no fixed meaning in the
+system, only a position, so every register, cast, link and state follows from
+three declarations. Their text companions are separate and darker, because acid
+green measures 1.26:1 on paper and can never be type there; each was measured
+against paper, surface and sunk in both modes, worst case 4.92:1.
+
 Three CSS layers, in this order:
 
 | layer | file | rule |
 |---|---|---|
 | the system | [`assets/preprint/`](assets/preprint/) | **vendored verbatim, do not edit.** `tools/sync-preprint` re-copies it from `~/code/preprint`; `tools/push` in the system updates every consumer. |
 | shared chrome | [`assets/base.css`](assets/base.css) | the classes every tool reuses, built only from `--pp-*` tokens |
-| workshop deviations | [`assets/site.css`](assets/site.css) | the complete list: halftone screen, the tilt, the neon, the drawing surface's ground |
+| workshop deviations | [`assets/site.css`](assets/site.css) | the complete list: the palette, halftone screen, the tilt, the neon and its switch, the drawing surface's ground |
 
 Two of the four scripts come from the system:
 
@@ -663,6 +673,20 @@ a tube in a shop only reads as lit when the room is dark. The whole row is one
 `[data-mode-toggle]` button, drawn in [`assets/site.css`](assets/site.css),
 sitting over the page rather than behind it — the glow is a `box-shadow`, which
 is the one place on this site a shadow is light rather than elevation.
+
+The site name is **light rather than an object**. It was a bordered board
+nailed to the page at a tilt until 2026-08-17; it is now the letters and nothing
+else, set in Hepta Slab at weight 250 — the display face is variable from 100 to
+900, so the mark can be drawn thin without a second family. On paper it is
+printed in ink, and in the dark the same letters are lit: a pale core with the
+plate colour at three distances behind it. The W stays the odd letter out, acid
+green with a hot pink edge and an electric blue cast on paper, and a lit green
+tube in the dark, where an outline and a drop are no longer what holds a shape.
+
+Built tools **light their own edges** in the dark: a card's border takes its
+category's colour and blooms, with the hard cast still under it. A coming-soon
+plate has no cast and gets no tube, which reads correctly — nothing is running
+in there yet.
 
 **It strikes.** A neon does not switch on, it strikes: the gas takes a moment to
 settle and stutters on the way up. Three hard dips over about 300 ms, in

@@ -237,11 +237,12 @@
   const grey = (v) => [v, v, v];
 
   /* The workshop's plates, as the press mixes them. The route is plate 2,
-     because a red line is the one thing on a grey map that survives a tired
-     office printer, and because a route line has been red since the AA started
-     drawing them. */
+     because a route line has been red since the AA started drawing them and
+     because a saturated line is the one thing on a grey map that survives a
+     tired office printer. Plate 2 became hot pink with the palette on
+     2026-08-17 and this followed it. */
   const INK = {
-    line: hex("#ed0a3f"),
+    line: hex("#ff2e6e"),
     ink: hex("#171716"),
     rule: grey(0.72),
     faint: grey(0.86),

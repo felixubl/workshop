@@ -15,6 +15,28 @@
      token with no reader invites misuse. Recorded here in case they are needed
      again: a chip is opaque in both modes with near-black text. */
 
+  /* ── the palette ──────────────────────────────────────────────────────────
+     Hot pink, acid green and electric blue: the three the workshop was built
+     on, put back on 2026-08-17. They re-point PREPRINT's three plates rather
+     than sitting beside them, which is what the plate tokens are for — a plate
+     carries no fixed meaning in the system, only a position, so a surface may
+     ink them and every register, cast, link and state follows without a second
+     decision anywhere.
+
+     The text companions are not the plates. Acid green measures 1.26:1 on paper
+     and can never be type there; hot pink and electric blue clear 3:1 as fields
+     but not 4.5:1 as small text. Each companion below was measured against
+     paper, surface and sunk in both modes, and the worst case is 4.92:1.
+
+     Dark takes the brighter half of the same three, as the system's own plates
+     do: a plate on graphite has to gain lightness as well as saturation. */
+  --pp-plate-1: #c6f232;
+  --pp-plate-2: #ff2e6e;
+  --pp-plate-3: #2b8cff;
+  --pp-plate-1-text: #5c6b00;
+  --pp-plate-2-text: #d10046;
+  --pp-plate-3-text: #0b5fd0;
+
   /* The workshop's own light, at full strength. Three objects wear it and no
      fourth may: the favicon, the W it is drawn from, and the tube in the
      neon that lights the page. They are one idea — the shop's light — and
@@ -25,8 +47,8 @@
      leave its own edge. --w-mark-edge gives the citron a boundary
      wherever it lands on paper, since citron on eggshell measures 1.3:1 and
      cannot carry an edge of its own. */
-  --w-mark-fill: #deee2e;
-  --w-mark-edge: #ff4fa3;
+  --w-mark-fill: #c6f232;
+  --w-mark-edge: #ff2e6e;
 
   /* How far under the ceiling the switch is screwed. The tubes take the first
      fourteen pixels of the page; this clears them and still reads as the top
@@ -61,6 +83,14 @@
    needs more presence on a dark ground, and a note's ground needs roughly
    double the strength. */
 [data-mode='dark'] {
+  /* The same three, brighter, so a plate on graphite still reads as a plate. */
+  --pp-plate-1: #d8ff5c;
+  --pp-plate-2: #ff5c8a;
+  --pp-plate-3: #6aa8ff;
+  --pp-plate-1-text: #d8ff5c;
+  --pp-plate-2-text: #ff8fa8;
+  --pp-plate-3-text: #9cc4ff;
+
   --w-screen-dot: rgba(239, 238, 232, .16);
   --w-wash-0: color-mix(in srgb, var(--pp-ink) 7%, transparent);
 }

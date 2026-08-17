@@ -482,10 +482,10 @@
    on the page rather than on the disc because both drawings print with it —
    the bite on the disc, and the same bite on every card in the strip. */
 body {
-  --ec-overprint: #00043f;                    /* #ed0a3f over #0066ff */
+  --ec-overprint: #2b196e;                    /* #ff2e6e over #2b8cff */
 }
 [data-mode="dark"] body {
-  /* the product of the mode's own plates (#ff4d68 x #6a9dff), a shade denser
-     so it clears 3:1 against both of them on a dark ground */
-  --ec-overprint: #50244e;
+  /* the product of the mode's own plates (#ff5c8a x #6aa8ff), a shade denser
+     so it clears 3:1 against both of them on a dark ground: 3.28 and 3.97 */
+  --ec-overprint: #5a3475;
 }

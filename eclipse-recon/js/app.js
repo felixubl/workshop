@@ -85,12 +85,12 @@
       paper: cssVar('--pp-paper', '#fbfbf9'),
       hair: cssVar('--pp-hair', 'rgba(23,23,22,.11)'),
       total: cssVar('--pp-plate-3-text', '#0052cc'),
-      totalLine: cssVar('--pp-plate-3', '#0066ff'),
+      totalLine: cssVar('--pp-plate-3', '#2b8cff'),
       ok: cssVar('--pp-state-ok', '#017a4e'),
-      okFill: cssVar('--pp-plate-1', '#01a368'),
+      okFill: cssVar('--pp-plate-1', '#c6f232'),
       danger: cssVar('--pp-state-danger', '#c8082f'),
-      dangerFill: cssVar('--pp-plate-2', '#ed0a3f'),
-      citron: cssVar('--w-mark-fill', '#deee2e')
+      dangerFill: cssVar('--pp-plate-2', '#ff2e6e'),
+      citron: cssVar('--w-mark-fill', '#c6f232')
     };
   }
 

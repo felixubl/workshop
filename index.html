@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Felix' Workshop</title>
 <meta name="description" content="Small self-serve tools, built one at a time. Every card carries a mark saying what leaves your machine, from nothing at all upward.">
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=5">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=6">
 <script src="assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="assets/preprint/styles.css">
 <!-- core.css is loaded for the .mk--citron marker. base.css follows it and wins
@@ -93,76 +93,69 @@
   .home-link:active {
     transform: var(--w-press);
   }
-  /* The site name, in a bordered box rotated by --w-tilt. No drop shadow: the
-     corner nails already show it is fixed to the page. */
+  /* The site name, as light rather than as an object. It was a bordered board
+     nailed to the page at a tilt until 2026-08-17; it is now the letters and
+     nothing else, at a weight a tube could be bent into. Hepta Slab is variable
+     from 100 to 900, so the display face itself can be drawn thin — no second
+     family, and the mark keeps the same skeleton it has always had.
+
+     One shape, two states, which is the rule the whole page now follows: on
+     paper it is printed in ink, and in the dark the same letters are lit. The
+     board, the nails and the tilt are gone from both, because a tilt reads as a
+     crooked sign only while there is a sign to be crooked. */
   .wordmark {
     position: relative;
-    /* Room for the corners the rotation pushes out. A 1.5 degree turn on a box
-       this wide lifts each end about 6px past the flat bounding box. */
-    margin: 0.45rem 0;
-    /* Padding leaves a lane for the corner nails. A 7px square rotated 45
-       degrees is 9.9px across, set 7px in. */
-    padding: 0.6rem 1.6rem 0.7rem;
-    background: var(--pp-surface);
-    /* 2px marks the most important panel on the page. */
-    border: var(--pp-rule-structure) solid var(--pp-edge);
-    border-radius: var(--pp-radius-lg);
-    transform: rotate(var(--w-tilt));
+    margin: 0.35rem 0 0.15rem;
     font-family: var(--pp-font-display);
-    font-weight: var(--pp-weight-display);
+    font-weight: 250;
     font-size: clamp(2.1rem, 6.5vw, 3.4rem);
-    line-height: 1;
-    letter-spacing: -0.05em;
+    line-height: 1.05;
+    letter-spacing: 0.01em;
     text-wrap: balance;
   }
-  /* Four nail heads, one per corner: filled squares rotated 45 degrees, set
-     inside the border rather than on it. */
-  .nails i {
-    position: absolute;
-    width: 7px;
-    height: 7px;
-    background: var(--pp-edge);
-    transform: rotate(45deg);
-  }
-  .nails i:nth-child(1) { top: 6px; left: 7px; }
-  .nails i:nth-child(2) { top: 6px; right: 7px; }
-  .nails i:nth-child(3) { bottom: 6px; left: 7px; }
-  .nails i:nth-child(4) { bottom: 6px; right: 7px; }
-  /* The W is the favicon at another size, and now it is measured against it
-     rather than approximated. The favicon strokes the glyph at 210 units on a
-     2000 upem body and offsets the cast by the same 210, which is 0.105em of
-     each; the wordmark had been carrying a 0.026em edge and a 0.05em cast, so
-     the one letter that is supposed to be the mark was a quarter of the mark's
-     weight and read as a printing fault.
-
-     Two things had to change with it. The cast is a second, STROKED copy rather
-     than a text-shadow, because a shadow follows the fill and the fill is
-     narrower than the pink silhouette — the favicon's comment says so, and the
-     narrow version is what makes it read as a shadow instead of as a second
-     pass through the press. And the letter is given clearance: at the wordmark's
-     -0.05em tracking the edge and the cast both landed on the o, which is what
-     made the whole mark look like an accident. It sets at its own tracking with
-     air either side, the way a stamped initial does. */
+  /* The W is the favicon at another size: acid green filled, hot pink edged,
+     electric blue cast under it. On paper it needs all three, because acid
+     green measures 1.26:1 there and cannot carry an edge of its own. */
   .wordmark .mark-w {
     position: relative;
-    margin: 0 0.15em 0 0.05em;
-    letter-spacing: 0;
+    margin: 0 0.12em 0 0.04em;
     color: var(--w-mark-fill);
-    -webkit-text-stroke: 0.105em var(--w-mark-edge);
+    -webkit-text-stroke: 0.09em var(--w-mark-edge);
     paint-order: stroke fill;
   }
-  /* The cast. z-index: -1 puts it under the wordmark's own letters and over the
-     panel they sit on, which works because the panel's rotation makes it a
-     stacking context. */
   .wordmark .mark-w::before {
     content: 'W';
     position: absolute;
-    left: 0.115em;
-    top: 0.115em;
+    left: 0.1em;
+    top: 0.1em;
     z-index: -1;
     color: var(--pp-plate-3);
-    -webkit-text-stroke: 0.105em var(--pp-plate-3);
+    -webkit-text-stroke: 0.09em var(--pp-plate-3);
     paint-order: stroke fill;
+  }
+
+  /* Lit. The core of a running tube is nearly white and its colour is in the
+     air around it, so the letters go pale and the plate colour becomes three
+     shadows at three distances. The W drops its edge and its cast here: an
+     outline and a drop are how a flat mark holds its shape on paper, and a lit
+     one holds it by being the only thing emitting. */
+  [data-mode='dark'] .wordmark {
+    color: #fff0f5;
+    text-shadow:
+      0 0 5px color-mix(in srgb, var(--pp-plate-2) 90%, transparent),
+      0 0 16px color-mix(in srgb, var(--pp-plate-2) 70%, transparent),
+      0 0 44px color-mix(in srgb, var(--pp-plate-2) 45%, transparent);
+  }
+  [data-mode='dark'] .wordmark .mark-w {
+    color: #f8ffe0;
+    -webkit-text-stroke: 0;
+    text-shadow:
+      0 0 5px color-mix(in srgb, var(--pp-plate-1) 90%, transparent),
+      0 0 18px color-mix(in srgb, var(--pp-plate-1) 70%, transparent),
+      0 0 48px color-mix(in srgb, var(--pp-plate-1) 45%, transparent);
+  }
+  [data-mode='dark'] .wordmark .mark-w::before {
+    display: none;
   }
 
   /* The repo link takes the secondary 1px border. Every other property is
@@ -299,11 +292,25 @@
      Hover increases the offset, active reduces it. It takes the colour from
      the section, so a plate and the rows around it always agree. */
   .plate-live {
-    box-shadow: 5px 5px 0 var(--w-card-ink);
-    transition: box-shadow var(--pp-dur-state) var(--pp-ease-out);
+    --w-cast: 5px;
+    box-shadow: var(--w-cast) var(--w-cast) 0 var(--w-card-ink);
+    transition: box-shadow var(--pp-dur-state) var(--pp-ease-out),
+                border-color var(--pp-dur-mode) ease;
   }
   .plate-live:hover {
-    box-shadow: 8px 8px 0 var(--w-card-ink);
+    --w-cast: 8px;
+  }
+  /* In the dark the plate's own border is a tube in the category's colour, and
+     the cast stays under it: the card is still an object standing off the page,
+     and now it is an object with its edge lit. Only built tools light up. A
+     coming-soon plate has no cast and gets no tube, which turns out to be the
+     honest reading — nothing is running in there yet. */
+  [data-mode='dark'] .plate-live {
+    border-color: color-mix(in srgb, var(--w-card-ink) 72%, #ffffff);
+    box-shadow:
+      var(--w-cast) var(--w-cast) 0 var(--w-card-ink),
+      0 0 9px color-mix(in srgb, var(--w-card-ink) 45%, transparent),
+      inset 0 0 12px color-mix(in srgb, var(--w-card-ink) 12%, transparent);
   }
   /* Four angles from one token, so the ratio holds if --w-tilt changes. */
   .plates > :nth-child(1) .plate { transform: rotate(calc(var(--w-tilt-card) * 0.96)); }
@@ -585,7 +592,7 @@
     </button>
 
     <div class="shelf">
-      <h1 class="wordmark">Felix' <span class="mark-w">W</span>orkshop<span class="nails" aria-hidden="true"><i></i><i></i><i></i><i></i></span></h1>
+      <h1 class="wordmark">Felix' <span class="mark-w">W</span>orkshop</h1>
     </div>
 
     <nav class="bar">

@@ -248,7 +248,7 @@
     const style = getComputedStyle(document.documentElement);
     const paper = style.getPropertyValue("--pp-paper").trim() || "#fbfbf9";
     const ink = style.getPropertyValue("--pp-ink").trim() || "#171716";
-    const line = style.getPropertyValue("--pp-plate-2").trim() || "#ed0a3f";
+    const line = style.getPropertyValue("--pp-plate-2").trim() || "#ff2e6e";
 
     const fetched = state.panels[key(panel, settings())];
     ctx.fillStyle = fetched ? "#ffffff" : paper;
