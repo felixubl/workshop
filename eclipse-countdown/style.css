@@ -222,6 +222,20 @@
   color: var(--pp-muted);
 }
 
+/* The one line about eyes, kept beside the number rather than in the notes,
+   because the number is what a reader is looking at when it matters. Plate 2
+   is the tool's own colour for "the Sun is not where you think it is"; the
+   rule under it is there so it reads as a caution without a box or an icon. */
+.clock-caveat {
+  margin: 0.55rem 0 0;
+  padding-top: 0.4rem;
+  border-top: var(--pp-rule-line) solid var(--pp-plate-2);
+  max-width: 34ch;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--pp-plate-2-text);
+}
+
 /* The four or five facts a reader checks after the number: what kind of
    eclipse it is there, how deep, how long, how high the Sun will be. */
 .stats {

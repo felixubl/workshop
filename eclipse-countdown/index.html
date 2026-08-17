@@ -144,6 +144,7 @@
         <p class="clock-label" id="clockLabel">until first contact</p>
         <p class="clock-time" id="clockTime">—</p>
         <p class="clock-at" id="clockAt"></p>
+        <p class="clock-caveat" id="clockCaveat" hidden></p>
         <dl class="stats" id="stats"></dl>
       </div>
     </div>
@@ -190,9 +191,13 @@
   <p class="sheet-note colophon">
     The elements, the calculations and the catalogue come from
     <a href="../eclipse-recon/">Eclipse Recon</a>, which adds the map, the
-    terrain and the cloud forecast. Contact times assume a smooth lunar limb at
-    sea level, so times at the very edge of the path can be a few seconds out.
-    An eclipse pasted into Recon from its NASA page appears here too.
+    terrain and the cloud forecast. The catalogue is computed from JPL DE440s by
+    <code>tools/eclipse-elements.py</code> rather than copied from the NASA
+    element pages, whose ephemeris and rotation figures are old enough to put
+    the clock out by seconds; <code>tools/eclipse-check.py</code> is the test
+    that keeps this reduction honest against the ephemeris. An eclipse pasted
+    into Recon from its NASA page appears here too, and carries that page's own
+    accuracy.
   </p>
 </div>
 

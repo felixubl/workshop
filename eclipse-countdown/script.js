@@ -21,7 +21,7 @@
 
   var ui = {};
   ['place', 'find', 'here', 'whereForm', 'hint', 'alts', 'altsRow', 'empty',
-   'choose', 'chooseCap', 'picks',
+   'choose', 'chooseCap', 'picks', 'clockCaveat',
    'report', 'reportLabel', 'whereCap', 'disc', 'discState', 'discNote',
    'play', 'playLabel',
    'clockLabel', 'clockTime', 'clockAt', 'stats', 'phaseRows', 'phaseZone',
@@ -36,6 +36,8 @@
     circ: null,      // its local circumstances there
     pickId: null,    // the eclipse the reader picked, if they picked one
     picksKey: '',    // the place the strip of eclipses was drawn for
+    elevM: 0,        // the reader's altitude, once the terrain has been read
+    elevAt: '',      // the place that altitude belongs to
     targets: [],     // the moments the clock counts to
     stateWord: '',   // last word the disc said, so aria only changes with it
     preview: null    // {started, segs} while the eclipse is being played
@@ -58,12 +60,26 @@
     return all.sort(function (a, b) { return a.id < b.id ? -1 : 1; });
   }
 
+  /* The reader's height above sea level, which the tool only knows once the
+     horizon check has read the ground under them. It is worth carrying: at
+     2000 m the Moon's shadow arrives about a second later and totality is
+     shorter by the same order, which is the size of everything else this tool
+     is careful about. Zero until then, which is the honest default. */
+  function siteElev() {
+    return state.at && state.elevAt === placeKey() ? state.elevM : 0;
+  }
+
+  function placeKey() {
+    return state.at ? state.at.lat.toFixed(4) + ',' + state.at.lon.toFixed(4) : '';
+  }
+
   /* Every eclipse on file as it stands at this position: its local
      circumstances (null when the eclipse never reaches there), and the moment
      it ends, so a past eclipse drops out. */
   function survey(lat, lon) {
+    var h = siteElev();
     return catalogue().map(function (ecl) {
-      var circ = Bessel.localCircumstances(ecl, lat, lon, 0);
+      var circ = Bessel.localCircumstances(ecl, lat, lon, h);
       var over = circ
         ? (circ.c4 ? circ.c4.date : circ.dateMax).getTime()
         : Date.UTC(ecl.date[0], ecl.date[1] - 1, ecl.date[2]) + 86400000;
@@ -447,6 +463,10 @@
     ui.whereCap.textContent = coordWord(state.at.lat, state.at.lon);
     ui.reportLabel.textContent = pickIndex === firstVisible(rows)
       ? 'Next eclipse here' : 'The eclipse you picked';
+    // the one warning that has to sit where the reader is already looking
+    ui.clockCaveat.hidden = circ.type !== 'total' || !circ.visible;
+    ui.clockCaveat.textContent = 'Filters come off at the last bead of sunlight, ' +
+      'not on this clock.';
 
     var ring = circ.type === 'annular';
     var stats = [
@@ -497,11 +517,39 @@
           'below the horizon.');
       }
     }
-    notes.push(circ.type === 'total'
-      ? 'Only totality is safe to view without a solar filter, and only while it lasts.'
-      : 'A partially eclipsed Sun needs a solar filter at all times.');
+    if (circ.type === 'total') {
+      notes.push('Only totality is safe to view without a solar filter, and only ' +
+        'while it lasts. Take the filter off when the last bead of sunlight has ' +
+        'gone, and put it back the moment the first one returns. The Sun is the ' +
+        'signal; a clock, this one included, is a prediction.');
+    } else if (circ.type === 'annular') {
+      notes.push('An annular eclipse is never safe to look at without a solar ' +
+        'filter. The ring is still the Sun, and it is bright enough to burn a ' +
+        'retina at every second of annularity.');
+    } else {
+      notes.push('A partially eclipsed Sun needs a solar filter at all times.');
+    }
+    notes.push(accuracyNote());
     ui.note.innerHTML = notes.join(' ');
 
+  }
+
+  /* What the times are worth, in the terms that actually limit them. The
+     elements and the reduction are the small part; the Earth's rotation years
+     from now and the Moon's ragged edge are the large one. */
+  function accuracyNote() {
+    var h = siteElev();
+    return 'The times come from JPL DE440s elements reduced in your browser, ' +
+      'which agree with a direct ephemeris solve to under 40 ms, for your ground ' +
+      (h ? 'at ' + Math.round(h) + ' m' : 'taken as sea level') + '. Two things ' +
+      'no reduction can pin down: how fast the Earth turns between now and then ' +
+      '(taken here as ΔT = ' + state.ecl.deltaT.toFixed(1) + ' s, worth about a ' +
+      'second for eclipses this decade and a few by the mid-2030s, and it shifts ' +
+      'the whole clock), and the Moon\u2019s edge, which is mountains rather ' +
+      'than a circle and moves second and third contact a second or two either ' +
+      'way. The cone here uses the smaller umbral radius the predictions have ' +
+      'always used, so the totality printed is a few seconds shorter than the ' +
+      'Moon\u2019s mean limb would give — the side to be wrong on.';
   }
 
   function renderNothing(rows) {
@@ -794,7 +842,15 @@
     }).then(function (scan) {
       if (hzKey() !== key) return;              // the reader moved meanwhile
       hz.scan = scan; hz.key = key;
-      drawHorizon();
+      // the scan read the ground under the reader as well as the skyline, so
+      // the times stop assuming sea level; locate() redraws the horizon too
+      if (isFinite(scan.siteElev)) {
+        state.elevM = scan.siteElev;
+        state.elevAt = placeKey();
+        locate();
+      } else {
+        drawHorizon();
+      }
     }).catch(function () {
       ui.hzStatus.textContent = 'no elevation data';
       ui.hzBody.innerHTML = '<p class="sheet-note">The elevation tiles could ' +
@@ -1011,7 +1067,7 @@
 
   function setPlace(at, keepField) {
     state.at = at;
-    state.geo = Bessel.geocentric(at.lat, 0);
+    state.geo = Bessel.geocentric(at.lat, siteElev());
     state.stateWord = '';
     if (!keepField) ui.place.value = at.name;
     try { localStorage.setItem(STORE, JSON.stringify(at)); } catch (err) { /* private mode */ }
@@ -1057,6 +1113,7 @@
     var rows = survey(state.at.lat, state.at.lon).filter(function (r) {
       return r.over > Date.now();
     });
+    state.geo = Bessel.geocentric(state.at.lat, siteElev());
     var pick = chosenIndex(rows);
     // a pick the new place cannot honour is not a pick any more
     if (state.pickId && (pick < 0 || rows[pick].ecl.id !== state.pickId)) state.pickId = null;

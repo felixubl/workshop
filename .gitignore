@@ -23,3 +23,6 @@ node_modules/
 # they stay out; what the survey PUBLISHES — abecedarian/data/ — is committed,
 # and tools/abecedarian-corpus.mjs re-fetches into here when the cache is cold.
 .dict-cache/
+
+# JPL kernels the eclipse tools download; they live in ~/.skyfield-data
+*.bsp
