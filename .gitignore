@@ -26,3 +26,6 @@ node_modules/
 
 # JPL kernels the eclipse tools download; they live in ~/.skyfield-data
 *.bsp
+
+# Scratch pages used to prototype or probe; never part of the site
+_*.html

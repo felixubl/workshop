@@ -17,16 +17,19 @@
 <body>
 <div class="wrap">
   <header>
-    <!-- The neon: the workshop's mode control, and the only thing on the page
-         that is not printed. Five tubes on the ceiling, of which a narrow screen
-         shows two — drawn in assets/site.css, struck by assets/neon.js. Lit is
-         dark mode. -->
-    <button class="neon" type="button" data-mode-toggle aria-label="Switch colour mode">
+    <!-- The ceiling and the switch that works it, drawn in assets/site.css and
+         struck by assets/neon.js. Five tubes, of which a narrow screen shows two;
+         they are light rather than control, which is why the switch is a switch
+         and sits where one goes. Lit is dark mode. -->
+    <span class="neon" aria-hidden="true">
       <span class="neon__tube"></span>
       <span class="neon__tube"></span>
       <span class="neon__tube"></span>
       <span class="neon__tube"></span>
       <span class="neon__tube"></span>
+    </span>
+    <button class="lightswitch" type="button" data-mode-toggle aria-label="Switch colour mode">
+      <span class="lightswitch__rocker"></span>
     </button>
 
     <div>

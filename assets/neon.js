@@ -5,6 +5,7 @@
    Load it after preprint/js/mode.js, which is the whole trick: mode.js flips
    `data-mode` from its own delegated click on the way down, so by the time the
    handler below runs the attribute already holds the mode the reader asked for.
+   The control is the wall switch; the tubes only answer it.
    Striking is then a question about the state the page has arrived in, not
    about which control was pressed or which way it went — the tube strikes when
    the room it is in has just gone dark, and does nothing at all on the way
@@ -14,14 +15,13 @@
 
   var STRIKE = 'is-striking';
 
-  function neonOf(node) {
-    return node && node.closest ? node.closest('.neon') : null;
-  }
-
   document.addEventListener('click', function (e) {
-    var neon = neonOf(e.target);
-    if (!neon) return;
+    /* Any mode control, not the light: the tubes are not a button any more, and
+       the switch that flips the room is what the tubes answer. */
+    if (!e.target.closest || !e.target.closest('[data-mode-toggle]')) return;
     if (document.documentElement.getAttribute('data-mode') !== 'dark') return;
+    var neon = document.querySelector('.neon');
+    if (!neon) return;
     /* Taking the class off and reading a layout value back puts the animation
        at its start again. Without the read the browser coalesces the two class
        changes into no change at all, and a second press does nothing. */
@@ -34,7 +34,6 @@
      wherever the last one stopped. */
   document.addEventListener('animationend', function (e) {
     if (e.animationName !== 'w-neon-strike') return;
-    var neon = neonOf(e.target);
-    if (neon) neon.classList.remove(STRIKE);
+    if (e.target.classList) e.target.classList.remove(STRIKE);
   });
 })();
