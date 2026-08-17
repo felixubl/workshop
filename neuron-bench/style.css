@@ -16,19 +16,6 @@ section + section { margin-top: var(--pp-space-5); }
 .nb-intro .lede { margin: 0 0 var(--pp-space-2); }
 .nb-intro .note { margin: 0; }
 
-/* ---- the lesson rail ---------------------------------------------------- */
-
-.nb-lessons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: var(--pp-space-2);
-}
-
-/* The measure, the ink and the rule all come from .note in base.css. What is
-   left here is where the note sits under the rail it belongs to. */
-#lessonSay { margin-bottom: 0; }
-
 /* ---- data ---------------------------------------------------------------- */
 
 #dsNote { margin-bottom: 0; }
@@ -64,6 +51,17 @@ section + section { margin-top: var(--pp-space-5); }
 .nb-layer-row input[type='number'] { width: 5.5rem; }
 
 /* ---- figures ------------------------------------------------------------- */
+
+/* The section label and the two pictures it can be drawn as, on one line. The
+   label keeps its own bottom margin when the row wraps on a phone. */
+.nb-viewbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px var(--pp-space-3);
+}
+.nb-viewbar .section-label { margin-bottom: 1rem; }
+.nb-viewbar .group { margin-bottom: 1rem; }
 
 .nb-figure { margin: 0; }
 
@@ -136,7 +134,16 @@ section + section { margin-top: var(--pp-space-5); }
   height: 104px;
   background: var(--pp-paper);
   border-radius: var(--pp-radius-sm);
+  cursor: var(--pp-cursor-point);
 }
+
+/* A pinned unit, here and in the diagram and in the row of values below it. The
+   pin is plate 3 in all three, because the system paints a selection blue. */
+.nb-cell.is-focus canvas {
+  outline: 2px solid var(--pp-plate-3);
+  outline-offset: 1px;
+}
+.nb-cell.is-focus figcaption { color: var(--pp-ink); }
 
 .nb-cell figcaption {
   margin-top: 4px;
@@ -152,6 +159,59 @@ section + section { margin-top: var(--pp-space-5); }
   font-size: var(--pp-size-label);
   color: var(--pp-faint);
 }
+
+/* ---- one observation ------------------------------------------------------
+   A row per layer: what the layer is on the left, what each of its units
+   answered on the right. Every value is a button, because every value is also
+   a way of pinning the unit that produced it. */
+
+.nb-probe-field { width: 7rem; }
+
+.nb-probe-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px var(--pp-space-3);
+  padding: var(--pp-space-2) 0;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+.nb-probe-row .section-label { margin: 0; min-width: 8rem; }
+
+.nb-probe-units {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+
+.nb-unit {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 7px;
+  border: var(--pp-rule-line) solid transparent;
+  border-radius: var(--pp-radius-sm);
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-mono);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+}
+.nb-unit code { color: var(--pp-ink); font: inherit; }
+.nb-unit:hover { border-color: var(--pp-line); }
+.nb-unit:active { transform: var(--w-press); }
+.nb-unit.is-focus {
+  border-color: var(--pp-plate-3);
+  color: var(--pp-ink);
+}
+
+.nb-probe-says {
+  margin: 0;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-mono);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-ink);
+}
+
+#unitNote { margin-top: var(--pp-space-2); }
 
 /* ---- pasted data ---------------------------------------------------------- */
 

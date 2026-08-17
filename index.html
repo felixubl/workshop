@@ -238,10 +238,9 @@
     flex: none;
     background: var(--w-card-ink);
   }
-  /* Page totals, above the categories. No register square, because it is not a
-     category. order: -2 keeps it above any category a pin promotes to -1. */
+  /* Page totals, above everything. No register square, because it is not a
+     category. Its place is DOM order now that nothing is promoted past it. */
   .band-inventory {
-    order: -2;
     margin-bottom: 0;
   }
 
@@ -271,15 +270,22 @@
     gap: var(--pp-space-4);
     align-items: start;
   }
+
+  /* The Pinned band carries no register square, like the inventory band above
+     it and for the same reason: a shelf is not a category. */
+  .pinned .band .section-label {
+    color: var(--pp-ink);
+  }
   @media (min-width: 700px) {
     .plates {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     /* Space for the annotation above the first plate. The annotation is
        absolutely positioned and adds no height, so the room is made here, in
-       the one category that carries it. :first-of-type is DOM order, so the
-       space stays with that category when a pin reorders the page. */
-    .area:first-of-type .plates {
+       the one category that carries it — asked for by the annotation rather
+       than by a position, since the card it is attached to can move. Once
+       anything is pinned the annotation is hidden and the space goes with it. */
+    main:not(:has(.is-pinned)) .area:has(.scrawl) .plates {
       margin-top: 2rem;
     }
     /* One step of the space scale. It stops two columns of plates reading as a
@@ -505,16 +511,12 @@
   .pin:active {
     transform: var(--w-press);
   }
-  /* A pinned tool moves to the front of its category, and its category to the
-     front of the page. Both rules are needed: the first alone leaves it at the
-     top of a category the reader still has to scroll to. order rather than a
-     DOM move, so each plate keeps its angle. */
-  .is-pinned {
-    order: -1;
-  }
-  .area:has(.is-pinned) {
-    order: -1;
-  }
+  /* A pinned tool leaves its category and sits in the Pinned section at the
+     top. It moves in the DOM rather than by order, because order can only sort
+     within one container and the whole complaint about the old arrangement was
+     that promoting a card promoted the entire category around it. Moving the
+     card means its angle comes from where it now sits, which is what the
+     Pinned section wants: it is a shelf, not a copy of a category. */
 
   /* Hand annotation pointing at the pin, which explains nothing about itself.
      The system owns the arrangement; this file sets the arrow, where it points
@@ -629,8 +631,21 @@
     <div class="band band-inventory">
       <p class="section-label">Inventory</p>
       <span class="band-rule" aria-hidden="true"></span>
-      <code><span data-pin-count></span><span class="mk mk--citron">13 built</span></code>
+      <code><span class="mk mk--citron">13 built</span></code>
     </div>
+
+    <!-- Pinned tools. Empty and hidden until somebody pins one, at which point
+       assets/favourites.js moves that card here and back again when it is
+       unpinned. A card brings its register class with it, so a plate keeps the
+       colour of the category it came from wherever it is sitting. -->
+    <section class="pinned" id="pinned" hidden>
+      <div class="band">
+        <p class="section-label">Pinned</p>
+        <span class="band-rule" aria-hidden="true"></span>
+        <code data-pinned-count></code>
+      </div>
+      <div class="plates" id="pinnedPlates"></div>
+    </section>
 
     <!-- Categories. Each holds the built tools of one domain as plates; the
        planned ones are listed in a comment inside the section. -->
@@ -846,7 +861,7 @@
           <div class="plate plate-live">
             <a class="plate-open" href="neuron-bench/"><h3>Neuron Bench</h3></a>
             <button class="pin" type="button" data-pin="neuron-bench" aria-label="Pin Neuron Bench to the top"><span class="pin-head" aria-hidden="true"></span></button>
-            <p class="plate-say">A single neuron is a linear regression, and this prints both answers side by side to prove it. A second neuron makes XOR solvable. Build a network a unit at a time, on Vienna's tree registry or your own numbers, and watch what each one adds &mdash; including all the ways it fails.</p>
+            <p class="plate-say">Build a network a unit at a time and then take it apart: the logic gates, Vienna's tree registry or your own CSV, one observation through it by hand, and every neuron open to a click. It trains in the tab.</p>
             <code class="plate-dates">added 2026-08-17</code>
             <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</code>
           </div>

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Neuron Bench — Felix' Workshop</title>
-<meta name="description" content="Build a neural network a neuron at a time and watch what each one adds. Starts where a single neuron is nothing more than a linear regression, goes through the XOR problem that a second neuron fixes, and shows the ways training fails and why. Real data from Vienna's tree registry, or your own.">
+<meta name="description" content="A bench for building a neural network a neuron at a time and taking it apart again. A dozen datasets from the logic gates to Vienna's tree registry or your own CSV, a network you assemble yourself, one observation at a time through it, and every unit open to inspection. Trains in your browser.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
@@ -66,13 +66,7 @@
 
   <section class="nb-intro">
     <p class="lede">A neuron is a function that multiplies each input by a weight, adds them up with a bias, and puts the total through one bend. That is the whole thing. Everything a network can do comes from stacking that.</p>
-    <p class="note">Start at the first lesson and work along. Every control stays live afterwards, so a lesson is a starting point rather than a mode: change the number of neurons, change the bend, break it on purpose.</p>
-  </section>
-
-  <section>
-    <p class="section-label">Lessons</p>
-    <div class="nb-lessons" id="lessons"></div>
-    <p class="note" id="lessonSay" hidden></p>
+    <p class="note">This is a bench rather than a course. Pick a set, build a network over it, train it, and then take it apart: every control stays live, so you can add and remove neurons, change the bend, break it on purpose, put one observation through by hand, and click any unit to see what it is doing.</p>
   </section>
 
   <section>
@@ -169,7 +163,13 @@
   </section>
 
   <section>
-    <p class="section-label">What it currently believes</p>
+    <div class="nb-viewbar">
+      <p class="section-label">What it currently believes</p>
+      <div class="group" id="viewPick" hidden>
+        <button type="button" class="btn-ghost preset" data-view="boundary" data-tip="Colour carries the answer: the two inputs are the two axes">a flat map</button>
+        <button type="button" class="btn-ghost preset" data-view="surface" data-tip="Height carries the answer: the output itself, over the two inputs">a surface</button>
+      </div>
+    </div>
     <figure class="nb-figure">
       <canvas id="mainCanvas" height="420"></canvas>
       <figcaption id="mainCaption"></figcaption>
@@ -188,6 +188,14 @@
     <p class="section-label">Neuron by neuron</p>
     <p class="note" id="neuronNote"></p>
     <div id="neurons"></div>
+    <p class="note" id="unitNote" hidden></p>
+  </section>
+
+  <section>
+    <p class="section-label">One observation</p>
+    <p class="note">Put a single row in and watch it go through. Each hidden value is what that unit answered for this row alone, and the last line is what the network made of them. Click any of them to pin that unit above.</p>
+    <div class="toolbar" id="probeFields"></div>
+    <div id="probeOut"></div>
   </section>
 
   <section>

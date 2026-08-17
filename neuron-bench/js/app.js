@@ -32,6 +32,7 @@
     prepared: null,
     reference: null,
     focus: null,          // {layer, unit} pinned in the neuron strip
+    view: null,           // main-plot override; null means the dataset's own
     lastMetrics: null,
     dirty: false
   };
@@ -110,8 +111,8 @@
     /* The closed-form line has to be fitted on exactly the rows the network
        trains on, not on the whole set. Comparing a neuron trained on 75% with a
        regression fitted on 100% would show a gap that is the split, not the
-       optimiser, and the whole point of the first lesson is that there is no
-       gap. */
+       optimiser, and the whole point of printing the two side by side is that
+       there is no gap. */
     S.reference = S.ds.task === 'regression' && S.ds.d === 1
       ? MLP.leastSquares(Data.gather(S.ds.X, parts.train, 1),
                          Data.gather(S.ds.Y, parts.train, 1), parts.train.length, 1)
@@ -176,18 +177,27 @@
       if (ds.d === 2) return 'surface';
       return 'scatter';
     }
-    if (ds.d === 2) return 'boundary';
+    if (ds.d === 2) {
+      /* Two classes over two inputs can be drawn either way: flat, where colour
+         carries the answer, or as a surface, where height does. The gates want
+         the surface and the tangled sets want the map, so the dataset says which
+         it prefers and the reader can still say otherwise. */
+      const want = S.view || (ds.task === 'binary' ? ds.view : null) || 'boundary';
+      return want === 'surface' ? 'surface' : 'boundary';
+    }
     return 'confusion';
   }
 
   function drawAll() {
     if (!S.ds) return;
-    const o = { normalise: normalising(), reference: S.reference, yaw: S.yaw, pitch: S.pitch };
+    const o = { normalise: normalising(), reference: S.reference, yaw: S.yaw, pitch: S.pitch, focus: S.focus };
     const view = mainView();
 
     el('mainCaption').textContent = {
       reg1d: 'The data, and the line the network currently draws through it.',
-      surface: 'Two inputs, so the network is a surface. Drag to turn it.',
+      surface: S.ds.task === 'binary'
+        ? `Height is what the network answers: the probability it puts on ${S.ds.classNames[1]}. The cases sit at the corners, and the dashed square at half height is where it changes its mind. Drag to turn it.`
+        : 'Two inputs, so the network is a surface. Drag to turn it.',
       boundary: 'Where the network would put the boundary, banded by how sure it is.',
       scatter: 'More than two inputs, so there is no boundary to draw. This is what it predicted against what was true.',
       confusion: 'More than two inputs, so there is no boundary to draw. Rows are the truth, columns the guess: blue down the diagonal is what it got right, red is everything it mistook for something else.',
@@ -201,10 +211,198 @@
     else if (view === 'scatter') Draw.predictedVsActual(c, S.ds, S.net, o);
     else if (view === 'confusion') Draw.confusion(c, S.ds, S.net, o);
 
+    syncViewPick(view);
     Draw.loss(el('lossCanvas'), S.history, { hasTest: S.prepared && S.prepared.testN > 0 });
     S.hits = Draw.network(el('netCanvas'), S.net, S.ds, o);
     drawNeuronStrip(o);
+    syncUnitNote();
+    runProbe();
     syncReadouts();
+  }
+
+  /* Offered only where both pictures are true of the same thing: two inputs and
+     two classes. A regression surface has no flat form, and three classes have
+     no single height. */
+  function syncViewPick(view) {
+    const host = el('viewPick');
+    const can = S.ds && S.ds.task === 'binary' && S.ds.d === 2;
+    host.hidden = !can;
+    if (!can) return;
+    for (const b of host.querySelectorAll('button')) {
+      b.classList.toggle('is-active', b.dataset.view === view);
+    }
+  }
+
+  /* ---- the pinned unit -----------------------------------------------------
+     One unit can be picked in three places — the diagram, its panel, the row of
+     values below — and there is one pin rather than three, so picking it
+     anywhere lights it everywhere. Clicking the pinned one lets it go. */
+
+  function focusUnit(layer, unit) {
+    const same = S.focus && S.focus.layer === layer && S.focus.unit === unit;
+    S.focus = same ? null : { layer, unit };
+    scheduleDraw();
+  }
+
+  function unitLabel(layer, unit) {
+    if (!S.net) return '';
+    const last = layer === S.net.layers.length - 1;
+    if (last) return S.net.layers[layer].units > 1 ? `output unit ${unit + 1}` : 'the output unit';
+    return `hidden layer ${layer + 1}, unit ${unit + 1}`;
+  }
+
+  function syncUnitNote() {
+    const n = el('unitNote');
+    const f = S.focus;
+    if (!S.net || !f || !S.net.layers[f.layer] || f.unit >= S.net.layers[f.layer].units) {
+      S.focus = null;
+      n.hidden = true;
+      return;
+    }
+    const l = S.net.layers[f.layer];
+    const names = f.layer === 0 ? S.ds.featureNames : null;
+    const show = Math.min(l.fanIn, 6);
+    const ins = [];
+    for (let i = 0; i < show; i++) {
+      ins.push(`${names ? names[i] : 'u' + (i + 1)} ${num(l.W[f.unit * l.fanIn + i], 3)}`);
+    }
+    let t = `${sentenceCase(unitLabel(f.layer, f.unit))}. Weights in: ${ins.join(', ')}` +
+      (l.fanIn > show ? `, and ${l.fanIn - show} more` : '') +
+      `. Bias ${num(l.b[f.unit], 3)}.`;
+    const nxt = S.net.layers[f.layer + 1];
+    if (nxt) {
+      const outs = [];
+      const showOut = Math.min(nxt.units, 6);
+      for (let u = 0; u < showOut; u++) outs.push(num(nxt.W[u * nxt.fanIn + f.unit], 3));
+      t += ` What the next layer makes of it: ${outs.join(', ')}` +
+        (nxt.units > showOut ? `, and ${nxt.units - showOut} more` : '') + '.';
+    }
+    n.textContent = t + ' Click it again to unpin it.';
+    n.hidden = false;
+  }
+
+  function sentenceCase(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  /* ---- one observation -----------------------------------------------------
+     The forward pass for a single row, which is the one thing the plots cannot
+     show: they say what the network does everywhere, and this says what it did
+     here. Live rather than behind a button, because everything else here is. */
+
+  function buildProbeFields() {
+    const host = el('probeFields');
+    host.textContent = '';
+    if (!S.ds) return;
+    for (let j = 0; j < S.ds.d; j++) {
+      const grp = document.createElement('div');
+      grp.className = 'group';
+      const lab = document.createElement('label');
+      lab.htmlFor = 'probe' + j;
+      lab.textContent = S.ds.featureNames[j];
+      const inp = document.createElement('input');
+      inp.type = 'number';
+      inp.id = 'probe' + j;
+      inp.step = 'any';
+      inp.value = num(S.ds.xMean[j], 2);
+      inp.className = 'nb-probe-field';
+      inp.addEventListener('input', runProbe);
+      grp.appendChild(lab);
+      grp.appendChild(inp);
+      host.appendChild(grp);
+    }
+  }
+
+  function probeRow() {
+    const xs = new Array(S.ds.d);
+    for (let j = 0; j < S.ds.d; j++) {
+      const node = el('probe' + j);
+      const v = node ? +node.value : NaN;
+      xs[j] = Number.isFinite(v) ? v : 0;
+    }
+    return xs;
+  }
+
+  /* The output unit's own value, which for a normalised regression is in the
+     units the network was trained in rather than the ones the answer is read
+     in. Naming it after the target would be a lie by one standard deviation,
+     so the target's name waits for the answer row underneath. */
+  function outputName(u) {
+    const ds = S.ds;
+    if (ds.task === 'regression') return 'out';
+    if (ds.task === 'binary') return 'p(' + ds.classNames[1] + ')';
+    return 'p(' + Draw.shortName(ds.classNames[u]) + ')';
+  }
+
+  function probeVerdict(out) {
+    const ds = S.ds;
+    if (ds.task === 'regression') {
+      return `${ds.targetName}: ${num(Draw.denorm(out[0], ds, normalising()))}`;
+    }
+    if (ds.task === 'binary') {
+      return `it says ${ds.classNames[out[0] >= 0.5 ? 1 : 0]}`;
+    }
+    let bi = 0;
+    for (let i = 1; i < out.length; i++) if (out[i] > out[bi]) bi = i;
+    return `it says ${Draw.shortName(ds.classNames[bi])}`;
+  }
+
+  function runProbe() {
+    const host = el('probeOut');
+    host.textContent = '';
+    if (!S.ds || !S.net || el('probe0') == null) return;
+
+    /* predict() leaves every layer's activations on the network, which is the
+       whole point of asking it about one row rather than a grid. */
+    const out = Draw.predict(S.net, probeRow(), normalising(), S.ds);
+
+    for (let li = 0; li < S.net.layers.length; li++) {
+      const l = S.net.layers[li];
+      const last = li === S.net.layers.length - 1;
+      const row = document.createElement('div');
+      row.className = 'nb-probe-row';
+      const lab = document.createElement('span');
+      lab.className = 'section-label';
+      lab.textContent = last ? 'output' : `hidden layer ${li + 1}`;
+      row.appendChild(lab);
+
+      const units = document.createElement('div');
+      units.className = 'nb-probe-units';
+      const shown = Math.min(l.units, 24);
+      for (let u = 0; u < shown; u++) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'nb-unit';
+        if (S.focus && S.focus.layer === li && S.focus.unit === u) b.classList.add('is-focus');
+        b.setAttribute('aria-label', 'pin ' + unitLabel(li, u));
+        const nm = document.createElement('span');
+        nm.textContent = last ? outputName(u) : 'u' + (u + 1);
+        const val = document.createElement('code');
+        val.textContent = num(l.a[u], 3);
+        b.appendChild(nm);
+        b.appendChild(val);
+        b.addEventListener('click', () => focusUnit(li, u));
+        units.appendChild(b);
+      }
+      row.appendChild(units);
+      if (l.units > shown) {
+        const more = document.createElement('p');
+        more.className = 'nb-more';
+        more.textContent = `${l.units - shown} more not shown.`;
+        row.appendChild(more);
+      }
+      host.appendChild(row);
+    }
+
+    const verdict = document.createElement('div');
+    verdict.className = 'nb-probe-row';
+    const lab = document.createElement('span');
+    lab.className = 'section-label';
+    lab.textContent = 'answer';
+    const says = document.createElement('p');
+    says.className = 'nb-probe-says';
+    says.textContent = probeVerdict(out);
+    verdict.appendChild(lab);
+    verdict.appendChild(says);
+    host.appendChild(verdict);
   }
 
   /* ---- readouts ----------------------------------------------------------- */
@@ -289,6 +487,7 @@
         const cap = document.createElement('figcaption');
         cap.textContent = 'unit ' + (u + 1);
         cell.appendChild(cv); cell.appendChild(cap);
+        cell.addEventListener('click', () => focusUnit(li, u));
         grid.appendChild(cell);
       }
       wrap.appendChild(grid);
@@ -318,6 +517,8 @@
     const canvases = el('neurons').querySelectorAll('canvas');
     for (const cv of canvases) {
       const li = +cv.dataset.layer, u = +cv.dataset.unit;
+      cv.parentNode.classList.toggle('is-focus',
+        !!S.focus && S.focus.layer === li && S.focus.unit === u);
       if (twoD) Draw.neuronPanel(cv, fields[li], u);
       else Draw.neuronWeights(cv, S.net, li, u, li === 0 ? S.ds.featureNames : null);
     }
@@ -382,121 +583,6 @@
     warn.hidden = !allLinear;
   }
 
-  /* ---- lessons ------------------------------------------------------------
-     Each one is a configuration plus the reason it is worth looking at. They
-     set the controls and rebuild; nothing is hidden from the user afterwards,
-     so a lesson is a starting point rather than a mode. */
-
-  const LESSONS = [
-    {
-      id: 'ols', title: 'A neuron is a linear regression',
-      dataset: 'ash', hidden: [], lr: 0.5, batch: 8192, epochs: 900, split: 25, seed: '1',
-      normalise: true, init: 'auto',
-      say: 'One neuron, identity activation, nothing hidden. Train it and the line it walks to is the same line the closed-form least squares gives — the two are printed side by side and they agree to every digit shown. Gradient descent is not doing anything mysterious here; it is arriving at the textbook answer the slow way.'
-    },
-    {
-      id: 'noscale', title: 'The same thing, unnormalised',
-      dataset: 'ash', hidden: [], lr: 0.5, batch: 8192, epochs: 900, split: 25, seed: '1',
-      normalise: false, init: 'auto',
-      say: 'Identical, except the inputs keep their real units. Planting years near 1990 and trunk circumferences near 100 cm produce gradients of wildly different sizes, and one learning rate cannot suit both. It does not converge slowly. It fails.'
-    },
-    {
-      id: 'bend', title: 'A straight line cannot bend',
-      dataset: 'curve', hidden: [], lr: 0.4, batch: 8192, epochs: 800, split: 25, seed: '1',
-      normalise: true, init: 'auto',
-      say: 'The data curves. One identity neuron can only ever produce a straight line, so it settles for the best straight line available — exactly the one least squares gives, printed beside it — and that line is visibly not the answer. Nothing is broken and no amount of training will help. The model cannot express the shape.'
-    },
-    {
-      id: 'bend2', title: 'Give it something that bends',
-      dataset: 'curve', hidden: [{ units: 6, act: 'tanh' }], lr: 0.15, batch: 32, epochs: 800, split: 25, seed: '1',
-      normalise: true, init: 'auto',
-      say: 'Six tanh units, then the same output neuron. Each unit contributes one soft bend and the output adds them up. Look at the panels underneath: the curve above is literally a weighted sum of those six shapes.'
-    },
-    {
-      id: 'xor1', title: 'XOR: one neuron cannot',
-      dataset: 'xor', hidden: [], lr: 0.5, batch: 4, epochs: 3000, split: 0, seed: '1',
-      normalise: false, init: 'auto',
-      say: 'Four points, nothing held back. A single neuron draws one straight boundary, and no straight line puts the two diagonal pairs on opposite sides. It settles at 50% and a loss of 0.693, which is exactly ln 2 — the loss of a model that has given up and guesses. This is the failure that stalled the field for a decade.'
-    },
-    {
-      id: 'xor2', title: 'Two neurons fix it',
-      dataset: 'xor', hidden: [{ units: 2, act: 'tanh' }], lr: 0.5, batch: 4, epochs: 3000, split: 0, seed: '3',
-      normalise: false, init: 'auto',
-      say: 'One hidden layer of two. Each draws its own straight line; the output neuron combines them into a region no single line could carve out. The two panels below are those two lines. Loss goes to nearly nothing and accuracy to 100%.'
-    },
-    {
-      id: 'xor3', title: 'The same network, a worse start',
-      dataset: 'xor', hidden: [{ units: 2, act: 'tanh' }], lr: 0.5, batch: 4, epochs: 3000, split: 0, seed: '1',
-      normalise: false, init: 'auto',
-      say: 'Identical to the last one except the seed, so the weights start somewhere else. It sticks at 50% and a loss of about 0.347, and it will stay there however long you run it or however large you make the learning rate — this is a local minimum, not slow progress. Two units is the exact theoretical minimum for XOR and it is fragile; raise the layer to three and it succeeds from almost anywhere. Solvable in principle and solvable in practice are different claims.'
-    },
-    {
-      id: 'dead', title: 'Dead ReLU',
-      dataset: 'moons', hidden: [{ units: 8, act: 'relu' }], lr: 4, batch: 16, epochs: 400, split: 25, seed: '1',
-      normalise: true, init: 'auto',
-      say: 'ReLU with a learning rate far too high. A unit pushed negative for every input has a gradient of exactly zero from then on, so it stops being part of the network. Watch panels below go flat and stay flat: those units are gone, and the survivors have to cover for them. Leaky ReLU keeps a sliver of slope on the left precisely to avoid this.'
-    },
-    {
-      id: 'zeros', title: 'Every neuron the same',
-      dataset: 'moons', hidden: [{ units: 8, act: 'tanh' }], lr: 0.3, batch: 16, epochs: 400, split: 25, seed: '1',
-      normalise: true, init: 'zeros',
-      say: 'Start every weight at zero and every unit in a layer receives exactly the same gradient, forever. Eight units, all identical, so the network has the expressive power of one. Every panel below is the same picture. This is why initialisation is random.'
-    },
-    {
-      id: 'ceiling', title: 'Real data has a ceiling',
-      dataset: 'two-species', hidden: [{ units: 32, act: 'tanh' }, { units: 32, act: 'tanh' }], lr: 0.08, batch: 32, epochs: 2500, split: 92, seed: '1',
-      normalise: true, init: 'auto',
-      say: 'Two real species told apart by trunk and height alone, and deliberately starved: 92% of the rows are held back, so about a thousand examples are being fitted by about twelve hundred weights. Watch the two loss curves separate. The training loss keeps falling because the network is memorising rows it has seen; the held-out loss stops improving and turns upward, because those memorised rows say nothing about the ones it has not seen. The species genuinely overlap, so there is a ceiling here that no amount of network gets past — and a bigger network makes the gap worse, not better.'
-    },
-    {
-      id: 'spiral', title: 'When you actually need depth',
-      dataset: 'spiral', hidden: [{ units: 16, act: 'tanh' }, { units: 16, act: 'tanh' }], lr: 0.12, batch: 32, epochs: 2000, split: 25, seed: '1',
-      normalise: true, init: 'auto',
-      say: 'Two interleaved arms. Remove the second hidden layer and watch one layer of sixteen fail at it, then put the layer back. This is the case where depth rather than width is what buys the answer.'
-    },
-    {
-      id: 'blind', title: 'Four inputs, nothing to look at',
-      dataset: 'species', hidden: [{ units: 16, act: 'tanh' }], lr: 0.1, batch: 64, epochs: 800, split: 25, seed: '1',
-      normalise: true, init: 'auto',
-      say: 'Four measurements, four species. At four dimensions there is no boundary to draw, which is the ordinary situation in practice rather than a special case. What is left is the confusion matrix — which species get mistaken for which — and the per-unit weights, which say what each neuron is actually watching.'
-    }
-  ];
-
-  function applyLesson(lesson) {
-    el('split').value = lesson.split;
-    el('seed').value = lesson.seed;
-    el('lr').value = lesson.lr;
-    el('batch').value = lesson.batch;
-    el('epochs').value = lesson.epochs;
-    el('normalise').checked = lesson.normalise;
-    el('init').value = lesson.init;
-    S.hidden = lesson.hidden.map((l) => ({ units: l.units, act: l.act }));
-    el('lessonSay').textContent = lesson.say;
-    el('lessonSay').hidden = false;
-    for (const b of el('lessons').querySelectorAll('button')) {
-      b.classList.toggle('is-active', b.dataset.lesson === lesson.id);
-    }
-    setDataset(lesson.dataset).then(() => {
-      // controls.js mirrors native values into its drawn faces on input events
-      for (const id of ['lr', 'batch', 'epochs', 'init', 'normalise', 'split', 'seed']) {
-        el(id).dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    });
-  }
-
-  function buildLessons() {
-    const host = el('lessons');
-    for (const l of LESSONS) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'btn-ghost preset';
-      b.textContent = l.title;
-      b.dataset.lesson = l.id;
-      b.addEventListener('click', () => applyLesson(l));
-      host.appendChild(b);
-    }
-  }
-
   /* ---- datasets ------------------------------------------------------------ */
 
   function adoptDataset(ds) {
@@ -506,13 +592,16 @@
       `${ds.n.toLocaleString()} rows · ${ds.d} input${ds.d === 1 ? '' : 's'} · ` +
       (ds.task === 'regression' ? '1 number out' : `${ds.task === 'binary' ? 2 : ds.k} classes`);
     S.outAct = null;
+    S.view = null;
+    S.focus = null;
+    buildProbeFields();
     rebuild();
   }
 
   /* Setting a control's value in code does not update the drawn face over it,
      which only listens for events. Dispatching one would re-enter our own
      handler, so the flag marks the difference between the user picking a set
-     and a lesson announcing which one it just loaded. */
+     and the page announcing which one it just loaded. */
   function setSelectSilently(id, value) {
     const n = el(id);
     if (n.value === value) return;
@@ -590,6 +679,26 @@
     });
 
     el('reset').addEventListener('click', () => { setStatus(''); rebuild(); });
+
+    for (const b of el('viewPick').querySelectorAll('button')) {
+      b.addEventListener('click', () => { S.view = b.dataset.view; scheduleDraw(); });
+    }
+
+    /* The diagram is the third way in to a unit. Draw.network hands back where
+       it put every one of them, in the same coordinates the canvas is drawn in,
+       so the hit test is a nearest-square-within-its-own-size and nothing more. */
+    const nc = el('netCanvas');
+    nc.addEventListener('click', (e) => {
+      if (!S.hits || !S.hits.length) return;
+      const r = nc.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      let best = null, bd = Infinity;
+      for (const hit of S.hits) {
+        const d = Math.hypot(hit.x - x, hit.y - y);
+        if (d < bd) { bd = d; best = hit; }
+      }
+      if (best && bd <= Math.max(11, best.r)) focusUnit(best.layer, best.unit);
+    });
 
     /* Turning the surface. Pointer events so it works with a finger. */
     const c = el('mainCanvas');
@@ -669,9 +778,8 @@
 
   function start() {
     buildDatasetOptions();
-    buildLessons();
     wire();
-    applyLesson(LESSONS[0]);
+    setDataset(el('dataset').value);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);

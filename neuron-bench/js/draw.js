@@ -173,8 +173,11 @@ var Draw = (function () {
     return a;
   }
 
+  /* Targets are only ever normalised for regression (see Data.prepare), so a
+     class probability comes back out of the network already in the units it
+     went in with. Scaling one by yStd would be quietly wrong. */
   function denorm(v, ds, norm) {
-    return norm ? v * ds.yStd[0] + ds.yMean[0] : v;
+    return norm && ds.task === 'regression' ? v * ds.yStd[0] + ds.yMean[0] : v;
   }
 
   /* ---- 1: one input, one output ------------------------------------------ */
@@ -356,7 +359,15 @@ var Draw = (function () {
   /* ---- 3: two inputs, one number — a surface ------------------------------
      Orthographic, wireframe, hidden lines not removed. A mesh reads as a
      printed contour drawing and stays legible in both modes, where a shaded
-     solid would need a light source the rest of the page does not have. */
+     solid would need a light source the rest of the page does not have.
+
+     A two-class set is drawn here too, and this is the picture the logic gates
+     want. Height is then the output itself, the probability the network puts on
+     class 1: the four cases sit at the corners at 0 and 1, and the dashed square
+     at half height is where it changes its mind. One neuron can only make this
+     surface a ramp, and a ramp cannot be high at two opposite corners and low at
+     the other two. That is the XOR argument in one look, which the flat map can
+     only make by showing that the line lands somewhere useless. */
 
   function surface3D(canvas, ds, net, o) {
     const { g, w, h } = fit(canvas);
@@ -368,9 +379,10 @@ var Draw = (function () {
     const scale = Math.min(w, h) * 0.33;
     const ox = w / 2, oy = h / 2 + h * 0.08;
 
+    const binary = ds.task === 'binary';
     const xr = [ds.xMin[0], ds.xMax[0]];
     const yr = [ds.xMin[1], ds.xMax[1]];
-    const zr = [ds.yMin, ds.yMax];
+    const zr = binary ? [0, 1] : [ds.yMin, ds.yMax];
     const nx = (v) => ((v - xr[0]) / Math.max(1e-9, xr[1] - xr[0])) * 2 - 1;
     const ny = (v) => ((v - yr[0]) / Math.max(1e-9, yr[1] - yr[0])) * 2 - 1;
     const nz = (v) => ((v - zr[0]) / Math.max(1e-9, zr[1] - zr[0])) * 2 - 1;
@@ -392,14 +404,39 @@ var Draw = (function () {
     corners.forEach((c, i) => (i ? g.lineTo(c.x, c.y) : g.moveTo(c.x, c.y)));
     g.closePath(); g.stroke();
 
-    // the data, behind the mesh
+    // where it changes its mind, dashed because it is a boundary and not a part
+    if (binary) {
+      g.save();
+      g.setLineDash([4, 3]);
+      g.strokeStyle = p.line; g.lineWidth = 1;
+      const half = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map((c) => proj(c[0], c[1], nz(0.5)));
+      g.beginPath();
+      half.forEach((c, i) => (i ? g.lineTo(c.x, c.y) : g.moveTo(c.x, c.y)));
+      g.closePath(); g.stroke();
+      g.restore();
+      g.font = '11px ' + p.mono;
+      g.fillStyle = p.faint;
+      g.textAlign = 'left'; g.textBaseline = 'bottom';
+      g.fillText('0.5', half[1].x + 5, half[1].y);
+    }
+
+    // the data, behind the mesh. Two classes take the marks the flat map gives
+    // them, so the same case is the same shape in both views.
     const n = ds.n;
     const step = n > 3000 ? Math.ceil(n / 3000) : 1;
-    g.fillStyle = p.muted;
-    g.globalAlpha = 0.5;
+    g.globalAlpha = binary ? 0.9 : 0.5;
     for (let i = 0; i < n; i += step) {
       const q = proj(nx(ds.X[i * 2]), ny(ds.X[i * 2 + 1]), nz(ds.Y[i]));
-      g.fillRect(q.x - 1, q.y - 1, 2, 2);
+      if (binary) {
+        const cls = ds.Y[i] > 0.5 ? 1 : 0;
+        g.fillStyle = cls ? p.b : p.a;
+        g.strokeStyle = p.paper; g.lineWidth = 1;
+        if (cls) { g.fillRect(q.x - 3, q.y - 3, 6, 6); g.strokeRect(q.x - 3, q.y - 3, 6, 6); }
+        else { g.beginPath(); g.arc(q.x, q.y, 3.5, 0, Math.PI * 2); g.fill(); g.stroke(); }
+      } else {
+        g.fillStyle = p.muted;
+        g.fillRect(q.x - 1, q.y - 1, 2, 2);
+      }
     }
     g.globalAlpha = 1;
 
@@ -416,7 +453,7 @@ var Draw = (function () {
         }
         grid.push(row);
       }
-      g.strokeStyle = p.a;
+      g.strokeStyle = binary ? p.muted : p.a;
       g.lineWidth = 1;
       g.globalAlpha = 0.85;
       for (let i = 0; i <= N; i++) {
@@ -436,12 +473,21 @@ var Draw = (function () {
     g.font = '11px ' + p.mono;
     g.fillStyle = p.muted;
     g.textAlign = 'center';
-    const lx = proj(0, -1.25, -1), ly = proj(1.25, 0, -1);
+    g.textBaseline = 'alphabetic';
+    const lx = proj(0, -1.5, -1), ly = proj(1.5, 0, -1);
     g.fillText(ds.featureNames[0], lx.x, lx.y + 4);
     g.fillText(ds.featureNames[1], ly.x, ly.y + 4);
     g.textAlign = 'left';
-    g.fillText(ds.targetName, 10, 16);
+    g.fillText(binary ? 'p(' + shortName(ds.classNames[1]) + ')' : ds.targetName, 10, binary ? 32 : 16);
     g.restore();
+
+    if (binary) {
+      legend(g, { x: 0, y: 4 }, p, [
+        { colour: p.a, label: shortName(ds.classNames[0]), kind: 'dot' },
+        { colour: p.b, label: shortName(ds.classNames[1]), kind: 'dot' },
+        net ? { colour: p.muted, label: 'what it answers', kind: 'line' } : null
+      ]);
+    }
   }
 
   /* ---- 4: what one hidden unit is doing -----------------------------------
@@ -761,7 +807,11 @@ var Draw = (function () {
     const totalEdges = net.layers.reduce((s, l) => s + l.W.length, 0);
     const thin = totalEdges > 400;
 
-    g.globalAlpha = thin ? 0.25 : 0.6;
+    /* A pinned unit takes its own edges out of the crowd: everything not wired
+       to it drops back rather than disappearing, so what is left reads as this
+       unit's share of a network that is still all there. */
+    const focus = o && o.focus;
+    const base = thin ? 0.25 : 0.6;
     for (let li = 0; li < net.layers.length; li++) {
       const l = net.layers[li];
       const from = pos[li], to = pos[li + 1];
@@ -770,6 +820,11 @@ var Draw = (function () {
           const wgt = l.W[t.unit * l.fanIn + f.unit];
           const mag = Math.abs(wgt) / maxAbs;
           if (thin && mag < 0.25) continue;
+          const mine = focus &&
+            ((li === focus.layer && t.unit === focus.unit) ||
+             (li === focus.layer + 1 && f.unit === focus.unit));
+          if (focus && !mine && thin && mag < 0.6) continue;
+          g.globalAlpha = focus ? (mine ? 0.9 : 0.12) : base;
           g.strokeStyle = wgt >= 0 ? p.a : p.b;
           g.lineWidth = Math.max(0.4, mag * 3);
           g.beginPath(); g.moveTo(f.x, f.y); g.lineTo(t.x, t.y); g.stroke();
@@ -786,9 +841,10 @@ var Draw = (function () {
       const c = pos[ci];
       for (const u of c.list) {
         const isIO = ci === 0 || ci === pos.length - 1;
+        const pinned = focus && ci > 0 && focus.layer === ci - 1 && focus.unit === u.unit;
         g.fillStyle = isIO ? p.surface : p.paper;
-        g.strokeStyle = p.edge;
-        g.lineWidth = ci === 0 ? 1 : 2;
+        g.strokeStyle = pinned ? p.a : p.edge;
+        g.lineWidth = pinned ? 3 : (ci === 0 ? 1 : 2);
         g.fillRect(u.x - size / 2, u.y - size / 2, size, size);
         g.strokeRect(u.x - size / 2, u.y - size / 2, size, size);
         if (ci > 0) hit.push({ x: u.x, y: u.y, r: size, layer: ci - 1, unit: u.unit });
