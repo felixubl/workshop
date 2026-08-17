@@ -34,6 +34,8 @@
     focus: null,          // {layer, unit} pinned in the neuron strip
     view: null,           // main-plot override; null means the dataset's own
     lastMetrics: null,
+    best: null,           // the record standing under the current conditions
+    recordStamp: null,    // what the record list was last built from
     dirty: false
   };
 
@@ -94,6 +96,10 @@
     S.lastMetrics = null;
     S.running = false;
     S.ready = false;
+    /* The record belongs to the conditions, not to the network, so a rebuild
+       re-reads it: changing the hold-back or the seed asks a different question
+       and a different record answers it. */
+    S.best = Records.get(recordContext());
 
     const prep = Data.prepare(S.ds, normalising());
     const frac = +el('split').value / 100;
@@ -151,6 +157,7 @@
       const last = S.history[S.history.length - 1];
       if (!last || last.epoch !== m.epoch) S.history.push(S.lastMetrics);
       if (S.history.length > 4000) S.history = S.history.filter((_, i) => i % 2 === 0);
+      offerRecord();
     }
     syncButtons();
     scheduleDraw();
@@ -212,12 +219,26 @@
     else if (view === 'confusion') Draw.confusion(c, S.ds, S.net, o);
 
     syncViewPick(view);
-    Draw.loss(el('lossCanvas'), S.history, { hasTest: S.prepared && S.prepared.testN > 0 });
+    Draw.loss(el('lossCanvas'), S.history, {
+      hasTest: S.prepared && S.prepared.testN > 0,
+      best: S.best ? S.best.loss : null
+    });
     S.hits = Draw.network(el('netCanvas'), S.net, S.ds, o);
     drawNeuronStrip(o);
+    drawActivationFaces();
     syncUnitNote();
     runProbe();
     syncReadouts();
+    syncRecords();
+  }
+
+  /* The thumbnail beside each layer's menu. Here rather than in the editor that
+     builds them, so a change of colour mode repaints them with everything
+     else. */
+  function drawActivationFaces() {
+    for (const cv of el('layers').querySelectorAll('canvas[data-act]')) {
+      Draw.activation(cv, cv.dataset.act);
+    }
   }
 
   /* Offered only where both pictures are true of the same thing: two inputs and
@@ -438,6 +459,157 @@
     } else ref.hidden = true;
   }
 
+  /* ---- the record book -----------------------------------------------------
+     Records.js decides what a record is and where it is kept; this decides how
+     it is said. Offered on every snapshot rather than at the end of a run,
+     because the lowest the loss ever went is the thing being recorded, and on
+     the sets that overfit that moment is somewhere in the middle. Snapshots
+     arrive on a wall-clock beat rather than every epoch, so what is kept is the
+     lowest the reader was actually shown — which is the honest thing for a
+     record to be, and the only one this side of the worker can see. */
+
+  const SESSION_START = Date.now();
+
+  /* Two different CSVs are two different problems and both arrive as 'user'.
+     Name, rows and columns is not a hash, but it is enough that one reader's
+     two files do not end up sharing a record. */
+  function setKey(ds) {
+    return ds.id === 'user' ? 'user:' + ds.name + ':' + ds.n + 'x' + ds.d : ds.id;
+  }
+
+  function recordContext() {
+    return {
+      set: setKey(S.ds),
+      name: S.ds.name,
+      normalise: normalising(),
+      split: Math.round(+el('split').value) || 0,
+      seed: el('seed').value || '1'
+    };
+  }
+
+  function archLabel() {
+    if (!S.hidden.length) return 'no hidden layer';
+    return S.hidden
+      .map((l) => Math.max(1, Math.round(l.units)) + '×' + MLP.ACT[l.act].label)
+      .join(' + ');
+  }
+
+  function conditionsLabel(c, join) {
+    return [
+      c.normalise ? 'normalised' : 'raw inputs',
+      c.split ? c.split + '% held back' : 'nothing held back',
+      'seed ' + c.seed
+    ].join(join || ' · ');
+  }
+
+  function offerRecord() {
+    const m = S.lastMetrics;
+    if (!S.ds || !m || m.epoch < 1) return;
+    /* With nothing held back there is no held-out loss to record, so the
+       training loss stands in — and says so, because a training loss is a
+       claim about rows the network has already seen. */
+    const held = !!(S.prepared && S.prepared.testN > 0);
+    const loss = held ? m.testLoss : m.trainLoss;
+    if (loss == null || !Number.isFinite(loss)) return;
+    const o = opts();
+    const offered = Records.offer(recordContext(), {
+      loss,
+      metric: held ? 'held-out' : 'training',
+      accuracy: held ? m.testAcc : m.trainAcc,
+      epoch: m.epoch,
+      params: S.params,
+      arch: archLabel(),
+      lr: o.lr, batch: o.batchSize, momentum: o.momentum,
+      init: el('init').value
+    });
+    S.best = offered.record;
+  }
+
+  /* A setting is printed as it was typed rather than to a fixed number of
+     places: 0.4 is a learning rate, 0.4000 is a measurement. */
+  function dial(v) {
+    return Number.isFinite(v) ? String(+v.toFixed(4)) : '—';
+  }
+
+  function recordHow(r) {
+    const bits = [r.metric, r.arch, 'rate ' + dial(r.lr), 'batch ' + r.batch];
+    if (r.momentum) bits.push('momentum ' + dial(r.momentum));
+    if (r.init && r.init !== 'auto') bits.push('from ' + (r.init === 'zeros' ? 'zeros' : 'much too large'));
+    bits.push('epoch ' + r.epoch);
+    return bits.join(' · ');
+  }
+
+  function syncRecords() {
+    if (!S.ds) return;
+    const c = recordContext();
+    S.best = Records.get(c);
+    el('rBest').textContent = S.best ? num(S.best.loss) : '—';
+
+    const note = el('bestNote');
+    const conditions = conditionsLabel(c, ', ');
+    if (S.best) {
+      const acc = S.best.accuracy == null ? '' : `, getting ${(S.best.accuracy * 100).toFixed(1)}% of them right`;
+      note.textContent =
+        `On ${S.ds.name} — ${conditions} — the lowest ${S.best.metric} loss this browser ` +
+        `has reached is ${num(S.best.loss)}${acc}, from ${S.best.arch} at a learning rate of ` +
+        `${dial(S.best.lr)}, at epoch ${S.best.epoch}. ` +
+        (S.best.t >= SESSION_START ? 'Set in this sitting.' : 'Set on ' + S.best.at + '.');
+    } else {
+      note.textContent =
+        `Nothing recorded on ${S.ds.name} — ${conditions} — yet. Train it once and the lowest ` +
+        'loss it reaches is kept here, with the network that reached it.';
+    }
+
+    /* The list is rebuilt only when it has actually changed. A run offers a
+       record ten times a second and beats itself most of those times, and
+       rebuilding a list of buttons at that rate would put a live control under
+       the pointer that is replaced before it can be clicked. */
+    const held = Records.all();
+    const mineKey = Records.key(c);
+    const stamp = mineKey + '#' + held.map((i) => i.key + ':' + i.record.loss).join('|');
+    el('recordTools').hidden = held.length < 2;
+    if (stamp === S.recordStamp) return;
+    S.recordStamp = stamp;
+
+    const host = el('recordList');
+    host.textContent = '';
+    for (const item of held) {
+      const r = item.record;
+      const li = document.createElement('li');
+      li.className = 'nb-record' + (item.key === mineKey ? ' is-current' : '');
+
+      const set = document.createElement('span');
+      set.className = 'nb-record-set';
+      set.textContent = r.name || r.set;
+
+      const loss = document.createElement('code');
+      loss.className = 'nb-record-loss';
+      loss.textContent = num(r.loss);
+
+      const how = document.createElement('span');
+      how.className = 'nb-record-how';
+      how.textContent = recordHow(r);
+
+      const when = document.createElement('span');
+      when.className = 'nb-record-when';
+      when.textContent = conditionsLabel(r) + ' · ' + r.at;
+
+      const drop = document.createElement('button');
+      drop.type = 'button';
+      drop.className = 'btn-ghost nb-record-forget';
+      drop.textContent = 'forget';
+      drop.setAttribute('aria-label', 'forget the record on ' + (r.name || r.set));
+      drop.addEventListener('click', () => { Records.forget(item.key); syncRecords(); scheduleDraw(); });
+
+      /* The button before the conditions, though it is read after them: the
+         conditions take a whole line to themselves, and anything appended past
+         them starts a third. */
+      li.appendChild(set); li.appendChild(loss); li.appendChild(how);
+      li.appendChild(drop); li.appendChild(when);
+      host.appendChild(li);
+    }
+  }
+
   /* With one identity neuron and normalisation on, the weight the network
      holds is in normalised units. Undoing that is the step that lets the
      network's answer be compared with the textbook one at all, and it is the
@@ -524,7 +696,21 @@
     }
   }
 
-  /* ---- architecture editor ------------------------------------------------ */
+  /* ---- architecture editor ------------------------------------------------
+     Thirteen activations is too many for one flat list, so the menu groups
+     them by what they do to a total rather than by when they were invented.
+     The order of the shelves is the order of the argument: nothing, then
+     squashing, then the hinges that replaced it, then the smooth gates that
+     replaced those, and last the shapes that are not sigmoid-shaped at all.
+     Within a shelf the order is MLP.ACT's own. */
+
+  const ACT_SHELVES = [
+    { family: 'plain', label: 'straight and stepped' },
+    { family: 'squash', label: 'squashing' },
+    { family: 'hinge', label: 'hinges' },
+    { family: 'gate', label: 'smooth gates' },
+    { family: 'fold', label: 'folds and bumps' }
+  ];
 
   function syncArchitectureUI() {
     const host = el('layers');
@@ -550,14 +736,30 @@
 
       const sel = document.createElement('select');
       sel.setAttribute('data-tip', 'The bend this layer applies');
-      for (const key of ['identity', 'sigmoid', 'tanh', 'relu', 'leaky', 'step']) {
-        const op = document.createElement('option');
-        op.value = key; op.textContent = MLP.ACT[key].label;
-        if (key === layer.act) op.selected = true;
-        sel.appendChild(op);
+      for (const shelf of ACT_SHELVES) {
+        const keys = Object.keys(MLP.ACT).filter((k) => MLP.ACT[k].family === shelf.family);
+        if (!keys.length) continue;
+        const grp = document.createElement('optgroup');
+        grp.label = shelf.label;
+        for (const key of keys) {
+          const op = document.createElement('option');
+          op.value = key; op.textContent = MLP.ACT[key].label;
+          if (key === layer.act) op.selected = true;
+          grp.appendChild(op);
+        }
+        sel.appendChild(grp);
       }
       sel.addEventListener('change', () => { layer.act = sel.value; rebuild(); });
       row.appendChild(sel);
+
+      /* The function itself, beside the name of it. Redrawn from drawAll rather
+         than here, so it restyles with the lamp like every other picture. */
+      const face = document.createElement('canvas');
+      face.className = 'nb-act-face';
+      face.dataset.act = layer.act;
+      face.setAttribute('aria-label', MLP.ACT[layer.act].label + ': what this layer does to a unit’s total, and the slope of it');
+      face.setAttribute('data-tip', 'The bend itself. Solid is the function, dashed is its slope — the part training can see');
+      row.appendChild(face);
 
       const rm = document.createElement('button');
       rm.type = 'button'; rm.className = 'btn-ghost';
@@ -578,7 +780,7 @@
     const act = MLP.ACT[S.hidden.length ? S.hidden[S.hidden.length - 1].act : 'identity'];
     el('actNote').textContent = S.hidden.length ? act.note : '';
 
-    const allLinear = S.hidden.length > 0 && S.hidden.every((l) => l.act === 'identity');
+    const allLinear = S.hidden.length > 0 && S.hidden.every((l) => MLP.ACT[l.act].linear);
     const warn = el('linearWarn');
     warn.hidden = !allLinear;
   }
@@ -679,6 +881,13 @@
     });
 
     el('reset').addEventListener('click', () => { setStatus(''); rebuild(); });
+
+    el('forgetAll').addEventListener('click', () => {
+      Records.clear();
+      S.best = null;
+      syncRecords();
+      scheduleDraw();
+    });
 
     for (const b of el('viewPick').querySelectorAll('button')) {
       b.addEventListener('click', () => { S.view = b.dataset.view; scheduleDraw(); });

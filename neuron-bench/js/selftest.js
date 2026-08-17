@@ -93,6 +93,44 @@
     return { worst, checked, skipped };
   }
 
+  /* Each activation on its own, before any network is built out of it: is the
+     derivative the derivative of the function next to it? A wrong df trains to
+     something plausible and wrong, and it is far easier to read the failure
+     here, one activation at a time, than out of a whole net's gradient.
+
+     z = 0 is skipped for the same reason a straddled kink is skipped below:
+     the hinges and the fold have their corner there and the step its jump, and
+     a central difference across it measures the average of two slopes. */
+  function derivativeCheck(key) {
+    const act = M.ACT[key];
+    const h = 1e-6;
+    let worst = 0, checked = 0;
+    for (let i = -40; i <= 40; i++) {
+      if (i === 0) continue;
+      const z = i * 0.1;
+      const num = (act.f(z + h) - act.f(z - h)) / (2 * h);
+      const rel = Math.abs(num - act.df(z, act.f(z))) /
+        Math.max(1e-6, Math.abs(num) + Math.abs(act.df(z, act.f(z))));
+      if (rel > worst) worst = rel;
+      checked++;
+    }
+    return { worst, checked };
+  }
+
+  /* A diverging network hands its activation whatever it likes. Anything that
+     comes back as NaN takes the rest of the run with it, and a page that stops
+     printing numbers teaches nothing, so every f and df has to stay finite out
+     to the edges of what a float can hold. */
+  function finiteCheck(key) {
+    const act = M.ACT[key];
+    const wild = [0, 1e-9, -1e-9, 15, -15, 40, -40, 710, -710, 1e30, -1e30, 1e300, -1e300];
+    for (const z of wild) {
+      const a = act.f(z);
+      if (!Number.isFinite(a) || !Number.isFinite(act.df(z, a))) return z;
+    }
+    return null;
+  }
+
   function run(log) {
     let pass = 0, fail = 0;
     const ok = (name, cond, extra) => {
@@ -100,16 +138,30 @@
       log(`${cond ? 'PASS' : 'FAIL'}  ${name}${extra ? '   ' + extra : ''}`);
     };
 
+    log('-- each activation against its own derivative --');
+    for (const key of Object.keys(M.ACT)) {
+      const r = derivativeCheck(key);
+      const wild = finiteCheck(key);
+      ok(`${key} differentiates to its df`, r.worst < 1e-6 && wild === null,
+        `worst ${r.worst.toExponential(2)} over ${r.checked} points` +
+        (wild === null ? ', finite everywhere' : `, NOT FINITE at z=${wild}`));
+    }
+
+    log('');
     log('-- gradients against finite differences --');
     const cases = [
       ['mse', 'identity', ['tanh', 'tanh']],
       ['mse', 'identity', ['relu', 'leaky']],
       ['mse', 'identity', ['sigmoid', 'relu']],
+      ['mse', 'identity', ['elu', 'softplus']],
+      ['mse', 'identity', ['abs', 'gauss']],
       ['mse', 'tanh', ['tanh', 'sigmoid']],
       ['bce', 'sigmoid', ['tanh', 'relu']],
       ['bce', 'sigmoid', ['leaky', 'leaky']],
+      ['bce', 'sigmoid', ['silu', 'gelu']],
       ['ce', 'identity', ['relu', 'tanh']],
-      ['ce', 'identity', ['tanh', 'tanh']]
+      ['ce', 'identity', ['tanh', 'tanh']],
+      ['ce', 'identity', ['sin', 'elu']]
     ];
     for (const [loss, outAct, hidden] of cases) {
       const r = gradientCheck(loss, outAct, hidden, loss + outAct + hidden.join());
@@ -151,22 +203,29 @@
       const X = new Float64Array([0, 0, 0, 1, 1, 0, 1, 1]);
       const Y = new Float64Array([0, 1, 1, 0]);
       const order = new Uint32Array([0, 1, 2, 3]);
-      const run1 = (hidden, seed) => {
+      const run1 = (hidden, seed, act) => {
         const layers = hidden
-          ? [{ units: hidden, act: 'tanh' }, { units: 1, act: 'sigmoid' }]
+          ? [{ units: hidden, act: act || 'tanh' }, { units: 1, act: 'sigmoid' }]
           : [{ units: 1, act: 'sigmoid' }];
         const net = M.create({ inputs: 2, layers, loss: 'bce', seed });
         const rand = M.rng('x' + seed);
         for (let e = 0; e < 4000; e++) M.trainEpoch(net, X, Y, 4, { lr: 0.5, batchSize: 4, momentum: 0.9, order, rand });
         return M.evaluate(net, X, Y, 4).accuracy;
       };
-      let bestSingle = 0, bestPair = 0;
+      let bestSingle = 0, bestPair = 0, folds = 0;
       for (const s of [1, 2, 3, 4, 5, 6]) {
         bestSingle = Math.max(bestSingle, run1(0, s));
         bestPair = Math.max(bestPair, run1(2, s));
+        /* The claim the absolute value carries in the menu. A bend of any kind
+           needs two units; a fold needs one, because |A − B| is XOR outright.
+           It is a bare minimum like the pair above, and fails from a dead start
+           as readily, so what is asserted is that it happens and happens often
+           — not that it always does. */
+        if (run1(1, s, 'abs') === 1) folds++;
       }
       ok('no single neuron ever solves XOR', bestSingle <= 0.75, `best over 6 seeds ${bestSingle}`);
       ok('two hidden units do', bestPair === 1, `best over 6 seeds ${bestPair}`);
+      ok('one folded unit does it alone, from most starts', folds >= 3, `${folds} of 6 seeds`);
     }
 
     log('');
@@ -256,6 +315,74 @@
       const ev = M.evaluate(d, X, Y, n);
       ok('a wild learning rate diverges visibly without going NaN', Number.isFinite(ev.loss),
         `loss ${ev.loss.toFixed(2)}, accuracy ${ev.accuracy.toFixed(2)}`);
+    }
+
+    log('');
+    log('-- where the weights start --');
+    {
+      /* A wide layer, so the spread of the drawn weights is the spread the
+         formula asked for rather than an accident of eight numbers. */
+      const spreadOf = (act) => {
+        const net = M.create({ inputs: 400, layers: [{ units: 400, act }], loss: 'mse', seed: 'init:' + act });
+        const W = net.layers[0].W;
+        let s = 0;
+        for (let i = 0; i < W.length; i++) s += W[i] * W[i];
+        return Math.sqrt(s / W.length);
+      };
+      const he = Math.sqrt(2 / 400), xavier = Math.sqrt(1 / 400);
+      const near = (v, want) => Math.abs(v - want) / want < 0.05;
+      ok('a rectifier starts from He', near(spreadOf('relu'), he) && near(spreadOf('gelu'), he),
+        `relu ${spreadOf('relu').toFixed(5)} and gelu ${spreadOf('gelu').toFixed(5)} against ${he.toFixed(5)}`);
+      ok('a squashing unit starts from Xavier', near(spreadOf('tanh'), xavier) && near(spreadOf('abs'), xavier),
+        `tanh ${spreadOf('tanh').toFixed(5)} against ${xavier.toFixed(5)}`);
+      ok('a sine starts wider than either', near(spreadOf('sin'), 3 * xavier),
+        `${spreadOf('sin').toFixed(5)} against ${(3 * xavier).toFixed(5)}`);
+
+      const biasesOf = (act) => Array.from(M.create({
+        inputs: 4, layers: [{ units: 8, act }, { units: 1, act: 'identity' }], loss: 'mse', seed: 5
+      }).layers[0].b);
+      ok('a one-sided activation starts every bias at zero',
+        biasesOf('relu').every((v) => v === 0) && biasesOf('tanh').every((v) => v === 0));
+      ok('an even one starts its centres apart',
+        new Set(biasesOf('abs')).size === 8 && new Set(biasesOf('gauss')).size === 8);
+
+      /* And why that is worth doing. A fold is symmetric, so folds sharing a
+         centre are one shape in eight widths, and eight of those cannot follow
+         a curve any better than one can. */
+      const rand = M.rng('folds');
+      const n = 250, X = new Float64Array(n), Y = new Float64Array(n);
+      for (let i = 0; i < n; i++) {
+        const x = rand() * 4 - 2;
+        X[i] = x; Y[i] = Math.sin(x * 1.6) + x * 0.2;
+      }
+      const order = new Uint32Array(n); for (let i = 0; i < n; i++) order[i] = i;
+      const foldFit = (flatten) => {
+        const net = M.create({ inputs: 1, layers: [{ units: 8, act: 'abs' }, { units: 1, act: 'identity' }], loss: 'mse', seed: 2 });
+        if (flatten) net.layers[0].b.fill(0);
+        const r = M.rng('ff');
+        for (let e = 0; e < 800; e++) M.trainEpoch(net, X, Y, n, { lr: 0.05, batchSize: 32, momentum: 0.9, order, rand: r });
+        return M.evaluate(net, X, Y, n).loss;
+      };
+      const apart = foldFit(false), together = foldFit(true);
+      ok('folds all on one centre cannot follow a curve, and spread ones can',
+        apart < 0.02 && together > 5 * apart,
+        `${apart.toExponential(2)} spread against ${together.toExponential(2)} together`);
+    }
+
+    log('');
+    log('-- the record book --');
+    {
+      const R = typeof Records !== 'undefined' ? Records : require('./records.js');
+      const base = { set: 'spiral', normalise: true, split: 25, seed: '1' };
+      ok('the same conditions are the same record',
+        R.key(base) === R.key({ set: 'spiral', normalise: true, split: 25, seed: '1' }));
+      /* Each of these changes what the number on the scoreboard would mean, so
+         each has to start a record of its own rather than overwrite one. */
+      const apart = [{ set: 'moons' }, { normalise: false }, { split: 0 }, { seed: '2' }]
+        .map((d) => R.key(Object.assign({}, base, d)));
+      const distinct = new Set(apart.concat([R.key(base)]));
+      ok('a set, a normalisation, a hold-back and a seed each start their own',
+        distinct.size === 5, apart.join('  '));
     }
 
     log('');

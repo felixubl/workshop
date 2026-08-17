@@ -151,6 +151,7 @@
       <div><span class="section-label">weights</span><code id="rParams">0</code></div>
       <div><span class="section-label">training loss</span><code id="rTrain">—</code></div>
       <div><span class="section-label">held-out loss</span><code id="rTest">—</code></div>
+      <div><span class="section-label">your best here</span><code id="rBest">—</code></div>
     </div>
     <div class="nb-readout" id="accRow" hidden>
       <div><span class="section-label">training accuracy</span><code id="rTrainAcc">—</code></div>
@@ -185,6 +186,18 @@
   </section>
 
   <section>
+    <div class="nb-viewbar">
+      <p class="section-label">Your best so far</p>
+      <div class="group" id="recordTools" hidden>
+        <button type="button" class="btn-ghost" id="forgetAll" data-tip="Empty the record book. There is no undo">forget all of them</button>
+      </div>
+    </div>
+    <p class="note" id="bestNote"></p>
+    <ul class="nb-records" id="recordList"></ul>
+    <p class="note nb-records-say">A loss is only a score against the same question, so a record is kept per set together with the three things that decide what the number means: whether the inputs were normalised, how much was held back, and the seed that chose which rows those were. Change any of them and the bench starts a new record rather than pretending the old one still applies. Nothing leaves this browser — there is no scoreboard behind this page, and clearing the site's data clears the book.</p>
+  </section>
+
+  <section>
     <p class="section-label">Neuron by neuron</p>
     <p class="note" id="neuronNote"></p>
     <div id="neurons"></div>
@@ -214,12 +227,13 @@
   </section>
 
   <footer>
-    <p>Runs entirely in this tab: the network is trained on your machine, in a background thread, and nothing about it is sent anywhere. Tree measurements come from the <a href="https://www.data.gv.at/datasets/c91a4635-8b7d-43fe-9b27-d95dec8392a7?locale=en">Vienna Baumkataster</a> (Stadt Wien, CC BY 4.0), trimmed to the eight commonest species and the numeric columns. The network, the training and every plot are written from scratch for this page.</p>
+    <p>Runs entirely in this tab: the network is trained on your machine, in a background thread, and nothing about it is sent anywhere. The one thing kept between visits is your own record book, in this browser's storage and nowhere else. Tree measurements come from the <a href="https://www.data.gv.at/datasets/c91a4635-8b7d-43fe-9b27-d95dec8392a7?locale=en">Vienna Baumkataster</a> (Stadt Wien, CC BY 4.0), trimmed to the eight commonest species and the numeric columns. The network, the training and every plot are written from scratch for this page.</p>
   </footer>
 </div>
 
 <script src="js/mlp.js"></script>
 <script src="js/data.js"></script>
+<script src="js/records.js"></script>
 <script src="js/draw.js"></script>
 <script src="js/app.js"></script>
 <script src="../assets/preprint/js/controls.js"></script>
