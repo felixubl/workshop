@@ -106,8 +106,8 @@ body {
    reaching for it; this is neither. It is the fixture itself — a lamp hung on a
    flex from the ceiling over the bench, throwing its light down the sheet — and
    the reader hits it the way they would hit the switch on a lamp they work
-   under. Light mode is the lamp ON. Dark mode is the lamp OFF and the room with
-   it.
+   under. Dark mode is the lamp ON. Light mode is the lamp OFF, because the
+   room does not need it: daylight is already on the bench.
 
    That is why it replaces the cord here rather than joining it. Two mode
    controls on one page is drift; the cord depicts reaching for a light that is
@@ -283,7 +283,7 @@ body {
    a small stroked grip under it for the flex to come out of. The old fixture had
    nothing at this end — the arm simply left the page — and a line that leaves the
    page is a line that is going somewhere, which is why the lamp read as floating
-   in dark mode where the beam was not there to anchor it. */
+   in whichever mode the beam was not there to anchor it. */
 .lamp__canopy {
   fill: var(--pp-edge);
 }
@@ -302,7 +302,7 @@ body {
 
    The bulb, then, is the one part of the drawing that reports the state, and it
    is hung in the mouth with its top half behind the shade — drawn before the
-   shade in the markup, which is what puts it there. It carries dark mode on its
+   shade in the markup, which is what puts it there. It carries light mode on its
    own: a lamp with no beam is only an absence, and an absence is not a drawing.
    An outlined bulb under an unlit shade says OFF the way missing light cannot.
 
@@ -310,13 +310,13 @@ body {
    is the point: one light, three places. Brighter than the throw below it,
    because a source is always brighter than what it lands on. */
 .lamp__bulb {
-  fill: var(--w-mark-fill);
+  fill: var(--pp-surface);
   stroke: var(--pp-edge);
   stroke-width: 2;
   transition: fill var(--pp-dur-fast) var(--pp-ease-out);
 }
 [data-mode='dark'] .lamp__bulb {
-  fill: var(--pp-surface);
+  fill: var(--w-mark-fill);
 }
 /* The rim: the heaviest line on the fixture, and what stops the shade reading as
    a triangle — a shade is sheet metal rolled to an edge. Stated in drawing units
@@ -353,13 +353,14 @@ body {
     calc(50% + var(--w-lamp-beam-mouth)) 0,
     100% 100%,
     0 100%);
+  opacity: 0;
   transition: opacity var(--pp-dur-fast) var(--pp-ease-out);
 }
-/* Out the moment the switch is hit, while the room takes the system's mode
-   duration to catch up. That order is the point: a bulb stops instantly and the
-   eye is what adjusts slowly. */
+/* On and off the moment the switch is hit, while the room takes the system's
+   mode duration to catch up. That order is the point: a bulb does not fade and
+   the eye is what adjusts slowly. */
 [data-mode='dark'] .lamp__beam {
-  opacity: 0;
+  opacity: 1;
 }
 
 /* The switch: a plain target over the shade, drawing nothing. It is sized to the
