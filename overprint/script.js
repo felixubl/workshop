@@ -22,6 +22,11 @@
  * than both and so lands on top of them.
  */
 const canvas = document.getElementById("canvas");
+const canvasWrap = document.getElementById("canvasWrap");
+const widthInput = document.getElementById("sheetWidth");
+const heightInput = document.getElementById("sheetHeight");
+const setSheetBtn = document.getElementById("setSheet");
+const sheetPresets = Array.from(document.querySelectorAll("#sheetPresets .preset"));
 const shapeGroup = document.getElementById("shapeGroup");
 const colorInput = document.getElementById("shapeColor");
 const sizeInput = document.getElementById("shapeSize");
@@ -36,8 +41,24 @@ const modelButtons = Array.from(document.querySelectorAll("[data-model]"));
 const paletteGroup = document.getElementById("paletteGroup");
 const pigmentButtons = Array.from(document.querySelectorAll("[data-pigment]"));
 
-const VIEW_W = 640;
-const VIEW_H = 480;
+/* ── the sheet's size ───────────────────────────────────────────────────────
+   The sheet is the drawing's own coordinate system and the exported file's
+   width and height, and it is the reader's to set. Everything below that has a
+   length is stated as a FRACTION of the sheet's short side rather than in
+   units, so the same three circles arrive looking like the same three circles
+   on an A4 sheet as on the default one. The fractions are the numbers the tool
+   was built with, over the 480 they were chosen against. */
+const DEFAULT_W = 640;
+const DEFAULT_H = 480;
+const MIN_SHEET = 40;
+const MAX_SHEET = 4000;
+
+let sheetW = DEFAULT_W;
+let sheetH = DEFAULT_H;
+
+const START_SIZE = 0.48;
+const SIZE_FLOOR = 0.08;
+const NUDGE = 1 / 120;
 
 // The ground each model needs, and the reason it can be left out of the
 // arithmetic: white multiplied by anything is that thing, black screened with
@@ -72,19 +93,15 @@ const PIGMENTS = [
   { id: "marker-cyan", name: "electric blue", ink: "#40ccff", light: "#40ccff" },
 ];
 
-const MIN_SIZE = Number(sizeInput.min);
-const MAX_SIZE = Number(sizeInput.max);
-const START_SIZE = 230;
-
 // Where a new shape lands: a third of a turn round from the last one, at a
 // radius that leaves three of them overlapping the way the demonstration in
 // every colour book does. Every third shape comes back to the same bearing and
 // is pushed further out, because a shape dropped exactly on top of an earlier
 // one looks like a press that did nothing. It is a starting position and not a
 // rule — the first thing anyone does with a shape here is drag it elsewhere.
-const SPILL = 74;
+const SPILL = 0.154;
 const SPILL_STEP = 0.5;
-const SPILL_MAX = 160;
+const SPILL_MAX = 0.333;
 
 let shapes = [];
 let model = "ink";
@@ -95,6 +112,20 @@ let drag = null;
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function shortSide() {
+  return Math.min(sheetW, sheetH);
+}
+
+// How big a shape may be set. The ceiling is the sheet's long side, so one shape
+// can span it and no more; the floor is small enough to be a dot and big enough
+// to still be grabbed.
+function sizeRange() {
+  return {
+    min: Math.max(4, Math.round(shortSide() * SIZE_FLOOR)),
+    max: Math.round(Math.max(sheetW, sheetH)),
+  };
 }
 
 // Two decimals is a tenth of a screen pixel at this size, and it keeps the
@@ -212,7 +243,7 @@ function buildSvg(chrome) {
   const clipped = new Set();
   sets.forEach((set) => set.slice(0, -1).forEach((i) => clipped.add(i)));
 
-  const body = [`<rect width="${VIEW_W}" height="${VIEW_H}" fill="${GROUND[model]}"/>`];
+  const body = [`<rect width="${sheetW}" height="${sheetH}" fill="${GROUND[model]}"/>`];
 
   if (clipped.size) {
     const defs = Array.from(clipped)
@@ -241,7 +272,7 @@ function buildSvg(chrome) {
     body.push(`<path class="pick-mat" d="${d}"/><path class="pick" d="${d}"/>`);
   }
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${VIEW_W}" height="${VIEW_H}" viewBox="0 0 ${VIEW_W} ${VIEW_H}">${body.join("")}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${sheetW}" height="${sheetH}" viewBox="0 0 ${sheetW} ${sheetH}">${body.join("")}</svg>`;
 }
 
 // Parsed as XML rather than assigned as innerHTML, so the string that reaches
@@ -269,14 +300,15 @@ function add(kind) {
   const slots = PRIMARIES[model].length;
   const slot = added % slots;
   const a = ((-90 + slot * 120) * Math.PI) / 180;
-  const spill = Math.min(SPILL * (1 + Math.floor(added / slots) * SPILL_STEP), SPILL_MAX);
+  const short = shortSide();
+  const spill = short * Math.min(SPILL * (1 + Math.floor(added / slots) * SPILL_STEP), SPILL_MAX);
   shapes.push({
     id: nextId++,
     kind: kind,
     slot: slot,
-    x: VIEW_W / 2 + spill * Math.cos(a),
-    y: VIEW_H / 2 + spill * Math.sin(a),
-    size: START_SIZE,
+    x: sheetW / 2 + spill * Math.cos(a),
+    y: sheetH / 2 + spill * Math.sin(a),
+    size: Math.round(short * START_SIZE),
     turn: 0,
     color: PRIMARIES[model][slot],
     // Whether the reader chose this colour. Until they do, the shape wears the
@@ -366,8 +398,8 @@ function pick(id) {
 function toUser(evt) {
   const box = canvas.getBoundingClientRect();
   return {
-    x: ((evt.clientX - box.left) / box.width) * VIEW_W,
-    y: ((evt.clientY - box.top) / box.height) * VIEW_H,
+    x: ((evt.clientX - box.left) / box.width) * sheetW,
+    y: ((evt.clientY - box.top) / box.height) * sheetH,
   };
 }
 
@@ -399,8 +431,8 @@ canvas.addEventListener("pointermove", (evt) => {
   const p = toUser(evt);
   // The centre is held on the sheet, so a shape can hang off an edge but can
   // never be pushed out of reach of the hand that put it there.
-  shape.x = clamp(p.x + drag.dx, 0, VIEW_W);
-  shape.y = clamp(p.y + drag.dy, 0, VIEW_H);
+  shape.x = clamp(p.x + drag.dx, 0, sheetW);
+  shape.y = clamp(p.y + drag.dy, 0, sheetH);
   render();
 });
 
@@ -418,6 +450,79 @@ canvas.addEventListener("pointerup", endDrag);
 canvas.addEventListener("pointercancel", endDrag);
 
 /* ── the toolbar ────────────────────────────────────────────────────────── */
+/* Setting the sheet is a crop and not a scale, which is the decision every
+   drawing program makes under the name "canvas size": nothing is resized, the
+   sheet is only how much of the plane the file carries.
+
+   It grows and shrinks about its middle, which is the anchor such a control
+   defaults to and the only one that leaves a composition still looking like the
+   composition — a corner anchor puts the picture in a corner, which is a thing
+   nobody asked for. So every shape moves by half the change and keeps its size,
+   its bearing and its place relative to the middle.
+
+   What a smaller sheet cannot keep is a shape stranded past its own edge, or a
+   shape bigger than the sheet's own range allows, so both are pulled back after
+   the move — the same rule, and the same reason, as the clamp on a drag. */
+function applySheet() {
+  const wasW = sheetW;
+  const wasH = sheetH;
+  sheetW = clamp(parseInt(widthInput.value, 10) || DEFAULT_W, MIN_SHEET, MAX_SHEET);
+  sheetH = clamp(parseInt(heightInput.value, 10) || DEFAULT_H, MIN_SHEET, MAX_SHEET);
+  widthInput.value = String(sheetW);
+  heightInput.value = String(sheetH);
+
+  canvas.setAttribute("width", sheetW);
+  canvas.setAttribute("height", sheetH);
+  canvas.setAttribute("viewBox", `0 0 ${sheetW} ${sheetH}`);
+  // The frame holds the sheet at its own width and no wider; the page holds it
+  // narrower than that whenever the page is narrower, which the flow already
+  // does without being told.
+  canvasWrap.style.setProperty("--sheet-max", `${sheetW}px`);
+
+  const range = sizeRange();
+  const shiftX = (sheetW - wasW) / 2;
+  const shiftY = (sheetH - wasH) / 2;
+  sizeInput.min = String(range.min);
+  sizeInput.max = String(range.max);
+  shapes.forEach((shape) => {
+    shape.x = clamp(shape.x + shiftX, 0, sheetW);
+    shape.y = clamp(shape.y + shiftY, 0, sheetH);
+    shape.size = clamp(shape.size, range.min, range.max);
+  });
+
+  syncPresets();
+  sync();
+  render();
+}
+
+// The highlight tracks the sheet that is actually set rather than what is typed
+// in the fields, so a size of somebody's own simply leaves every preset unlit.
+function syncPresets() {
+  sheetPresets.forEach((btn) => {
+    const on = Number(btn.dataset.w) === sheetW && Number(btn.dataset.h) === sheetH;
+    btn.classList.toggle("is-active", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+}
+
+setSheetBtn.addEventListener("click", applySheet);
+
+sheetPresets.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    widthInput.value = btn.dataset.w;
+    heightInput.value = btn.dataset.h;
+    applySheet();
+  });
+});
+
+// Enter in either field sets the sheet, so a size of somebody's own does not
+// need a trip to the button.
+[widthInput, heightInput].forEach((input) => {
+  input.addEventListener("keydown", (evt) => {
+    if (evt.key === "Enter") applySheet();
+  });
+});
+
 addButtons.forEach((btn) => {
   btn.addEventListener("click", () => add(btn.dataset.add));
 });
@@ -442,7 +547,8 @@ pigmentButtons.forEach((btn) => {
 sizeInput.addEventListener("input", () => {
   const shape = selected();
   if (!shape) return;
-  shape.size = clamp(Number(sizeInput.value), MIN_SIZE, MAX_SIZE);
+  const range = sizeRange();
+  shape.size = clamp(Number(sizeInput.value), range.min, range.max);
   sizeValue.textContent = String(Math.round(shape.size));
   render();
 });
@@ -486,12 +592,12 @@ document.addEventListener("keydown", (evt) => {
     removeBtn.click();
     return;
   }
-  const step = evt.shiftKey ? 20 : 4;
+  const step = Math.max(1, Math.round(shortSide() * NUDGE)) * (evt.shiftKey ? 5 : 1);
   const move = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[evt.key];
   if (!move) return;
   evt.preventDefault();
-  shape.x = clamp(shape.x + move[0], 0, VIEW_W);
-  shape.y = clamp(shape.y + move[1], 0, VIEW_H);
+  shape.x = clamp(shape.x + move[0], 0, sheetW);
+  shape.y = clamp(shape.y + move[1], 0, sheetH);
   render();
 });
 
@@ -515,4 +621,5 @@ exportBtn.addEventListener("click", exportSvg);
 // circles is what the tool is for, and a reader who has seen it once knows what
 // every other control does.
 paintPalette();
+applySheet();
 for (let i = 0; i < 3; i++) add("circle");

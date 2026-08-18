@@ -143,6 +143,17 @@ Raster and vector images, type, colour, audio and video.
   and screen are both commutative, so a patch under cyan and yellow is green
   whichever plate went down first.
 
+  The sheet is the reader's to set: two fields, a "Set sheet" button and five
+  proportions to press — the bench's own 4:3, a square, 16:9, and A4 either way
+  up at 72 to the inch, which is the unit a PDF is laid out in. Setting it crops
+  rather than scales, the way a canvas-size control does everywhere else:
+  nothing is resized, and the sheet grows and shrinks about its middle so a
+  composition stays where it was put. A shape left outside a smaller sheet is
+  pulled back to its edge, which is the same rule as the clamp on a drag. Every
+  length the tool invents — where a new shape lands, how big it starts, how far
+  an arrow key nudges — is a fraction of the sheet's short side rather than a
+  number, so the same three circles arrive looking the same on any of them.
+
   Beside the colour picker is the site's own palette as pigments: the three
   plates and the three markers. A plate carries one value per ground, and the
   ground here is the sheet's rather than the page's — white paper under ink, a

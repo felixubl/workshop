@@ -1,6 +1,17 @@
 /* Tool-specific layout only. Faces, buttons, tags, fields, the title and the
    toolbar come from ../assets/base.css over the vendored system. */
 
+.dim-sep {
+  color: var(--pp-faint);
+  font-family: var(--pp-font-mono);
+  font-size: 0.8rem;
+}
+
+input[type='number'].field {
+  width: 84px;
+  font-family: var(--pp-font-mono);
+}
+
 .readout {
   min-width: 46px;
   justify-content: center;
@@ -54,7 +65,10 @@
 #canvasWrap {
   border: var(--pp-rule-structure) solid var(--pp-edge);
   border-radius: var(--pp-radius-lg);
-  max-width: 640px;
+  /* Written by script.js when the sheet is set. The frame never draws the sheet
+     larger than the sheet is, and the page already holds it smaller whenever
+     the page is narrower. */
+  max-width: var(--sheet-max, 640px);
   overflow: hidden;
   display: flex;
 }

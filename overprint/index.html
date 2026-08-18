@@ -66,6 +66,21 @@
 
   <div class="toolbar">
     <div class="group">
+      <label for="sheetWidth">Sheet</label>
+      <input class="field" type="number" id="sheetWidth" min="40" max="4000" value="640" aria-label="Sheet width">
+      <span class="dim-sep" aria-hidden="true">&times;</span>
+      <input class="field" type="number" id="sheetHeight" min="40" max="4000" value="480" aria-label="Sheet height">
+      <button class="btn-ghost" id="setSheet">Set sheet</button>
+    </div>
+    <div class="group" id="sheetPresets">
+      <label>Sizes</label>
+      <button class="btn-ghost preset" type="button" data-w="640" data-h="480" data-tip="The bench's own sheet, 4:3">640&times;480</button>
+      <button class="btn-ghost preset" type="button" data-w="800" data-h="800" data-tip="Square">800&times;800</button>
+      <button class="btn-ghost preset" type="button" data-w="1200" data-h="675" data-tip="16:9, the shape of a slide">1200&times;675</button>
+      <button class="btn-ghost preset" type="button" data-w="595" data-h="842" data-tip="A4 upright at 72 to the inch, which is the unit a PDF is laid out in">595&times;842</button>
+      <button class="btn-ghost preset" type="button" data-w="842" data-h="595" data-tip="A4 on its side">842&times;595</button>
+    </div>
+    <div class="group">
       <label>Lay down</label>
       <button class="btn-ghost icon-only" type="button" data-add="square" aria-label="Add a square" data-tip="Add a square">
         <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="miter" aria-hidden="true"><path d="M2.8 2.8h10.4v10.4H2.8Z"></path></svg>
@@ -126,7 +141,10 @@
   </div>
 
   <p class="note">Drag a shape to move it, and click the sheet to select nothing.
-    Arrow keys nudge whatever is selected; Delete takes it off.</p>
+    Arrow keys nudge whatever is selected; Delete takes it off. Setting the sheet
+    crops rather than scales: nothing is resized, the sheet grows and shrinks
+    about its middle, and only a shape left outside a smaller one is pulled back
+    to its edge.</p>
 
   <p class="note">
     An overlap here is a region and not a blend mode. The bench works out which
