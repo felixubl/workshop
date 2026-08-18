@@ -1,0 +1,73 @@
+/* Tool-specific layout only. Faces, buttons, tags, fields, the title and the
+   toolbar come from ../assets/base.css over the vendored system. */
+
+.readout {
+  min-width: 46px;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--pp-muted);
+}
+
+/* Compact controls take the small end of the cut scale, so their radius sits
+   below the 44px buttons beside them. */
+.btn-ghost.icon-only {
+  width: var(--pp-target);
+  padding: 0;
+}
+
+.toolbar input[type='range'] {
+  width: 108px;
+}
+
+/* Nothing is selected, so the controls that edit a selection have nothing to
+   edit. Dimmed as one block rather than control by control: the label is as
+   dead as the slider under it, and saying so once is clearer than four
+   greyed-out widgets beside a black word. */
+#shapeGroup.is-idle {
+  opacity: 0.42;
+}
+
+/* The sheet. Its ground is the artwork's rather than the page's and is set by
+   the mixing model — white paper for ink, a dark room for light — so the frame
+   is what holds it to the page in either mode. */
+#canvasWrap {
+  border: var(--pp-rule-structure) solid var(--pp-edge);
+  border-radius: var(--pp-radius-lg);
+  max-width: 640px;
+  overflow: hidden;
+  display: flex;
+}
+
+#canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+  cursor: var(--pp-cursor-grab);
+}
+
+/* The mixed patches are drawn over the shapes that make them, so without this
+   every click in an overlap would land on a region rather than on a shape. The
+   patch is a consequence and not a thing to take hold of; the shapes under it
+   are, and the topmost one at that point is what a click gets. */
+#canvas g,
+#canvas .pick-mat,
+#canvas .pick {
+  pointer-events: none;
+}
+
+/* Which shape the toolbar is editing. Two strokes rather than one, because the
+   sheet under it is white in one model and black in the other and no single ink
+   reads on both: a solid pale stroke laid first, a dashed dark one over it.
+   Chrome, so it is built only for the screen and never reaches the file. */
+#canvas .pick-mat {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 3.5;
+}
+#canvas .pick {
+  fill: none;
+  stroke: #171716;
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}

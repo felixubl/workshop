@@ -317,14 +317,15 @@
   .plate-live:hover {
     box-shadow: 8px 8px 0 var(--w-card-ink);
   }
-  /* Four angles from one token, so the ratio holds if --w-tilt changes. */
+  /* Five angles from one token, so the ratio holds if --w-tilt changes. */
   .plates > :nth-child(1) .plate { transform: rotate(calc(var(--w-tilt-card) * 0.96)); }
   .plates > :nth-child(2) .plate { transform: rotate(calc(var(--w-tilt-card) * -1.1)); }
   .plates > :nth-child(3) .plate { transform: rotate(calc(var(--w-tilt-card) * -0.8)); }
   .plates > :nth-child(4) .plate { transform: rotate(calc(var(--w-tilt-card) * 1.15)); }
-  /* A category holds at most three plates, so only the first two or three
-     angles are used. Alternate categories turn the other way, so no two
-     adjacent ones repeat the same layout. */
+  .plates > :nth-child(5) .plate { transform: rotate(calc(var(--w-tilt-card) * -0.92)); }
+  /* The list runs one angle past the biggest category, so the next tool to be
+     built lands crooked like the rest rather than square. Alternate categories
+     turn the other way, so no two adjacent ones repeat the same layout. */
   .area:nth-of-type(even) .plates > :nth-child(1) .plate { transform: rotate(calc(var(--w-tilt-card) * -0.85)); }
   .area:nth-of-type(even) .plates > :nth-child(2) .plate { transform: rotate(calc(var(--w-tilt-card) * 1.05)); }
 
@@ -631,7 +632,7 @@
     <div class="band band-inventory">
       <p class="section-label">Inventory</p>
       <span class="band-rule" aria-hidden="true"></span>
-      <code><span class="mk mk--citron">13 built</span></code>
+      <code><span class="mk mk--citron">14 built</span></code>
     </div>
 
     <!-- Pinned tools. Empty and hidden until somebody pins one, at which point
@@ -657,7 +658,7 @@
         <span class="band-mark" aria-hidden="true"></span>
         <p class="section-label">Media</p>
         <span class="band-rule" aria-hidden="true"></span>
-        <code>4 built</code>
+        <code>5 built</code>
       </div>
 
       <div class="plates">
@@ -709,6 +710,16 @@
             <button class="pin" type="button" data-pin="fourier-bench" aria-label="Pin Fourier Bench to the top"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">Take a sound apart into the sinusoids it is made of, then put it back together and listen to what is missing. The part that is missing is the honest part.</p>
             <code class="plate-dates">added 2026-08-15</code>
+            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</code>
+          </div>
+        </div>
+
+        <div data-tool="overprint">
+          <div class="plate plate-live">
+            <a class="plate-open" href="overprint/"><h3>Overprint Bench</h3></a>
+            <button class="pin" type="button" data-pin="overprint" aria-label="Pin Overprint Bench to the top"><span class="pin-head" aria-hidden="true"></span></button>
+            <p class="plate-say">Lay coloured squares, circles, triangles and hexagons over one another and watch every overlap take the colour those two make &mdash; as ink on paper, or as light in a dark room. The sheet exports as a real SVG.</p>
+            <code class="plate-dates">added 2026-08-18</code>
             <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</code>
           </div>
         </div>

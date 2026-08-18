@@ -22,7 +22,7 @@ would make both harder to read. It appears as five squares filled from the
 left plus one word. The key at the foot of the index defines all five; a card
 carries the rating and nothing more.
 
-No tool is above `fetch` today: eight never open a socket, four read public
+No tool is above `fetch` today: ten never open a socket, four read public
 data and keep nothing. `store` and `account` are defined ahead of the tools
 that will need them.
 
@@ -120,6 +120,28 @@ Raster and vector images, type, colour, audio and video.
   answer changed; shorten the frame and the onset sharpens while the partials
   blur together. The line under the spectrogram prints that trade as a product
   which does not depend on the frame size at all.
+
+- [Overprint Bench](overprint/) — lay coloured squares, circles, triangles and
+  hexagons over one another and watch every overlap take the colour those two
+  make. Two models: ink, which multiplies plates onto white paper so overlaps
+  darken, and light, which screens beams into a dark room so they brighten.
+  Cyan, magenta and yellow go down to black one way; red, green and blue go up
+  to white the other.
+
+  An overlap here is a region rather than a blend mode. The bench works out
+  which shapes cover a patch, mixes those colours once, and prints the patch as
+  a flat opaque shape clipped to it — nested `clipPath`, which SVG has had since
+  1.1 and every reader supports, so a circle stays a circle rather than becoming
+  a polygon with enough sides to pass. `mix-blend-mode` would be a tenth of the
+  code and a file only a browser can open.
+
+  One function builds the document; the screen gets it with a selection outline
+  and the export gets it without one. There is no second drawing path to keep in
+  step, so the file is the picture, arrived at the same way.
+
+  Nothing on the sheet has a z-order, because ink does not have one: multiply
+  and screen are both commutative, so a patch under cyan and yellow is green
+  whichever plate went down first.
 
 Planned: image, SVG, font, colour, audio and video toolkits.
 
