@@ -22,7 +22,7 @@ would make both harder to read. It appears as five squares filled from the
 left plus one word. The key at the foot of the index defines all five; a card
 carries the rating and nothing more.
 
-No tool is above `fetch` today: ten never open a socket, four read public
+No tool is above `fetch` today: eleven never open a socket, four read public
 data and keep nothing. `store` and `account` are defined ahead of the tools
 that will need them.
 
@@ -522,6 +522,35 @@ figure or another file rather than a rendering.
   gradient is checked against finite differences on every activation and loss
   pairing the interface can produce, in
   [`js/selftest.js`](neuron-bench/js/selftest.js), which also runs under node.
+
+- [Expression Problem Bench](expression-problem/) — how objects and functions
+  relate, which is not that one is better. A program that handles several cases
+  and does several things with each of them is a grid: cases down the side,
+  operations along the top, one expression per cell. A language does not get to
+  decide what goes in the cells, only where the boxes go. Objects box the rows —
+  a class per case, holding every operation on it. Functions box the columns — a
+  function per operation, matching on every case.
+
+  Press the other arrangement and the boxes turn ninety degrees while every cell
+  stays exactly where it was. Then add a case: one new box in the first
+  arrangement, every box opened in the second. Add an operation and it is the
+  mirror image. That is Wadler's expression problem, and it is the whole
+  relationship — two duals across one table, each cheap in the direction the
+  other is dear.
+
+  The cells are the model. The board, both assemblies and the results are all
+  derived from one object of expressions, so "only the boxes moved" is a fact
+  about the code rather than a caption. A cell is an expression over its row's
+  own field names — `Math.PI * r * r`, not `this.r` and not `shape.r` — and each
+  assembly binds those names first, off `this` on one side and off the argument
+  on the other. That single decision is what lets one cell serve both.
+
+  It runs, because a page that says two arrangements agree and does not check is
+  asking to be believed. Both are built with `new Function` on the source
+  printed on the page, the objects are constructed, the functions are called on
+  plain records, and every pair is compared with `Object.is`. The agreement is a
+  measurement. The cells are editable, so it is a measurement of whatever you
+  typed.
 
 Planned: CSV and spreadsheet toolkit, developer tools, archive and file tools,
 calendar and date tools.

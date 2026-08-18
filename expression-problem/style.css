@@ -1,0 +1,186 @@
+/* Tool-specific layout only. Faces, buttons, tags, fields, the title, the
+   toolbar and the sheets come from ../assets/base.css over the vendored
+   system. */
+
+.lede {
+  margin: 0 0 1.75rem;
+}
+
+/* ── the board ──────────────────────────────────────────────────────────────
+   The grid, and the boxes drawn round it. The cells never move: a change of
+   arrangement moves the RINGS, which is the one claim this whole tool makes and
+   so is the one thing that must be visible as a movement rather than as a
+   redraw. That is why the rings are absolutely positioned boxes measured off
+   the cells in script.js and not grid placement — `grid-row` and `grid-column`
+   cannot be transitioned, and a box that teleports from a row to a column says
+   nothing at all. */
+.board-wrap {
+  overflow-x: auto;
+  padding: 0 0 0.5rem;
+  margin-bottom: 1.35rem;
+}
+
+.board {
+  position: relative;
+  display: grid;
+  /* Wide enough that two boxes drawn 6px proud of their cells still have air
+     between them. Under that the rings touch and three boxes read as one box
+     with dividers, which is the opposite of what they are for. */
+  gap: 18px;
+  min-width: 520px;
+  /* The first track holds the row names and the rest share what is left. */
+  grid-template-columns: auto repeat(var(--cols, 3), minmax(120px, 1fr));
+  /* Room round the outside for the rings, which are drawn 6px proud of the
+     cells they hold and would otherwise be clipped by the scroll box. */
+  padding: 8px;
+}
+
+.corner {
+  grid-column: 1;
+}
+
+.colhead,
+.rowhead {
+  display: flex;
+  align-items: center;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-muted);
+  white-space: nowrap;
+}
+.rowhead {
+  padding-right: 0.6rem;
+}
+/* The header says what the box round it IS, and only in the arrangement where
+   there is one: `circle` is a row of cells, `class Circle` is a class. Ink
+   rather than muted, because in that arrangement it is a declaration and not a
+   label. */
+.colhead.is-boxed,
+.rowhead.is-boxed {
+  color: var(--pp-ink);
+}
+
+.cell {
+  position: relative;
+  z-index: 1;
+}
+
+/* One expression, and the reader may type another. A field rather than a face:
+   what is in it is source, so it is set in mono at the size the listing below
+   uses, and it wraps to no more than one line because a cell is one expression
+   and a cell that grew to three would move the rings under the hand. */
+.cell input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.45rem 0.55rem;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-md);
+  background: var(--pp-surface);
+  color: var(--pp-ink);
+  font-family: var(--pp-font-mono);
+  font-size: 0.76rem;
+  letter-spacing: var(--w-track-mono);
+}
+.cell input:hover {
+  border-color: var(--pp-edge);
+}
+.cell input::placeholder {
+  color: var(--pp-faint);
+}
+
+/* Just written, by pressing one of the Add buttons. A marker field behind the
+   cell, which is a marker doing its own job — a translucent wash under
+   something read — and the only thing on the page that says HOW MANY places one
+   change reached. It stays until the next change rather than fading, because
+   the count is the point and a count that disappears cannot be counted. */
+.cell.is-touched input {
+  background: color-mix(in srgb, var(--pp-marker-citron) 70%, var(--pp-surface));
+}
+
+/* Not written yet. A cell that arrived with an addition nobody has filled in is
+   the honest cost of the change, so it is drawn as a hole rather than hidden. */
+.cell.is-empty input {
+  border-style: dashed;
+}
+
+/* The boxes. One per group in the current arrangement, sized and placed in
+   script.js and transitioned between the two — the rest of the page can be
+   redrawn, but these four properties must interpolate. */
+.rings {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.ring {
+  position: absolute;
+  border: var(--pp-rule-structure) solid var(--pp-edge);
+  border-radius: var(--pp-radius-lg);
+  /* The system's longest control duration and its movement easing. This is
+     motion.css's fourth case — a thing restoring its position, where a jump
+     loses the context that makes the move worth watching — and the scale it
+     gives is the scale, so no fifth duration is invented for it. Reduced
+     motion is already handled where the tokens are declared. */
+  transition:
+    top var(--pp-dur-confirm) var(--pp-ease),
+    left var(--pp-dur-confirm) var(--pp-ease),
+    width var(--pp-dur-confirm) var(--pp-ease),
+    height var(--pp-dur-confirm) var(--pp-ease),
+    opacity var(--pp-dur-fast) var(--pp-ease-out);
+}
+
+/* Each result band is its own section of the page rather than another
+   paragraph, so it takes a step of air above it that base.css does not give. */
+.result-bar {
+  margin-top: 2.25rem;
+}
+
+/* ── the assembled source ───────────────────────────────────────────────── */
+.listing {
+  margin: 0 0 0.65rem;
+  padding: 0.9rem 1rem;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  background: var(--pp-surface);
+  /* Tall enough to read a class or two and short enough that the run below it
+     stays on the same screen — the two arrangements are meant to be compared
+     against the same table of answers, and a listing that pushed the answers
+     off the page would break the comparison it exists to support. It also
+     keeps its scroll position across an arrangement change. */
+  max-height: 24rem;
+  overflow: auto;
+  font-family: var(--pp-font-mono);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-ink);
+  tab-size: 2;
+}
+
+/* The cost table is four short phrases, so it does not need the 460px floor the
+   data sheets take to stay readable. */
+.cost-sheet {
+  --w-sheet-min: 380px;
+}
+.cost-sheet td:first-child,
+.cost-sheet th:first-child {
+  width: 34%;
+}
+/* The arrangement that is currently on. Weight rather than colour: the two
+   arrangements are not two categories of thing, they are one thing seen twice,
+   and a plate would say otherwise. */
+.cost-sheet .is-on {
+  color: var(--pp-ink);
+  font-weight: 700;
+}
+
+.sheet-note code,
+.note code {
+  font-family: var(--pp-font-mono);
+  font-size: 0.86em;
+}
+
+/* Something in a cell will not parse. The one red on a tool page, and it always
+   sits beside the words that say what is wrong. */
+.is-broken {
+  color: var(--pp-plate-2-text);
+}

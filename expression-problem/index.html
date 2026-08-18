@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expression Problem Bench — Felix' Workshop</title>
+<meta name="description" content="Objects and functions are two ways of drawing boxes around the same grid of code. Regroup the grid, add a case or an operation, and watch the cost land on opposite sides.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
+<script src="../assets/preprint/js/mode.js"></script>
+<link rel="stylesheet" href="../assets/preprint/styles.css">
+<link rel="stylesheet" href="../assets/preprint/core.css">
+<link rel="stylesheet" href="../assets/preprint/controls.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <!-- The ceiling lamp, drawn in assets/site.css and swung by
+       assets/lamp.js. The span is the fixture and hangs behind the page; the
+       button is the switch and sits over the shade, and swings with it. The
+       rose is the only part fixed to the ceiling: the flex turns under it, and
+       the head — the shade and the light it throws — turns again where the flex
+       ends, because a weight on a cord arrives after the cord does. -->
+    <span class="lamp" aria-hidden="true">
+      <span class="lamp__hang">
+        <span class="lamp__flex"></span>
+        <span class="lamp__head">
+          <span class="lamp__beam"></span>
+          <svg class="lamp__head-art" viewBox="-70 0 140 96" fill="none">
+            <circle class="lamp__bulb" cx="0" cy="70" r="13"></circle>
+            <g class="lamp__rig">
+              <path class="lamp__shade" d="M-16 0H16L62 62H-62Z"></path>
+              <path class="lamp__rim" d="M-64 62H64"></path>
+            </g>
+          </svg>
+        </span>
+      </span>
+      <svg class="lamp__rose" viewBox="-30 0 60 20" fill="none">
+        <path class="lamp__canopy" d="M-28 0H28V9H-28Z"></path>
+        <g class="lamp__rig">
+          <path class="lamp__grip" d="M-8 9H8L5 16H-5Z"></path>
+        </g>
+      </svg>
+    </span>
+    <button class="lamp-switch" type="button" data-mode-toggle aria-label="Switch colour mode"></button>
+
+    <div>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <div class="title-row">
+        <h1 class="tool-title">Expression Problem Bench</h1>
+        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
+          <span data-share-label>copy link</span>
+        </button>
+        <button class="share-btn pin-btn" type="button" data-pin="expression-problem" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="spine"></div>
+
+  <p class="lede">
+    A program is a grid. Down one side are the cases it has to handle; along the
+    other are the things it has to do with them. Every cell is one expression,
+    and a language does not get to decide what goes in them &mdash; only how they
+    are boxed up. Objects draw the boxes across the rows. Functions draw them
+    down the columns. Same grid, same cells, same answers; two arrangements, and
+    each one is easy to extend in exactly the direction the other is hard.
+  </p>
+
+  <div class="toolbar">
+    <div class="group">
+      <label>Boxes drawn</label>
+      <button class="btn-ghost preset is-active" type="button" data-group="type" data-tip="Across the rows: each case gets a class holding every operation on it">By case</button>
+      <button class="btn-ghost preset" type="button" data-group="operation" data-tip="Down the columns: each operation gets a function matching on every case">By operation</button>
+    </div>
+    <div class="group">
+      <label>Add</label>
+      <button class="btn-ghost" type="button" id="addVariant" data-tip="A new row: one more shape the program has to handle">A case</button>
+      <button class="btn-ghost" type="button" id="addOperation" data-tip="A new column: one more thing the program has to do with every shape">An operation</button>
+    </div>
+    <div class="group">
+      <button class="btn-ghost" type="button" id="reset">Reset</button>
+    </div>
+  </div>
+
+  <div class="board-wrap">
+    <div class="board" id="board"></div>
+  </div>
+
+  <p class="note" id="boardNote"></p>
+
+  <div class="result-bar">
+    <p class="section-label">What the next change costs</p>
+    <code id="costMeta"></code>
+  </div>
+  <div class="sheet cost-sheet">
+    <div class="sheet-scroll">
+      <table id="costTable"></table>
+    </div>
+  </div>
+  <p class="sheet-note">
+    That is the expression problem, and the table is the whole of it. Neither
+    arrangement is behind the other: one is cheap in the direction the other is
+    dear, and the numbers cross over as the grid grows.
+  </p>
+
+  <div class="result-bar">
+    <p class="section-label">The assembled source</p>
+    <code id="listingMeta"></code>
+  </div>
+  <pre class="listing" id="listing" tabindex="0"></pre>
+  <p class="sheet-note">
+    Generated from the cells above, not written out twice. Press the other
+    arrangement and every character in the boxes stays the same; only the
+    scaffolding around them moves.
+  </p>
+
+  <div class="result-bar">
+    <p class="section-label">Run</p>
+    <code id="agreement"></code>
+  </div>
+  <div class="sheet">
+    <div class="sheet-scroll">
+      <table id="runTable"></table>
+    </div>
+  </div>
+  <p class="sheet-note" id="runNote"></p>
+
+  <p class="note">
+    Both assemblies are really built and really run, in this tab, with
+    <code>new Function</code> on the source printed above &mdash; the objects are
+    constructed, the functions are called on plain records, and every answer is
+    compared with <code>Object.is</code>. The agreement is measured rather than
+    asserted, which is the only reason it is worth saying.
+  </p>
+
+  <p class="note">
+    The cells are yours to edit. Anything you type is an expression over that
+    row's own field names, which is why one cell can serve both arrangements
+    without being rewritten: the class method destructures it off
+    <code>this</code>, the function destructures it off its argument, and the
+    expression in between never learns which happened.
+  </p>
+</div>
+
+<script src="script.js"></script>
+<script src="../assets/preprint/js/controls.js"></script>
+<script src="../assets/lamp.js"></script>
+<script src="../assets/share.js"></script>
+<script src="../assets/favourites.js"></script>
+</body>
+</html>

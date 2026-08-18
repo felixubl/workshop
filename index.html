@@ -632,7 +632,7 @@
     <div class="band band-inventory">
       <p class="section-label">Inventory</p>
       <span class="band-rule" aria-hidden="true"></span>
-      <code><span class="mk mk--citron">14 built</span></code>
+      <code><span class="mk mk--citron">15 built</span></code>
     </div>
 
     <!-- Pinned tools. Empty and hidden until somebody pins one, at which point
@@ -843,7 +843,7 @@
         <span class="band-mark" aria-hidden="true"></span>
         <p class="section-label">Data &amp; Computation</p>
         <span class="band-rule" aria-hidden="true"></span>
-        <code>3 built</code>
+        <code>4 built</code>
       </div>
 
       <div class="plates">
@@ -878,6 +878,16 @@
           </div>
         </div>
 
+        <div data-tool="expression-problem">
+          <div class="plate plate-live">
+            <a class="plate-open" href="expression-problem/"><h3>Expression Problem Bench</h3></a>
+            <button class="pin" type="button" data-pin="expression-problem" aria-label="Pin Expression Problem Bench to the top"><span class="pin-head" aria-hidden="true"></span></button>
+            <p class="plate-say">A program is a grid: cases down one side, operations along the other, one expression per cell. Objects box the rows and functions box the columns. Regroup it, add a case or an operation, and watch the cost land on opposite sides.</p>
+            <code class="plate-dates">added 2026-08-18</code>
+            <code class="plate-custody" data-custody="local"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>local</code>
+          </div>
+        </div>
+
       </div>
 
       <!-- Planned for this category, kept in the file and out of the view.
@@ -904,6 +914,23 @@
            View and convert ICS files, merge calendars, shift event times, fix
            timezone mistakes, and generate a recurring-event ICS from a
            plain-language rule.
+
+           State Bench
+           The second panel the Expression Problem Bench did not build, and the
+           other half of what objects and functions differ about. A small machine
+           the reader steps: the object side rewrites one box in place, the value
+           side produces a new box each step and leaves the whole chain on
+           screen. Drag the tick backwards and one side simply shows you where it
+           was while the other cannot. Immutability, time travel and "where did
+           the old value go" as a picture rather than a paragraph.
+
+           The Same Box
+           The third panel. Build one counter twice — a class, and a function
+           returning a record of closures — and watch them collapse into the same
+           runtime shape: some captured data, and some functions that can see it.
+           An object is a closure wearing a hat; a closure is an object with one
+           method. Worth doing only if it can be shown rather than asserted, the
+           way the grid is.
       -->
     </section>
 
