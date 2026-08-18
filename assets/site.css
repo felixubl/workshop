@@ -79,6 +79,24 @@
      deviation. */
   --w-artwork-paper: #fbfbf9;
   --w-artwork-rule: rgba(23, 23, 22, .27);
+
+  /* Source, coloured. A syntax highlighter is a semantic colour code spread
+     over many elements, and law 05 licenses one element per flow — so it is not
+     a breach that has to be budgeted, it is the case laws.md names next to it:
+     "a breach used twice is an undeclared token. The second time a violation
+     appears, it stops being one. Name it, give it a token." This is the name.
+
+     Every colour is the plate's -text companion and never the plate, because
+     code is small type — 0.78rem, well under the 18px where a plate hands over —
+     and that rule is the plates' own and holds wherever they land. Five roles
+     and no more: past five an editor's colouring stops sorting and starts
+     decorating, and the sixth thing anyone reaches for is a called name, which
+     is ordinary ink here. */
+  --w-code-keyword: var(--pp-plate-3-text);
+  --w-code-string: var(--pp-plate-1-text);
+  --w-code-number: var(--pp-plate-2-text);
+  --w-code-comment: var(--pp-faint);
+  --w-code-punct: var(--pp-muted);
 }
 
 /* Both concern this page's own devices rather than the palette: the halftone

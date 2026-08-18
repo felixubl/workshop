@@ -122,6 +122,47 @@
   </p>
 
   <div class="result-bar">
+    <p class="section-label">Walk one call down both roads</p>
+    <code id="traceMeta"></code>
+  </div>
+
+  <div class="trace">
+    <div class="trace-bar">
+      <button class="btn-ghost icon-only" type="button" id="traceBack" aria-label="Back a step">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5"></path></svg>
+      </button>
+      <span class="tag readout" id="traceStep"></span>
+      <button class="btn-ghost icon-only" type="button" id="traceNext" aria-label="On a step">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"></path></svg>
+      </button>
+      <button class="btn-ghost" type="button" id="tracePlay">Play</button>
+      <span class="trace-aim">Focus any cell in the grid to walk that one instead.</span>
+    </div>
+
+    <div class="trace-roads">
+      <div class="trace-road">
+        <p class="trace-head">by case <code id="traceTypeCost"></code></p>
+        <pre class="listing trace-src" id="traceTypeSrc"></pre>
+        <p class="trace-say" id="traceTypeSay"></p>
+      </div>
+      <div class="trace-road">
+        <p class="trace-head">by operation <code id="traceOpCost"></code></p>
+        <pre class="listing trace-src" id="traceOpSrc"></pre>
+        <p class="trace-say" id="traceOpSay"></p>
+      </div>
+    </div>
+
+    <p class="trace-join" id="traceJoin" hidden></p>
+  </div>
+
+  <p class="sheet-note">
+    The class knows its own methods, so the lookup is one hop whatever the case
+    is. The match has to ask, and it asks its arms in order, so a case near the
+    bottom of the list costs more questions than one near the top &mdash; walk a
+    triangle and then walk a circle. Both roads end on the same line.
+  </p>
+
+  <div class="result-bar">
     <p class="section-label">Run</p>
     <code id="agreement"></code>
   </div>
@@ -133,22 +174,40 @@
   <p class="sheet-note" id="runNote"></p>
 
   <p class="note">
-    Both assemblies are really built and really run, in this tab, with
-    <code>new Function</code> on the source printed above &mdash; the objects are
-    constructed, the functions are called on plain records, and every answer is
-    compared with <code>Object.is</code>. The agreement is measured rather than
-    asserted, which is the only reason it is worth saying.
+    The Python is read rather than mimed.
+    <a href="https://github.com/felixubl/workshop/blob/main/expression-problem/python.js">python.js</a>
+    is a small one written for this page &mdash; a lexer, a Pratt parser over the
+    expression grammar a cell is allowed, and an evaluator that keeps ints and
+    floats apart the way Python does, so <code>b * h / 2</code> comes back
+    <code>6.0</code> and not <code>6</code>. The same token stream that runs a
+    cell is the one that colours it, so a thing painted as a number is a thing
+    the evaluator read as a number.
+    <a href="https://github.com/felixubl/workshop/blob/main/expression-problem/selftest.js">selftest.js</a>
+    checks it against CPython's own answers, in the browser at
+    <a href="../tools/verify/expression-problem.html">tools/verify</a> and under
+    node with <code>node expression-problem/selftest.js</code>.
+  </p>
+
+  <p class="note">
+    Only expressions, which is all a cell is ever allowed to be: names,
+    attributes, calls, numbers, strings and f-strings, the arithmetic and
+    comparison operators, and <code>not</code>, <code>and</code>,
+    <code>or</code>. No statements, no lambdas, no comprehensions. A cell that
+    reaches past that gets a parse error where its answer would be, which is the
+    honest report. Transcendental functions come from the browser's own library
+    rather than CPython's, and the two are entitled to differ in the last bit.
   </p>
 
   <p class="note">
     The cells are yours to edit. Anything you type is an expression over that
     row's own field names, which is why one cell can serve both arrangements
-    without being rewritten: the class method destructures it off
-    <code>this</code>, the function destructures it off its argument, and the
-    expression in between never learns which happened.
+    without being rewritten: the class binds those names off <code>self</code>,
+    the match binds them in its pattern, and the expression in between never
+    learns which happened.
   </p>
 </div>
 
+<script src="python.js"></script>
 <script src="script.js"></script>
 <script src="../assets/preprint/js/controls.js"></script>
 <script src="../assets/lamp.js"></script>

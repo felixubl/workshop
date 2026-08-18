@@ -538,19 +538,40 @@ figure or another file rather than a rendering.
   relationship — two duals across one table, each cheap in the direction the
   other is dear.
 
-  The cells are the model. The board, both assemblies and the results are all
-  derived from one object of expressions, so "only the boxes moved" is a fact
-  about the code rather than a caption. A cell is an expression over its row's
-  own field names — `Math.PI * r * r`, not `this.r` and not `shape.r` — and each
-  assembly binds those names first, off `this` on one side and off the argument
-  on the other. That single decision is what lets one cell serve both.
+  Then walk one call down both roads at once, a step at a time. The class side
+  looks the method up on the value's own type: one hop, and the same one hop
+  whatever the case is, because a class already holds its own methods. The match
+  side has to ask, and it asks its arms in order, so a case near the bottom of
+  the list costs more questions than one near the top — walk a triangle and then
+  walk a circle. Both roads end on the same line, with the same names bound, and
+  come back with the same value. Different lengths, different work, one
+  destination.
 
-  It runs, because a page that says two arrangements agree and does not check is
-  asking to be believed. Both are built with `new Function` on the source
-  printed on the page, the objects are constructed, the functions are called on
-  plain records, and every pair is compared with `Object.is`. The agreement is a
-  measurement. The cells are editable, so it is a measurement of whatever you
-  typed.
+  The cells are the model. The board, both assemblies, both walks and the
+  results are all derived from one object of expressions, so "only the boxes
+  moved" is a fact about the code rather than a caption. A cell is an expression
+  over its row's own field names — `math.pi * r * r`, not `self.r` and not
+  `shape["r"]` — and the class binds those names off `self` while the match
+  binds them in its pattern. That single decision is what lets one cell serve
+  both.
+
+  The Python is read rather than mimed.
+  [`python.js`](expression-problem/python.js) is a small one written for this
+  page: a lexer, a Pratt parser over the expression grammar a cell is allowed,
+  and an evaluator that keeps ints and floats apart the way Python does, so
+  `b * h / 2` comes back `6.0` and not `6`, and `-7 % 3` comes back `2` and not
+  `-1`. The same token stream that runs a cell is the one that colours it, so a
+  thing painted as a number is a thing the evaluator read as a number.
+
+  Shipping a whole CPython to WebAssembly would have been ten megabytes and a
+  third-party fetch for a page of arithmetic, and showing Python while running
+  JavaScript underneath is the kind of quiet lie this site exists not to tell.
+  What the subset cannot read it says so about, where the answer would be.
+  [`selftest.js`](expression-problem/selftest.js) checks the arithmetic, every
+  cell the bench ships and the colouring itself against CPython's own answers —
+  in the browser at
+  [`tools/verify/expression-problem.html`](tools/verify/expression-problem.html)
+  and under node with `node expression-problem/selftest.js`, off one set.
 
 Planned: CSV and spreadsheet toolkit, developer tools, archive and file tools,
 calendar and date tools.

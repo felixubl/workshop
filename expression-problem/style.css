@@ -156,6 +156,134 @@
   tab-size: 2;
 }
 
+/* ── source, coloured ───────────────────────────────────────────────────────
+   The five roles declared in assets/site.css, applied. Nothing else in a
+   listing takes a colour: a plain name, a call, a bracket that is not an
+   operator are all the page's own ink, which is what keeps the coloured things
+   worth looking at. */
+.tk-keyword,
+.tk-soft { color: var(--w-code-keyword); }
+.tk-string { color: var(--w-code-string); }
+.tk-number { color: var(--w-code-number); }
+.tk-comment { color: var(--w-code-comment); }
+.tk-op,
+.tk-punc { color: var(--w-code-punct); }
+/* The name straight after `def` or `class` is the thing being declared rather
+   than a thing being used, and it is the one place weight says more than a
+   sixth colour would. */
+.tk-declared { font-weight: 700; }
+
+/* ── the walk ───────────────────────────────────────────────────────────────
+   Two roads, side by side, because the whole point is that they are different
+   lengths and end in the same place. They stack on a narrow page, where "side
+   by side" is not available and the order — class first, match second — carries
+   it instead. */
+.trace {
+  margin-bottom: 0.65rem;
+}
+
+.trace-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-bottom: 1rem;
+}
+.trace-aim {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-label);
+  color: var(--pp-faint);
+}
+
+.trace-roads {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 860px) {
+  .trace-roads {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.trace-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 0.5rem;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--pp-track-label);
+  text-transform: uppercase;
+  color: var(--pp-faint);
+}
+.trace-head code {
+  text-transform: none;
+  letter-spacing: var(--w-track-mono);
+}
+
+/* The fragment, not the whole program: one class against one function, which is
+   the only pairing that shows both arrangements at once. Fixed height, so the
+   two roads keep their boxes while the step moves and the page does not jump
+   under the button being pressed. */
+.trace-src {
+  max-height: 15rem;
+  min-height: 15rem;
+  margin: 0;
+}
+.trace-src .ln {
+  display: block;
+  padding: 0 0.35rem;
+  margin: 0 -0.35rem;
+  border-radius: var(--pp-radius-sm);
+}
+/* Where the walk has got to. The marker again, and meaning the same thing it
+   means on the board above: this is the part to look at. */
+.trace-src .ln.is-at {
+  background: color-mix(in srgb, var(--pp-marker-citron) 70%, transparent);
+}
+
+.trace-say {
+  margin: 0.7rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--pp-ink);
+}
+.trace-say code {
+  font-family: var(--pp-font-mono);
+  font-size: 0.86em;
+}
+/* This road has finished and the other has not. Stepped back rather than hidden:
+   a road that vanished when it arrived would take the comparison with it. */
+.trace-say.is-done {
+  color: var(--pp-muted);
+}
+
+/* Where they meet. A rule above it and the two roads above that, so it reads as
+   the place two things join rather than as another paragraph. */
+.trace-join {
+  margin: 1.25rem 0 0;
+  padding-top: 0.85rem;
+  border-top: var(--pp-rule-structure) solid var(--pp-edge);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--pp-ink);
+}
+.trace-join code {
+  font-family: var(--pp-font-mono);
+  font-size: 0.86em;
+}
+
+/* Which cell the walk is aimed at. A dotted edge rather than the marker: the
+   marker is for what just changed, and this has not changed, it is only where
+   you are pointing. */
+.cell.is-walked input {
+  border-color: var(--pp-edge);
+  box-shadow: inset 0 0 0 1px var(--pp-edge);
+}
+
 /* The cost table is four short phrases, so it does not need the 460px floor the
    data sheets take to stay readable. */
 .cost-sheet {

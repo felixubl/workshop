@@ -12,23 +12,27 @@
  * but that they are duals across the same table.
  *
  * WHY THE CELLS ARE THE MODEL. Everything on the page is derived from one
- * object of expressions: the board, both assemblies, and the results. Nothing
- * is written out twice, so "only the boxes moved" is a fact about the code
- * rather than a claim in a caption — press the other arrangement and the same
- * strings come back out in a different scaffold.
- *
- * WHY IT ACTUALLY RUNS. A page that says two arrangements agree and does not
- * check is asking to be believed. Both assemblies are built with `new Function`
- * on the source printed on the page, the objects are constructed, the functions
- * are called on plain records, and every pair is compared with `Object.is`. The
- * agreement is a measurement.
+ * object of expressions: the board, both assemblies, both walks and the
+ * results. Nothing is written out twice, so "only the boxes moved" is a fact
+ * about the code rather than a claim in a caption.
  *
  * WHY ONE CELL SERVES BOTH. A cell is an expression over the row's own field
- * names — `Math.PI * r * r`, not `this.r` and not `shape.r`. Each assembly
- * binds those names first, off `this` on one side and off the argument on the
- * other, so the expression between them never learns which happened. That one
- * decision is what makes the grid a grid rather than two grids that resemble
- * each other.
+ * names — `math.pi * r * r`, not `self.r` and not `shape["r"]`. The class binds
+ * those names off `self` and the match binds them in its pattern, and the
+ * expression between never learns which happened.
+ *
+ * THE WALK IS THE POINT OF THE SECOND HALF. Both arrangements reach the same
+ * answer, and saying so is worth nothing next to showing the two roads. So one
+ * call is stepped through both: the class side looks the method up on the
+ * value's own type in one hop, the function side scans its match arms in order
+ * until one fits. Different lengths, different work, and the last step is
+ * literally the same expression on both sides. That is where they meet.
+ *
+ * PYTHON IS READ, NOT FAKED. `python.js` is a small Python — a lexer, a Pratt
+ * parser over the expression grammar, and an evaluator that keeps ints and
+ * floats apart the way Python does. The same token stream colours the source,
+ * so a thing painted as a number is a thing the evaluator read as a number.
+ * `selftest.js` checks all of it against CPython's own answers.
  */
 const board = document.getElementById("board");
 const boardNote = document.getElementById("boardNote");
@@ -44,9 +48,29 @@ const addVariantBtn = document.getElementById("addVariant");
 const addOperationBtn = document.getElementById("addOperation");
 const resetBtn = document.getElementById("reset");
 
+const traceMeta = document.getElementById("traceMeta");
+const traceStep = document.getElementById("traceStep");
+const traceBack = document.getElementById("traceBack");
+const traceNext = document.getElementById("traceNext");
+const tracePlay = document.getElementById("tracePlay");
+const traceSides = {
+  type: {
+    source: document.getElementById("traceTypeSrc"),
+    say: document.getElementById("traceTypeSay"),
+    cost: document.getElementById("traceTypeCost"),
+  },
+  operation: {
+    source: document.getElementById("traceOpSrc"),
+    say: document.getElementById("traceOpSay"),
+    cost: document.getElementById("traceOpCost"),
+  },
+};
+const traceJoin = document.getElementById("traceJoin");
+
 // Past six of either the grid stops being readable at a glance, and a grid you
 // cannot take in at a glance has stopped making the argument.
 const MAX_SIDE = 6;
+const PLAY_MS = 900;
 
 /* ── the library ────────────────────────────────────────────────────────────
    Cases and operations the bench knows how to fill in, and the cells for every
@@ -54,50 +78,50 @@ const MAX_SIDE = 6;
    is always a working program; past the end they add an empty row or column,
    which is the truer picture of what an addition costs anyway. */
 const VARIANTS = [
-  { id: "circle", fields: [["r", 2]] },
-  { id: "square", fields: [["a", 3]] },
-  { id: "triangle", fields: [["b", 4], ["h", 3]] },
-  { id: "pentagon", fields: [["s", 2]] },
-  { id: "ellipse", fields: [["a", 3], ["b", 2]] },
+  { id: "circle", cls: "Circle", fields: [["r", 2]] },
+  { id: "square", cls: "Square", fields: [["a", 3]] },
+  { id: "triangle", cls: "Triangle", fields: [["b", 4], ["h", 3]] },
+  { id: "pentagon", cls: "Pentagon", fields: [["s", 2]] },
+  { id: "ellipse", cls: "Ellipse", fields: [["a", 3], ["b", 2]] },
 ];
 
-const OPERATIONS = ["area", "perimeter", "describe", "corners", "isRound"];
+const OPERATIONS = ["area", "perimeter", "describe", "corners", "is_round"];
 
 const LIBRARY = {
   circle: {
-    area: "Math.PI * r * r",
-    perimeter: "2 * Math.PI * r",
-    describe: "`circle r=${r}`",
+    area: "math.pi * r * r",
+    perimeter: "2 * math.pi * r",
+    describe: 'f"circle r={r}"',
     corners: "0",
-    isRound: "true",
+    is_round: "True",
   },
   square: {
     area: "a * a",
     perimeter: "4 * a",
-    describe: "`square a=${a}`",
+    describe: 'f"square a={a}"',
     corners: "4",
-    isRound: "false",
+    is_round: "False",
   },
   triangle: {
     area: "b * h / 2",
-    perimeter: "b + h + Math.hypot(b, h)",
-    describe: "`right triangle ${b}×${h}`",
+    perimeter: "b + h + math.hypot(b, h)",
+    describe: 'f"right triangle {b}×{h}"',
     corners: "3",
-    isRound: "false",
+    is_round: "False",
   },
   pentagon: {
-    area: "5 * s * s / (4 * Math.tan(Math.PI / 5))",
+    area: "5 * s * s / (4 * math.tan(math.pi / 5))",
     perimeter: "5 * s",
-    describe: "`pentagon s=${s}`",
+    describe: 'f"pentagon s={s}"',
     corners: "5",
-    isRound: "false",
+    is_round: "False",
   },
   ellipse: {
-    area: "Math.PI * a * b",
-    perimeter: "Math.PI * (3 * (a + b) - Math.sqrt((3 * a + b) * (a + 3 * b)))",
-    describe: "`ellipse ${a}×${b}`",
+    area: "math.pi * a * b",
+    perimeter: "math.pi * (3 * (a + b) - math.sqrt((3 * a + b) * (a + 3 * b)))",
+    describe: 'f"ellipse {a}×{b}"',
     corners: "0",
-    isRound: "true",
+    is_round: "True",
   },
 };
 
@@ -115,37 +139,49 @@ let touched = new Set();
 let lastAction = null;
 let made = 0;
 
+let walk = null;
+let step = 0;
+let playing = null;
+
 const key = (variantId, operationId) => `${variantId}|${operationId}`;
-const cap = (word) => word[0].toUpperCase() + word.slice(1);
 const names = (variant) => variant.fields.map((field) => field[0]);
 
 function reset() {
-  variants = VARIANTS.slice(0, START_VARIANTS).map((v) => ({ id: v.id, fields: v.fields.map((f) => f.slice()) }));
+  variants = VARIANTS.slice(0, START_VARIANTS).map(copyVariant);
   operations = OPERATIONS.slice(0, START_OPERATIONS).map((id) => ({ id: id }));
   cells = {};
-  variants.forEach((v) => {
-    operations.forEach((o) => {
-      cells[key(v.id, o.id)] = (LIBRARY[v.id] || {})[o.id] || "";
+  variants.forEach((variant) => {
+    operations.forEach((operation) => {
+      cells[key(variant.id, operation.id)] = (LIBRARY[variant.id] || {})[operation.id] || "";
     });
   });
   touched = new Set();
   lastAction = null;
   made = 0;
+  walk = { variant: variants[0].id, operation: operations[0].id };
   rebuild();
+}
+
+function copyVariant(source) {
+  return { id: source.id, cls: source.cls, fields: source.fields.map((field) => field.slice()) };
+}
+
+function newVariant(n) {
+  return { id: `shape${n}`, cls: `Shape${n}`, fields: [["x", 1]] };
 }
 
 /* ── growing the grid ───────────────────────────────────────────────────── */
 function addVariant() {
   if (variants.length >= MAX_SIDE) return;
   const known = VARIANTS[variants.length];
-  const variant = known
-    ? { id: known.id, fields: known.fields.map((f) => f.slice()) }
-    : { id: `shape${++made}`, fields: [["x", 1]] };
+  // The counter only moves when a name has to be invented, so the generated
+  // ones run shape1, shape2 rather than skipping past every known case first.
+  const variant = known ? copyVariant(known) : newVariant(++made);
   variants.push(variant);
   touched = new Set();
-  operations.forEach((o) => {
-    cells[key(variant.id, o.id)] = (LIBRARY[variant.id] || {})[o.id] || "";
-    touched.add(key(variant.id, o.id));
+  operations.forEach((operation) => {
+    cells[key(variant.id, operation.id)] = (LIBRARY[variant.id] || {})[operation.id] || "";
+    touched.add(key(variant.id, operation.id));
   });
   lastAction = { what: "case", name: variant.id };
   rebuild();
@@ -157,144 +193,182 @@ function addOperation() {
   const operation = { id: known || `op${++made}` };
   operations.push(operation);
   touched = new Set();
-  variants.forEach((v) => {
-    cells[key(v.id, operation.id)] = (LIBRARY[v.id] || {})[operation.id] || "";
-    touched.add(key(v.id, operation.id));
+  variants.forEach((variant) => {
+    cells[key(variant.id, operation.id)] = (LIBRARY[variant.id] || {})[operation.id] || "";
+    touched.add(key(variant.id, operation.id));
   });
   lastAction = { what: "operation", name: operation.id };
   rebuild();
 }
 
 /* ── the two assemblies ─────────────────────────────────────────────────────
-   The only two functions in this file that know anything about JavaScript's
-   syntax, and they are deliberately the same length and the same shape: bind
-   the row's fields, then return the cell. Everything that differs between them
-   is the scaffolding, which is the argument. */
-function returnLine(variant, operation, indent) {
-  const cell = cells[key(variant.id, operation.id)];
-  const pad = " ".repeat(indent);
-  if (!cell) return `${pad}return undefined; // not written yet`;
-  return `${pad}return ${cell};`;
+   The only place in this file that knows Python's syntax. Both are built out of
+   the same three moves — name the box, bind the row's fields, return the cell —
+   and everything that differs between them is the scaffolding, which is the
+   argument. */
+const IMPORT = ["import math", ""];
+
+function cellOf(variant, operation) {
+  return cells[key(variant.id, operation.id)] || "";
 }
 
-function bindLine(variant, source, indent) {
+function returnLine(variant, operation, indent) {
+  const cell = cellOf(variant, operation);
+  const pad = " ".repeat(indent);
+  return cell ? `${pad}return ${cell}` : `${pad}return None  # not written yet`;
+}
+
+// `r = self.r` for one field, `b, h = self.b, self.h` for several. Python's own
+// way of taking a handful of attributes into locals, and the line the cell
+// underneath depends on without knowing it is there.
+function bindFromSelf(variant, indent) {
   const list = names(variant);
   if (!list.length) return null;
-  return `${" ".repeat(indent)}const { ${list.join(", ")} } = ${source};`;
+  return `${" ".repeat(indent)}${list.join(", ")} = ${list.map((name) => `self.${name}`).join(", ")}`;
+}
+
+// The mapping pattern binds the same names, in the pattern itself rather than
+// in a line of its own. That difference is the whole of what `match` buys.
+function casePattern(variant, indent) {
+  const parts = [`"kind": "${variant.id}"`].concat(
+    names(variant).map((name) => `"${name}": ${name}`));
+  return `${" ".repeat(indent)}case {${parts.join(", ")}}:`;
+}
+
+function classBlock(variant) {
+  const list = names(variant);
+  const out = [`class ${variant.cls}:`];
+  out.push(`    def __init__(self${list.length ? ", " + list.join(", ") : ""}):`);
+  if (list.length) list.forEach((name) => out.push(`        self.${name} = ${name}`));
+  else out.push("        pass");
+  operations.forEach((operation) => {
+    out.push("");
+    out.push(`    def ${operation.id}(self):`);
+    const bind = bindFromSelf(variant, 8);
+    if (bind) out.push(bind);
+    out.push(returnLine(variant, operation, 8));
+  });
+  return out;
+}
+
+function functionBlock(operation) {
+  const out = [`def ${operation.id}(shape):`];
+  out.push("    match shape:");
+  variants.forEach((variant) => {
+    out.push(casePattern(variant, 8));
+    out.push(returnLine(variant, operation, 12));
+  });
+  return out;
 }
 
 function assembleClasses() {
-  const out = [];
+  const out = IMPORT.slice();
   variants.forEach((variant) => {
-    const list = names(variant);
-    out.push(`class ${cap(variant.id)} {`);
-    out.push(`  constructor(${list.join(", ")}) {`);
-    list.forEach((name) => out.push(`    this.${name} = ${name};`));
-    out.push("  }");
-    operations.forEach((operation) => {
-      out.push(`  ${operation.id}() {`);
-      const bind = bindLine(variant, "this", 4);
-      if (bind) out.push(bind);
-      out.push(returnLine(variant, operation, 4));
-      out.push("  }");
-    });
-    out.push("}");
-    out.push("");
+    out.push(...classBlock(variant), "");
   });
-  return out.join("\n").trimEnd();
+  return out.join("\n").replace(/\n+$/, "");
 }
 
 function assembleFunctions() {
-  const out = [];
+  const out = IMPORT.slice();
   operations.forEach((operation) => {
-    out.push(`function ${operation.id}(shape) {`);
-    out.push("  switch (shape.kind) {");
-    variants.forEach((variant) => {
-      out.push(`    case "${variant.id}": {`);
-      const bind = bindLine(variant, "shape", 6);
-      if (bind) out.push(bind);
-      out.push(returnLine(variant, operation, 6));
-      out.push("    }");
-    });
-    out.push("  }");
-    out.push("}");
-    out.push("");
+    out.push(...functionBlock(operation), "");
   });
-  return out.join("\n").trimEnd();
+  return out.join("\n").replace(/\n+$/, "");
 }
 
-/* ── running both ───────────────────────────────────────────────────────────
-   Built and called for real. A cell the reader is halfway through typing will
-   not parse, and that is reported where the agreement is reported rather than
-   swallowed: a bench that hides a syntax error is a bench that lies about what
-   it just ran. */
-function runBoth() {
-  const classNames = variants.map((v) => cap(v.id));
-  const functionNames = operations.map((o) => o.id);
-  let built;
+/* ── walking a call ─────────────────────────────────────────────────────────
+   Each side returns its own small program and a list of steps over it. A step
+   is a line to point at and a sentence about what just happened, and the last
+   step of each is the same expression with the same names bound — which is the
+   thing worth showing, and the reason the two lists are built separately rather
+   than one being derived from the other. */
+function bindings(variant) {
+  const env = {};
+  variant.fields.forEach((field) => { env[field[0]] = Py.int(field[1]); });
+  return env;
+}
+
+function fieldList(variant) {
+  return variant.fields.map((field) => `${field[0]} = ${field[1]}`).join(", ");
+}
+
+function evaluateCell(variant, operation) {
+  const cell = cellOf(variant, operation);
+  if (!cell) return { value: Py.none, error: null };
   try {
-    built = {
-      classes: new Function(`${assembleClasses()}\nreturn { ${classNames.join(", ")} };`)(),
-      functions: new Function(`${assembleFunctions()}\nreturn { ${functionNames.join(", ")} };`)(),
-    };
+    return { value: Py.evaluate(cell, bindings(variant)), error: null };
   } catch (error) {
-    return { error: error.message, rows: [], agreed: 0, checked: 0 };
+    return { value: null, error: error.message };
   }
+}
 
-  const rows = [];
-  let agreed = 0;
-  let checked = 0;
+function walkByType(variant, operation) {
+  const lines = classBlock(variant);
+  const list = names(variant);
+  const args = variant.fields.map((field) => field[1]).join(", ");
+  const methodAt = lines.indexOf(`    def ${operation.id}(self):`);
+  const bindAt = list.length ? methodAt + 1 : -1;
+  const returnAt = methodAt + (list.length ? 2 : 1);
+  const outcome = evaluateCell(variant, operation);
 
-  variants.forEach((variant) => {
-    const values = variant.fields.map((field) => field[1]);
-    const record = { kind: variant.id };
-    variant.fields.forEach((field) => { record[field[0]] = field[1]; });
-
-    let instance;
-    try {
-      instance = new built.classes[cap(variant.id)](...values);
-    } catch (error) {
-      rows.push({ variant: variant, failed: error.message, results: [] });
-      return;
-    }
-
-    const results = operations.map((operation) => {
-      const written = Boolean(cells[key(variant.id, operation.id)]);
-      const fromObject = call(() => instance[operation.id]());
-      const fromFunction = call(() => built.functions[operation.id](record));
-      const same = fromObject.threw || fromFunction.threw
-        ? fromObject.value === fromFunction.value
-        : Object.is(fromObject.value, fromFunction.value);
-      if (written) {
-        checked += 1;
-        if (same) agreed += 1;
-      }
-      return { written: written, same: same, shown: show(fromObject), threw: fromObject.threw };
+  const steps = [
+    {
+      line: 0,
+      say: `\`shape = ${variant.cls}(${args})\` — the value is built from a class, so it carries its type with it wherever it goes.`,
+    },
+    {
+      line: methodAt,
+      say: `\`shape.${operation.id}()\` — Python looks \`${operation.id}\` up on \`type(shape)\`, which is \`${variant.cls}\`. One hop, and no search: a class already holds its own methods.`,
+    },
+  ];
+  if (bindAt >= 0) {
+    steps.push({
+      line: bindAt,
+      say: `The method takes the fields off \`self\`: ${fieldList(variant)}.`,
     });
-
-    rows.push({ variant: variant, results: results });
+  }
+  steps.push({
+    line: returnAt,
+    say: "And evaluates the cell.",
+    final: true,
   });
-
-  return { error: null, rows: rows, agreed: agreed, checked: checked };
+  return { lines: lines, steps: steps, outcome: outcome };
 }
 
-function call(thunk) {
-  try {
-    return { value: thunk(), threw: false };
-  } catch (error) {
-    return { value: error.message, threw: true };
-  }
-}
+function walkByOperation(variant, operation) {
+  const lines = functionBlock(operation);
+  const index = variants.indexOf(variant);
+  const record = variants.length
+    ? `{"kind": "${variant.id}"${variant.fields.map((f) => `, "${f[0]}": ${f[1]}`).join("")}}`
+    : "{}";
+  const outcome = evaluateCell(variant, operation);
 
-function show(result) {
-  if (result.threw) return `threw: ${result.value}`;
-  const value = result.value;
-  if (value === undefined) return "—";
-  if (typeof value === "number") {
-    if (Number.isInteger(value)) return String(value);
-    return String(Math.round(value * 1000) / 1000);
-  }
-  return String(value);
+  const steps = [
+    {
+      line: 0,
+      say: `\`shape = ${record}\` — a plain record. It carries a tag, not a type, and knows nothing about \`${operation.id}\`.`,
+    },
+    {
+      line: 1,
+      say: `\`match shape:\` — the function was handed something and has to find out what.`,
+    },
+  ];
+  variants.slice(0, index + 1).forEach((candidate, i) => {
+    const at = 2 + i * 2;
+    steps.push({
+      line: at,
+      say: i === index
+        ? `\`case {"kind": "${candidate.id}", …}\` — this one fits, and the pattern binds the names as it matches: ${fieldList(variant)}.`
+        : `\`case {"kind": "${candidate.id}", …}\` — the tag does not match. On to the next arm.`,
+    });
+  });
+  steps.push({
+    line: 3 + index * 2,
+    say: "And evaluates the cell.",
+    final: true,
+  });
+  return { lines: lines, steps: steps, outcome: outcome };
 }
 
 /* ── the board ──────────────────────────────────────────────────────────────
@@ -340,6 +414,14 @@ function rebuild() {
         refresh();
         paintCells();
       });
+      // Focusing a cell is how the walk below is aimed. No extra control for
+      // it: the thing you are looking at is the thing it walks.
+      input.addEventListener("focus", () => {
+        walk = { variant: variant.id, operation: operation.id };
+        step = 0;
+        stopPlaying();
+        drawWalk();
+      });
       cell.appendChild(input);
       parts.push(cell);
     });
@@ -347,7 +429,6 @@ function rebuild() {
 
   const rings = document.createElement("div");
   rings.className = "rings";
-  rings.id = "rings";
   const ringCount = Math.max(variants.length, operations.length);
   for (let i = 0; i < ringCount; i++) {
     const ring = document.createElement("div");
@@ -374,6 +455,7 @@ function paintCells() {
       if (!cell) return;
       cell.classList.toggle("is-touched", touched.has(id));
       cell.classList.toggle("is-empty", !cells[id]);
+      cell.classList.toggle("is-walked", Boolean(walk) && walk.variant === variant.id && walk.operation === operation.id);
     });
   });
 }
@@ -430,8 +512,8 @@ function refresh() {
   const byType = grouping === "type";
 
   board.querySelectorAll(".rowhead").forEach((head) => {
-    const id = head.dataset.variant;
-    head.textContent = byType ? `class ${cap(id)}` : id;
+    const variant = variants.find((v) => v.id === head.dataset.variant);
+    head.textContent = byType ? `class ${variant.cls}` : variant.id;
     head.classList.toggle("is-boxed", byType);
   });
   board.querySelectorAll(".colhead").forEach((head) => {
@@ -446,9 +528,15 @@ function refresh() {
   addVariantBtn.disabled = variants.length >= MAX_SIDE;
   addOperationBtn.disabled = operations.length >= MAX_SIDE;
 
+  if (walk && (!variants.some((v) => v.id === walk.variant) || !operations.some((o) => o.id === walk.operation))) {
+    walk = { variant: variants[0].id, operation: operations[0].id };
+    step = 0;
+  }
+
   drawNote();
   drawCost();
   drawListing();
+  drawWalk();
   drawRun();
 }
 
@@ -499,53 +587,179 @@ function drawCost() {
   costMeta.textContent = `${variants.length} × ${operations.length}`;
 }
 
+// One span per line, so a walk can point at one of them. Painted line by line
+// rather than in one pass, which is safe because nothing here spans a line.
+// Joined with nothing: each span is already a block, and a newline between two
+// blocks inside a <pre> is a second line break nobody asked for.
+function paintLines(lines, current) {
+  return lines.map((line, index) =>
+    `<span class="ln${index === current ? " is-at" : ""}">${Py.paint(line) || "&nbsp;"}</span>`).join("");
+}
+
 function drawListing() {
-  listing.textContent = grouping === "type" ? assembleClasses() : assembleFunctions();
+  const source = grouping === "type" ? assembleClasses() : assembleFunctions();
+  listing.innerHTML = Py.paint(source);
   listingMeta.textContent = grouping === "type"
     ? `${variants.length} classes`
     : `${operations.length} functions`;
 }
 
-function drawRun() {
-  const result = runBoth();
+/* ── the walk ───────────────────────────────────────────────────────────── */
+function drawWalk() {
+  if (!walk) return;
+  const variant = variants.find((v) => v.id === walk.variant);
+  const operation = operations.find((o) => o.id === walk.operation);
+  if (!variant || !operation) return;
 
-  if (result.error) {
-    agreement.textContent = "will not parse";
-    agreement.className = "is-broken";
-    runTable.innerHTML = "";
-    runNote.textContent = result.error;
-    runNote.className = "sheet-note is-broken";
+  const sides = {
+    type: walkByType(variant, operation),
+    operation: walkByOperation(variant, operation),
+  };
+  const total = Math.max(sides.type.steps.length, sides.operation.steps.length);
+  step = Math.max(0, Math.min(step, total - 1));
+
+  traceMeta.textContent = `${variant.id} · ${operation.id}`;
+  traceStep.textContent = `${step + 1} / ${total}`;
+  traceBack.disabled = step === 0;
+  traceNext.disabled = step >= total - 1;
+
+  Object.keys(sides).forEach((which) => {
+    const side = sides[which];
+    const at = Math.min(step, side.steps.length - 1);
+    const done = step >= side.steps.length - 1;
+    const target = traceSides[which];
+    target.source.innerHTML = paintLines(side.lines, side.steps[at].line);
+    target.say.innerHTML = mono(side.steps[at].say);
+    target.say.classList.toggle("is-done", done);
+    target.cost.textContent = `${side.steps.length} steps`;
+  });
+
+  // The two sides finish at the same expression with the same names bound, and
+  // that is the only sentence on this page that had to be earned rather than
+  // written: it is printed from the value both walks actually came back with.
+  const bothDone = step >= total - 1;
+  const outcome = sides.type.outcome;
+  const cell = cellOf(variant, operation);
+  if (!bothDone) {
+    traceJoin.hidden = true;
     return;
   }
+  traceJoin.hidden = false;
+  if (outcome.error) {
+    traceJoin.className = "trace-join is-broken";
+    traceJoin.innerHTML = mono(`Both roads arrive at \`${cell}\` — and it will not read: ${outcome.error}`);
+    return;
+  }
+  traceJoin.className = "trace-join";
+  const bound = fieldList(variant);
+  const tried = variants.indexOf(variant) + 1;
+  const byType = sides.type.steps.length;
+  const byOperation = sides.operation.steps.length;
+  traceJoin.innerHTML = cell
+    ? mono(
+        `Both roads arrive at the same expression — \`${cell}\`${bound ? ` with ${bound}` : ""} — ` +
+        `and both come back with \`${Py.show(outcome.value)}\`. ` +
+        `By case: ${byType} steps, and it would be ${byType} for any case in the grid, because a class ` +
+        `already holds its own methods. By operation: ${byOperation} steps, ` +
+        (tried === 1
+          ? "because this case is the first arm the match tries."
+          : `because the match tried ${tried} arms before this one fitted.`))
+    : mono("Both roads arrive at a cell nobody has written, and both come back with `None`.");
+}
 
-  agreement.className = "";
-  runNote.className = "sheet-note";
+// Backticks in a step's sentence become code, which is the one bit of markup
+// these strings are allowed. Everything else is escaped first.
+function mono(text) {
+  return escapeHtml(text).replace(/`([^`]+)`/g, (_, code) => `<code>${code}</code>`);
+}
+
+function stopPlaying() {
+  if (!playing) return;
+  clearInterval(playing);
+  playing = null;
+  tracePlay.textContent = "Play";
+}
+
+function play() {
+  if (playing) return stopPlaying();
+  step = 0;
+  drawWalk();
+  tracePlay.textContent = "Stop";
+  playing = setInterval(() => {
+    const before = traceStep.textContent;
+    step += 1;
+    drawWalk();
+    if (traceStep.textContent === before) stopPlaying();
+  }, PLAY_MS);
+}
+
+/* ── running every cell ─────────────────────────────────────────────────────
+   Both roads walked for every pair, and the answers compared. What that catches
+   is not that two identical expressions are equal — they are — but that both
+   dispatches landed on the SAME cell with the SAME names bound, which is the
+   part a hand-written lookup gets wrong. */
+function runAll() {
+  const rows = [];
+  let agreed = 0;
+  let checked = 0;
+  let broken = null;
+
+  variants.forEach((variant) => {
+    const results = operations.map((operation) => {
+      const written = Boolean(cellOf(variant, operation));
+      const byType = walkByType(variant, operation).outcome;
+      const byOperation = walkByOperation(variant, operation).outcome;
+      const same = byType.error || byOperation.error
+        ? byType.error === byOperation.error
+        : Py.same(byType.value, byOperation.value);
+      if (written) {
+        checked += 1;
+        if (same) agreed += 1;
+        if (byType.error && !broken) broken = `${variant.id} · ${operation.id}: ${byType.error}`;
+      }
+      return {
+        same: same,
+        shown: byType.error ? `!${byType.error}` : Py.show(byType.value),
+        failed: Boolean(byType.error),
+      };
+    });
+    rows.push({ variant: variant, results: results });
+  });
+
+  return { rows: rows, agreed: agreed, checked: checked, broken: broken };
+}
+
+function drawRun() {
+  const result = runAll();
+
+  agreement.className = result.broken ? "is-broken" : "";
   agreement.textContent = result.checked === 0
     ? "nothing written"
     : `${result.agreed} of ${result.checked} agree`;
 
   runTable.innerHTML =
     "<thead><tr><th>value</th>" +
-    operations.map((operation) => `<th>${operation.id}</th>`).join("") +
+    operations.map((operation) => `<th>${escapeHtml(operation.id)}</th>`).join("") +
     "</tr></thead><tbody>" +
     result.rows.map((row) => {
-      const label = `${row.variant.id}(${row.variant.fields.map((f) => f[1]).join(", ")})`;
-      if (row.failed) {
-        return `<tr><td>${label}</td><td colspan="${operations.length}" class="is-broken">${row.failed}</td></tr>`;
-      }
-      return `<tr><td>${label}</td>` +
+      const label = `${row.variant.cls}(${row.variant.fields.map((f) => f[1]).join(", ")})`;
+      return `<tr><td>${escapeHtml(label)}</td>` +
         row.results.map((cell) =>
-          `<td${cell.same ? "" : " class=\"is-broken\""}>${escapeHtml(cell.shown)}</td>`
+          `<td${cell.failed || !cell.same ? " class=\"is-broken\"" : ""}>${escapeHtml(cell.shown)}</td>`
         ).join("") +
         "</tr>";
     }).join("") +
     "</tbody>";
 
-  runNote.textContent = result.checked === 0
-    ? "Every cell is empty, so there is nothing to compare."
-    : "One table, from two programs. Each number was produced twice — once by " +
-      "calling a method on an object, once by calling a function on a plain " +
-      "record — and the two were compared before it was printed.";
+  runNote.className = result.broken ? "sheet-note is-broken" : "sheet-note";
+  runNote.textContent = result.broken
+    ? result.broken
+    : result.checked === 0
+      ? "Every cell is empty, so there is nothing to compare."
+      : "One table, walked twice. Every value here was reached once through a " +
+        "class and once through a match, and the two were compared before it " +
+        "was printed. Python's own int and float rules are kept, which is why " +
+        "an area can come back 6.0 where a corner count comes back 4.";
 }
 
 // `escape` is a global of its own, and shadowing a built-in in a file this
@@ -568,6 +782,10 @@ groupButtons.forEach((button) => {
 addVariantBtn.addEventListener("click", addVariant);
 addOperationBtn.addEventListener("click", addOperation);
 resetBtn.addEventListener("click", reset);
+
+traceBack.addEventListener("click", () => { stopPlaying(); step -= 1; drawWalk(); });
+traceNext.addEventListener("click", () => { stopPlaying(); step += 1; drawWalk(); });
+tracePlay.addEventListener("click", play);
 
 // The rings are pixel measurements, so anything that reflows the board makes
 // them wrong. A resize is the only such thing the page does not already know

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>verify — expression problem bench</title>
+<!-- The bench's Python and the assertions that hold it to its claims. Both are
+     the tool's own files rather than copies: a check that has drifted from the
+     thing it checks is worse than no check, and loading the same bytes the page
+     loads is the only way to guarantee it cannot drift.
+
+     The same file runs under node — `node expression-problem/selftest.js` — off
+     one set of assertions. This page exists because the bench prints Python and
+     says it read it, and nothing on it shows whether that is true: a wrong
+     answer in the run table looks exactly as convincing as a right one. So the
+     answers are checked against CPython's, and the colouring is checked against
+     the source it was handed. -->
+<script src="/expression-problem/python.js"></script>
+<script src="/expression-problem/selftest.js"></script>
+</head>
+<body style="margin:0;font:13px ui-monospace,monospace">
+<pre id="out">running…</pre>
+
+<script>
+var out = document.getElementById('out');
+setTimeout(function () {
+  var t0 = Date.now();
+  var lines = [];
+  ExpressionProblemSelftest.run(function (results, passed, total) {
+    results.forEach(function (r) {
+      lines.push((r.pass ? 'PASS  ' : 'FAIL  ') + r.name + (r.detail ? '  ::  ' + r.detail : ''));
+    });
+    lines.push('');
+    lines.push(passed + ' pass, ' + (total - passed) + ' fail, ' +
+               ((Date.now() - t0) / 1000).toFixed(1) + 's');
+  });
+  out.textContent = lines.join('\n');
+}, 0);
+</script>
+</body>
+</html>
