@@ -143,6 +143,14 @@ Raster and vector images, type, colour, audio and video.
   and screen are both commutative, so a patch under cyan and yellow is green
   whichever plate went down first.
 
+  Beside the colour picker is the site's own palette as pigments: the three
+  plates and the three markers. A plate carries one value per ground, and the
+  ground here is the sheet's rather than the page's — white paper under ink, a
+  dark room under light — so the row follows the mixing model and not the page's
+  colour mode. Each swatch names its hex, so it never changes under you without
+  saying what to. The `-text` companions are not offered: their whole job is to
+  stand in for a plate below 18px, and there is no type on the sheet.
+
 Planned: image, SVG, font, colour, audio and video toolkits.
 
 ### Documents

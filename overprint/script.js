@@ -33,6 +33,8 @@ const clearBtn = document.getElementById("clear");
 const exportBtn = document.getElementById("export");
 const addButtons = Array.from(document.querySelectorAll("[data-add]"));
 const modelButtons = Array.from(document.querySelectorAll("[data-model]"));
+const paletteGroup = document.getElementById("paletteGroup");
+const pigmentButtons = Array.from(document.querySelectorAll("[data-pigment]"));
 
 const VIEW_W = 640;
 const VIEW_H = 480;
@@ -51,6 +53,24 @@ const PRIMARIES = {
   ink: ["#00ffff", "#ff00ff", "#ffff00"],
   light: ["#ff0000", "#00ff00", "#0000ff"],
 };
+
+// The workshop's own colours, offered as pigments rather than typed in. A plate
+// carries one value per ground and the marker's two differ only in opacity, so
+// what the row shows follows the SHEET's ground — white paper under ink, a dark
+// room under light — and not the page's [data-mode]. The two are independent
+// here: the sheet is the artwork's surface, the way draw-svg's canvas is, and
+// keeps its own ground in either mode.
+//
+// The -text companions are deliberately not here. Their whole job is to stand in
+// for a plate below 18px, and there is no type on the sheet to stand in for.
+const PIGMENTS = [
+  { id: "plate-1", name: "green plate", ink: "#01a368", light: "#26d494" },
+  { id: "plate-2", name: "red plate", ink: "#ed0a3f", light: "#ff4d68" },
+  { id: "plate-3", name: "blue plate", ink: "#0066ff", light: "#6a9dff" },
+  { id: "marker-citron", name: "acid green", ink: "#deee2e", light: "#deee2e" },
+  { id: "marker-pink", name: "hot pink", ink: "#ff4fa3", light: "#ff4fa3" },
+  { id: "marker-cyan", name: "electric blue", ink: "#40ccff", light: "#40ccff" },
+];
 
 const MIN_SIZE = Number(sizeInput.min);
 const MAX_SIZE = Number(sizeInput.max);
@@ -277,7 +297,38 @@ function setModel(next) {
     if (!s.inked) s.color = PRIMARIES[model][s.slot];
   });
   modelButtons.forEach((b) => b.classList.toggle("is-active", b.dataset.model === model));
+  paintPalette();
   sync();
+  render();
+}
+
+// A pigment's face, name and hex all move with the model, and the tip carries
+// the hex so the row never changes under the reader without saying what to.
+function paintPalette() {
+  pigmentButtons.forEach((btn) => {
+    const pigment = PIGMENTS.find((p) => p.id === btn.dataset.pigment);
+    if (!pigment) return;
+    const hex = pigment[model];
+    btn.style.background = hex;
+    btn.setAttribute("data-tip", `${pigment.name} ${hex}`);
+    btn.setAttribute("aria-label", `Ink the selected shape ${pigment.name}, ${hex}`);
+  });
+}
+
+// The drawn picker in the vendored controls.js keeps its own state and follows
+// the input on `change` only, which it says so in as many words. A bare
+// assignment leaves its chip showing the last colour it painted itself.
+function showColour(hex) {
+  colorInput.value = hex;
+  colorInput.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function ink(hex) {
+  const shape = selected();
+  if (!shape) return;
+  shape.color = hex;
+  shape.inked = true;
+  showColour(hex);
   render();
 }
 
@@ -287,11 +338,12 @@ function setModel(next) {
 function sync() {
   const shape = selected();
   shapeGroup.classList.toggle("is-idle", !shape);
-  [colorInput, sizeInput, turnInput, removeBtn].forEach((el) => {
+  paletteGroup.classList.toggle("is-idle", !shape);
+  [colorInput, sizeInput, turnInput, removeBtn].concat(pigmentButtons).forEach((el) => {
     el.disabled = !shape;
   });
   if (!shape) return;
-  colorInput.value = shape.color;
+  showColour(shape.color);
   sizeInput.value = String(Math.round(shape.size));
   sizeValue.textContent = String(Math.round(shape.size));
   turnInput.value = String(Math.round(shape.turn));
@@ -382,6 +434,11 @@ colorInput.addEventListener("input", () => {
   render();
 });
 
+pigmentButtons.forEach((btn) => {
+  const pigment = PIGMENTS.find((p) => p.id === btn.dataset.pigment);
+  if (pigment) btn.addEventListener("click", () => ink(pigment[model]));
+});
+
 sizeInput.addEventListener("input", () => {
   const shape = selected();
   if (!shape) return;
@@ -457,4 +514,5 @@ exportBtn.addEventListener("click", exportSvg);
 // The sheet starts with the demonstration on it rather than empty: three
 // circles is what the tool is for, and a reader who has seen it once knows what
 // every other control does.
+paintPalette();
 for (let i = 0; i < 3; i++) add("circle");

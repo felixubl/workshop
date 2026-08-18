@@ -19,11 +19,32 @@
   width: 108px;
 }
 
+/* The workshop's colours as pigments, drawn like the system's own swatch dots —
+   a line border, the small cut and the site's one-pixel press — at the compact
+   target, which is the rung a dense row of controls takes and which meets the
+   44px floor on a finger anyway. The face is written by script.js: a plate has
+   one value per ground, and which ground the sheet is showing is the mixing
+   model's answer rather than the page's. */
+.pigment {
+  width: var(--pp-target-compact);
+  height: var(--pp-target-compact);
+  padding: 0;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-sm);
+}
+.pigment:hover {
+  border-color: var(--pp-edge);
+}
+.pigment:active {
+  transform: var(--w-press);
+}
+
 /* Nothing is selected, so the controls that edit a selection have nothing to
    edit. Dimmed as one block rather than control by control: the label is as
    dead as the slider under it, and saying so once is clearer than four
    greyed-out widgets beside a black word. */
-#shapeGroup.is-idle {
+#shapeGroup.is-idle,
+#paletteGroup.is-idle {
   opacity: 0.42;
 }
 
