@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Overprint Bench — Felix' Workshop</title>
+<title>Overprint — Felix' Workshop</title>
 <meta name="description" content="Lay coloured squares, circles, triangles and hexagons over one another and watch each overlap take the colour the two make — as ink or as light — then export the sheet as a real SVG.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
@@ -52,7 +52,7 @@
         Felix' Workshop
       </a>
       <div class="title-row">
-        <h1 class="tool-title">Overprint Bench</h1>
+        <h1 class="tool-title">Overprint</h1>
         <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
           <span data-share-label>copy link</span>
@@ -74,7 +74,7 @@
     </div>
     <div class="group" id="sheetPresets">
       <label>Sizes</label>
-      <button class="btn-ghost preset" type="button" data-w="640" data-h="480" data-tip="The bench's own sheet, 4:3">640&times;480</button>
+      <button class="btn-ghost preset" type="button" data-w="640" data-h="480" data-tip="The sheet this starts on, 4:3">640&times;480</button>
       <button class="btn-ghost preset" type="button" data-w="800" data-h="800" data-tip="Square">800&times;800</button>
       <button class="btn-ghost preset" type="button" data-w="1200" data-h="675" data-tip="16:9, the shape of a slide">1200&times;675</button>
       <button class="btn-ghost preset" type="button" data-w="595" data-h="842" data-tip="A4 upright at 72 to the inch, which is the unit a PDF is laid out in">595&times;842</button>
@@ -147,7 +147,7 @@
     to its edge.</p>
 
   <p class="note">
-    An overlap here is a region and not a blend mode. The bench works out which
+    An overlap here is a region and not a blend mode. The tool works out which
     shapes cover which patch of the sheet, mixes those colours once, and prints
     the patch as a flat opaque shape clipped to it &mdash; so the exported file
     is the picture on the screen, arrived at the same way, and it opens the same

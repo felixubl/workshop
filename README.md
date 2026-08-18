@@ -121,14 +121,14 @@ Raster and vector images, type, colour, audio and video.
   blur together. The line under the spectrogram prints that trade as a product
   which does not depend on the frame size at all.
 
-- [Overprint Bench](overprint/) — lay coloured squares, circles, triangles and
+- [Overprint](overprint/) — lay coloured squares, circles, triangles and
   hexagons over one another and watch every overlap take the colour those two
   make. Two models: ink, which multiplies plates onto white paper so overlaps
   darken, and light, which screens beams into a dark room so they brighten.
   Cyan, magenta and yellow go down to black one way; red, green and blue go up
   to white the other.
 
-  An overlap here is a region rather than a blend mode. The bench works out
+  An overlap here is a region rather than a blend mode. The tool works out
   which shapes cover a patch, mixes those colours once, and prints the patch as
   a flat opaque shape clipped to it — nested `clipPath`, which SVG has had since
   1.1 and every reader supports, so a circle stays a circle rather than becoming
@@ -144,7 +144,7 @@ Raster and vector images, type, colour, audio and video.
   whichever plate went down first.
 
   The sheet is the reader's to set: two fields, a "Set sheet" button and five
-  proportions to press — the bench's own 4:3, a square, 16:9, and A4 either way
+  proportions to press — its own 4:3, a square, 16:9, and A4 either way
   up at 72 to the inch, which is the unit a PDF is laid out in. Setting it crops
   rather than scales, the way a canvas-size control does everywhere else:
   nothing is resized, and the sheet grows and shrinks about its middle so a

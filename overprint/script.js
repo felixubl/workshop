@@ -1,4 +1,4 @@
-/* Overprint Bench — shapes, and the colour their overlaps make.
+/* Overprint — shapes, and the colour their overlaps make.
  *
  * The whole tool is one function. `buildSvg` turns the list of shapes into an
  * SVG document, and everything else either edits that list or calls it: the
