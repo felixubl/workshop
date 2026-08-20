@@ -22,7 +22,7 @@ would make both harder to read. It appears as five squares filled from the
 left plus one word. The key at the foot of the index defines all five; a card
 carries the rating and nothing more.
 
-No tool is above `fetch` today: eleven never open a socket, four read public
+No tool is above `fetch` today: twelve never open a socket, four read public
 data and keep nothing. `store` and `account` are defined ahead of the tools
 that will need them.
 
@@ -161,6 +161,44 @@ Raster and vector images, type, colour, audio and video.
   colour mode. Each swatch names its hex, so it never changes under you without
   saying what to. The `-text` companions are not offered: their whole job is to
   stand in for a plate below 18px, and there is no type on the sheet.
+
+- [Morse Key](morse-key/) — the space bar is the key. A short press is a dit, a
+  long one a dah, and the length of the silence after it decides where one
+  letter ends and the next begins. Nothing is typed: the only two numbers the
+  tool reads are how long you held and how long you waited.
+
+  Morse has one length in it, the dit, and everything else is counted in dits. A
+  dah is three, the gap inside a letter is one, between letters three, between
+  words seven. So the code is a rhythm rather than an alphabet, and two
+  operators at different speeds send the same thing as long as the ratios hold.
+  The speed dial sets how long a dit is in milliseconds — at twelve words a
+  minute, by the standard word PARIS, a tenth of a second — and everything else
+  follows from it. A press is read as a dah past two units, a silence ends the
+  letter past two and adds a word space past five: the midpoints between the
+  lengths the code defines, and so where the guess is least likely to be wrong.
+
+  Because the thresholds are somebody's speed and not yours, the tool measures
+  the speed you are actually sending at from the median of your own dits, prints
+  it beside the dial, and offers to adopt it. The paper tape is the same
+  reading, drawn: sixty units of tape wide, a tick for every unit, each mark a
+  bar as long as you held it, with the bar you are still holding coloured until
+  you let go. It is the register the operators read lengths off, and it is here
+  because the whole tool is a claim about durations that would otherwise be
+  invisible.
+
+  The alphabet is built from the same table the decoder reads, so a character
+  the tool can decode and one the page prints cannot come apart. While a letter
+  is part way through, every pattern the partial has ruled out fades, which
+  turns the chart into a live account of what you have narrowed it to. A pattern
+  with nothing against it is printed in angle brackets the way an operator
+  writes a prosign, rather than dropped. Where a punctuation mark and a prosign
+  share a pattern the mark is what prints and the operator's name for it sits
+  beside it in the chart, so `.-.-.` is a `+` on the line and `AR` in the
+  margin.
+
+  The sidetone is one oscillator running for the life of the page with a gain
+  gating it, ramped over a few milliseconds at each end. Gating a sine by
+  starting and stopping it clicks, and the click is louder than the note.
 
 Planned: image, SVG, font, colour, audio and video toolkits.
 

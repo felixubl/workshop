@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morse Key — Felix' Workshop</title>
+<meta name="description" content="Tap the space bar and it reads your timing back as dits, dahs and letters. The whole alphabet is on the page, and a paper tape shows the units you actually sent.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
+<script src="../assets/preprint/js/mode.js"></script>
+<link rel="stylesheet" href="../assets/preprint/styles.css">
+<link rel="stylesheet" href="../assets/preprint/core.css">
+<link rel="stylesheet" href="../assets/preprint/controls.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <!-- The ceiling lamp, drawn in assets/site.css and swung by
+       assets/lamp.js. The span is the fixture and hangs behind the page; the
+       button is the switch and sits over the shade, and swings with it. The
+       rose is the only part fixed to the ceiling: the flex turns under it, and
+       the head — the shade and the light it throws — turns again where the flex
+       ends, because a weight on a cord arrives after the cord does. -->
+    <span class="lamp" aria-hidden="true">
+      <span class="lamp__hang">
+        <span class="lamp__flex"></span>
+        <span class="lamp__head">
+          <span class="lamp__beam"></span>
+          <svg class="lamp__head-art" viewBox="-70 0 140 96" fill="none">
+            <circle class="lamp__bulb" cx="0" cy="70" r="13"></circle>
+            <g class="lamp__rig">
+              <path class="lamp__shade" d="M-16 0H16L62 62H-62Z"></path>
+              <path class="lamp__rim" d="M-64 62H64"></path>
+            </g>
+          </svg>
+        </span>
+      </span>
+      <svg class="lamp__rose" viewBox="-30 0 60 20" fill="none">
+        <path class="lamp__canopy" d="M-28 0H28V9H-28Z"></path>
+        <g class="lamp__rig">
+          <path class="lamp__grip" d="M-8 9H8L5 16H-5Z"></path>
+        </g>
+      </svg>
+    </span>
+    <button class="lamp-switch" type="button" data-mode-toggle aria-label="Switch colour mode"></button>
+
+    <div>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <div class="title-row">
+        <h1 class="tool-title">Morse Key</h1>
+        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
+          <span data-share-label>copy link</span>
+        </button>
+        <button class="share-btn pin-btn" type="button" data-pin="morse-key" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="spine"></div>
+
+  <p class="lede">
+    Hold the space bar down. A short press is a dit, a long one a dah, and the
+    length of the silence after it decides where one letter ends and the next
+    begins. Nothing is typed here: the only thing the tool reads is how long you
+    held and how long you waited.
+  </p>
+
+  <div class="toolbar">
+    <div class="group">
+      <label for="wpm">Speed</label>
+      <input class="field" type="number" id="wpm" min="5" max="40" step="1" value="12" aria-label="Sending speed in words per minute" data-tip="Words per minute, by the standard word PARIS. It sets the unit every press and pause is measured against">
+      <span class="tag readout" id="unitOut">100 ms</span>
+    </div>
+
+    <div class="group">
+      <label>Your hand</label>
+      <span class="tag readout" id="fistOut">—</span>
+      <button class="btn-ghost preset" type="button" id="match" disabled data-tip="Set the speed dial to the one you are actually sending at, measured from your own dits">match</button>
+    </div>
+
+    <div class="group">
+      <label for="pitch">Tone</label>
+      <input class="field" type="number" id="pitch" min="300" max="1200" step="20" value="600" aria-label="Sidetone pitch in hertz" data-tip="Pitch of the sidetone, in hertz">
+      <label class="checkbox" data-tip="The note you hear while the key is down. It is how you hear your own rhythm"><input type="checkbox" id="sound" checked> Sidetone</label>
+    </div>
+
+    <div class="group">
+      <button class="btn-ghost" type="button" id="copy" data-tip="Copy the decoded message">copy text</button>
+      <button class="btn-ghost" type="button" id="clear" data-tip="Empty the line and the tape">clear</button>
+    </div>
+  </div>
+
+  <div class="deck">
+    <!-- A button, so it is reachable and pressable without a pointer. Press and
+       release are driven from pointer and key events rather than from click,
+       because a click has no duration and duration is the entire signal. -->
+    <button class="key-slab" type="button" id="slab" aria-label="Morse key. Hold to send a mark, release to end it">
+      <span class="key-cap">space</span>
+      <span class="key-say">tap for a dit, hold for a dah</span>
+    </button>
+
+    <div class="deck-side">
+      <div class="result-bar">
+        <p class="section-label">Keying</p>
+        <code id="liveSay">nothing yet</code>
+      </div>
+      <code class="live-code" id="liveCode" aria-live="off"></code>
+    </div>
+  </div>
+
+  <div class="result-bar">
+    <p class="section-label">Paper tape</p>
+    <code id="tapeLegend">60 units wide</code>
+  </div>
+  <canvas class="tape" id="tape" aria-hidden="true"></canvas>
+  <p class="sheet-note">
+    The register drew marks on a moving tape and the operator read the lengths
+    off it. This one runs the same way, sixty units of tape wide, with a tick
+    for every unit along the bottom. The bar you are still holding is coloured
+    until you let go of it.
+  </p>
+
+  <div class="result-bar">
+    <p class="section-label">Message</p>
+    <code id="count">0 characters</code>
+  </div>
+  <div class="line" id="line" aria-live="polite"><span class="caret" aria-hidden="true"></span></div>
+
+  <div class="result-bar">
+    <p class="section-label">The alphabet</p>
+    <code id="chartSay">56 characters</code>
+  </div>
+  <div class="chart" id="chart"></div>
+
+  <p class="note">
+    Morse has one length in it, the dit, and everything else is counted in dits.
+    A dah is three. The gap inside a letter is one, between letters three, and
+    between words seven. So the whole code is a rhythm rather than an alphabet,
+    and two operators at different speeds send the same thing as long as the
+    ratios hold. The speed dial sets how long a dit is in milliseconds — at
+    twelve words a minute it is a tenth of a second — and everything else follows
+    from it.
+  </p>
+
+  <p class="note">
+    A press is read as a dah past two units, and a silence ends the letter past
+    two and adds a word space past five. Those are the midpoints between the
+    lengths the code defines, so they are where the guess is least likely to be
+    wrong. If your letters keep running together or breaking apart, the dial is
+    set to somebody else's speed rather than yours; the measured reading beside
+    it, and the match button, are there for that.
+  </p>
+
+  <p class="note">
+    A pattern with no character against it is printed in angle brackets the way
+    an operator writes a prosign, so nothing is silently dropped. Backspace
+    clears the letter you are part way through, or removes the last one if you
+    are between letters.
+  </p>
+</div>
+
+<script src="script.js"></script>
+<script src="../assets/preprint/js/controls.js"></script>
+<script src="../assets/lamp.js"></script>
+<script src="../assets/share.js"></script>
+<script src="../assets/favourites.js"></script>
+</body>
+</html>

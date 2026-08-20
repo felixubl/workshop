@@ -1,0 +1,260 @@
+/* Tool-specific layout only. Faces, buttons, tags, fields, the title and the
+   toolbar come from ../assets/base.css over the vendored system. */
+
+.lede {
+  margin: 0 0 1.6rem;
+}
+
+input[type='number'].field {
+  width: 76px;
+  font-family: var(--pp-font-mono);
+}
+
+.readout {
+  min-width: 62px;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--pp-muted);
+}
+
+/* ---- the key ---- */
+
+.deck {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--pp-space-3);
+  align-items: stretch;
+  margin-bottom: var(--pp-space-4);
+}
+
+/* A key is a thing you hit, so it is drawn as one: a slab standing on a hard
+   cast, which is the one law 04 spends on this page, and which collapses under
+   the press exactly as far as the slab travels. */
+.key-slab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 128px;
+  padding: var(--pp-space-3);
+  border: var(--pp-border-structure) solid var(--pp-edge);
+  border-radius: var(--pp-radius-md);
+  background: var(--pp-paper);
+  box-shadow: 3px 3px 0 var(--pp-edge);
+  cursor: var(--pp-cursor-point);
+  transition: transform var(--pp-dur-instant) var(--pp-ease),
+              box-shadow var(--pp-dur-instant) var(--pp-ease),
+              background var(--pp-dur-instant) var(--pp-ease);
+  touch-action: none;
+  user-select: none;
+}
+
+.key-slab:hover {
+  background: var(--pp-tint);
+}
+
+.key-slab.is-down {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--pp-edge);
+  background: var(--pp-ink);
+  color: var(--pp-paper);
+}
+
+.key-cap {
+  font-family: var(--pp-font-mono);
+  font-size: 1.5rem;
+  letter-spacing: var(--w-track-mono);
+  text-transform: lowercase;
+}
+
+.key-say {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-label);
+  color: var(--pp-muted);
+}
+
+.key-slab.is-down .key-say {
+  color: var(--pp-paper);
+}
+
+.deck-side {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.deck-side .result-bar {
+  margin-bottom: 0;
+}
+
+/* The pattern in hand. It is the one reading that changes on every press, so it
+   is the largest thing in the block and it keeps its box whether or not there
+   is anything in it. */
+.live-code {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-height: 66px;
+  padding: 0 var(--pp-space-2);
+  border: var(--pp-rule-line) solid var(--pp-hair);
+  border-top: 0;
+  font-family: var(--pp-font-mono);
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  color: var(--pp-ink);
+  overflow-x: auto;
+}
+
+/* ---- the tape ---- */
+
+.tape {
+  display: block;
+  width: 100%;
+  height: 88px;
+  border: var(--pp-rule-line) solid var(--pp-hair);
+  border-top: 0;
+  background: var(--pp-surface-well);
+}
+
+/* ---- the line ---- */
+
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  min-height: 74px;
+  padding: var(--pp-space-2);
+  border: var(--pp-rule-line) solid var(--pp-hair);
+  border-top: 0;
+  margin-bottom: var(--pp-space-4);
+  background: var(--pp-surface-well);
+  font-family: var(--pp-font-mono);
+  font-size: 1.5rem;
+  line-height: 1.4;
+  letter-spacing: var(--w-track-mono);
+  overflow-wrap: anywhere;
+}
+
+.tok-space {
+  width: 0.9em;
+}
+
+.tok-lost {
+  font-size: 0.62em;
+  color: var(--pp-muted);
+  border-bottom: var(--pp-rule-line) dashed var(--pp-line);
+}
+
+.caret {
+  width: 2px;
+  align-self: center;
+  height: 1.1em;
+  background: var(--pp-ink);
+  animation: blink 1.1s steps(1, end) infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret { animation: none; }
+}
+
+/* ---- the alphabet ---- */
+
+/* Cells rule themselves rather than sitting in a gap over a coloured ground.
+   A group rarely fills its last row, and an empty grid track would print those
+   leftovers as a block of rule colour. */
+.chart {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  border: var(--pp-rule-line) solid var(--pp-hair);
+  border-top: 0;
+  margin-bottom: var(--pp-space-5);
+  background: var(--pp-paper);
+}
+
+.chart-head {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 10px var(--pp-space-2) 6px;
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+
+.cell {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 10px;
+  border-right: var(--pp-rule-hairline) solid var(--pp-hair);
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+  transition: opacity var(--pp-dur-fast) var(--pp-ease),
+              background var(--pp-dur-fast) var(--pp-ease),
+              color var(--pp-dur-fast) var(--pp-ease);
+}
+
+/* SOS is nine elements against a letter's one to four, so it takes the room a
+   letter does not need instead of setting the width for all fifty-six. */
+.cell.is-long {
+  grid-column: span 2;
+}
+
+.cell-char {
+  min-width: 1.1em;
+  font-family: var(--pp-font-mono);
+  font-size: 0.95rem;
+  font-weight: var(--pp-weight-strong);
+}
+
+.cell-code {
+  font-family: var(--pp-font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  color: var(--pp-muted);
+}
+
+.cell-alias {
+  margin-left: auto;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-micro);
+  letter-spacing: var(--w-track-label);
+  white-space: nowrap;
+  color: var(--pp-faint);
+}
+
+/* Ruled out by what has been keyed so far. Faded rather than hidden, because
+   the point of watching it is seeing the field close in. */
+.cell.is-out {
+  opacity: 0.22;
+}
+
+.cell.is-hit {
+  background: var(--pp-tint);
+}
+
+.cell.is-hit .cell-code {
+  color: var(--pp-ink);
+}
+
+/* The character that just landed on the line. */
+.cell.is-sent {
+  background: var(--pp-ink);
+  color: var(--pp-paper);
+}
+
+.cell.is-sent .cell-code,
+.cell.is-sent .cell-alias {
+  color: var(--pp-paper);
+}
+
+@media (max-width: 620px) {
+  .deck {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
