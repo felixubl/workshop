@@ -22,7 +22,7 @@ would make both harder to read. It appears as five squares filled from the
 left plus one word. The key at the foot of the index defines all five; a card
 carries the rating and nothing more.
 
-No tool is above `fetch` today: twelve never open a socket, four read public
+No tool is above `fetch` today: thirteen never open a socket, five read public
 data and keep nothing. `store` and `account` are defined ahead of the tools
 that will need them.
 
@@ -199,6 +199,43 @@ Raster and vector images, type, colour, audio and video.
   The sidetone is one oscillator running for the life of the page with a gain
   gating it, ramped over a few milliseconds at each end. Gating a sine by
   starting and stopping it clicks, and the click is louder than the note.
+
+- [Portrait](portrait/) — reduce a photograph of a face to one bit. Two models
+  run in the tab: one returns 478 face landmarks and decides where the head is,
+  the other labels every pixel as background, hair, body skin, face skin,
+  clothes or accessory. The first crops, the second says which part each pixel
+  belongs to. Both are served from this site, so nothing is fetched and the
+  picture is only ever read by the page that opened it.
+
+  The landmarker runs on the CPU deliberately. On the GPU delegate it returns
+  exactly one face however high `numFaces` is set, so a picture of two people
+  silently loses one; a single still frame costs little on the CPU. The head
+  crop is squared and then clamped inside the picture, because a square that
+  runs off the edge is padded with white, and that padding belongs to no
+  component and can never be drawn.
+
+  Reduction is per component rather than per picture. Each part carries its own
+  method and its own settings, and its threshold is computed from its own
+  pixels: a face's histogram and a jacket's have nothing to say to each other,
+  and one global cut has to compromise between them. So the clothes can be
+  solid while the face keeps every wrinkle. Seven published methods are
+  offered and none is invented here — Otsu; Sauvola and Bradley, which
+  threshold against a local neighbourhood and come from document scanning;
+  Floyd–Steinberg, Atkinson and an ordered Bayer matrix, which hold apparent
+  tone as dot density; and XDoG, an extended difference of Gaussians published
+  for stylising portraits, which is the one that draws hair as strokes rather
+  than as a mass of shadow. Each is previewed on the actual picture, so the
+  choice is made by looking.
+
+  The SVG is traced, not wrapped. The boundary between ink and paper is an
+  isoline at a half, so marching squares walks it, Douglas–Peucker simplifies
+  it and Chaikin rounds it; the result is emitted as one path under the
+  even-odd rule, which turns a loop inside a loop into a hole without anyone
+  computing nesting.
+
+  A face has to be about an eighth of the frame's width to be found at all —
+  measured, not guessed: detection holds at twelve per cent and fails at
+  eleven. This is a portrait tool, not a way to pick a face out of a crowd.
 
 Planned: image, SVG, font, colour, audio and video toolkits.
 

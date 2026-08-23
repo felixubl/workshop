@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portrait — Felix' Workshop</title>
+<meta name="description" content="Turn a photograph of a face into one bit. A model finds the head and labels every pixel as hair, skin or clothes, then each of those parts is reduced to black and white on its own terms — solid clothes, detailed face — and comes out as a PNG or a real SVG. The picture never leaves your machine.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
+<script src="../assets/preprint/js/mode.js"></script>
+<link rel="stylesheet" href="../assets/preprint/styles.css">
+<link rel="stylesheet" href="../assets/preprint/core.css">
+<link rel="stylesheet" href="../assets/preprint/controls.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <!-- The ceiling lamp, drawn in assets/site.css and swung by
+       assets/lamp.js. The span is the fixture and hangs behind the page; the
+       button is the switch and sits over the shade, and swings with it. The
+       rose is the only part fixed to the ceiling: the flex turns under it, and
+       the head — the shade and the light it throws — turns again where the flex
+       ends, because a weight on a cord arrives after the cord does. -->
+    <span class="lamp" aria-hidden="true">
+      <span class="lamp__hang">
+        <span class="lamp__flex"></span>
+        <span class="lamp__head">
+          <span class="lamp__beam"></span>
+          <svg class="lamp__head-art" viewBox="-70 0 140 96" fill="none">
+            <circle class="lamp__bulb" cx="0" cy="70" r="13"></circle>
+            <g class="lamp__rig">
+              <path class="lamp__shade" d="M-16 0H16L62 62H-62Z"></path>
+              <path class="lamp__rim" d="M-64 62H64"></path>
+            </g>
+          </svg>
+        </span>
+      </span>
+      <svg class="lamp__rose" viewBox="-30 0 60 20" fill="none">
+        <path class="lamp__canopy" d="M-28 0H28V9H-28Z"></path>
+        <g class="lamp__rig">
+          <path class="lamp__grip" d="M-8 9H8L5 16H-5Z"></path>
+        </g>
+      </svg>
+    </span>
+    <button class="lamp-switch" type="button" data-mode-toggle aria-label="Switch colour mode"></button>
+
+    <div>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <div class="title-row">
+        <h1 class="tool-title">Portrait</h1>
+        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
+          <span data-share-label>copy link</span>
+        </button>
+        <button class="share-btn pin-btn" type="button" data-pin="portrait" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="spine"></div>
+
+  <label class="dropzone dz-open" id="drop">
+    <input type="file" id="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp">
+    <span class="dz-head">Drop a portrait here</span>
+    <span class="dz-pick">or press to choose a file</span>
+    <span class="dz-formats">JPEG &middot; PNG &middot; WebP &mdash; one face or several</span>
+    <span class="dz-note">Nothing is uploaded. Both models are served by this site and run in this tab; the picture is only ever read by it.</span>
+  </label>
+
+
+  <p class="sheet-note" id="status"></p>
+
+  <section id="work" hidden>
+
+    <div class="toolbar">
+      <div class="group" id="faceWrap" hidden>
+        <label for="facePick">Face</label>
+        <select id="facePick" aria-label="Which face to work on" data-tip="More than one face was found. Each is cropped and reduced on its own."></select>
+      </div>
+      <div class="group">
+        <label for="exportSize">Export</label>
+        <select id="exportSize" aria-label="Size of the exported file" data-tip="Pixels across for the PNG; the drawing size the SVG is written against.">
+          <option>512</option><option>1024</option><option selected>2048</option><option>4096</option>
+        </select>
+        <button class="btn-ghost" type="button" id="savePng" disabled data-tip="A one-bit image at the size chosen">PNG</button>
+        <button class="btn-ghost" type="button" id="saveSvg" disabled data-tip="Outlines traced from the ink and written as real curves, not a wrapped bitmap">SVG</button>
+      </div>
+    </div>
+
+    <div class="stage">
+      <figure class="sheet">
+        <canvas id="bw" width="720" height="720" aria-label="The portrait reduced to black and white"></canvas>
+      </figure>
+
+      <div class="side">
+        <p class="section-label">Method for this part</p>
+        <div class="thumbs">
+          <button class="thumb" type="button" data-m="otsu"><canvas id="th_otsu"></canvas><span>Otsu &mdash; one global cut</span></button>
+          <button class="thumb" type="button" data-m="sauvola"><canvas id="th_sauvola"></canvas><span>Sauvola &mdash; local</span></button>
+          <button class="thumb" type="button" data-m="bradley"><canvas id="th_bradley"></canvas><span>Bradley &mdash; local mean</span></button>
+          <button class="thumb" type="button" data-m="atkinson"><canvas id="th_atkinson"></canvas><span>Atkinson dither</span></button>
+          <button class="thumb" type="button" data-m="floyd"><canvas id="th_floyd"></canvas><span>Floyd&ndash;Steinberg</span></button>
+          <button class="thumb" type="button" data-m="bayer"><canvas id="th_bayer"></canvas><span>Bayer 8&times;8</span></button>
+          <button class="thumb" type="button" data-m="xdog"><canvas id="th_xdog"></canvas><span>XDoG &mdash; for portraits</span></button>
+        </div>
+      </div>
+    </div>
+
+    <p class="sheet-note" id="bwStats"></p>
+
+    <div class="toolbar">
+      <div class="group" id="layerTabs" role="group" aria-label="Which part of the picture to set"></div>
+    </div>
+
+    <div class="toolbar">
+      <div class="group">
+        <label for="lmode">This part is</label>
+        <select id="lmode" aria-label="How this part is drawn" data-tip="A part can be reduced by a method, filled solid, left blank, or dropped entirely.">
+          <option value="method">reduced by a method</option>
+          <option value="solid">solid black</option>
+          <option value="paper">left blank</option>
+          <option value="off">dropped</option>
+        </select>
+      </div>
+      <div class="group" id="lmethodWrap">
+        <label for="lmethod">Method</label>
+        <select id="lmethod" aria-label="Which method reduces this part">
+          <option value="otsu">Otsu</option><option value="sauvola">Sauvola</option>
+          <option value="bradley">Bradley</option><option value="atkinson">Atkinson</option>
+          <option value="floyd">Floyd&ndash;Steinberg</option><option value="bayer">Bayer 8&times;8</option>
+          <option value="xdog">XDoG</option>
+        </select>
+      </div>
+      <div class="group">
+        <button class="btn-ghost" type="button" id="applyAll" data-tip="Give every other part the settings this one has">Copy to every part</button>
+      </div>
+    </div>
+
+    <div id="lparams">
+      <div class="toolbar">
+        <div class="group">
+          <label for="lflatten">Flatten light</label>
+          <input type="range" id="lflatten" min="0" max="60" step="2" value="24" aria-label="Flatten the lighting" data-tip="Divides this part by a blurred copy of itself, so a shadow across it stops deciding the threshold.">
+        </div>
+        <div class="group">
+          <label for="lcontrast">Contrast</label>
+          <input type="range" id="lcontrast" min="0.4" max="3" step="0.05" value="1" aria-label="Contrast">
+        </div>
+        <div class="group">
+          <label for="lgamma">Gamma</label>
+          <input type="range" id="lgamma" min="0.4" max="2.5" step="0.05" value="1" aria-label="Gamma">
+        </div>
+        <div class="group">
+          <label for="lpreblur">Soften</label>
+          <input type="range" id="lpreblur" min="0" max="5" step="1" value="0" aria-label="Soften before reducing">
+        </div>
+        <div class="group">
+          <label for="lbias">Bias</label>
+          <input type="range" id="lbias" min="-0.25" max="0.25" step="0.01" value="0" aria-label="Push the threshold either way" data-tip="More ink to the left, less to the right.">
+        </div>
+        <div class="group">
+          <label for="ldespeckle">Despeckle</label>
+          <input class="field" type="number" id="ldespeckle" min="0" max="400" value="10" aria-label="Smallest blob to keep">
+        </div>
+      </div>
+
+      <div class="toolbar mparams" data-for="sauvola bradley">
+        <div class="group">
+          <label for="lwindow">Window</label>
+          <input type="range" id="lwindow" min="3" max="40" step="1" value="12" aria-label="Size of the local neighbourhood">
+        </div>
+        <div class="group">
+          <label for="lk">Sauvola k</label>
+          <input type="range" id="lk" min="0.02" max="0.6" step="0.01" value="0.18" aria-label="Sauvola k">
+        </div>
+        <div class="group">
+          <label for="lc">Bradley C</label>
+          <input type="range" id="lc" min="0" max="0.2" step="0.005" value="0.03" aria-label="Bradley C">
+        </div>
+      </div>
+
+      <div class="toolbar mparams" data-for="xdog">
+        <div class="group">
+          <label for="lsigma">Sigma</label>
+          <input type="range" id="lsigma" min="1" max="8" step="1" value="1" aria-label="XDoG sigma">
+        </div>
+        <div class="group">
+          <label for="ltau">Tau</label>
+          <input type="range" id="ltau" min="0.9" max="1.02" step="0.005" value="0.985" aria-label="XDoG tau">
+        </div>
+        <div class="group">
+          <label for="leps">Epsilon</label>
+          <input type="range" id="leps" min="-0.02" max="0.06" step="0.002" value="0.014" aria-label="XDoG epsilon">
+        </div>
+        <div class="group">
+          <label for="lphi">Phi</label>
+          <input type="range" id="lphi" min="5" max="200" step="5" value="60" aria-label="XDoG phi">
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="group">
+        <label for="binres">Detail</label>
+        <select id="binres" aria-label="Working resolution" data-tip="Pixels across. Above the picture's own resolution there is nothing more to find.">
+          <option>320</option><option>480</option><option selected>720</option>
+          <option>1000</option><option>1400</option><option>2000</option>
+        </select>
+      </div>
+      <div class="group">
+        <label class="checkbox" data-tip="Keeps hair, skin and face inside the cleaned-up head shape, so stray specks outside it are dropped."><input type="checkbox" id="limitToMatte" checked> Trim head to the matte</label>
+        <label class="checkbox"><input type="checkbox" id="invert"> Invert</label>
+      </div>
+      <div class="group">
+        <label for="vtol">SVG</label>
+        <input type="range" id="vtol" min="0" max="3" step="0.1" value="0.6" aria-label="How far the outlines may stray while simplifying" data-tip="Simplify: how far an outline may stray from the pixels.">
+        <input type="range" id="vsmooth" min="0" max="3" step="1" value="1" aria-label="Rounds of corner cutting" data-tip="Smoothing: rounds of corner cutting.">
+        <input class="field" type="number" id="vmin" min="0" max="500" value="6" aria-label="Smallest outline to keep" data-tip="Drop outlines smaller than this.">
+      </div>
+    </div>
+
+    <details class="innards">
+      <summary>How the head was found</summary>
+
+      <p class="legend">
+        Two models run here. One returns 478 landmarks and says where the face is;
+        the other labels every pixel as background, hair, body skin, face skin,
+        clothes or accessory. The first decides the crop, the second decides which
+        part each pixel belongs to.
+      </p>
+
+      <div class="toolbar">
+        <div class="group">
+          <label for="grow">Crop margin</label>
+          <input type="range" id="grow" min="0.1" max="1.6" step="0.05" value="0.85" aria-label="How far past the face to crop" data-tip="Hair sits well outside the face mesh. Too tight and it is cut flat across the top.">
+        </div>
+        <div class="group">
+          <label for="neck">Neck cut</label>
+          <input type="range" id="neck" min="0" max="2" step="0.05" value="0.35" aria-label="Where to cut below the chin">
+        </div>
+        <div class="group">
+          <label for="close">Close gaps</label>
+          <input type="range" id="close" min="0" max="6" step="1" value="2" aria-label="Seal gaps between strands of hair">
+        </div>
+        <div class="group">
+          <label for="feather">Feather</label>
+          <input type="range" id="feather" min="0" max="6" step="1" value="1" aria-label="Soften the edge of the matte">
+        </div>
+        <div class="group">
+          <label for="segsize">Mask size</label>
+          <select id="segsize" aria-label="Resolution the labels are computed at">
+            <option>256</option><option>512</option><option selected>768</option><option>1024</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="group">
+          <label>Counts as head</label>
+          <label class="checkbox"><input type="checkbox" id="cls_hair" checked> hair</label>
+          <label class="checkbox"><input type="checkbox" id="cls_faceSkin" checked> face skin</label>
+          <label class="checkbox"><input type="checkbox" id="cls_bodySkin" checked> body skin</label>
+          <label class="checkbox"><input type="checkbox" id="cls_clothes"> clothes</label>
+          <label class="checkbox"><input type="checkbox" id="cls_other"> accessories</label>
+        </div>
+        <div class="group">
+          <label class="checkbox"><input type="checkbox" id="largest" checked> Largest piece</label>
+          <label class="checkbox"><input type="checkbox" id="holes" checked> Fill holes</label>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="group">
+          <label class="checkbox"><input type="checkbox" id="showBox" checked> Crop box</label>
+          <label class="checkbox"><input type="checkbox" id="showMarks"> Landmarks</label>
+          <label class="checkbox"><input type="checkbox" id="showRings"> Feature rings</label>
+        </div>
+        <div class="group">
+          <button class="btn-ghost" type="button" id="save">Save the cutout</button>
+        </div>
+      </div>
+
+      <div class="panes">
+        <figure><figcaption>source</figcaption><canvas id="src"></canvas></figure>
+        <figure><figcaption>what the model saw</figcaption><canvas id="classes"></canvas></figure>
+        <figure><figcaption>extracted head</figcaption><canvas id="cut"></canvas></figure>
+      </div>
+
+      <p class="sheet-note" id="stats"></p>
+    </details>
+
+  </section>
+</div>
+
+<canvas id="hidden" hidden></canvas>
+<p class="sr-only" id="say" role="status" aria-live="polite"></p>
+
+<script type="module" src="script.js"></script>
+<script src="../assets/preprint/js/controls.js"></script>
+<script src="../assets/lamp.js"></script>
+<script src="../assets/share.js"></script>
+<script src="../assets/favourites.js"></script>
+</body>
+</html>

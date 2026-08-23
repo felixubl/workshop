@@ -1,0 +1,157 @@
+/* Tool-specific layout only. The shell, toolbar, buttons, fields, checkboxes
+   and drop target come from ../assets/base.css over the vendored system. What
+   is here is the stage — one big sheet with the result on it — and the rail of
+   method samples beside it. */
+
+/* The drop target has two sizes. Open, it fills the page and is the only thing
+   to do. Once a picture is loaded it drops to a line: still a target, no
+   longer an invitation. */
+.dz-open {
+  padding: clamp(2.5rem, 8vw, 4.5rem) 1.25rem;
+}
+.dz-head {
+  display: block;
+  font-family: var(--pp-font-display);
+  font-weight: var(--pp-weight-head);
+  font-size: var(--pp-size-subhead);
+  letter-spacing: var(--pp-track-head);
+  color: var(--pp-ink);
+}
+.dz-pick,
+.dz-formats,
+.dz-note {
+  display: block;
+  color: var(--pp-muted);
+  font-size: var(--pp-size-label);
+}
+.dz-note {
+  margin-top: 0.6rem;
+}
+
+/* The result is the point of the page, so it gets the width and everything
+   else queues underneath it. The rail only leaves its column when there is no
+   room for both. */
+.stage {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin: 1rem 0 0.5rem;
+}
+.stage .sheet {
+  margin: 0;
+  flex: 1 1 22rem;
+  min-width: 0;
+}
+#bw {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--pp-paper);
+  border: var(--pp-rule-hairline) solid var(--pp-edge);
+  /* One bit in, one bit out: smoothing the upscale would invent greys the
+     picture does not contain. */
+  image-rendering: pixelated;
+}
+
+.side {
+  flex: 0 0 15rem;
+  max-width: 100%;
+}
+.thumbs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+.thumb {
+  display: block;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  background: var(--pp-paper);
+  border: var(--pp-rule-hairline) solid var(--pp-edge);
+  border-radius: var(--pp-radius-sm);
+  overflow: hidden;
+  font: inherit;
+  color: inherit;
+}
+.thumb canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+.thumb span {
+  display: block;
+  padding: 0.25rem 0.4rem;
+  font-size: var(--pp-size-label);
+  color: var(--pp-muted);
+  border-top: var(--pp-rule-hairline) solid var(--pp-edge);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.thumb:hover { border-color: var(--pp-ink); }
+.thumb.on { border-color: var(--pp-ink); }
+.thumb.on span { color: var(--pp-ink); background: var(--pp-tint); }
+
+/* The part being edited is named by a pressed button rather than a dropdown,
+   because which part you are on has to stay readable while you work the
+   sliders underneath it. */
+.ltab {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.2rem 0.6rem;
+  color: var(--pp-ink);
+  background: var(--pp-paper);
+  border: var(--pp-rule-hairline) solid var(--pp-edge);
+  border-radius: var(--pp-radius-sm);
+}
+.ltab:hover { border-color: var(--pp-ink); }
+.ltab.on { background: var(--pp-ink); color: var(--pp-paper); border-color: var(--pp-ink); }
+.ltab .dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.4rem;
+  border-radius: 50%;
+  /* The same colours the class map is drawn in, so the tab and the picture
+     under "how the head was found" agree about which part is which. */
+  vertical-align: baseline;
+}
+
+/* Only the parameters belonging to the chosen method are shown; the rest would
+   be knobs wired to nothing. */
+.mparams { display: none; }
+.mparams.on { display: flex; }
+
+.innards { margin-top: 1.25rem; }
+.panes {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+.panes figure { margin: 0; }
+.panes figcaption {
+  color: var(--pp-muted);
+  font-size: var(--pp-size-label);
+  margin-bottom: 0.25rem;
+}
+.panes canvas {
+  display: block;
+  max-width: 15rem;
+  height: auto;
+  background: var(--pp-paper);
+  border: var(--pp-rule-hairline) solid var(--pp-edge);
+}
+
+/* The cutout is transparent, so it needs something behind it to prove that. */
+#cut {
+  background-image:
+    linear-gradient(45deg, var(--pp-tint) 25%, transparent 25%, transparent 75%, var(--pp-tint) 75%),
+    linear-gradient(45deg, var(--pp-tint) 25%, transparent 25%, transparent 75%, var(--pp-tint) 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
+}
