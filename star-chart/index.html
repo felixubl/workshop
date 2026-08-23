@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Star Chart — Felix' Workshop</title>
+<meta name="description" content="The sky over any place, at any hour. Nine thousand stars, the eighty-eight figures, the planets and the Moon, drawn from real catalogues and reduced to the moment you ask for.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
+<script src="../assets/preprint/js/mode.js"></script>
+<link rel="stylesheet" href="../assets/preprint/styles.css">
+<link rel="stylesheet" href="../assets/preprint/core.css">
+<link rel="stylesheet" href="../assets/preprint/controls.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap tool-head">
+  <header>
+    <!-- The ceiling lamp, drawn in assets/site.css and swung by
+       assets/lamp.js. The span is the fixture and hangs behind the page; the
+       button is the switch and sits over the shade, and swings with it. The
+       rose is the only part fixed to the ceiling: the flex turns under it, and
+       the head — the shade and the light it throws — turns again where the flex
+       ends, because a weight on a cord arrives after the cord does. -->
+    <span class="lamp" aria-hidden="true">
+      <span class="lamp__hang">
+        <span class="lamp__flex"></span>
+        <span class="lamp__head">
+          <span class="lamp__beam"></span>
+          <svg class="lamp__head-art" viewBox="-70 0 140 96" fill="none">
+            <circle class="lamp__bulb" cx="0" cy="70" r="13"></circle>
+            <g class="lamp__rig">
+              <path class="lamp__shade" d="M-16 0H16L62 62H-62Z"></path>
+              <path class="lamp__rim" d="M-64 62H64"></path>
+            </g>
+          </svg>
+        </span>
+      </span>
+      <svg class="lamp__rose" viewBox="-30 0 60 20" fill="none">
+        <path class="lamp__canopy" d="M-28 0H28V9H-28Z"></path>
+        <g class="lamp__rig">
+          <path class="lamp__grip" d="M-8 9H8L5 16H-5Z"></path>
+        </g>
+      </svg>
+    </span>
+    <button class="lamp-switch" type="button" data-mode-toggle aria-label="Switch colour mode"></button>
+
+    <div>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <div class="title-row">
+        <h1 class="tool-title">Star Chart</h1>
+        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
+          <span data-share-label>copy link</span>
+        </button>
+        <button class="share-btn pin-btn" type="button" data-pin="star-chart" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="spine"></div>
+
+  <div class="toolbar">
+    <div class="group">
+      <label for="place">Place</label>
+      <input class="field place" type="search" id="place" placeholder="Vienna, or 48.21, 16.37" autocomplete="off" aria-label="Place name or coordinates" data-tip="Type a town, or a pair of coordinates. Coordinates are read here and never sent anywhere.">
+      <button class="btn-ghost" type="button" id="here" data-tip="Ask the browser where you are. It will prompt you first.">here</button>
+    </div>
+
+    <div class="group">
+      <label for="when">When</label>
+      <input class="field" type="datetime-local" id="when" aria-label="Date and time, in the chart's own time zone">
+      <button class="btn-ghost" type="button" id="now" data-tip="Jump to this moment">now</button>
+    </div>
+
+    <div class="group">
+      <button class="btn-ghost" type="button" id="play" data-tip="Run the sky forward">play</button>
+      <select id="rate" aria-label="How fast time runs while playing" data-tip="How fast the sky moves while it is running">
+        <option value="60">a minute a second</option>
+        <option value="600" selected>ten minutes a second</option>
+        <option value="3600">an hour a second</option>
+        <option value="86400">a day a second</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <label for="limit">Faintest</label>
+      <input class="field" type="number" id="limit" min="1" max="6.5" step="0.5" value="5" aria-label="Faintest magnitude drawn" data-tip="Magnitude runs backwards: the bigger the number the fainter the star. About 6 is the naked-eye limit under a dark sky, 4 in a town.">
+      <span class="tag readout" id="countOut">—</span>
+    </div>
+
+    <div class="group switches">
+      <label class="check"><input type="checkbox" id="optFigures" checked><span>figures</span></label>
+      <label class="check"><input type="checkbox" id="optNames" checked><span>names</span></label>
+      <label class="check"><input type="checkbox" id="optBodies" checked><span>planets</span></label>
+      <label class="check"><input type="checkbox" id="optDeep"><span>deep sky</span></label>
+      <label class="check"><input type="checkbox" id="optColour"><span>colour</span></label>
+      <button class="btn-ghost" type="button" id="reset" data-tip="Back to the whole sky, zenith in the middle">whole sky</button>
+    </div>
+  </div>
+
+  <p class="place-note" id="placeNote"></p>
+  <div class="alternatives" id="alternatives"></div>
+</div>
+
+<!-- The chart is the one element on this page that crosses the column. The
+     sky does not stop at 66 characters, and law 03 licenses exactly this:
+     content that genuinely continues past the edge. It is the section's only
+     breach, so nothing else here is allowed one. -->
+<main id="stage" aria-label="The sky">
+  <div class="sky-holder">
+    <canvas id="sky" aria-label="Star chart" role="img"></canvas>
+    <p class="sky-loading" id="loading">reading the catalogue…</p>
+    <div class="compass" aria-hidden="true">
+      <span class="compass-n">N</span><span class="compass-e">E</span>
+      <span class="compass-s">S</span><span class="compass-w">W</span>
+    </div>
+  </div>
+
+  <aside class="detail" id="detail" hidden>
+    <button class="detail-close" type="button" id="detailClose" aria-label="Close">×</button>
+    <p class="detail-kind" id="detailKind"></p>
+    <h2 class="detail-name" id="detailName"></h2>
+    <p class="detail-sub" id="detailSub"></p>
+    <dl class="detail-rows" id="detailRows"></dl>
+  </aside>
+</main>
+
+<div class="wrap">
+  <p class="status-line"><span id="statusPlace">—</span> · <span id="statusTime">—</span> · <span id="statusSky">—</span></p>
+
+  <section class="notes">
+    <p class="section-label">What is drawn</p>
+    <p>Every position is worked out for the moment and the place you set, not
+      looked up. The stars arrive from the catalogue at their year-2000 places
+      and are carried forward by their own proper motion, then precessed,
+      nutated and aberrated to the equinox of the date. The Sun, Moon and
+      planets are summed from their series each time the clock moves. Nothing
+      is cached and nothing is approximated as "close enough for a picture".</p>
+
+    <p>How far off it can be, measured against
+      <a href="https://ssd.jpl.nasa.gov/planets/eph_export.html">JPL DE440s</a>
+      over 1950 to 2100, worst case: stars 0.5″, the Sun 1.5″, the planets 4″,
+      the Moon 27″. The Moon is the loosest because the tool carries only the
+      main problem of ELP2000-82B; twenty-seven arcseconds is a fiftieth of the
+      Moon's own width. The
+      <a href="../tools/verify/star-chart.html">assertions are on a page of their own</a>
+      and run against the same files this page loads.</p>
+
+    <p class="note" id="fetchNote">Typing a place name asks
+      <code>geocoding-api.open-meteo.com</code> to turn it into coordinates.
+      That is the only request this tool makes to anyone but this site, it
+      carries nothing but the words you typed, and it does not happen at all if
+      you enter coordinates or use <em>here</em>.</p>
+
+    <p class="section-label">Where it comes from</p>
+    <ul class="sources">
+      <li><span>Stars</span> Yale Bright Star Catalogue, 5th edition — Hoffleit &amp; Warren, ADC V/50. 9,096 stars to magnitude 6.5.</li>
+      <li><span>Distances</span> Hipparcos, the New Reduction — van Leeuwen 2007, I/311.</li>
+      <li><span>Star names</span> IAU Working Group on Star Names, the official catalogue. 338 of them land on a star this chart draws.</li>
+      <li><span>Figures</span> d3-celestial, Olaf Frohn, BSD-3-Clause. Every vertex is snapped to the nearest catalogue star, so a line always joins two stars you can click.</li>
+      <li><span>Deep sky</span> OpenNGC, Mattia Verga, CC BY-SA 4.0. 109 Messier objects; M102 is left out because it is a second sighting of M101.</li>
+      <li><span>Planets</span> VSOP87D — Bretagnon &amp; Francou.</li>
+      <li><span>Moon</span> ELP2000-82B main problem — Chapront-Touzé &amp; Chapront.</li>
+    </ul>
+  </section>
+</div>
+
+<script src="js/astro.js"></script>
+<script src="js/ephem-data.js"></script>
+<script src="js/ephem.js"></script>
+<script src="js/sky.js"></script>
+<script src="js/places.js"></script>
+<script src="js/app.js"></script>
+<script src="../assets/preprint/js/controls.js"></script>
+<script src="../assets/lamp.js"></script>
+<script src="../assets/share.js"></script>
+<script src="../assets/favourites.js"></script>
+</body>
+</html>

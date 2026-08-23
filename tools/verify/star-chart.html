@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>verify — star chart</title>
+<!-- The chart's arithmetic and the assertions that hold it to its claims. Both
+     are the tool's own files rather than copies: a check that has drifted from
+     the thing it checks is worse than no check, and loading the same bytes the
+     page loads is the only way to guarantee it cannot drift.
+
+     The same file runs under node — `node star-chart/js/selftest.js` — off one
+     set of assertions. This page exists because a star chart is the most
+     convincing thing in the world to look at and the least verifiable: a sky
+     drawn ninety degrees out, or a year out, or with the pole in the wrong
+     place, looks exactly as much like the night sky as a correct one. So the
+     positions are measured against JPL DE440s, printed by Skyfield, and the
+     tolerances are stated rather than hoped for. -->
+<script src="/star-chart/js/astro.js"></script>
+<script src="/star-chart/js/ephem-data.js"></script>
+<script src="/star-chart/js/ephem.js"></script>
+<script src="/star-chart/js/selftest.js"></script>
+</head>
+<body style="margin:0;font:13px ui-monospace,monospace">
+<pre id="out">running…</pre>
+
+<script>
+var out = document.getElementById('out');
+setTimeout(function () {
+  var t0 = Date.now();
+  var lines = [];
+  StarChartSelftest(function (results, passed, total) {
+    results.forEach(function (r) {
+      lines.push((r.pass ? 'PASS  ' : 'FAIL  ') + r.name + (r.detail ? '  ::  ' + r.detail : ''));
+    });
+    lines.push('');
+    lines.push(passed + ' pass, ' + (total - passed) + ' fail, ' +
+               ((Date.now() - t0) / 1000).toFixed(1) + 's');
+  });
+  out.textContent = lines.join('\n');
+}, 0);
+</script>
+</body>
+</html>

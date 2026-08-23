@@ -1,0 +1,270 @@
+/* Tool-specific layout only. Faces, buttons, tags, fields, the title and the
+   toolbar come from ../assets/base.css over the vendored system. */
+
+:root {
+  /* The chart's own pens. They are named here rather than written into each
+     rule so the figure is restyled in one place, and every one of them is a
+     system value rather than a literal: the sky follows the mode like every
+     other surface on the site. On paper the stars are ink; on an unlit sheet
+     the ground and the ink change places and they are light. That is the whole
+     dark-mode story and it needed no second implementation.
+
+     No plate appears anywhere on the chart. This section has already spent its
+     one licensed breach on the full bleed, and law 00 is explicit that a
+     second one cancels the first rather than adding to it. The selected object
+     is marked by shape — four ticks and a gap — not by colour. */
+  --sky-ground: var(--pp-paper);
+  --sky-ink: var(--pp-ink);
+  --sky-rule: var(--pp-edge);
+  --sky-line: color-mix(in srgb, var(--pp-ink) 34%, transparent);
+  --sky-quiet: color-mix(in srgb, var(--pp-ink) 22%, transparent);
+  --sky-mark: var(--pp-ink);
+}
+
+.tool-head { padding-bottom: var(--pp-space-3); }
+
+/* The place field wants to be wide: a place name is longer than a number. */
+.toolbar .place { min-width: 15ch; flex: 1 1 15ch; }
+
+.toolbar .switches {
+  flex-wrap: wrap;
+  gap: var(--pp-space-2) var(--pp-space-3);
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pp-space-1);
+  font: var(--pp-size-sm) / 1 var(--pp-font-mono);
+  letter-spacing: var(--w-track-mono);
+  white-space: nowrap;
+}
+
+.place-note {
+  margin: var(--pp-space-2) 0 0;
+  font: var(--pp-size-sm) / 1.4 var(--pp-font-mono);
+  color: var(--pp-faint);
+  min-height: 1.2em;
+}
+
+.alternatives {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pp-space-1);
+  margin-top: var(--pp-space-1);
+}
+
+.alternatives:empty { display: none; }
+
+.alternatives .btn-ghost.is-on {
+  background: var(--pp-ink);
+  color: var(--pp-paper);
+}
+
+/* ---- the chart ------------------------------------------------------ */
+
+#stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pp-space-4);
+  align-items: center;
+  padding: 0 var(--pp-gutter) var(--pp-space-4);
+  max-width: var(--pp-page-max);
+  margin: 0 auto;
+}
+
+.sky-holder {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  /* Never taller than the window minus the chrome above it, so the whole sky
+     is on screen without a scroll. */
+  max-height: min(78vh, 760px);
+  max-width: min(100%, 760px);
+  border: var(--pp-rule-structure) solid var(--pp-edge);
+  background: var(--sky-ground);
+}
+
+.sky-holder canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+}
+
+.sky-holder canvas:active { cursor: grabbing; }
+
+.sky-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  font: var(--pp-size-sm) / 1 var(--pp-font-mono);
+  color: var(--pp-faint);
+}
+
+.compass span {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font: 700 var(--pp-size-sm) / 1 var(--pp-font-mono);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-muted);
+  background: var(--sky-ground);
+  padding: 2px 3px;
+  pointer-events: none;
+}
+
+/* ---- the panel ------------------------------------------------------ */
+
+.detail {
+  position: relative;
+  width: 100%;
+  max-width: min(100%, 760px);
+  border: var(--pp-rule-structure) solid var(--pp-edge);
+  background: var(--pp-surface);
+  padding: var(--pp-space-4);
+}
+
+.detail-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: var(--pp-target-compact);
+  height: var(--pp-target-compact);
+  border: 0;
+  background: none;
+  color: var(--pp-muted);
+  font: 400 20px / 1 var(--pp-font-mono);
+  cursor: pointer;
+}
+
+.detail-close:hover { color: var(--pp-ink); }
+
+.detail-kind {
+  margin: 0;
+  font: var(--pp-size-xs) / 1 var(--pp-font-mono);
+  letter-spacing: var(--w-track-label);
+  text-transform: uppercase;
+  color: var(--pp-faint);
+}
+
+.detail-kind:empty { display: none; }
+
+.detail-name {
+  margin: var(--pp-space-1) 0 0;
+  font: var(--pp-weight-semibold) var(--pp-size-xl) / 1.1 var(--pp-font-display);
+}
+
+.detail-sub {
+  margin: var(--pp-space-1) 0 0;
+  font: var(--pp-size-sm) / 1.4 var(--pp-font-body);
+  color: var(--pp-muted);
+}
+
+.detail-sub:empty { display: none; }
+
+.detail-rows {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--pp-space-1) var(--pp-space-4);
+  margin: var(--pp-space-3) 0 0;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+  padding-top: var(--pp-space-3);
+}
+
+.detail-rows dt {
+  font: var(--pp-size-xs) / 1.5 var(--pp-font-mono);
+  letter-spacing: var(--w-track-label);
+  color: var(--pp-faint);
+}
+
+.detail-rows dd {
+  margin: 0;
+  font: var(--pp-size-sm) / 1.5 var(--pp-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- the foot ------------------------------------------------------- */
+
+.status-line {
+  margin: 0 0 var(--pp-space-5);
+  font: var(--pp-size-sm) / 1.5 var(--pp-font-mono);
+  color: var(--pp-muted);
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+  padding-top: var(--pp-space-2);
+}
+
+.notes p { max-width: var(--pp-measure); }
+
+.sources {
+  list-style: none;
+  margin: var(--pp-space-3) 0 var(--pp-space-6);
+  padding: 0;
+  max-width: var(--pp-measure);
+}
+
+.sources li {
+  display: grid;
+  /* max-content, not a ch measure: these labels carry letter-spacing, so a
+     column counted in characters is narrower than the word that goes in it
+     and "DISTANCES" ends up touching the sentence beside it. */
+  grid-template-columns: max-content 1fr;
+  gap: var(--pp-space-3);
+  padding: var(--pp-space-2) 0;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+  font: var(--pp-size-sm) / 1.5 var(--pp-font-body);
+}
+
+.sources li span {
+  font: var(--pp-size-xs) / 1.7 var(--pp-font-mono);
+  letter-spacing: var(--w-track-label);
+  text-transform: uppercase;
+  color: var(--pp-faint);
+}
+
+/* ---- wide ----------------------------------------------------------- */
+
+@media (min-width: 62rem) {
+  #stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 22rem;
+    align-items: start;
+    gap: var(--pp-space-5);
+  }
+
+  /* With nothing selected there is no panel, and a chart squeezed into two
+     thirds of the page to leave room for an empty column is the wrong trade.
+     The column arrives with the panel. */
+  #stage:has(.detail[hidden]) { grid-template-columns: minmax(0, 1fr); }
+
+  .sky-holder {
+    max-width: 100%;
+    max-height: min(82vh, 860px);
+  }
+
+  .detail {
+    position: sticky;
+    top: var(--pp-space-4);
+    max-width: none;
+  }
+}
+
+@media (max-width: 34rem) {
+  .sources li { grid-template-columns: 1fr; gap: 2px; }
+  .detail { padding: var(--pp-space-3); }
+
+  /* Let the groups pack rather than giving each one a row of its own. On a
+     phone every row of chrome is a row the sky does not get, and the sky is
+     what the page is for. */
+  .toolbar { gap: var(--pp-space-2) var(--pp-space-3); }
+  .toolbar .place { flex: 1 1 9ch; min-width: 9ch; }
+  .toolbar .group { flex-wrap: wrap; }
+
+  /* The place and the hour each earn a line. Everything else shares. */
+  .toolbar .group:nth-child(1),
+  .toolbar .group:nth-child(2) { width: 100%; }
+
+  .sky-holder { max-height: none; }
+}

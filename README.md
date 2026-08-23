@@ -620,6 +620,35 @@ Tools that measure something outside the browser rather than a file the reader
 supplied: terrain, sky and the network connection. Every rung above `local` is
 in this category, which follows from the definition.
 
+- [Star Chart](star-chart/) — the sky over a place and an hour: 9,096 stars to
+  magnitude 6.5, the 88 constellation figures, 109 Messier objects, the five
+  naked-eye planets, and the Moon drawn with the phase and the orientation it
+  actually has. The whole visible hemisphere is one stereographic circle with
+  the zenith in the middle and east on the *left*, because the chart is the sky
+  seen from inside it rather than a map of the ground. Drag to look around,
+  pinch or scroll to zoom, and touch anything on it for its designation,
+  distance, spectrum and present altitude.
+
+  Nothing is looked up. Catalogue positions are carried forward by each star's
+  own proper motion, then precessed, nutated and aberrated to the equinox of the
+  date; the Sun, Moon and planets are summed from VSOP87D and ELP2000-82B every
+  time the clock moves. Measured against JPL DE440s over 1950–2100, the worst
+  error is 0.5″ for stars, 1.5″ for the Sun, 4″ for the planets and 27″ for the
+  Moon — a fiftieth of the Moon's own width. The tolerances are asserted in
+  [`star-chart/js/selftest.js`](star-chart/js/selftest.js), which runs both under
+  node and at [`tools/verify/star-chart.html`](tools/verify/star-chart.html) off
+  one set of assertions, against reference positions printed by Skyfield rather
+  than by this tool.
+
+  Nine thousand stars cannot each take the full reduction every frame, so the
+  drawing path composes precession, nutation, the Earth's rotation and the
+  observer's latitude into a single 3×3 matrix and spends nine multiplications
+  per star. The detail panel takes the slow exact route instead, because a
+  number a reader can copy down should not be the fast approximation; the two
+  agree to well under an arcsecond, which is a fraction of a pixel. It is on
+  `fetch` for one reason: turning a typed place name into coordinates. Type
+  coordinates, or press *here*, and it opens no socket.
+
 - [Eclipse Recon](eclipse-recon/) — a planning console for a solar eclipse.
   The path is computed from Besselian elements in the browser, with an animated
   umbra that can be scrubbed through time and a report for any point clicked or

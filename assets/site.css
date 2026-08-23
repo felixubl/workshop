@@ -97,6 +97,29 @@
   --w-code-number: var(--pp-plate-2-text);
   --w-code-comment: var(--pp-faint);
   --w-code-punct: var(--pp-muted);
+
+  /* Star colour, for the chart. This is not a code and not a licensed breach:
+     a star's colour is the star, the way a photograph of a red brick is red.
+     What is being drawn is measured — B−V, the difference between a star's
+     blue and visual magnitudes — binned into the five classes the eye can
+     actually tell apart at the size of a printed star. Past five they stop
+     sorting.
+
+     They cannot be the plates' -text companions the way the syntax colours
+     are, because there is no green star and no magenta one; the hues are
+     fixed by physics rather than chosen from the palette. What they DO borrow
+     is the rule those companions exist for — a star is a mark two pixels
+     wide, far under the 18px where a plate hands over, so every value here is
+     weighted like ink rather than like a plate.
+
+     Both modes are written out because the chart follows the mode: on paper a
+     star is dark and on an unlit sheet it is light, and a hue alone cannot
+     cross that. */
+  --w-star-hot: #2f4f8f;
+  --w-star-white: #2b2b33;
+  --w-star-yellow: #6b5a1e;
+  --w-star-orange: #7a4a1c;
+  --w-star-red: #7d2f26;
 }
 
 /* Both concern this page's own devices rather than the palette: the halftone
@@ -104,6 +127,11 @@
    double the strength. */
 [data-mode='dark'] {
   --w-screen-dot: rgba(239, 238, 232, .16);
+  --w-star-hot: #9db8f0;
+  --w-star-white: #e8e8ea;
+  --w-star-yellow: #f0e3a8;
+  --w-star-orange: #f0c089;
+  --w-star-red: #ef9d8c;
   --w-wash-0: color-mix(in srgb, var(--pp-ink) 7%, transparent);
 }
 
