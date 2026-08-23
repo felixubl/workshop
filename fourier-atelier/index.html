@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fourier Atelier — Felix' Workshop</title>
+<meta name="description" content="Drop in an SVG and watch a chain of rotating circles draw it as one single unbroken line. Every shape in the file is joined into one closed curve first, because a chain of circles can only ever draw one. The number of circles is yours to set, and the line comes back out as an SVG.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
+<script src="../assets/preprint/js/mode.js"></script>
+<link rel="stylesheet" href="../assets/preprint/styles.css">
+<link rel="stylesheet" href="../assets/preprint/core.css">
+<link rel="stylesheet" href="../assets/preprint/controls.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <!-- The ceiling lamp, drawn in assets/site.css and swung by
+       assets/lamp.js. The span is the fixture and hangs behind the page; the
+       button is the switch and sits over the shade, and swings with it. The
+       rose is the only part fixed to the ceiling: the flex turns under it, and
+       the head — the shade and the light it throws — turns again where the flex
+       ends, because a weight on a cord arrives after the cord does. -->
+    <span class="lamp" aria-hidden="true">
+      <span class="lamp__hang">
+        <span class="lamp__flex"></span>
+        <span class="lamp__head">
+          <span class="lamp__beam"></span>
+          <svg class="lamp__head-art" viewBox="-70 0 140 96" fill="none">
+            <circle class="lamp__bulb" cx="0" cy="70" r="13"></circle>
+            <g class="lamp__rig">
+              <path class="lamp__shade" d="M-16 0H16L62 62H-62Z"></path>
+              <path class="lamp__rim" d="M-64 62H64"></path>
+            </g>
+          </svg>
+        </span>
+      </span>
+      <svg class="lamp__rose" viewBox="-30 0 60 20" fill="none">
+        <path class="lamp__canopy" d="M-28 0H28V9H-28Z"></path>
+        <g class="lamp__rig">
+          <path class="lamp__grip" d="M-8 9H8L5 16H-5Z"></path>
+        </g>
+      </svg>
+    </span>
+    <button class="lamp-switch" type="button" data-mode-toggle aria-label="Switch colour mode"></button>
+
+    <div>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <div class="title-row">
+        <h1 class="tool-title">Fourier Atelier</h1>
+        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
+          <span data-share-label>copy link</span>
+        </button>
+        <button class="share-btn pin-btn" type="button" data-pin="fourier-atelier" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="spine"></div>
+
+  <label class="dropzone dz-open" id="drop">
+    <input type="file" id="file" accept="image/svg+xml,.svg">
+    <span class="dz-head">Drop an SVG here</span>
+    <span class="dz-pick">or press to choose a file</span>
+    <span class="dz-formats">Anything with shapes in it &mdash; a drawing, a logo, a portrait</span>
+    <span class="dz-note">Every shape in the file is joined into one closed curve first, because a chain of circles can only ever draw one line. Nothing is uploaded.</span>
+  </label>
+
+  <p class="sheet-note" id="status"></p>
+
+  <section id="work" hidden>
+
+    <div class="toolbar">
+      <div class="group">
+        <label for="circles">Circles</label>
+        <input class="field" type="number" id="circles" min="1" max="16384" step="1" value="400" aria-label="How many circles draw the line" data-tip="Only the largest coefficients are kept. This is literally how many rotating circles are left.">
+      </div>
+      <div class="group">
+        <label class="checkbox"><input type="checkbox" id="animate" checked> Run</label>
+        <label class="checkbox"><input type="checkbox" id="showCircles" checked> Circles</label>
+        <label class="checkbox"><input type="checkbox" id="trace"> Trace</label>
+        <label class="checkbox"><input type="checkbox" id="showCurve" checked> Whole line</label>
+      </div>
+      <div class="group">
+        <label for="speed">Speed</label>
+        <input type="range" id="speed" min="0.2" max="20" step="0.2" value="4" aria-label="How fast the circles turn">
+      </div>
+      <div class="group">
+        <label>View</label>
+        <button class="btn-ghost" type="button" id="zoomBack" aria-label="Zoom out">&minus;</button>
+        <code id="zoomOut">100%</code>
+        <button class="btn-ghost" type="button" id="zoomIn" aria-label="Zoom in">+</button>
+        <button class="btn-ghost" type="button" id="fit" data-tip="Back to the whole drawing">Fit</button>
+      </div>
+      <div class="group">
+        <label for="exportSize">Export</label>
+        <select id="exportSize" aria-label="Size of the exported drawing">
+          <option>512</option><option selected>1024</option><option>2048</option><option>4096</option>
+        </select>
+        <button class="btn-ghost" type="button" id="savePng" disabled data-tip="The whole drawing, fitted, on white">PNG</button>
+        <button class="btn-ghost" type="button" id="saveSvg" disabled data-tip="One path, one closed line, exactly what the circles draw">SVG</button>
+      </div>
+    </div>
+
+    <figure class="sheet">
+      <canvas id="stage" width="900" height="900" aria-label="The drawing traced by the circles"></canvas>
+    </figure>
+
+    <p class="sheet-note" id="stats"></p>
+
+    <div class="toolbar">
+      <div class="group">
+        <label for="samples">Samples</label>
+        <select id="samples" aria-label="Points the line is measured at" data-tip="Points around the closed curve. It caps how many circles there can be, and must be a power of two.">
+          <option>1024</option><option>2048</option><option selected>8192</option>
+          <option>16384</option><option>32768</option>
+        </select>
+      </div>
+      <div class="group">
+        <label for="res">Canvas</label>
+        <select id="res" aria-label="Size the drawing is rendered at">
+          <option>700</option><option selected>900</option><option>1200</option>
+        </select>
+        <label for="weight">Stroke</label>
+        <input type="range" id="weight" min="0.4" max="4" step="0.2" value="1.2" aria-label="Line weight">
+      </div>
+    </div>
+
+    <details class="innards">
+      <summary>How the file became one line</summary>
+
+      <p class="legend">
+        A chain of circles draws one closed curve and nothing else, so the shapes
+        in the file have to be joined before the transform ever sees them. They
+        are joined along a minimum spanning tree, walked depth first, with every
+        bridge travelled out and back again. The joins are still visible as lines
+        between shapes &mdash; retracing does not hide them. What it buys is that
+        the line returns the way it came instead of wandering on to the next
+        shape, so a join reads as one stroke rather than two, and the spanning
+        tree keeps them short. It is also what closes the curve: a walk that
+        retraces every edge finishes where it started.
+      </p>
+
+      <div class="toolbar">
+        <div class="group">
+          <label for="step">Sampling step</label>
+          <input type="range" id="step" min="0.3" max="6" step="0.1" value="1.2" aria-label="How finely each shape is walked" data-tip="How far apart the points are when each shape is walked. Smaller reads more detail and costs more.">
+        </div>
+        <div class="group">
+          <label for="tolerance">Simplify</label>
+          <input type="range" id="tolerance" min="0" max="4" step="0.1" value="0.4" aria-label="How far a shape may stray while being simplified">
+        </div>
+        <div class="group">
+          <label for="minloop">Smallest shape</label>
+          <input class="field" type="number" id="minloop" min="0" max="2000" value="8" aria-label="Shortest shape worth keeping">
+        </div>
+        <div class="group">
+          <label for="maxloops">Most shapes</label>
+          <input class="field" type="number" id="maxloops" min="1" max="4000" value="1200" aria-label="How many shapes to keep, longest first">
+        </div>
+        <div class="group">
+          <label class="checkbox" data-tip="A file often carries a white rectangle behind the drawing. Traced like any other shape it becomes the longest loop, so the pen starts on it and draws a border."><input type="checkbox" id="dropBg" checked> Drop the background shape</label>
+        </div>
+      </div>
+    </details>
+
+  </section>
+</div>
+
+<script type="module" src="script.js"></script>
+<script src="../assets/preprint/js/controls.js"></script>
+<script src="../assets/lamp.js"></script>
+<script src="../assets/share.js"></script>
+<script src="../assets/favourites.js"></script>
+</body>
+</html>

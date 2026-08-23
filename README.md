@@ -22,7 +22,7 @@ would make both harder to read. It appears as five squares filled from the
 left plus one word. The key at the foot of the index defines all five; a card
 carries the rating and nothing more.
 
-No tool is above `fetch` today: thirteen never open a socket, five read public
+No tool is above `fetch` today: fourteen never open a socket, five read public
 data and keep nothing. `store` and `account` are defined ahead of the tools
 that will need them.
 
@@ -236,6 +236,38 @@ Raster and vector images, type, colour, audio and video.
   A face has to be about an eighth of the frame's width to be found at all —
   measured, not guessed: detection holds at twelve per cent and fails at
   eleven. This is a portrait tool, not a way to pick a face out of a crowd.
+
+- [Fourier Atelier](fourier-atelier/) — drop in an SVG and watch a chain of
+  rotating circles draw it as one unbroken line. The transform is the easy half.
+  A chain of circles can draw exactly one closed curve, so the shapes in the
+  file — a portrait exported from the tool above arrives with two thousand of
+  them — have to become one curve before it ever runs. They are joined along a
+  minimum spanning tree, walked depth first, with every join travelled out and
+  back. Retracing does not hide a join, but it does mean the line returns the
+  way it came rather than wandering on to the next shape, and a walk that
+  retraces every edge finishes where it started, which is what closes the curve.
+  The pen leaves a shape at the point nearest its neighbour and in the order it
+  passes them, so the joins stay short instead of fanning out from wherever the
+  shape was entered.
+
+  No path parser is written here. The browser already evaluates a `d`
+  attribute — arcs, relative commands, every curve type — so each shape is
+  walked with `getPointAtLength`, and a file using a command this tool has never
+  heard of still works. That has one trap in it: `getPointAtLength` walks the
+  path from its start on every call, so one `d` holding two thousand subpaths is
+  quadratic and took three minutes. Cutting the `d` at each moveto and giving
+  every subpath its own element makes each call walk only its own subpath, which
+  is eight seconds.
+
+  Fewer circles means keeping the largest coefficients and throwing the rest
+  away, and the drawing is rebuilt by transforming back rather than by summing
+  every circle at every sample: `O(N log N)` against `O(N·M)`, which at a few
+  thousand circles is the difference between a control that responds and one
+  that does not. A file often carries a white rectangle behind the drawing;
+  traced like any other shape it becomes the longest loop and the pen draws a
+  border round the picture, so a shape as large as the whole drawing and no
+  longer than its own bounding box is dropped. What comes out is one path, one
+  moveto, one closepath — one line.
 
 Planned: image, SVG, font, colour, audio and video toolkits.
 

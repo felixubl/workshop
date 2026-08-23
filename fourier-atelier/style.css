@@ -1,0 +1,71 @@
+/* Tool-specific layout only. The shell, toolbar, buttons, fields, checkboxes
+   and drop target come from ../assets/base.css over the vendored system. What
+   is here is the stage — one big sheet with the result on it — and the rail of
+   method samples beside it. */
+
+/* The drop target has two sizes. Open, it fills the page and is the only thing
+   to do. Once a picture is loaded it drops to a line: still a target, no
+   longer an invitation. */
+.dz-open {
+  padding: clamp(2.5rem, 8vw, 4.5rem) 1.25rem;
+}
+.dz-head {
+  display: block;
+  font-family: var(--pp-font-display);
+  font-weight: var(--pp-weight-head);
+  font-size: var(--pp-size-subhead);
+  letter-spacing: var(--pp-track-head);
+  color: var(--pp-ink);
+}
+.dz-pick,
+.dz-formats,
+.dz-note {
+  display: block;
+  color: var(--pp-muted);
+  font-size: var(--pp-size-label);
+}
+.dz-note {
+  margin-top: 0.6rem;
+}
+
+/* The drawing is the whole page. The canvas is square, so capping the sheet by
+   viewport height rather than by width is what keeps the whole drawing on
+   screen without scrolling; the zoom is for looking closer, not for seeing all
+   of it. The frame comes from .sheet, which also carries the surface the canvas
+   sits on; the canvas itself stays transparent so the ink and the paper both
+   follow the colour mode rather than being fixed here. */
+.sheet {
+  margin: 0.6rem auto 0.5rem;
+  /* A starting point only; script.js measures the room actually left below the
+     controls and sets this properly, because the controls change height with
+     the width of the window. */
+  max-width: min(56rem, 64vh);
+}
+#stage {
+  display: block;
+  width: 100%;
+  height: auto;
+  cursor: grab;
+  touch-action: none;
+}
+#stage.dragging { cursor: grabbing; }
+
+/* Once there is a drawing, the invitation shrinks to a line: still a target,
+   no longer the thing to look at. */
+.dropzone:not(.dz-open) {
+  padding: 0.4rem 0.8rem;
+}
+.dropzone:not(.dz-open) .dz-head {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  font-weight: normal;
+  letter-spacing: normal;
+  color: var(--pp-muted);
+}
+.dropzone:not(.dz-open) .dz-pick,
+.dropzone:not(.dz-open) .dz-formats,
+.dropzone:not(.dz-open) .dz-note {
+  display: none;
+}
+
+.innards { margin-top: 1.25rem; }
