@@ -30,19 +30,38 @@ const CHAR_OF = Object.create(null);
 for (const name of Object.keys(MORSE)) CHAR_OF[MORSE[name]] = name;
 const CODES = Object.keys(CHAR_OF);
 
-/* The lengths the code defines, in units, and the thresholds between them. A
-   press is a dah past two, because two is the midpoint of one and three; a
-   silence ends the letter past two and the word past five, five being the
-   midpoint of three and seven. */
+/* The lengths the code defines, and the thresholds between them. A press is a
+   dah past two units, two being the midpoint of one and three.
+
+   Silences are counted against a SECOND unit, because a hand does not pause the
+   way it presses. The elements inside a character are muscle memory and come out
+   at the speed of the dial; the gap before the next character also holds however
+   long it takes to remember what that character is, and for anyone not yet
+   fluent that is several times longer. Counting both against one unit is what
+   makes a beginner's message arrive as single letters — every thinking pause
+   reads as the end of a word.
+
+   The trade has had a name for this since the 1950s: Farnsworth timing,
+   characters at one speed and the spacing at another. The spacing dial is that
+   second speed. Set it equal to the sending speed and this reduces exactly to
+   strict timing.
+
+   The thresholds are still midpoints, which is still where a guess is least
+   likely to be wrong. A silence ends the letter halfway between one character
+   unit and three spacing units, and adds a word space at five spacing units,
+   halfway between three and seven. */
 const DAH_AT = 2;
-const LETTER_AT = 2;
-const WORD_AT = 5;
+const INTRA_GAP = 1;
+const LETTER_GAP = 3;
+const WORD_GAP = 7;
 const TAPE_UNITS = 60;
 const LEVEL = 0.16;
 
 const slab = document.getElementById("slab");
 const wpm = document.getElementById("wpm");
 const unitOut = document.getElementById("unitOut");
+const spacing = document.getElementById("spacing");
+const gapOut = document.getElementById("gapOut");
 const fistOut = document.getElementById("fistOut");
 const matchBtn = document.getElementById("match");
 const pitch = document.getElementById("pitch");
@@ -62,11 +81,16 @@ const cells = [];
 
 const state = {
   unit: 100,
+  gapUnit: 240,
+  letterAt: 410,
+  wordAt: 1200,
   code: "",
   tokens: [],
   events: [],
   dits: [],
+  gaps: [],
   down: 0,
+  lastUp: 0,
 };
 
 let letterTimer = 0;
@@ -82,6 +106,19 @@ function pretty(code) {
 
 function press(now) {
   if (state.down) return;
+  /* The silence that just ended, measured before anything is decided about it.
+     Anything past the dah threshold is a gap BETWEEN characters rather than one
+     inside a character, and that judgement uses only the sending speed. Reading
+     it independently of the letter and word thresholds is the point: a
+     measurement that depended on the spacing dial could never tell you the
+     spacing dial was wrong. */
+  if (state.lastUp) {
+    const silence = now - state.lastUp;
+    if (silence > state.unit * DAH_AT && silence < 8000) {
+      state.gaps.push(silence);
+      if (state.gaps.length > 12) state.gaps.shift();
+    }
+  }
   state.down = now;
   clearTimeout(letterTimer);
   clearTimeout(wordTimer);
@@ -108,8 +145,9 @@ function release(now) {
 
   slab.classList.remove("is-down");
   toneOff();
-  letterTimer = setTimeout(commitLetter, state.unit * LETTER_AT);
-  wordTimer = setTimeout(commitWord, state.unit * WORD_AT);
+  state.lastUp = now;
+  letterTimer = setTimeout(commitLetter, state.letterAt);
+  wordTimer = setTimeout(commitWord, state.wordAt);
   render();
   wake();
 }
@@ -148,6 +186,8 @@ function clearAll() {
   state.tokens = [];
   state.events = [];
   state.dits = [];
+  state.gaps = [];
+  state.lastUp = 0;
   render();
   wake();
 }
@@ -264,11 +304,25 @@ function render() {
     cell.classList.toggle("is-hit", live && code === state.code);
   }
 
+  /* Both halves of the reader's own timing, read back. The dits give the speed
+     the characters are actually going out at; the gaps between characters give
+     the speed the spacing is actually going out at, which for most hands is a
+     good deal slower. A letter gap is three spacing units, so the spacing unit
+     is a third of the median gap. */
   if (state.dits.length >= 3) {
     const measured = Math.round(1200 / median(state.dits));
-    fistOut.textContent = measured + " wpm";
-    matchBtn.disabled = measured === Number(wpm.value) || measured < 5 || measured > 40;
+    let label = measured + " wpm";
+    let spaced = 0;
+    if (state.gaps.length >= 3) {
+      spaced = Math.min(measured, Math.max(3, Math.round(3600 / median(state.gaps))));
+      label += " · spacing " + spaced;
+    }
+    fistOut.textContent = label;
+    const sameSpeed = measured === Number(wpm.value);
+    const sameSpacing = !spaced || spaced === Number(spacing.value);
+    matchBtn.disabled = (sameSpeed && sameSpacing) || measured < 5 || measured > 40;
     matchBtn.dataset.wpm = String(measured);
+    matchBtn.dataset.spacing = spaced ? String(spaced) : "";
   } else {
     fistOut.textContent = "—";
     matchBtn.disabled = true;
@@ -418,7 +472,16 @@ function wake() {
 function applyUnit() {
   const value = Math.min(40, Math.max(5, Number(wpm.value) || 12));
   state.unit = 1200 / value;
+  /* Spacing may be slower than the characters but never faster: a gap shorter
+     than the elements it separates is not a gap anyone could read. */
+  const spaced = Math.min(value, Math.max(3, Number(spacing.value) || 5));
+  state.gapUnit = 1200 / spaced;
+  state.letterAt = (state.unit * INTRA_GAP + state.gapUnit * LETTER_GAP) / 2;
+  state.wordAt = state.gapUnit * (LETTER_GAP + WORD_GAP) / 2;
+
   unitOut.textContent = Math.round(state.unit) + " ms";
+  gapOut.textContent = "letter " + Math.round(state.letterAt) +
+                       " · word " + Math.round(state.wordAt) + " ms";
   tapeLegend.textContent = TAPE_UNITS + " units · " + (state.unit * TAPE_UNITS / 1000).toFixed(1) + " s";
   render();
   wake();
@@ -426,10 +489,14 @@ function applyUnit() {
 
 wpm.addEventListener("input", applyUnit);
 wpm.addEventListener("change", applyUnit);
+spacing.addEventListener("input", applyUnit);
+spacing.addEventListener("change", applyUnit);
 
 matchBtn.addEventListener("click", () => {
   wpm.value = matchBtn.dataset.wpm;
+  if (matchBtn.dataset.spacing) spacing.value = matchBtn.dataset.spacing;
   wpm.dispatchEvent(new Event("input", { bubbles: true }));
+  spacing.dispatchEvent(new Event("input", { bubbles: true }));
   applyUnit();
 });
 

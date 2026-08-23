@@ -74,8 +74,14 @@
   <div class="toolbar">
     <div class="group">
       <label for="wpm">Speed</label>
-      <input class="field" type="number" id="wpm" min="5" max="40" step="1" value="12" aria-label="Sending speed in words per minute" data-tip="Words per minute, by the standard word PARIS. It sets the unit every press and pause is measured against">
+      <input class="field" type="number" id="wpm" min="5" max="40" step="1" value="12" aria-label="Sending speed in words per minute" data-tip="Words per minute, by the standard word PARIS. It sets the unit every press is measured against">
       <span class="tag readout" id="unitOut">100 ms</span>
+    </div>
+
+    <div class="group">
+      <label for="spacing">Spacing</label>
+      <input class="field" type="number" id="spacing" min="3" max="40" step="1" value="5" aria-label="Spacing speed in words per minute" data-tip="Farnsworth timing: the words a minute the GAPS are counted at, which for most hands is slower than the sending speed. Lower it to give yourself longer to find the next character without the tool calling the word over. Set it equal to the speed for strict timing">
+      <span class="tag readout" id="gapOut">letter 410 · word 1200 ms</span>
     </div>
 
     <div class="group">
@@ -149,12 +155,28 @@
   </p>
 
   <p class="note">
-    A press is read as a dah past two units, and a silence ends the letter past
-    two and adds a word space past five. Those are the midpoints between the
-    lengths the code defines, so they are where the guess is least likely to be
-    wrong. If your letters keep running together or breaking apart, the dial is
-    set to somebody else's speed rather than yours; the measured reading beside
-    it, and the match button, are there for that.
+    A press is read as a dah past two units, the midpoint of one and three.
+    Silences are read against a second unit, because a hand does not pause the
+    way it presses: the elements inside a character are muscle memory and come
+    out at the speed of the dial, while the gap before the next character also
+    holds however long it takes to remember what that character is. Counting
+    both against one unit is what makes a beginner's message arrive as single
+    letters — every thinking pause reads as the end of a word. The trade has
+    had a name for the fix since the 1950s: <em>Farnsworth timing</em>,
+    characters at one speed and the spacing at another, and the spacing dial is
+    that second speed. Set it equal to the sending speed and this reduces
+    exactly to strict timing.
+  </p>
+
+  <p class="note">
+    The thresholds stay midpoints, which is still where a guess is least likely
+    to be wrong: a silence ends the letter halfway between one character unit
+    and three spacing units, and adds a word space at five spacing units,
+    halfway between three and seven. Both are printed beside the dial in
+    milliseconds, so what the tool is waiting for is never a guess on your part
+    either. If your letters keep running together or breaking apart, the dials
+    are set to somebody else's hands rather than yours; the reading beside them
+    measures both your dits and your gaps, and the match button sets both.
   </p>
 
   <p class="note">
