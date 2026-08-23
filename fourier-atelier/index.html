@@ -132,6 +132,52 @@
       </div>
     </div>
 
+    <div class="result-bar">
+      <p class="section-label">The function</p>
+      <code class="readout" id="fnCount"></code>
+    </div>
+
+    <p class="formula">
+      <i>f</i>(<i>t</i>)&nbsp;=&nbsp;<span class="sum">&Sigma;</span>&nbsp;<i>c<sub>n</sub></i>&nbsp;<i>e</i><sup>2&pi;<i>i n t</i></sup>
+    </p>
+    <p class="legend">
+      That is the drawing &mdash; not a description of it. <i>t</i> runs from 0 to 1,
+      one lap of the pen. Each term is one circle: <i>n</i> is how many turns it makes
+      in that lap, and <i>c<sub>n</sub></i> is a complex number saying how big it is and
+      where it starts. Add them up at a given <i>t</i> and you have the point the pen is
+      on. Everything else in this tool is machinery for choosing the <i>c<sub>n</sub></i>.
+    </p>
+    <p class="formula formula--head" id="fnHead"></p>
+
+    <div class="sheet">
+      <div class="sheet-scroll">
+        <table id="termTable">
+          <thead>
+            <tr>
+              <th style="width: 4rem">rank</th>
+              <th style="width: 6rem">n</th>
+              <th style="width: 8rem">radius</th>
+              <th style="width: 7rem">phase</th>
+              <th style="width: 7rem">share</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="sheet-note" id="fnNote"></p>
+
+    <div class="toolbar">
+      <div class="group">
+        <label for="rows">Show</label>
+        <input class="field" type="number" id="rows" min="1" max="500" value="24" aria-label="How many terms to list">
+      </div>
+      <div class="group">
+        <button class="btn-ghost" type="button" id="copyCsv" data-tip="Every term, as n, real, imaginary, radius and phase">Copy the terms</button>
+        <button class="btn-ghost" type="button" id="copyCode" data-tip="A runnable f(t) carrying every coefficient of this drawing">Copy as code</button>
+      </div>
+    </div>
+
     <details class="innards">
       <summary>How the file became one line</summary>
 

@@ -75,6 +75,113 @@ function rebuildNow() {
     " circles · mean error " + (err / BOX * 100).toFixed(2) + "% of the frame" + joins;
   paintCurve();
   resetTrace();
+  showFunction();
+}
+
+// ── The function ────────────────────────────────────────────────────────────
+//
+// The drawing is not a picture the tool is keeping somewhere; it is this sum,
+// and nothing else. Printing the terms is therefore the whole definition rather
+// than a readout about it — the numbers below are what the pen is obeying.
+
+// A typographic minus, not a hyphen, and never a signed zero.
+function fmt(x, dp) {
+  const v = x.toFixed(dp == null ? 2 : dp);
+  if (/^-0(\.0*)?$/.test(v)) return v.slice(1);
+  return v.replace("-", "\u2212");
+}
+
+function signed(x) {
+  return (x < 0 ? "\u2212 " : "+ ") + fmt(Math.abs(x));
+}
+
+function showFunction() {
+  const kept = state.built.kept;
+  const n = state.samples.length;
+  $("fnCount").textContent = kept.length + " of " + n + " terms";
+
+  // The first few written out, so the general form above has something
+  // concrete under it.
+  const head = kept.slice(0, 3).map((c) =>
+    "(" + fmt(c.re) + " " + signed(c.im) + "i)\u00b7e^(2\u03c0i\u00b7" + fmt(c.freq, 0) + "\u00b7t)"
+  ).join("  +  ");
+  const rest = kept.length > 3 ? "  +  \u2026 and " + (kept.length - 3) + " more" : "";
+  $("fnHead").textContent = "f(t) = " + head + rest;
+
+  let sum = 0;
+  for (const c of kept) sum += c.mag;
+  const rows = Math.min(+$("rows").value, kept.length);
+  const body = [];
+  for (let i = 0; i < rows; i++) {
+    const c = kept[i];
+    const deg = (Math.atan2(c.im, c.re) * 180) / Math.PI;
+    body.push("<tr><td>" + (i + 1) + "</td><td>" + c.freq + "</td><td>" +
+      fmt(c.mag) + "</td><td>" + fmt(deg, 1) + "\u00b0</td><td>" +
+      (sum > 0 ? ((c.mag / sum) * 100).toFixed(2) : "0") + "%</td></tr>");
+  }
+  $("termTable").querySelector("tbody").innerHTML = body.join("");
+  $("fnNote").textContent =
+    "Radii are in the units of the frame, which is 1000 across. A term with n = 3 " +
+    "turns three times while the pen goes round once; a negative n turns the other way. " +
+    "Showing " + rows + " of " + kept.length + ".";
+}
+
+function termsCSV() {
+  const lines = ["n,re,im,radius,phase_deg"];
+  for (const c of state.built.kept) {
+    lines.push([c.freq, c.re, c.im, c.mag, (Math.atan2(c.im, c.re) * 180) / Math.PI].join(","));
+  }
+  return lines.join("\n");
+}
+
+function termsCode() {
+  const terms = state.built.kept
+    .map((c) => "  { n: " + c.freq + ", re: " + c.re.toFixed(4) + ", im: " + c.im.toFixed(4) + " },")
+    .join("\n");
+  return "// This drawing, in full. f(t) for t from 0 to 1 traces it once.\n" +
+    "// Coordinates are in a frame 1000 across, centred on the origin.\n" +
+    "const terms = [\n" + terms + "\n];\n\n" +
+    "function f(t) {\n" +
+    "  let x = 0, y = 0;\n" +
+    "  for (const c of terms) {\n" +
+    "    const a = 2 * Math.PI * c.n * t;\n" +
+    "    x += c.re * Math.cos(a) - c.im * Math.sin(a);\n" +
+    "    y += c.re * Math.sin(a) + c.im * Math.cos(a);\n" +
+    "  }\n" +
+    "  return { x, y };\n" +
+    "}\n";
+}
+
+// The modern clipboard call needs a permission the browser will not always
+// grant. The old selection-and-copy route needs none, so it stands behind it.
+function copyTheOldWay(text) {
+  const box = document.createElement("textarea");
+  box.value = text;
+  box.setAttribute("readonly", "");
+  box.style.cssText = "position:fixed;top:0;left:-9999px;opacity:0";
+  document.body.appendChild(box);
+  box.select();
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+  box.remove();
+  return ok;
+}
+
+async function copyOut(text, label, button) {
+  let ok = false;
+  try {
+    await navigator.clipboard.writeText(text);
+    ok = true;
+  } catch (e) {
+    ok = copyTheOldWay(text);
+  }
+  if (!ok) {
+    say("the browser would not let this page reach the clipboard, so " + label + " was not copied");
+    return;
+  }
+  const was = button.textContent;
+  button.textContent = "copied";
+  setTimeout(() => { button.textContent = was; }, 1400);
 }
 
 // ── Drawing ─────────────────────────────────────────────────────────────────
@@ -217,7 +324,7 @@ function setAnimation() {
 // with the width of the window and with whether the drop target has collapsed.
 // So the space is measured rather than guessed at in the stylesheet.
 function fitStage() {
-  const sheet = document.querySelector(".sheet");
+  const sheet = document.querySelector("figure.sheet");
   if (!sheet || $("work").hidden) return;
   sheet.style.maxWidth = "";
   const top = sheet.getBoundingClientRect().top;
@@ -370,6 +477,13 @@ for (const id of ["showCurve", "showCircles", "trace"]) {
 }
 $("animate").addEventListener("change", setAnimation);
 $("speed").addEventListener("input", () => {});
+$("rows").addEventListener("change", () => { if (state.built) showFunction(); });
+$("copyCsv").addEventListener("click", (e) => {
+  if (state.built) copyOut(termsCSV(), "the terms", e.currentTarget);
+});
+$("copyCode").addEventListener("click", (e) => {
+  if (state.built) copyOut(termsCode(), "the code", e.currentTarget);
+});
 
 // Both exports show the whole drawing, fitted, whatever the screen happens to
 // be zoomed to. The zoom is for looking; a saved file that quietly cropped

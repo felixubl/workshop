@@ -34,7 +34,9 @@
    of it. The frame comes from .sheet, which also carries the surface the canvas
    sits on; the canvas itself stays transparent so the ink and the paper both
    follow the colour mode rather than being fixed here. */
-.sheet {
+/* Scoped to the figure: the terms table further down is a .sheet too, and it
+   wants the full width rather than the canvas's. */
+figure.sheet {
   margin: 0.6rem auto 0.5rem;
   /* A starting point only; script.js measures the room actually left below the
      controls and sets this properly, because the controls change height with
@@ -69,3 +71,34 @@
 }
 
 .innards { margin-top: 1.25rem; }
+
+/* The formula is set in the display face rather than the mono one: it is a
+   piece of notation, not a readout, and the mono face has no italic worth
+   reading at this size. */
+.formula {
+  font-family: var(--pp-font-display);
+  font-size: 1.15rem;
+  line-height: 1.7;
+  color: var(--pp-ink);
+  margin: 0.9rem 0 0.4rem;
+}
+.formula .sum {
+  font-size: 1.5em;
+  line-height: 0;
+  vertical-align: -0.18em;
+}
+.formula sup { font-size: 0.66em; }
+.formula sub { font-size: 0.66em; }
+
+/* The written-out head is the same statement with this drawing's own numbers
+   in it, so it is set smaller and in the mono face where the digits line up. */
+.formula--head {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  color: var(--pp-muted);
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-bottom: 0.3rem;
+}
+
+#termTable td { font-variant-numeric: tabular-nums; }
