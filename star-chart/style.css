@@ -35,14 +35,14 @@
   display: inline-flex;
   align-items: center;
   gap: var(--pp-space-1);
-  font: var(--pp-size-sm) / 1 var(--pp-font-mono);
+  font: var(--pp-size-mono) / 1 var(--pp-font-mono);
   letter-spacing: var(--w-track-mono);
   white-space: nowrap;
 }
 
 .place-note {
   margin: var(--pp-space-2) 0 0;
-  font: var(--pp-size-sm) / 1.4 var(--pp-font-mono);
+  font: var(--pp-size-mono) / 1.4 var(--pp-font-mono);
   color: var(--pp-faint);
   min-height: 1.2em;
 }
@@ -63,15 +63,31 @@
 
 /* ---- the chart ------------------------------------------------------ */
 
+/* Two columns: the sky, and the column that tells you what is in it. The
+   second one used to arrive only when something was selected, on the argument
+   that an empty column is not worth narrowing the chart for. It is never empty
+   now -- the finder and the list of what is above the horizon are the answer
+   to "what can I see", and that question is asked before anything is clicked,
+   so the column is permanent. */
 #stage {
-  display: flex;
-  flex-direction: column;
-  gap: var(--pp-space-4);
-  align-items: center;
+  display: grid;
+  gap: var(--pp-space-5) var(--pp-space-5);
+  justify-items: center;
   padding: 0 var(--pp-gutter) var(--pp-space-4);
   max-width: var(--pp-page-max);
   margin: 0 auto;
 }
+
+.sky-column,
+.side {
+  width: 100%;
+  max-width: min(100%, 760px);
+  display: flex;
+  flex-direction: column;
+}
+
+.sky-column { gap: var(--pp-space-3); }
+.side { gap: var(--pp-space-4); }
 
 .sky-holder {
   position: relative;
@@ -79,10 +95,12 @@
   aspect-ratio: 1 / 1;
   /* Never taller than the window minus the chrome above it, so the whole sky
      is on screen without a scroll. */
-  max-height: min(78vh, 760px);
-  max-width: min(100%, 760px);
+  max-height: min(72vh, 720px);
   border: var(--pp-rule-structure) solid var(--pp-edge);
   background: var(--sky-ground);
+  /* The chart ends at its frame. The compass letters and the hover label are
+     placed from script and both can be asked for a point past the edge. */
+  overflow: hidden;
 }
 
 .sky-holder canvas {
@@ -101,14 +119,14 @@
   display: grid;
   place-items: center;
   margin: 0;
-  font: var(--pp-size-sm) / 1 var(--pp-font-mono);
+  font: var(--pp-size-mono) / 1 var(--pp-font-mono);
   color: var(--pp-faint);
 }
 
 .compass span {
   position: absolute;
   transform: translate(-50%, -50%);
-  font: 700 var(--pp-size-sm) / 1 var(--pp-font-mono);
+  font: 700 var(--pp-size-mono) / 1 var(--pp-font-mono);
   letter-spacing: var(--w-track-mono);
   color: var(--pp-muted);
   background: var(--sky-ground);
@@ -116,12 +134,118 @@
   pointer-events: none;
 }
 
+/* The name under the pointer. It follows the cursor, so it is placed from
+   script; everything here is what it looks like once it is there. */
+.sky-hover {
+  position: absolute;
+  margin: 0;
+  padding: 3px 7px;
+  transform: translate(14px, -50%);
+  pointer-events: none;
+  white-space: nowrap;
+  font: var(--pp-size-mono) / 1.3 var(--pp-font-mono);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-ink);
+  background: var(--sky-ground);
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-sm);
+}
+
+.sky-hover.is-left { transform: translate(calc(-100% - 14px), -50%); }
+.sky-hover em { font-style: normal; color: var(--pp-faint); }
+
+/* ---- the view bar --------------------------------------------------- */
+
+.view-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--pp-space-2) var(--pp-space-4);
+}
+
+.view-hint {
+  margin: 0;
+  font: var(--pp-size-label) / 1.4 var(--pp-font-mono);
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+}
+
+.view-bar .readout { min-width: 5.5ch; justify-content: center; }
+
+/* ---- the finder and the list ---------------------------------------- */
+
+.finder .field { flex: 1 1 12ch; min-width: 0; }
+
+.find-results:empty { display: none; }
+
+.up-now { display: contents; }
+.up-now .section-label { margin: 0; }
+
+.up-head {
+  margin: var(--pp-space-3) 0 0;
+  font: var(--pp-size-label) / 1.6 var(--pp-font-mono);
+  letter-spacing: var(--w-track-label);
+  text-transform: uppercase;
+  color: var(--pp-faint);
+}
+
+.up-head:first-child { margin-top: 0; }
+
+.up-empty {
+  margin: 0;
+  font: var(--pp-size-mono) / 1.5 var(--pp-font-mono);
+  color: var(--pp-faint);
+}
+
+/* One row idiom for both lists: a name, where to look, and how bright. The
+   whole row is the control, because the name is the thing you want to press
+   and a separate button beside it would be a second target for one act. */
+.sky-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content 4.5ch;
+  align-items: baseline;
+  gap: var(--pp-space-2) var(--pp-space-3);
+  width: 100%;
+  text-align: left;
+  padding: var(--pp-space-2) var(--pp-space-2);
+  border: 0;
+  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
+  background: none;
+  color: var(--pp-ink);
+  font: var(--pp-size-mono) / 1.4 var(--pp-font-body);
+  cursor: pointer;
+}
+
+.sky-row:hover { background: var(--pp-tint); }
+.sky-row:active { transform: var(--w-press); }
+
+/* Selected, in ink -- the same mark the place alternatives use. The chart's
+   own selection is carried by shape rather than colour because the chart has
+   no second breach to spend; a list is ordinary page furniture and this is
+   the page's ordinary way of saying "this one". */
+.sky-row.is-on { background: var(--pp-ink); color: var(--pp-paper); }
+.sky-row.is-on .sky-row-where,
+.sky-row.is-on .sky-row-mag,
+.sky-row.is-on em { color: var(--pp-paper); }
+
+.sky-row-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sky-row-name em { font-style: normal; color: var(--pp-faint); }
+
+.sky-row-where,
+.sky-row-mag {
+  font-family: var(--pp-font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--pp-muted);
+  white-space: nowrap;
+}
+
+.sky-row-mag { text-align: right; }
+
 /* ---- the panel ------------------------------------------------------ */
 
 .detail {
   position: relative;
   width: 100%;
-  max-width: min(100%, 760px);
   border: var(--pp-rule-structure) solid var(--pp-edge);
   background: var(--pp-surface);
   padding: var(--pp-space-4);
@@ -144,7 +268,7 @@
 
 .detail-kind {
   margin: 0;
-  font: var(--pp-size-xs) / 1 var(--pp-font-mono);
+  font: var(--pp-size-label) / 1 var(--pp-font-mono);
   letter-spacing: var(--w-track-label);
   text-transform: uppercase;
   color: var(--pp-faint);
@@ -154,12 +278,12 @@
 
 .detail-name {
   margin: var(--pp-space-1) 0 0;
-  font: var(--pp-weight-semibold) var(--pp-size-xl) / 1.1 var(--pp-font-display);
+  font: var(--pp-weight-strong) var(--pp-size-subhead) / 1.1 var(--pp-font-display);
 }
 
 .detail-sub {
   margin: var(--pp-space-1) 0 0;
-  font: var(--pp-size-sm) / 1.4 var(--pp-font-body);
+  font: var(--pp-size-mono) / 1.4 var(--pp-font-body);
   color: var(--pp-muted);
 }
 
@@ -175,14 +299,14 @@
 }
 
 .detail-rows dt {
-  font: var(--pp-size-xs) / 1.5 var(--pp-font-mono);
+  font: var(--pp-size-label) / 1.5 var(--pp-font-mono);
   letter-spacing: var(--w-track-label);
   color: var(--pp-faint);
 }
 
 .detail-rows dd {
   margin: 0;
-  font: var(--pp-size-sm) / 1.5 var(--pp-font-mono);
+  font: var(--pp-size-mono) / 1.5 var(--pp-font-mono);
   font-variant-numeric: tabular-nums;
 }
 
@@ -190,7 +314,7 @@
 
 .status-line {
   margin: 0 0 var(--pp-space-5);
-  font: var(--pp-size-sm) / 1.5 var(--pp-font-mono);
+  font: var(--pp-size-mono) / 1.5 var(--pp-font-mono);
   color: var(--pp-muted);
   border-top: var(--pp-rule-hairline) solid var(--pp-hair);
   padding-top: var(--pp-space-2);
@@ -214,11 +338,11 @@
   gap: var(--pp-space-3);
   padding: var(--pp-space-2) 0;
   border-top: var(--pp-rule-hairline) solid var(--pp-hair);
-  font: var(--pp-size-sm) / 1.5 var(--pp-font-body);
+  font: var(--pp-size-mono) / 1.5 var(--pp-font-body);
 }
 
 .sources li span {
-  font: var(--pp-size-xs) / 1.7 var(--pp-font-mono);
+  font: var(--pp-size-label) / 1.7 var(--pp-font-mono);
   letter-spacing: var(--w-track-label);
   text-transform: uppercase;
   color: var(--pp-faint);
@@ -228,27 +352,15 @@
 
 @media (min-width: 62rem) {
   #stage {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 22rem;
+    grid-template-columns: minmax(0, 1fr) 23rem;
     align-items: start;
-    gap: var(--pp-space-5);
+    justify-items: stretch;
   }
 
-  /* With nothing selected there is no panel, and a chart squeezed into two
-     thirds of the page to leave room for an empty column is the wrong trade.
-     The column arrives with the panel. */
-  #stage:has(.detail[hidden]) { grid-template-columns: minmax(0, 1fr); }
+  .sky-column,
+  .side { max-width: 100%; }
 
-  .sky-holder {
-    max-width: 100%;
-    max-height: min(82vh, 860px);
-  }
-
-  .detail {
-    position: sticky;
-    top: var(--pp-space-4);
-    max-width: none;
-  }
+  .sky-holder { max-height: min(78vh, 820px); }
 }
 
 @media (max-width: 34rem) {
@@ -267,4 +379,5 @@
   .toolbar .group:nth-child(2) { width: 100%; }
 
   .sky-holder { max-height: none; }
+  .view-hint { display: none; }
 }

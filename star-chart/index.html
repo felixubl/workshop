@@ -99,7 +99,6 @@
       <label class="check"><input type="checkbox" id="optBodies" checked><span>planets</span></label>
       <label class="check"><input type="checkbox" id="optDeep"><span>deep sky</span></label>
       <label class="check"><input type="checkbox" id="optColour"><span>colour</span></label>
-      <button class="btn-ghost" type="button" id="reset" data-tip="Back to the whole sky, zenith in the middle">whole sky</button>
     </div>
   </div>
 
@@ -112,22 +111,64 @@
      content that genuinely continues past the edge. It is the section's only
      breach, so nothing else here is allowed one. -->
 <main id="stage" aria-label="The sky">
-  <div class="sky-holder">
-    <canvas id="sky" aria-label="Star chart" role="img"></canvas>
-    <p class="sky-loading" id="loading">reading the catalogue…</p>
-    <div class="compass" aria-hidden="true">
-      <span class="compass-n">N</span><span class="compass-e">E</span>
-      <span class="compass-s">S</span><span class="compass-w">W</span>
+  <div class="sky-column">
+    <div class="sky-holder">
+      <canvas id="sky" aria-label="Star chart" role="img"></canvas>
+      <p class="sky-loading" id="loading">reading the catalogue…</p>
+      <div class="compass" aria-hidden="true">
+        <span class="compass-n">N</span><span class="compass-e">E</span>
+        <span class="compass-s">S</span><span class="compass-w">W</span>
+      </div>
+      <!-- Whatever the pointer is over, named where the pointer is. Clicking
+           for the full reading is still there; this is the sweep that tells
+           you what you are looking at without asking for anything. -->
+      <p class="sky-hover" id="skyHover" hidden></p>
+    </div>
+
+    <!-- The view controls sit under the chart rather than in the toolbar at
+         the top of the page, because they move this and nothing else. -->
+    <div class="view-bar">
+      <div class="group">
+        <label>Face</label>
+        <button class="btn-ghost preset" type="button" data-look="0" data-tip="Turn to face north, as if you were standing outside">north</button>
+        <button class="btn-ghost preset" type="button" data-look="90" data-tip="Turn to face east">east</button>
+        <button class="btn-ghost preset" type="button" data-look="180" data-tip="Turn to face south">south</button>
+        <button class="btn-ghost preset" type="button" data-look="270" data-tip="Turn to face west">west</button>
+        <button class="btn-ghost preset" type="button" data-look="up" data-tip="Look straight up">overhead</button>
+        <button class="btn-ghost preset" type="button" id="reset" data-tip="Back to the whole sky at once, zenith in the middle">whole sky</button>
+      </div>
+      <div class="group">
+        <label>Field</label>
+        <button class="btn-ghost preset" type="button" id="zoomOut" aria-label="Widen the field">−</button>
+        <button class="btn-ghost preset" type="button" id="zoomIn" aria-label="Narrow the field">+</button>
+        <span class="tag readout" id="fovOut">—</span>
+      </div>
+      <p class="view-hint">Drag the sky to turn it · scroll to zoom · arrow keys turn, + and − zoom</p>
     </div>
   </div>
 
-  <aside class="detail" id="detail" hidden>
-    <button class="detail-close" type="button" id="detailClose" aria-label="Close">×</button>
-    <p class="detail-kind" id="detailKind"></p>
-    <h2 class="detail-name" id="detailName"></h2>
-    <p class="detail-sub" id="detailSub"></p>
-    <dl class="detail-rows" id="detailRows"></dl>
-  </aside>
+  <div class="side">
+    <div class="group finder">
+      <label for="find">Find</label>
+      <input class="field" type="search" id="find" placeholder="Saturn, Vega, Orion, M31" autocomplete="off" aria-label="Find a star, a planet, a figure or a Messier object" data-tip="Type a name and the chart turns to it. Nothing is sent anywhere; the catalogue is already here.">
+    </div>
+    <div class="find-results" id="findResults"></div>
+
+    <aside class="detail" id="detail" hidden>
+      <button class="detail-close" type="button" id="detailClose" aria-label="Close">×</button>
+      <p class="detail-kind" id="detailKind"></p>
+      <h2 class="detail-name" id="detailName"></h2>
+      <p class="detail-sub" id="detailSub"></p>
+      <dl class="detail-rows" id="detailRows"></dl>
+    </aside>
+
+    <!-- What is above the horizon at the moment on the clock, brightest
+         first. Every row turns the chart to the thing it names. -->
+    <section class="up-now">
+      <p class="section-label">Up right now</p>
+      <div class="up-list" id="upList"></div>
+    </section>
+  </div>
 </main>
 
 <div class="wrap">

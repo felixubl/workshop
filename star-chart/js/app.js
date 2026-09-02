@@ -23,7 +23,8 @@
   ['place', 'here', 'when', 'now', 'play', 'rate', 'limit', 'countOut', 'reset',
    'optFigures', 'optNames', 'optBodies', 'optDeep', 'optColour',
    'sky', 'loading', 'detail', 'detailClose', 'detailKind', 'detailName',
-   'detailSub', 'detailRows', 'statusPlace', 'statusTime', 'statusSky', 'stage'
+   'detailSub', 'detailRows', 'statusPlace', 'statusTime', 'statusSky', 'stage',
+   'find', 'findResults', 'upList', 'skyHover', 'fovOut', 'zoomIn', 'zoomOut'
   ].forEach(function (id) { ui[id] = document.getElementById(id); });
   ui.stage = document.getElementById('stage');
   ui.holder = document.querySelector('.sky-holder');
@@ -131,7 +132,14 @@
     var drawn = [];
     for (var i = 0; i < stars.length; i++) {
       var s = stars[i];
-      if (s.mag > limit) { s._x = null; continue; }
+      /* Every star is reduced, not only the ones the limit lets through. The
+         magnitude limit decides what is DRAWN, and that is a separate
+         question from where a star is. Reducing them all costs nine
+         multiplications each and buys a list of what is up and a finder that
+         both keep working when the limit moves. It also removes a real fault:
+         skipping a star left its alt and az at whatever they were the last
+         time the limit was high enough, so lowering the limit froze a figure
+         vertex in place while the rest of the sky turned. */
       /* Proper motion as a straight-line nudge on the unit sphere. Over a
          century the largest of these is a fifth of a degree and the geometry
          of the shortcut costs far less than that. */
@@ -141,7 +149,7 @@
       h[0] /= n; h[1] /= n; h[2] /= n;
       var aa = altAz(h);
       s.alt = aa.alt; s.az = aa.az; s._x = null;
-      if (aa.alt > -2) drawn.push(s);
+      if (s.mag <= limit && aa.alt > -2) drawn.push(s);
     }
 
     var figures = [];
@@ -154,7 +162,10 @@
           var line = polys[p];
           for (var q = 0; q + 1 < line.length; q++) {
             var a = stars[line[q]], b = stars[line[q + 1]];
-            if (a.alt == null || b.alt == null) continue;
+            /* A line joins two stars you can click, so both ends have to be
+               drawn. Now that every star carries a position this has to be
+               asked in magnitudes; a null alt no longer means "not drawn". */
+            if (a.mag > limit || b.mag > limit) continue;
             if (a.alt < -2 && b.alt < -2) continue;
             figures.push({ a: a, b: b, con: key,
                            highlight: state.selection && state.selection.con === key });
@@ -162,7 +173,7 @@
           }
           for (var r = 0; r < line.length; r++) {
             var st = stars[line[r]];
-            if (st.alt == null) continue;
+            if (st.mag > limit) continue;
             var av = st.alt * RAD, azv = st.az * RAD, ca = Math.cos(av);
             sumX += ca * Math.cos(azv); sumY += ca * Math.sin(azv); sumZ += Math.sin(av);
             count++;
@@ -178,22 +189,22 @@
       }
     }
 
+    /* Placed whether or not the switch draws them, for the same reason the
+       faint stars are: the finder has to be able to answer "where is M31" on
+       a chart with deep sky turned off. */
     var deep = [];
-    if (ui.optDeep.checked) {
-      for (var d = 0; d < cat.dso.length; d++) {
-        var o = cat.dso[d];
-        var hv = apply(fromJ2000, o.v);
-        var da = altAz(hv);
-        o.alt = da.alt; o.az = da.az; o._x = null;
-        if (da.alt > -2) deep.push(o);
-      }
+    for (var d = 0; d < cat.dso.length; d++) {
+      var o = cat.dso[d];
+      var hv = apply(fromJ2000, o.v);
+      var da = altAz(hv);
+      o.alt = da.alt; o.az = da.az; o._x = null;
+      if (ui.optDeep.checked && da.alt > -2) deep.push(o);
     }
 
-    var bodies = [];
-    if (ui.optBodies.checked) {
-      var list = Ephem.all(jdTt);
-      for (var b = 0; b < list.length; b++) {
-        var body = list[b];
+    var all = Ephem.all(jdTt);
+    {
+      for (var b = 0; b < all.length; b++) {
+        var body = all[b];
         var ra = body.ra, dec = body.dec;
         /* The Moon is close enough that where you stand moves it by up to a
            degree -- two of its own widths. Everything else is far enough away
@@ -208,30 +219,42 @@
         var ba = altAz(ha);
         body.alt = ba.alt; body.az = ba.az; body._x = null;
         body.topoRa = ra; body.topoDec = dec;
+      }
+      /* Brightest first. Labels are placed in list order and the first one
+         to claim a patch of canvas keeps it, so the Sun must be offered a
+         place before Mercury sitting two degrees away from it. */
+      all.sort(function (x, y) { return x.magnitude - y.magnitude; });
+    }
+
+    var bodies = [];
+    if (ui.optBodies.checked) {
+      for (var k = 0; k < all.length; k++) {
+        var bd = all[k];
         /* The faintest-magnitude control has to mean one thing across the
            whole chart. A sky set to what the naked eye can see should not
            carry Neptune at magnitude 7.8 just because it is a planet. The Sun
            and Moon are exempt: they are not points and nobody sets a limit
            meaning to hide them. */
-        var alwaysDrawn = body.name === 'Sun' || body.name === 'Moon';
-        if (ba.alt > -6 && (alwaysDrawn || body.magnitude <= limit)) bodies.push(body);
+        var alwaysDrawn = bd.name === 'Sun' || bd.name === 'Moon';
+        if (bd.alt > -6 && (alwaysDrawn || bd.magnitude <= limit)) bodies.push(bd);
       }
-      /* Brightest first. Labels are placed in list order and the first one
-         to claim a patch of canvas keeps it, so the Sun must be offered a
-         place before Mercury sitting two degrees away from it. */
-      bodies.sort(function (x, y) { return x.magnitude - y.magnitude; });
     }
 
     scene = { stars: drawn, figures: figures, constellations: conLabels,
-              deep: deep, bodies: bodies, lst: lst, jdTt: jdTt, jdUt: jdUt,
-              sun: ui.optBodies.checked ? null : null };
+              deep: deep, bodies: bodies, allBodies: all, lst: lst,
+              jdTt: jdTt, jdUt: jdUt, years: years, fromJ2000: fromJ2000 };
     var sunPos = sunAltAz(jdTt, obs);
     scene.sunAlt = sunPos.alt;
     scene.sunAz = sunPos.az;
 
-    ui.countOut.textContent = drawn.length.toLocaleString() + ' up';
+    ui.countOut.textContent = drawn.length.toLocaleString() + ' drawn';
     needsScene = false;
     updateStatus();
+    buildUpList();
+    /* The panel is a reading of the sky at a moment, and the moment moves. It
+       is rebuilt with the scene so a selected planet's altitude counts down
+       while you watch instead of going quietly stale. */
+    if (state.selection) showDetail(state.selection);
   }
 
   /* The Sun's place is wanted twice over: for the twilight readout, and to
@@ -283,13 +306,16 @@
     });
     drawMarker(g);
     placeCompass(g);
+    ui.fovOut.textContent = Math.round(state.view.fov) + '°';
     needsDraw = false;
   }
 
   function drawMarker(g) {
     var sel = state.selection;
-    if (!sel || sel.alt == null) return;
-    var p = Sky.project(state.view, g, sel.alt, sel.az);
+    if (!sel || !sel.object || sel.object.alt == null) return;
+    /* The object, not the position it had when it was picked: the sky turns
+       while the panel is open and the mark has to turn with it. */
+    var p = Sky.project(state.view, g, sel.object.alt, sel.object.az);
     if (!p || p.cos < 0) return;
     ctx.save();
     var r = 13;
@@ -319,18 +345,69 @@
       var el = ui.compass.querySelector('.compass-' + k);
       if (!el) return;
       var p = Sky.project(state.view, g, 0, marks[k]);
-      if (!p || p.cos < 0.02) { el.style.display = 'none'; return; }
-      el.style.display = '';
+      /* Zero, not a small positive number. On the whole-sky view the eye
+         points at the zenith and every horizon point is at exactly ninety
+         degrees from it, so the cosine is zero -- give or take the 6e-17 that
+         cos(90 degrees) actually is. A guard of 0.02 rejected all four, which
+         is why the default view of this chart has never carried a compass.
+         Behind the observer is what wants rejecting, and that is negative. */
+      if (!p || p.cos < -0.02) { el.style.display = 'none'; return; }
       var pull = 0.93;
-      el.style.left = (g.cx + (p.x - g.cx) * pull) + 'px';
-      el.style.top = (g.cy + (p.y - g.cy) * pull) + 'px';
+      var x = g.cx + (p.x - g.cx) * pull;
+      var y = g.cy + (p.y - g.cy) * pull;
+      /* A compass point seen almost edge-on projects hundreds of pixels
+         outside the chart, and the letter went with it -- an "S" adrift in the
+         margin of the page, because nothing here clips. Facing one direction
+         puts the two beside it in exactly that position, so this is the
+         ordinary case rather than a corner one. */
+      if (x < 0 || y < 0 || x > g.width || y > g.height) { el.style.display = 'none'; return; }
+      el.style.display = '';
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
     });
   }
 
   function frame() {
+    if (glide) stepGlide();
     if (needsScene) buildScene();
     if (needsDraw) draw();
     requestAnimationFrame(frame);
+  }
+
+  /* Turning to a named thing. A jump lands you somewhere with no idea which
+     way you turned, so the view is carried there over four-tenths of a second
+     -- long enough to read the movement, short enough not to wait for it.
+     Azimuth goes the short way round, and the field is interpolated
+     geometrically because zooming is a ratio, not a difference. */
+  var glide = null;
+
+  function glideTo(to) {
+    var from = { alt: state.view.alt, az: state.view.az, fov: state.view.fov };
+    glide = { from: from, to: to, t0: performance.now(), ms: 420,
+              dAz: ((to.az - from.az + 540) % 360) - 180 };
+  }
+
+  function stepGlide() {
+    var u = Math.min(1, (performance.now() - glide.t0) / glide.ms);
+    var e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+    var v = state.view;
+    v.alt = glide.from.alt + (glide.to.alt - glide.from.alt) * e;
+    v.az = (glide.from.az + glide.dAz * e + 360) % 360;
+    v.fov = glide.from.fov * Math.pow(glide.to.fov / glide.from.fov, e);
+    needsDraw = true;
+    if (u >= 1) glide = null;
+  }
+
+  /* Point the chart at something. A whole-sky view is narrowed on the way,
+     because "show me Saturn" on a 180-degree fisheye shows you a dot in a
+     field of dots. An already-narrowed field is left alone: the reader set
+     it. */
+  function pointAt(alt, az) {
+    glideTo({
+      alt: Math.max(-10, Math.min(88, alt)),
+      az: (az + 360) % 360,
+      fov: state.view.fov > 110 ? 55 : state.view.fov
+    });
   }
 
   /* ---- catalogue ----------------------------------------------------- */
@@ -364,6 +441,7 @@
           alt: null, az: null
         };
       });
+      stars.forEach(function (st) { starByHr[st.hr] = st; });
       cat.dso.forEach(function (o) {
         var ra = o.ra * RAD, dec = o.dec * RAD, cd = Math.cos(dec);
         o.v = [cd * Math.cos(ra), cd * Math.sin(ra), Math.sin(dec)];
@@ -485,6 +563,7 @@
     }
     ui.detailRows.innerHTML = rows;
     needsDraw = true;
+    markSelectedRows();
   }
 
   function moonPhaseName(m) {
@@ -524,7 +603,293 @@
     state.selection = null;
     ui.detail.hidden = true;
     needsDraw = true;
+    markSelectedRows();
   }
+
+  /* ---- naming things ------------------------------------------------- */
+
+  function esc(text) {
+    return String(text).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  /* The best short name a star has: the one people use, then the Bayer
+     letter, then the Flamsteed number, then the catalogue entry. */
+  function starLabel(s) {
+    if (s.name) return s.name;
+    var ix = cat.ix, r = s.row;
+    var con = s.con ? conName(s.con) : null;
+    var sup = r[ix.sup] ? String(r[ix.sup]) : '';
+    if (r[ix.bayer] >= 0 && con) return cat.glyph[r[ix.bayer]] + sup + ' ' + con.ab;
+    if (r[ix.flam] && con) return r[ix.flam] + ' ' + con.ab;
+    return 'HR ' + s.hr;
+  }
+
+  /* A name, the quiet half-line beside it that says what kind of thing it is,
+     and how bright. Between them they are what identifies an object, so the
+     list, the hover readout and the search results all ask here rather than
+     each writing their own version of the same three fields. */
+  function describe(o, kind) {
+    if (kind === 'body') {
+      var note = o.name === 'Sun' ? '' : o.name === 'Moon' ? moonPhaseName(o) : 'planet';
+      return { name: o.name, note: note, mag: o.magnitude };
+    }
+    if (kind === 'deep') return { name: o.name || ('M' + o.m), note: o.kind, mag: o.mag };
+    if (kind === 'con') {
+      var c = conName(o.ab);
+      /* Orion's English name is Orion. Printing it twice says nothing. */
+      return { name: c.name, note: c.en === c.name ? 'figure' : c.en, mag: null };
+    }
+    return { name: starLabel(o), note: o.con ? conName(o.con).name : '', mag: o.mag };
+  }
+
+  function keyOf(o, kind) {
+    if (kind === 'body') return 'b:' + o.name;
+    if (kind === 'deep') return 'd:' + o.m;
+    if (kind === 'con') return 'c:' + o.ab;
+    return 's:' + o.hr;
+  }
+
+  /* A key back to the thing it names. Everything it can return already has a
+     current altitude and azimuth, because the scene places every star, every
+     Messier object and every planet whether or not the switches draw it. */
+  function byKey(key) {
+    var tag = key.charAt(0), id = key.slice(2), i;
+    if (tag === 'b') {
+      for (i = 0; i < scene.allBodies.length; i++) {
+        if (scene.allBodies[i].name === id) return { object: scene.allBodies[i], kind: 'body' };
+      }
+      return null;
+    }
+    if (tag === 'd') {
+      for (i = 0; i < cat.dso.length; i++) {
+        if (String(cat.dso[i].m) === id) return { object: cat.dso[i], kind: 'deep' };
+      }
+      return null;
+    }
+    if (tag === 'c') {
+      var c = figureCentre(id);
+      return c ? { object: { ab: id, alt: c.alt, az: c.az }, kind: 'con' } : null;
+    }
+    return starByHr[id] ? { object: starByHr[id], kind: 'star' } : null;
+  }
+
+  /* Where a figure sits, as the mean direction of its own stars. The same
+     sum the labels use, asked for one constellation at a time. */
+  function figureCentre(ab) {
+    var polys = cat.figures[ab];
+    if (!polys) return null;
+    var x = 0, y = 0, z = 0, count = 0;
+    for (var p = 0; p < polys.length; p++) {
+      for (var q = 0; q < polys[p].length; q++) {
+        var st = stars[polys[p][q]];
+        if (st.alt == null) continue;
+        var a = st.alt * RAD, A = st.az * RAD, ca = Math.cos(a);
+        x += ca * Math.cos(A); y += ca * Math.sin(A); z += Math.sin(a);
+        count++;
+      }
+    }
+    return count ? altAz([x / count, y / count, z / count]) : null;
+  }
+
+  /* ---- what is up ---------------------------------------------------- */
+
+  function rowHtml(o, kind) {
+    var d = describe(o, kind);
+    var key = keyOf(o, kind);
+    var sel = state.selection;
+    var on = sel && sel.object && keyOf(sel.object, sel.kind) === key;
+    return '<button class="sky-row' + (on ? ' is-on' : '') + '" type="button" data-key="' +
+      esc(key) + '">' +
+      '<span class="sky-row-name">' + esc(d.name) +
+      (d.note ? ' <em>' + esc(d.note) + '</em>' : '') + '</span>' +
+      '<span class="sky-row-where">' +
+      (o.alt > 0 ? compassWord(o.az) + ' ' + Math.round(o.alt) + '\u00b0' : 'below') +
+      '</span>' +
+      '<span class="sky-row-mag">' + magnitude(d.mag) + '</span>' +
+      '</button>';
+  }
+
+  /* One decimal, a real minus sign, and no "-0.0" -- Arcturus at -0.04 is
+     brighter than zero and must not be printed as if it were dimmer. */
+  function magnitude(mag) {
+    if (mag == null) return '';
+    var v = mag.toFixed(1);
+    return (v === '-0.0' ? '0.0' : v).replace('-', '\u2212');
+  }
+
+  /* "What can I see right now" is the question the page is opened with, and
+     until now the only way to answer it was to hunt the chart. This is the
+     answer written out: everything above the horizon worth stepping outside
+     for, brightest first, each row turning the chart to what it names. */
+  function buildUpList() {
+    if (!scene) return;
+    var html = '';
+
+    var up = scene.allBodies.filter(function (b) { return b.alt > 0; });
+    if (up.length) {
+      /* Named for what is actually in it. A heading that promises the Sun at
+         midnight is a heading a reader stops trusting. */
+      var parts = [];
+      if (up.some(function (b) { return b.name === 'Sun'; })) parts.push('the Sun');
+      if (up.some(function (b) { return b.name === 'Moon'; })) parts.push('the Moon');
+      if (up.some(function (b) { return b.name !== 'Sun' && b.name !== 'Moon'; })) parts.push('the planets');
+      html += '<p class="up-head">' + parts.join(', ').replace(/,([^,]*)$/, ' and$1') + '</p>';
+      up.forEach(function (b) { html += rowHtml(b, 'body'); });
+    }
+
+    /* Magnitude two rather than the chart's own limit: this list says what is
+       up, and that does not change because you turned the drawing down. Two
+       is roughly what survives a lit street. Five degrees, because anything
+       lower is behind a building. */
+    var bright = [];
+    for (var i = 0; i < stars.length; i++) {
+      if (stars[i].mag <= 2.0 && stars[i].alt > 5) bright.push(stars[i]);
+    }
+    bright.sort(function (a, b) { return a.mag - b.mag; });
+    if (bright.length) {
+      html += '<p class="up-head">the brightest stars</p>';
+      bright.slice(0, 12).forEach(function (st) { html += rowHtml(st, 'star'); });
+    }
+
+    if (ui.optDeep.checked) {
+      var dso = scene.deep.filter(function (o) { return o.alt > 10 && o.mag != null; });
+      dso.sort(function (a, b) { return a.mag - b.mag; });
+      if (dso.length) {
+        html += '<p class="up-head">the deep sky</p>';
+        dso.slice(0, 8).forEach(function (o) { html += rowHtml(o, 'deep'); });
+      }
+    }
+
+    ui.upList.innerHTML = html || '<p class="up-empty">nothing is above the horizon</p>';
+  }
+
+  /* The lists are rewritten wholesale as the sky turns, so the selected row
+     is marked in place instead: a click on the chart must not cost a rebuild
+     of two lists. */
+  function markSelectedRows() {
+    var sel = state.selection;
+    var key = sel && sel.object ? keyOf(sel.object, sel.kind) : null;
+    [ui.upList, ui.findResults].forEach(function (box) {
+      box.querySelectorAll('.sky-row').forEach(function (b) {
+        b.classList.toggle('is-on', b.getAttribute('data-key') === key);
+      });
+    });
+  }
+
+  function chooseKey(key) {
+    var hit = byKey(key);
+    if (!hit) return;
+    /* A figure is a region, not an object, so it gets turned to and nothing
+       is selected -- there is no reading to put in the panel. */
+    if (hit.kind !== 'con') showDetail(hit);
+    pointAt(hit.object.alt, hit.object.az);
+  }
+
+  ui.upList.addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.sky-row');
+    if (btn) chooseKey(btn.getAttribute('data-key'));
+  });
+
+  /* ---- the finder ---------------------------------------------------- */
+
+  /* One flat index of everything nameable, built once and searched by
+     substring. Twelve thousand short strings is nothing to scan, and one
+     index means a proper name, a Bayer letter, a Messier number and a
+     planet all arrive through the same path instead of four. */
+  var index = null;
+  var starByHr = {};
+
+  function buildIndex() {
+    index = [];
+    var ix = cat.ix, i;
+
+    for (i = 0; i < scene.allBodies.length; i++) {
+      var b = scene.allBodies[i];
+      index.push({ key: 'b:' + b.name, hay: b.name.toLowerCase(), rank: -30 });
+    }
+
+    for (i = 0; i < stars.length; i++) {
+      var st = stars[i], r = st.row, con = st.con ? conName(st.con) : null;
+      var sup = r[ix.sup] ? String(r[ix.sup]) : '';
+      var terms = [];
+      if (st.name) terms.push(st.name);
+      if (con && r[ix.bayer] >= 0) {
+        terms.push(cat.greek[r[ix.bayer]] + sup + ' ' + con.ab);
+        terms.push(cat.greek[r[ix.bayer]] + sup + ' ' + con.gen);
+        terms.push(cat.glyph[r[ix.bayer]] + sup + ' ' + con.ab);
+      }
+      if (con && r[ix.flam]) terms.push(r[ix.flam] + ' ' + con.ab);
+      terms.push('hr ' + st.hr);
+      index.push({ key: 's:' + st.hr, hay: terms.join('|').toLowerCase(), rank: st.mag });
+    }
+
+    cat.dso.forEach(function (o) {
+      var t = ['m' + o.m, 'messier ' + o.m];
+      if (o.name) t.push(o.name);
+      if (o.ngc) t.push(o.ngc);
+      index.push({ key: 'd:' + o.m, hay: t.join('|').toLowerCase(),
+                   rank: o.mag == null ? 9 : o.mag });
+    });
+
+    cat.cons.forEach(function (c) {
+      index.push({ key: 'c:' + c.ab,
+                   hay: [c.name, c.gen, c.en, c.ab].join('|').toLowerCase(), rank: -20 });
+    });
+  }
+
+  function lookup(query) {
+    if (!scene) return [];
+    if (!index) buildIndex();
+    var needle = query.trim().toLowerCase();
+    if (needle.length < 2) return [];
+    var found = [];
+    for (var i = 0; i < index.length; i++) {
+      var at = index[i].hay.indexOf(needle);
+      if (at < 0) continue;
+      /* A match at the head of one of an entry's terms beats one buried in
+         the middle, so "mar" offers Mars before Markab. */
+      found.push({ key: index[i].key, rank: index[i].rank,
+                   head: at === 0 || index[i].hay.charAt(at - 1) === '|' });
+    }
+    found.sort(function (a, b) {
+      if (a.head !== b.head) return a.head ? -1 : 1;
+      return a.rank - b.rank;
+    });
+    return found.slice(0, 8).map(function (f) { return byKey(f.key); }).filter(Boolean);
+  }
+
+  function renderFind() {
+    var q = ui.find.value;
+    if (q.trim().length < 2) { ui.findResults.innerHTML = ''; return; }
+    var hits = lookup(q);
+    ui.findResults.innerHTML = hits.length
+      ? hits.map(function (h) { return rowHtml(h.object, h.kind); }).join('')
+      : '<p class="up-empty">nothing by that name in the catalogue</p>';
+  }
+
+  ui.find.addEventListener('input', renderFind);
+
+  ui.find.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter') {
+      var first = ui.findResults.querySelector('.sky-row');
+      if (!first) return;
+      ev.preventDefault();
+      chooseKey(first.getAttribute('data-key'));
+      ui.findResults.innerHTML = '';
+    } else if (ev.key === 'Escape') {
+      ui.findResults.innerHTML = '';
+      ui.find.blur();
+    }
+  });
+
+  ui.findResults.addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.sky-row');
+    if (!btn) return;
+    chooseKey(btn.getAttribute('data-key'));
+    ui.findResults.innerHTML = '';
+  });
 
   /* ---- interaction --------------------------------------------------- */
 
@@ -541,6 +906,9 @@
   }
 
   ui.sky.addEventListener('pointerdown', function (ev) {
+    glide = null;
+    ui.skyHover.hidden = true;
+    state.hover = null;
     ui.sky.setPointerCapture(ev.pointerId);
     var p = localPoint(ev);
     drag = { x: p.x, y: p.y, startX: p.x, startY: p.y, moved: false,
@@ -555,7 +923,15 @@
       if (drag.moved) {
         var g = currentGeometry();
         var perPx = state.view.fov / (2 * g.radius);
-        state.view.az = (drag.az + dx * perPx / Math.max(0.25, Math.cos(state.view.alt * RAD)) + 360) % 360;
+        /* The cursor over the chart is a grab cursor, so the sky has to come
+           with the hand. A point at a larger azimuth projects further to the
+           right, so pulling the pointer right has to LOWER the view's
+           azimuth for that point to travel with it. The sign was the other
+           way round: dragging left moved the sky right, while the vertical
+           axis followed the hand correctly. Two axes disagreeing is what
+           made the chart feel unsteerable, and it reads as a broken
+           projection rather than a wrong sign. */
+        state.view.az = (drag.az - dx * perPx / Math.max(0.25, Math.cos(state.view.alt * RAD)) + 360) % 360;
         state.view.alt = Math.max(-20, Math.min(90, drag.alt + dy * perPx));
         needsDraw = true;
       }
@@ -564,16 +940,40 @@
     if (ev.pointerType === 'mouse') hoverAt(p);
   });
 
+  ui.sky.addEventListener('pointerleave', function () {
+    ui.skyHover.hidden = true;
+    state.hover = null;
+  });
+
+  /* Sweeping the pointer over the chart names what is under it. Clicking for
+     the full reading is still there; this is what turns nine thousand
+     identical dots into a thing you can read without committing to one. */
   function hoverAt(p) {
     if (!scene) return;
     var hit = Sky.pick(scene, p.x, p.y, {
       bodies: ui.optBodies.checked, deep: ui.optDeep.checked, radius: 14
     });
-    var key = hit ? (hit.kind + (hit.object.hr || hit.object.m || hit.object.name)) : null;
+    ui.sky.style.cursor = hit ? 'pointer' : '';
+    if (!hit) {
+      ui.skyHover.hidden = true;
+      state.hover = null;
+      return;
+    }
+    var key = keyOf(hit.object, hit.kind);
     if (key !== state.hover) {
       state.hover = key;
-      ui.sky.style.cursor = hit ? 'pointer' : '';
+      var d = describe(hit.object, hit.kind);
+      ui.skyHover.innerHTML = esc(d.name) +
+        (d.note ? ' <em>' + esc(d.note) + '</em>' : '') +
+        (d.mag == null ? '' : ' <em>' + d.mag.toFixed(1) + '</em>');
+      ui.skyHover.hidden = false;
     }
+    /* Anchored to the object rather than to the cursor. The pick radius is
+       wider than a star, so a label following the pointer jitters beside a
+       mark that is not moving. */
+    ui.skyHover.classList.toggle('is-left', hit.object._x > canvasBox().width - 170);
+    ui.skyHover.style.left = hit.object._x + 'px';
+    ui.skyHover.style.top = hit.object._y + 'px';
   }
 
   ui.sky.addEventListener('pointerup', function (ev) {
@@ -596,6 +996,7 @@
   }, { passive: false });
 
   function zoomBy(factor) {
+    glide = null;
     state.view.fov = Math.max(2, Math.min(180, state.view.fov * factor));
     if (state.view.fov >= 179.5) { state.view.alt = 90; state.view.az = 180; }
     needsDraw = true;
@@ -664,23 +1065,77 @@
     ui[k].addEventListener('change', function () { needsScene = true; needsDraw = true; });
   });
 
-  ui.reset.addEventListener('click', function () {
-    state.view = Sky.initialView();
+  ui.reset.addEventListener('click', function () { glideTo(Sky.initialView()); });
+
+  /* Standing outside and turning to face a direction. Thirty degrees up is
+     where the eye rests when you look at a horizon, and a hundred and ten
+     degrees across is about what you take in without moving your head. */
+  document.querySelectorAll('[data-look]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var to = btn.getAttribute('data-look');
+      if (to === 'up') glideTo({ alt: 85, az: state.view.az, fov: 100 });
+      else glideTo({ alt: 30, az: parseFloat(to), fov: 110 });
+    });
+  });
+
+  ui.zoomIn.addEventListener('click', function () { zoomBy(1 / 1.4); });
+  ui.zoomOut.addEventListener('click', function () { zoomBy(1.4); });
+
+  function turn(dAz, dAlt) {
+    glide = null;
+    state.view.az = (state.view.az + dAz + 360) % 360;
+    state.view.alt = Math.max(-20, Math.min(90, state.view.alt + dAlt));
     needsDraw = true;
+  }
+
+  /* The keys are on the window rather than on the canvas. A canvas that has
+     to be focused before it answers is a canvas that looks broken, and giving
+     it a tab stop buys a focus ring around the chart for nothing. */
+  window.addEventListener('keydown', function (ev) {
+    if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    var t = ev.target;
+    if (t && /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)) return;
+    var step = Math.max(2, state.view.fov / 6);
+    if (ev.key === 'ArrowLeft') turn(-step, 0);
+    else if (ev.key === 'ArrowRight') turn(step, 0);
+    else if (ev.key === 'ArrowUp') turn(0, step);
+    else if (ev.key === 'ArrowDown') turn(0, -step);
+    else if (ev.key === '+' || ev.key === '=') zoomBy(1 / 1.4);
+    else if (ev.key === '-' || ev.key === '_') zoomBy(1.4);
+    else if (ev.key === 'Escape') hideDetail();
+    else return;
+    ev.preventDefault();
   });
 
   ui.detailClose.addEventListener('click', hideDetail);
 
-  ui.here.addEventListener('click', function () {
+  function useHere() {
     ui.here.textContent = 'asking…';
-    Places.here().then(function (p) {
+    return Places.here().then(function (p) {
+      note('');
       setPlace(p);
       ui.here.textContent = 'here';
     }).catch(function (err) {
       ui.here.textContent = 'here';
       note(err && err.code === 1 ? 'permission refused' : 'could not get a position');
     });
-  });
+  }
+
+  ui.here.addEventListener('click', useHere);
+
+  /* The page is opened to ask what is over ME, now. The clock answers the
+     second half by itself. The first half cannot be taken without asking,
+     and a permission box thrown at a page you have only just opened is bad
+     manners -- so it is taken silently only where the browser says the
+     permission has already been given, and otherwise the page says plainly
+     that it is showing somewhere else and where the button is. */
+  function offerHere() {
+    if (!navigator.permissions || !navigator.permissions.query) return;
+    navigator.permissions.query({ name: 'geolocation' }).then(function (st) {
+      if (st.state === 'granted') useHere();
+      else note('This is ' + state.place.label + '. Press “here” for the sky over your own place.');
+    }).catch(function () { /* older Safari has no geolocation permission to query */ });
+  }
 
   var searchTimer = null, searchAbort = null;
   ui.place.addEventListener('input', function () {
@@ -781,6 +1236,8 @@
   resize();
   requestAnimationFrame(frame);
   tick();
+
+  if (!saved) offerHere();
 
   loadCatalogue().catch(function (err) {
     ui.loading.hidden = false;
