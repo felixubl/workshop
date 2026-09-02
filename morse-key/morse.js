@@ -91,6 +91,52 @@ const Morse = (function () {
     return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
   }
 
+  /* Whether a silence between two marks is a gap BETWEEN characters rather than
+     one inside a character. The judgement uses only the sending speed, never the
+     letter or word thresholds: a measurement that depended on the spacing dial
+     could never tell you the spacing dial was wrong. */
+  function isGap(silence, unit) {
+    return silence > unit * DAH_AT && silence < STALE;
+  }
+
+  /* The lengths a hand can be measured by, pulled off a list of marks: how long
+     its dits are, how long its silences between characters are, and how much of
+     the whole stretch had the key down. Over how many marks is the caller's
+     business — a rolling dozen for a live readout, a whole run for a score — and
+     that is the only thing the two differ in. */
+  function samples(marks, unit) {
+    const dits = [];
+    const gaps = [];
+    let markTime = 0;
+    for (let i = 0; i < marks.length; i += 1) {
+      const mark = marks[i];
+      if (!mark.t1) continue;
+      markTime += mark.t1 - mark.t0;
+      if (mark.dit) dits.push(mark.t1 - mark.t0);
+      const next = marks[i + 1];
+      if (next && isGap(next.t0 - mark.t1, unit)) gaps.push(next.t0 - mark.t1);
+    }
+    return { dits: dits, gaps: gaps, markTime: markTime };
+  }
+
+  /* What those lengths say the hand is going out at. A dit is one unit, so 1200
+     over the median dit is the speed the characters are sending at; a letter gap
+     is three spacing units, so 3600 over the median gap is the speed the spacing
+     is sending at, which for most hands is a good deal slower. Null until there
+     are enough dits to take a median through, and zero spacing until there are
+     enough gaps. Raw: rounding this to a dial is the caller's business, and the
+     two callers round it differently on purpose. */
+  function readHand(taken) {
+    if (taken.dits.length < 3) return null;
+    const wpm = 1200 / median(taken.dits);
+    /* Spacing may be slower than the characters but never faster, the same rule
+       the dial itself is resolved under. */
+    const spacing = taken.gaps.length >= 3
+      ? Math.min(wpm, 3600 / median(taken.gaps))
+      : 0;
+    return { wpm: wpm, spacing: spacing };
+  }
+
   /* The error signal: eight dits, which no character claims. An operator sends
      it to say the word just sent was wrong and is about to be sent again. Morse
      Key prints it as an unassigned pattern, having no word to take back; Morse
@@ -234,14 +280,10 @@ const Morse = (function () {
   Keyer.prototype.press = function (now) {
     if (this.down) return;
     /* The silence that just ended, measured before anything is decided about
-       it. Anything past the dah threshold is a gap BETWEEN characters rather
-       than one inside a character, and that judgement uses only the sending
-       speed. Reading it independently of the letter and word thresholds is the
-       point: a measurement that depended on the spacing dial could never tell
-       you the spacing dial was wrong. */
+       it. What counts as a gap is isGap's rule and nobody else's. */
     if (this.lastUp) {
       const silence = now - this.lastUp;
-      if (silence > this.unit * DAH_AT && silence < STALE) {
+      if (isGap(silence, this.unit)) {
         this.gaps.push(silence);
         if (this.gaps.length > SAMPLES) this.gaps.shift();
       }
@@ -311,39 +353,39 @@ const Morse = (function () {
     this.lastUp = 0;
   };
 
-  /* The reader's own timing, read back. The dits give the speed the characters
-     are actually going out at; the gaps between characters give the speed the
-     spacing is actually going out at, which for most hands is a good deal
-     slower. A letter gap is three spacing units, so the spacing unit is a third
-     of the median gap. Null until there is enough to take a median through. */
+  /* The reader's own timing over the rolling dozen the key keeps, rounded to
+     whole words a minute because what it is read against is a dial. The reading
+     itself is readHand's, so a page that measures a longer stretch gets the same
+     arithmetic rather than its own copy of it. */
   Keyer.prototype.hand = function () {
-    if (this.dits.length < 3) return null;
-    const wpm = Math.round(1200 / median(this.dits));
-    let spacing = 0;
-    if (this.gaps.length >= 3) {
-      spacing = Math.min(wpm, Math.max(3, Math.round(3600 / median(this.gaps))));
-    }
-    return { wpm: wpm, spacing: spacing };
+    const raw = readHand({ dits: this.dits, gaps: this.gaps });
+    if (!raw) return null;
+    const wpm = Math.round(raw.wpm);
+    return {
+      wpm: wpm,
+      spacing: raw.spacing ? Math.min(wpm, Math.max(3, Math.round(raw.spacing))) : 0,
+    };
   };
 
+  /* What leaves the module. DAH_AT, STALE, CODES, INTRA_GAP, WORD_GAP and
+     timing() are all still here, inside — they are how the code works, not
+     things a page has to know. They were on this list while Morse Bench was
+     rebuilding the hand reading out of them, which is what samples() and
+     readHand() are for. */
   return {
     TABLE: TABLE,
     ALIAS: ALIAS,
     GROUPS: GROUPS,
     CHAR_OF: CHAR_OF,
-    CODES: CODES,
-    DAH_AT: DAH_AT,
-    INTRA_GAP: INTRA_GAP,
     LETTER_GAP: LETTER_GAP,
-    WORD_GAP: WORD_GAP,
-    STALE: STALE,
     pretty: pretty,
     fitting: fitting,
     median: median,
     isError: isError,
     costOf: costOf,
     wpmOf: wpmOf,
-    timing: timing,
+    samples: samples,
+    readHand: readHand,
     Sidetone: Sidetone,
     Keyer: Keyer,
   };

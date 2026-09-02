@@ -7,7 +7,7 @@
    arithmetic that turns a list of presses into two speeds. */
 
 const { pretty, fitting, CHAR_OF, TABLE, costOf, wpmOf, median, isError,
-        LETTER_GAP, DAH_AT, STALE } = Morse;
+        LETTER_GAP, samples, readHand } = Morse;
 
 const slab = document.getElementById("slab");
 const wpm = document.getElementById("wpm");
@@ -196,26 +196,18 @@ function askedUnits(words) {
   return units + LETTER_GAP * Math.max(0, chars - 1);
 }
 
-/* The two halves of the reader's own timing, taken over the whole run rather
-   than over a rolling dozen: the dits fix the unit the characters went out at,
-   and a letter gap being three spacing units, a third of the median silence
-   between characters fixes the other. */
+/* The reader's own timing over the whole run rather than over the rolling dozen
+   the key keeps for its live readout. Which marks to measure is the only thing
+   that differs, so it is the only thing said here: the rule for what counts as a
+   gap and the arithmetic that turns the lengths into two speeds are the key's,
+   and are not rewritten. */
 function ownTiming(marks) {
-  const dits = [];
-  const gaps = [];
-  for (let i = 0; i < marks.length; i += 1) {
-    const mark = marks[i];
-    if (!mark.t1) continue;
-    if (mark.dit) dits.push(mark.t1 - mark.t0);
-    const next = marks[i + 1];
-    if (!next) continue;
-    const silence = next.t0 - mark.t1;
-    if (silence > keyer.unit * DAH_AT && silence < STALE) gaps.push(silence);
-  }
+  const taken = samples(marks, keyer.unit);
+  const hand = readHand(taken);
   return {
-    wpm: dits.length >= 3 ? 1200 / median(dits) : 0,
-    spacing: gaps.length >= 3 ? 3600 / median(gaps) : 0,
-    markTime: marks.reduce((sum, m) => sum + (m.t1 ? m.t1 - m.t0 : 0), 0),
+    wpm: hand ? hand.wpm : 0,
+    spacing: hand ? hand.spacing : 0,
+    markTime: taken.markTime,
   };
 }
 
