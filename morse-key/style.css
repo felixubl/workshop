@@ -38,7 +38,7 @@ input[type='number'].field {
   gap: 6px;
   min-height: 128px;
   padding: var(--pp-space-3);
-  border: var(--pp-border-structure) solid var(--pp-edge);
+  border: var(--pp-rule-structure) solid var(--pp-edge);
   border-radius: var(--pp-radius-md);
   background: var(--pp-paper);
   box-shadow: 3px 3px 0 var(--pp-edge);

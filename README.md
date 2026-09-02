@@ -22,7 +22,7 @@ would make both harder to read. It appears as five squares filled from the
 left plus one word. The key at the foot of the index defines all five; a card
 carries the rating and nothing more.
 
-No tool is above `fetch` today: fourteen never open a socket, five read public
+No tool is above `fetch` today: fifteen never open a socket, five read public
 data and keep nothing. `store` and `account` are defined ahead of the tools
 that will need them.
 
@@ -199,6 +199,57 @@ Raster and vector images, type, colour, audio and video.
   The sidetone is one oscillator running for the life of the page with a gain
   gating it, ramped over a few milliseconds at each end. Gating a sine by
   starting and stopping it clicks, and the click is louder than the note.
+
+- [Morse Bench](morse-bench/) — a typing test for the key next door. A set of
+  words goes up, you send them on the space bar, and the clock starts on your
+  first press. With the crib shown the dits and dahs sit under every letter of
+  the word in hand and you are practising your hand; with it hidden the word is
+  all you get, and the question is whether you know the code.
+
+  A typing test has one speed in it. Morse has two, and telling them apart is
+  what the bench is for. *Character speed* is what your elements imply: a dit is
+  one unit, so the median of your dits fixes the unit and 1200 divided by it is
+  the speed a receiving operator would call your code speed. *Effective speed*
+  is what you actually got through: the units the run asked for, over the
+  seconds it took. For a fluent operator the two are nearly one number. For
+  everybody else the second is a fraction of the first, because the elements
+  come out at the speed they were drilled at while the gaps hold however long it
+  takes to remember what comes next — and that split is the thing a single
+  number cannot report.
+
+  Words per minute is a real unit here rather than a count of words. PARIS is
+  fifty units counting the space after it, so a passage worth *n* units sent in
+  *t* seconds went out at 60*n*/50*t* words a minute whatever the words were.
+  The bench charges for the characters it asked for and the three units of
+  silence between each pair, and not for the space between words, because the
+  next word opens the moment the last letter of this one lands and that space is
+  never sent. What that buys is exactness rather than tidiness: a run keyed at
+  strict timing on the dial reads back the dial's own speed to the decimal
+  place, which is what the tool is verified against.
+
+  Corrections use the trade's signal rather than the keyboard's. Eight dits — the
+  pattern no character claims — puts the word back to its start and costs what a
+  correction should cost, which is the seconds it took. The characters already
+  fumbled stay on the tally, because the signal takes back the text and not the
+  record. Backspace clears a pattern part way through and nothing else.
+
+  Material is either ordinary English words, the way a typing test does it, or
+  five-character groups drawn evenly from the twenty-six letters and the ten
+  digits, which is what the licence exam sent. The second is there because
+  English is not evenly spread over the alphabet — E is one element and Q is
+  four, and a run of common words is mostly the cheap end of the code, so a
+  score off it says as much about letter frequency as about the hand. The
+  per-character table at the foot is where that pays: every character the run
+  touched, slowest first, at its own speed in words a minute, measured from the
+  first press for it to the first press for the next, so the pause before a
+  character lands on the character you were reaching for rather than on the one
+  you had just finished. What shows up is which letters are costing you the run.
+
+  The alphabet, the thresholds, the sidetone and the key itself are
+  [`morse-key/morse.js`](morse-key/morse.js), loaded from the neighbouring
+  folder rather than copied, the same arrangement Eclipse Countdown has with
+  Eclipse Recon, so the two tools cannot disagree about what a pattern means or
+  where a letter ends.
 
 - [Portrait](portrait/) — reduce a photograph of a face to one bit. Two models
   run in the tab: one returns 478 face landmarks and decides where the head is,

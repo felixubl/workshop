@@ -1,0 +1,318 @@
+/* Tool-specific layout only. Faces, buttons, tags, fields, the title, the
+   toolbar and the sheet come from ../assets/base.css over the vendored system.
+   The key deck is drawn the way Morse Key draws it, because it is the same
+   object; the run board and the reading are this page's own. */
+
+.lede {
+  margin: 0 0 1.6rem;
+}
+
+input[type='number'].field {
+  width: 76px;
+  font-family: var(--pp-font-mono);
+}
+
+.readout {
+  min-width: 62px;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--pp-muted);
+}
+
+/* ---- the run ---- */
+
+/* Every word of the run at once, so the end of it is visible from the start.
+   The words already sent say whether they went cleanly; the rest are only
+   waiting, and are set back to say so. */
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  align-items: baseline;
+  padding: var(--pp-space-2) var(--pp-space-3);
+  border: var(--pp-rule-line) solid var(--pp-hair);
+  background: var(--pp-surface-well);
+  font-family: var(--pp-font-mono);
+  font-size: 0.9rem;
+  letter-spacing: var(--w-track-mono);
+}
+
+.word {
+  color: var(--pp-faint);
+}
+
+.word.is-clean {
+  color: var(--pp-muted);
+}
+
+/* breach(05): the page's one semantic plate, and it means one thing wherever it
+   appears — a character or a word that did not come out as asked. Everything
+   else on the board is ink at different strengths, and a mistake is the one
+   thing here that must not read as ink. */
+.word.is-fumbled {
+  color: var(--pp-plate-2-text);
+}
+
+.word.is-now {
+  color: var(--pp-ink);
+  font-weight: var(--pp-weight-strong);
+  border-bottom: var(--pp-rule-structure) solid var(--pp-edge);
+}
+
+/* The word in hand, letter by letter. Each cell is one letter over one slot,
+   and the slot holds the crib until the letter is sent — or what actually
+   arrived, if it was not what was asked for.
+
+   It butts onto the strip above with no rule of its own between them, because
+   the two are one board: the whole run, and the place in it you are at. The
+   grounds do the separating — the run is in the well, the word in hand is on
+   the paper you are working over. */
+.stage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: var(--pp-space-1);
+  min-height: 104px;
+  padding: var(--pp-space-3);
+  border: var(--pp-rule-line) solid var(--pp-hair);
+  border-top: 0;
+  background: var(--pp-paper);
+  margin-bottom: var(--pp-space-4);
+}
+
+.letter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--pp-space-2);
+  min-width: 62px;
+  padding: var(--pp-space-2) 10px;
+  border: var(--pp-rule-line) solid transparent;
+  border-radius: var(--pp-radius-sm);
+}
+
+.letter-char {
+  font-family: var(--pp-font-mono);
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: var(--w-track-mono);
+  color: var(--pp-faint);
+}
+
+.letter-code,
+.letter-got {
+  font-family: var(--pp-font-mono);
+  font-size: 0.85rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  color: var(--pp-muted);
+}
+
+/* Hidden rather than removed, so the stage keeps its height and the board does
+   not jump the moment the crib goes away. */
+.stage.is-blind .letter-code {
+  visibility: hidden;
+}
+
+.letter.is-now {
+  border-color: var(--pp-edge);
+}
+
+.letter.is-now .letter-char {
+  color: var(--pp-ink);
+}
+
+.letter.is-hit .letter-char {
+  color: var(--pp-ink);
+}
+
+.letter.is-miss .letter-char {
+  color: var(--pp-plate-2-text);
+  text-decoration: line-through;
+}
+
+/* Always visible, in both crib settings: what came out instead is the whole
+   reason to look at a letter you have already sent. */
+.letter.is-miss .letter-got {
+  color: var(--pp-plate-2-text);
+}
+
+.stage-say {
+  margin: 0;
+  align-self: center;
+  font-size: 0.9rem;
+  color: var(--pp-muted);
+}
+
+/* ---- the key ---- */
+
+.deck {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--pp-space-3);
+  align-items: stretch;
+  margin-bottom: var(--pp-space-3);
+}
+
+/* A key is a thing you hit, so it is drawn as one: a slab standing on a hard
+   cast, which is the one law 04 spends on this page, and which collapses under
+   the press exactly as far as the slab travels. */
+.key-slab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 128px;
+  padding: var(--pp-space-3);
+  border: var(--pp-rule-structure) solid var(--pp-edge);
+  border-radius: var(--pp-radius-md);
+  background: var(--pp-paper);
+  box-shadow: 3px 3px 0 var(--pp-edge);
+  cursor: var(--pp-cursor-point);
+  transition: transform var(--pp-dur-instant) var(--pp-ease),
+              box-shadow var(--pp-dur-instant) var(--pp-ease),
+              background var(--pp-dur-instant) var(--pp-ease);
+  touch-action: none;
+  user-select: none;
+}
+
+.key-slab:hover {
+  background: var(--pp-tint);
+}
+
+.key-slab.is-down {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--pp-edge);
+  background: var(--pp-ink);
+  color: var(--pp-paper);
+}
+
+.key-cap {
+  font-family: var(--pp-font-mono);
+  font-size: 1.5rem;
+  letter-spacing: var(--w-track-mono);
+  text-transform: lowercase;
+}
+
+.key-say {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-label);
+  color: var(--pp-muted);
+}
+
+.key-slab.is-down .key-say {
+  color: var(--pp-paper);
+}
+
+.deck-side {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.deck-side .result-bar {
+  margin-bottom: 0;
+}
+
+.live-code {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-height: 66px;
+  padding: 0 var(--pp-space-2);
+  border: var(--pp-rule-line) solid var(--pp-hair);
+  border-top: 0;
+  font-family: var(--pp-font-mono);
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  color: var(--pp-ink);
+  overflow-x: auto;
+}
+
+/* The note under the key is about the key, so it stays with it — but it is the
+   last thing before the results and needs the gap a result bar expects above
+   it. base.css gives a sheet-note no bottom margin, since most sit at the foot
+   of what they explain. */
+.deck + .sheet-note {
+  margin-bottom: var(--pp-space-4);
+}
+
+/* ---- the reading ---- */
+
+/* Four numbers, and the two on the left are the pair the whole page is about.
+   Cells rule themselves rather than sitting in a gap over a coloured ground,
+   the way the alphabet does next door, so a row that does not fill prints no
+   leftover tracks. */
+.scores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  border: var(--pp-rule-line) solid var(--pp-hair);
+  background: var(--pp-paper);
+}
+
+.score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--pp-space-1);
+  padding: var(--pp-space-3);
+  border-right: var(--pp-rule-hairline) solid var(--pp-hair);
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+}
+
+.score-num {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-title);
+  line-height: 1;
+  letter-spacing: var(--pp-track-head);
+  color: var(--pp-ink);
+}
+
+.score-say {
+  margin: 0;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--pp-track-label);
+  text-transform: uppercase;
+  color: var(--pp-muted);
+}
+
+.score-note {
+  margin: 0;
+  font-size: var(--pp-size-micro);
+  line-height: var(--pp-leading-micro);
+  color: var(--pp-faint);
+}
+
+.score .preset {
+  margin-top: var(--pp-space-1);
+}
+
+#splitSay {
+  max-width: var(--pp-measure);
+  margin-bottom: var(--pp-space-5);
+}
+
+/* Same plate, same meaning: a character the run kept getting wrong. */
+.sheet tbody tr.is-fumbled td:first-child {
+  color: var(--pp-plate-2-text);
+}
+
+.sheet {
+  margin-bottom: 0;
+}
+
+.sheet + .sheet-note {
+  margin-bottom: var(--pp-space-5);
+}
+
+@media (max-width: 620px) {
+  .deck {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
