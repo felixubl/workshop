@@ -22,7 +22,7 @@ would make both harder to read. It appears as five squares filled from the
 left plus one word. The key at the foot of the index defines all five; a card
 carries the rating and nothing more.
 
-No tool is above `fetch` today: fifteen never open a socket, five read public
+No tool is above `fetch` today: sixteen never open a socket, five read public
 data and keep nothing. `store` and `account` are defined ahead of the tools
 that will need them.
 
@@ -730,6 +730,28 @@ figure or another file rather than a rendering.
   in the browser at
   [`tools/verify/expression-problem.html`](tools/verify/expression-problem.html)
   and under node with `node expression-problem/selftest.js`, off one set.
+
+- [Odometer](odometer/) — count in any base from 2 to 16 on a row of reels,
+  binary to start. Each reel shows one digit, and a reel that passes its last
+  digit goes back to 0 and pushes the reel on its left up by one. The number
+  the reels hold is printed beside them in base 10, and under them as a sum of
+  place values and in bases 2, 8, 10 and 16. Clicking a reel adds what that
+  reel is worth.
+
+  The reels are geared to each other directly, and differently on each side:
+  one tooth per digit on the right edge, and a single carry tooth on the left,
+  at the seam between the last digit and 0. So a reel turns freely until its
+  carry tooth comes round. That tooth waits three tenths of a digit short of
+  the tooth it pushes, and the slack is what makes a long carry ripple, each
+  reel starting a fraction of a step after the one that pushes it, instead of
+  the whole row turning at once. While teeth touch, both reels move at one
+  constant speed, so the two rows of teeth never pass through each other; a
+  pushed reel eases into place only after the reel behind it has stopped.
+
+  The teeth are drawn only around the reading line. Anywhere else, a carry
+  tooth moving one digit would run into a tooth of its neighbour's full row. A
+  real counter solves that with a small transfer wheel behind the frame at that
+  one spot, and the page says so rather than drawing the impossible version.
 
 Planned: CSV and spreadsheet toolkit, developer tools, archive and file tools,
 calendar and date tools.
