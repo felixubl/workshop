@@ -320,34 +320,6 @@
   padding-top: var(--pp-space-2);
 }
 
-.notes p { max-width: var(--pp-measure); }
-
-.sources {
-  list-style: none;
-  margin: var(--pp-space-3) 0 var(--pp-space-6);
-  padding: 0;
-  max-width: var(--pp-measure);
-}
-
-.sources li {
-  display: grid;
-  /* max-content, not a ch measure: these labels carry letter-spacing, so a
-     column counted in characters is narrower than the word that goes in it
-     and "DISTANCES" ends up touching the sentence beside it. */
-  grid-template-columns: max-content 1fr;
-  gap: var(--pp-space-3);
-  padding: var(--pp-space-2) 0;
-  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
-  font: var(--pp-size-mono) / 1.5 var(--pp-font-body);
-}
-
-.sources li span {
-  font: var(--pp-size-label) / 1.7 var(--pp-font-mono);
-  letter-spacing: var(--w-track-label);
-  text-transform: uppercase;
-  color: var(--pp-faint);
-}
-
 /* ---- wide ----------------------------------------------------------- */
 
 @media (min-width: 62rem) {
@@ -364,7 +336,6 @@
 }
 
 @media (max-width: 34rem) {
-  .sources li { grid-template-columns: 1fr; gap: 2px; }
   .detail { padding: var(--pp-space-3); }
 
   /* Let the groups pack rather than giving each one a row of its own. On a

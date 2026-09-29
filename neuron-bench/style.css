@@ -14,7 +14,6 @@ section + section { margin-top: var(--pp-space-5); }
 
 .nb-intro { max-width: var(--pp-measure); margin-bottom: var(--pp-space-5); }
 .nb-intro .lede { margin: 0 0 var(--pp-space-2); }
-.nb-intro .note { margin: 0; }
 
 /* ---- data ---------------------------------------------------------------- */
 
@@ -201,8 +200,6 @@ section + section { margin-top: var(--pp-space-5); }
 }
 .nb-record.is-current .nb-record-how,
 .nb-record.is-current .nb-record-when { color: var(--pp-muted); }
-
-.nb-records-say { margin-top: var(--pp-space-3); }
 
 /* ---- the neuron grid ------------------------------------------------------ */
 

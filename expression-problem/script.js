@@ -315,22 +315,22 @@ function walkByType(variant, operation) {
   const steps = [
     {
       line: 0,
-      say: `\`shape = ${variant.cls}(${args})\` — the value is built from a class, so it carries its type with it wherever it goes.`,
+      say: `\`shape = ${variant.cls}(${args})\` creates an object.`,
     },
     {
       line: methodAt,
-      say: `\`shape.${operation.id}()\` — Python looks \`${operation.id}\` up on \`type(shape)\`, which is \`${variant.cls}\`. One hop, and no search: a class already holds its own methods.`,
+      say: `\`shape.${operation.id}()\` finds \`${operation.id}\` on \`${variant.cls}\` directly.`,
     },
   ];
   if (bindAt >= 0) {
     steps.push({
       line: bindAt,
-      say: `The method takes the fields off \`self\`: ${fieldList(variant)}.`,
+      say: `Reads the fields from \`self\`: ${fieldList(variant)}.`,
     });
   }
   steps.push({
     line: returnAt,
-    say: "And evaluates the cell.",
+    say: "Evaluates the cell.",
     final: true,
   });
   return { lines: lines, steps: steps, outcome: outcome };
@@ -347,11 +347,11 @@ function walkByOperation(variant, operation) {
   const steps = [
     {
       line: 0,
-      say: `\`shape = ${record}\` — a plain record. It carries a tag, not a type, and knows nothing about \`${operation.id}\`.`,
+      say: `\`shape = ${record}\` creates a plain record with a tag.`,
     },
     {
       line: 1,
-      say: `\`match shape:\` — the function was handed something and has to find out what.`,
+      say: `\`match shape:\` checks the tag.`,
     },
   ];
   variants.slice(0, index + 1).forEach((candidate, i) => {
@@ -359,13 +359,13 @@ function walkByOperation(variant, operation) {
     steps.push({
       line: at,
       say: i === index
-        ? `\`case {"kind": "${candidate.id}", …}\` — this one fits, and the pattern binds the names as it matches: ${fieldList(variant)}.`
-        : `\`case {"kind": "${candidate.id}", …}\` — the tag does not match. On to the next arm.`,
+        ? `\`case {"kind": "${candidate.id}", …}\` matches and binds ${fieldList(variant)}.`
+        : `\`case {"kind": "${candidate.id}", …}\` does not match.`,
     });
   });
   steps.push({
     line: 3 + index * 2,
-    say: "And evaluates the cell.",
+    say: "Evaluates the cell.",
     final: true,
   });
   return { lines: lines, steps: steps, outcome: outcome };
@@ -405,7 +405,7 @@ function rebuild() {
       input.spellcheck = false;
       input.autocomplete = "off";
       input.value = cells[key(variant.id, operation.id)];
-      input.placeholder = "not written";
+      input.placeholder = "empty";
       input.setAttribute("aria-label", `${operation.id} of a ${variant.id}`);
       input.addEventListener("input", () => {
         cells[key(variant.id, operation.id)] = input.value;
@@ -543,21 +543,17 @@ function refresh() {
 function drawNote() {
   if (!lastAction) {
     boardNote.textContent =
-      `${variants.length} cases and ${operations.length} operations: ` +
-      `${variants.length * operations.length} cells, and one box round every ` +
-      `${grouping === "type" ? "row" : "column"}. ` +
-      "Change the arrangement and watch what moves.";
+      `${variants.length} cases, ${operations.length} operations, ` +
+      `${variants.length * operations.length} cells.`;
     return;
   }
   const opened = lastAction.what === "case" ? operations.length : variants.length;
   const boxes = grouping === "type" ? "classes" : "functions";
+  const box = grouping === "type" ? "class" : "function";
   const oneBox = (lastAction.what === "case") === (grouping === "type");
   boardNote.textContent = oneBox
-    ? `Added ${lastAction.name}: one new box, and not a line changed in any ` +
-      `of the ${(grouping === "type" ? variants : operations).length - 1} already there. ` +
-      "Now press the other arrangement without touching anything else."
-    : `Added ${lastAction.name}: no new box, and every one of the ${opened} ${boxes} ` +
-      "had to be opened. The marked cells are where the change landed.";
+    ? `Added ${lastAction.name}: 1 new ${box}, no other ${box} changed.`
+    : `Added ${lastAction.name}: all ${opened} ${boxes} changed. The marked cells show where.`;
 }
 
 function drawCost() {
@@ -576,8 +572,8 @@ function drawCost() {
   const on = (which) => (grouping === which ? " class=\"is-on\"" : "");
   costTable.innerHTML =
     "<thead><tr><th>change</th>" +
-    `<th${on("type")}>boxed by case</th>` +
-    `<th${on("operation")}>boxed by operation</th></tr></thead><tbody>` +
+    `<th${on("type")}>by case</th>` +
+    `<th${on("operation")}>by operation</th></tr></thead><tbody>` +
     rows.map((row) =>
       `<tr><td>${row.change}</td>` +
       `<td${on("type")}>${row.byType}</td>` +
@@ -647,7 +643,7 @@ function drawWalk() {
   traceJoin.hidden = false;
   if (outcome.error) {
     traceJoin.className = "trace-join is-broken";
-    traceJoin.innerHTML = mono(`Both roads arrive at \`${cell}\` — and it will not read: ${outcome.error}`);
+    traceJoin.innerHTML = mono(`Both end at \`${cell}\`, which fails: ${outcome.error}`);
     return;
   }
   traceJoin.className = "trace-join";
@@ -657,14 +653,10 @@ function drawWalk() {
   const byOperation = sides.operation.steps.length;
   traceJoin.innerHTML = cell
     ? mono(
-        `Both roads arrive at the same expression — \`${cell}\`${bound ? ` with ${bound}` : ""} — ` +
-        `and both come back with \`${Py.show(outcome.value)}\`. ` +
-        `By case: ${byType} steps, and it would be ${byType} for any case in the grid, because a class ` +
-        `already holds its own methods. By operation: ${byOperation} steps, ` +
-        (tried === 1
-          ? "because this case is the first arm the match tries."
-          : `because the match tried ${tried} arms before this one fitted.`))
-    : mono("Both roads arrive at a cell nobody has written, and both come back with `None`.");
+        `Both end at \`${cell}\`${bound ? ` with ${bound}` : ""} and return \`${Py.show(outcome.value)}\`. ` +
+        `By case: ${byType} steps. By operation: ${byOperation} steps ` +
+        `(${tried} arm${tried === 1 ? "" : "s"} tried).`)
+    : mono("The cell is empty. Both return `None`.");
 }
 
 // Backticks in a step's sentence become code, which is the one bit of markup
@@ -755,11 +747,8 @@ function drawRun() {
   runNote.textContent = result.broken
     ? result.broken
     : result.checked === 0
-      ? "Every cell is empty, so there is nothing to compare."
-      : "One table, walked twice. Every value here was reached once through a " +
-        "class and once through a match, and the two were compared before it " +
-        "was printed. Python's own int and float rules are kept, which is why " +
-        "an area can come back 6.0 where a corner count comes back 4.";
+      ? "Every cell is empty."
+      : "Each value is computed by class and by match, then compared.";
 }
 
 // `escape` is a global of its own, and shadowing a built-in in a file this

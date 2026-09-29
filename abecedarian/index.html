@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Abecedarian Distance — Felix' Workshop</title>
-<meta name="description" content="billowy and almost are already in alphabetical order. Every other word would be, under some other alphabet — this finds the nearest one and counts the letter swaps it took to get there.">
+<title>Alphabet Distance — Felix' Workshop</title>
+<meta name="description" content="Count the alphabet swaps that put a word in alphabetical order.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
@@ -52,23 +52,20 @@
         Felix' Workshop
       </a>
       <div class="title-row">
-        <h1 class="tool-title">Abecedarian Distance</h1>
-        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+        <h1 class="tool-title">Alphabet Distance</h1>
+        <button class="share-btn" type="button" data-share>
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
           <span data-share-label>copy link</span>
         </button>
-        <button class="share-btn pin-btn" type="button" data-pin="abecedarian" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+        <button class="share-btn pin-btn" type="button" data-pin="abecedarian" aria-label="Pin this tool"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
       </div>
     </div>
   </header>
 
   <div class="spine"></div>
 
-  <!-- One field, and nothing beside it. A row of example words lived here and
-       was cut: the whole interface is a word, and a shelf of pre-chosen ones
-       beside it made the page look like it had settings. The words worth
-       trying are in the sentence below, where they are doing an explaining job
-       rather than a decorating one. -->
+  <p class="lede">Count the alphabet swaps that put a word in alphabetical order.</p>
+
   <div class="toolbar">
     <div class="group grow">
       <label for="word">Word</label>
@@ -79,23 +76,12 @@
 
   <p class="hint" id="hint" hidden></p>
 
-  <!-- The empty state carries the definition, because this tool cannot be
-       understood from its own controls the way a PDF merger can. One field and
-       a number would be a riddle. -->
-  <div class="card prompt" id="empty">
-    A word is <strong>abecedarian</strong> when its letters already run in
-    alphabetical order — <em>billowy</em>, <em>almost</em>, <em>aegilops</em>.
-    Nearly no word is. But nearly every word would be, if the alphabet ran in
-    some other order: <em>zebra</em> needs only Z moved to the front and A to
-    the back. So the question stops being yes or no and becomes
-    <strong>how far</strong> — the fewest pairs of letters you would have to
-    swap in the alphabet itself before the word comes out sorted.
-  </div>
+  <div class="card prompt" id="empty">Type a word, for example <em>zebra</em>.</div>
 
   <section id="result" hidden>
 
     <div class="result-bar">
-      <p class="section-label">The distance</p>
+      <p class="section-label">Distance</p>
       <code class="meta" id="verdictMeta"></code>
     </div>
 
@@ -109,7 +95,7 @@
 
     <div data-when="sortable">
       <div class="result-bar">
-        <p class="section-label">The nearest alphabet</p>
+        <p class="section-label">Nearest alphabet</p>
         <code class="meta" id="alphaMeta"></code>
       </div>
 
@@ -118,7 +104,7 @@
              letter that lives there under the new order, and above it in small
              type the letter that normally would, wherever the two differ. -->
         <div class="sheet-body">
-          <div class="strip" id="strip" role="list" aria-label="The nearest alphabet, position by position"></div>
+          <div class="strip" id="strip" role="list" aria-label="Nearest alphabet"></div>
         </div>
       </div>
       <p class="sheet-note" id="stripKey"></p>
@@ -127,7 +113,7 @@
     <div class="two" data-when="sortable">
       <section>
         <div class="result-bar">
-          <p class="section-label">The swaps</p>
+          <p class="section-label">Swaps</p>
           <code class="meta" id="swapMeta"></code>
         </div>
         <div class="sheet">
@@ -140,7 +126,7 @@
 
       <section>
         <div class="result-bar">
-          <p class="section-label">The word, re-read</p>
+          <p class="section-label">Positions</p>
           <code class="meta" id="readMeta"></code>
         </div>
         <div class="sheet">
@@ -167,13 +153,13 @@
          where everything else is one search. script.js runs it in slices. -->
     <div data-when="sortable">
       <div class="result-bar">
-        <p class="section-label">Which letters carry it</p>
+        <p class="section-label">Key letters</p>
         <code class="meta" id="carryMeta"></code>
       </div>
       <div class="sheet">
         <div class="sheet-body">
           <div class="carry" id="carry" role="list"
-               aria-label="Each letter of the root, and what the word would cost without it"></div>
+               aria-label="Distance without each letter"></div>
         </div>
       </div>
       <p class="sheet-note" id="carryNote"></p>
@@ -192,7 +178,7 @@
          field and watching the number above stay put is the demonstration. -->
     <div data-when="sortable">
       <div class="result-bar">
-        <p class="section-label">The word inside the word</p>
+        <p class="section-label">Core</p>
         <code class="meta" id="coreMeta"></code>
       </div>
       <div class="sheet">
@@ -205,7 +191,7 @@
 
     <div data-when="sortable">
       <div class="result-bar">
-        <p class="section-label">Which alphabet this is</p>
+        <p class="section-label">Alphabet number</p>
         <code class="meta">of 26! = 403,291,461,126,605,635,584,000,000</code>
       </div>
       <div class="sheet">
@@ -213,12 +199,7 @@
           <p class="seed" id="seed"></p>
         </div>
       </div>
-      <p class="sheet-note">
-        Every one of the 26! orderings has a number: its place in the list of
-        them, sorted the way a dictionary sorts. Ordinary A&ndash;Z is 0. The
-        conversion is the Lehmer code, and it runs both ways, so this number
-        names that alphabet exactly and nothing else.
-      </p>
+      <p class="sheet-note">A to Z is number 0.</p>
     </div>
   </section>
 
@@ -241,7 +222,7 @@
   <section class="corpus">
 
     <div class="result-bar">
-      <p class="section-label">What the words cost</p>
+      <p class="section-label">Dictionary distances</p>
       <code class="meta" id="corpusMeta"></code>
     </div>
 
@@ -254,8 +235,8 @@
          Four at a time, because four is how many inks a red-green reader can
          still tell apart pairwise and there is no fifth. -->
     <div class="corpus-bar">
-      <div class="picks" id="corpusPick" role="group" aria-label="Which dictionaries the first figure draws"></div>
-      <button class="btn-ghost preset" type="button" id="tableBtn" aria-expanded="false" aria-controls="corpusTable">the numbers</button>
+      <div class="picks" id="corpusPick" role="group" aria-label="Dictionaries to draw"></div>
+      <button class="btn-ghost preset" type="button" id="tableBtn" aria-expanded="false" aria-controls="corpusTable">table</button>
     </div>
 
     <div class="sheet">
@@ -284,12 +265,9 @@
          in the bar too, and what a reader sees is how little of a dictionary
          the question even reaches.
 
-         Two denominators, one form, one ramp. A logarithmic figure used to sit
-         between these two and carried the far tail distance by distance; it is
-         gone, and the tail lives in the ramp's last step, the record rows below
-         and the table. -->
+         Two denominators, one form, one ramp. -->
     <div class="result-bar corpus-second">
-      <p class="section-label">What a dictionary is made of</p>
+      <p class="section-label">Whole dictionaries</p>
       <code class="meta" id="stackMeta"></code>
     </div>
 
@@ -311,15 +289,9 @@
          The figure above draws a point at ten swaps and cannot say what is
          standing in it. These are the words: the worst in each dictionary, and
          every word that ties for worst where the tie is short enough to print.
-
-         They are clickable, and that is not the shelf of example words this
-         page threw out. That shelf sat beside the field, offering pre-chosen
-         words before the reader had typed anything, which made a one-field
-         tool look like it had settings. These are findings — the survey's own
-         answer to "and what is the worst it found" — sitting at the end of the
-         survey, and clicking one is how a reader asks to see the working. -->
+         Clicking one answers it. -->
     <div class="result-bar corpus-second">
-      <p class="section-label">The longest way round</p>
+      <p class="section-label">Hardest words</p>
       <code class="meta" id="peakMeta"></code>
     </div>
 
@@ -348,7 +320,7 @@
          That is the finding, and it is the opposite of what "reducing" a
          dictionary sounds like it should do. -->
     <div class="result-bar corpus-second">
-      <p class="section-label">Where words meet</p>
+      <p class="section-label">Word families</p>
       <code class="meta" id="metMeta"></code>
     </div>
 

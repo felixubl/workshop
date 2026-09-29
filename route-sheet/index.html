@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Route Sheet — Felix' Workshop</title>
-<meta name="description" content="Turn a GPX, TCX, KML, KMZ or GeoJSON route — or a Google Maps, Waze, Apple or OpenStreetMap link — into a printable PDF with a map, a scale bar and turn-by-turn instructions worked out from the shape of the path. Paper works when the phone does not.">
+<meta name="description" content="Turn a GPX file or map link into a printable route.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
@@ -53,16 +53,18 @@
       </a>
       <div class="title-row">
         <h1 class="tool-title">Route Sheet</h1>
-        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+        <button class="share-btn" type="button" data-share>
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
           <span data-share-label>copy link</span>
         </button>
-        <button class="share-btn pin-btn" type="button" data-pin="route-sheet" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+        <button class="share-btn pin-btn" type="button" data-pin="route-sheet" aria-label="Pin this tool"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
       </div>
     </div>
   </header>
 
   <div class="spine"></div>
+
+  <p class="lede">Turn a GPX file or map link into a printable route.</p>
 
   <section class="intake" id="intake">
     <div class="dropzone" id="dropzone">
@@ -72,7 +74,7 @@
     </div>
 
     <div class="paste">
-      <label class="section-label" for="pasted">…or paste a map link, a list of coordinates, or an encoded polyline</label>
+      <label class="section-label" for="pasted">Or paste a map link or coordinates</label>
       <textarea class="field" id="pasted" rows="3" spellcheck="false" autocomplete="off"
         placeholder="https://www.google.com/maps/dir/…&#10;48.20817, 16.37381&#10;47.07071, 15.43949"></textarea>
       <div class="group">
@@ -89,24 +91,8 @@
   <p class="hint" id="hint" hidden></p>
 
   <div class="card prompt" id="empty">
-    <p><strong>A sheet of paper does not need a signal, a battery or a network.</strong>
-    Give this a route and it prints one: an overview map with the path on it, a
-    scale bar and a north arrow, the numbers that matter, and a numbered list of
-    every turn — how far along it is, how far to the next one, and the
-    coordinates, so a phone that comes back to life can be told where to go.</p>
-
-    <p>Every sport app exports <strong>GPX</strong>, and Komoot, Strava,
-    AllTrails, RideWithGPS and Garmin all do. So do <strong>TCX</strong>,
-    <strong>GeoJSON</strong> and the <strong>KML</strong> or <strong>KMZ</strong>
-    that Google <em>My Maps</em> hands you. Those carry the path itself, every
-    vertex of it, and they make the best sheets.</p>
-
-    <p><strong>Google Maps directions and Waze do not export.</strong> A share
-    link from either carries the stops and not the road between them, so this
-    tool reads the stops, draws them joined by a dashed line, and says on the
-    sheet that the dashes are not a road. That is the honest limit of what those
-    two links contain — for a real path out of Google, build the route in My Maps
-    and export the KML.</p>
+    <p>Links from Google Maps, Waze, Apple Maps, OpenStreetMap or Bing give only
+    the stops, joined by straight dashed lines. A GPX file gives the full path.</p>
   </div>
 
   <section id="workbench" hidden>
@@ -118,7 +104,7 @@
 
       <div class="group">
         <label for="grain">Instructions</label>
-        <select class="field" id="grain" data-tip="How sharp a bend has to be before it earns a line on the sheet. A city ride wants every corner; a motorway route wants junctions.">
+        <select class="field" id="grain" data-tip="Which bends to list">
           <option value="auto" selected>Match the route</option>
           <option value="fine">Every corner</option>
           <option value="normal">The turns</option>
@@ -128,15 +114,14 @@
 
       <div class="group">
         <label for="detail">Detail pages</label>
-        <input class="field num narrow" type="number" id="detail" min="0" max="24" step="1" value="0"
-          data-tip="The route cut into equal lengths, one page each, drawn close enough to tell one junction from the next. Zero for the overview alone.">
+        <input class="field num narrow" type="number" id="detail" min="0" max="24" step="1" value="0" data-tip="Close-up maps, one per page">
       </div>
 
       <div class="group">
         <label for="basemap">Map</label>
-        <select class="field" id="basemap" data-tip="Fetches map squares from tile.openstreetmap.org. Off, and this page opens no socket at all.">
-          <option value="off" selected>None — no network</option>
-          <option value="grey">Grey — best for printing</option>
+        <select class="field" id="basemap">
+          <option value="off" selected>None</option>
+          <option value="grey">Grey</option>
           <option value="colour">Colour</option>
         </select>
       </div>
@@ -165,15 +150,14 @@
 
     <p class="custody-note" id="custodyNote">
       <span class="custody-dot" aria-hidden="true"></span>
-      <span id="custodyText">Nothing has left this page. With the map set to
-      <em>None</em> the tool opens no socket: the file is read here, the turns are
-      worked out here, and the PDF is written here byte by byte.</span>
+      <span id="custodyText">Nothing leaves this page. With a map, tiles come from
+      <code>tile.openstreetmap.org</code>.</span>
     </p>
 
     <div class="bench">
       <section class="preview-pane">
         <div class="result-bar">
-          <p class="section-label">The map</p>
+          <p class="section-label">Map</p>
           <div class="group">
             <button class="btn-ghost preset" type="button" id="prevPanel" aria-label="Previous panel">‹</button>
             <code class="pager-at" id="panelAt">overview</code>
@@ -195,7 +179,7 @@
       </section>
 
       <section class="facts-pane">
-        <p class="section-label">The route</p>
+        <p class="section-label">Route</p>
         <div class="sheet">
           <div class="sheet-cap">
             <code id="routeCap">—</code>
@@ -208,7 +192,7 @@
     </div>
 
     <div class="result-bar">
-      <p class="section-label">The instructions</p>
+      <p class="section-label">Instructions</p>
       <div class="group">
         <button class="btn-ghost" type="button" id="copyCues">Copy as text</button>
         <button class="btn-primary" type="button" id="download">
@@ -236,52 +220,6 @@
       </div>
     </div>
     <p class="sheet-note" id="cueNote"></p>
-  </section>
-
-  <section class="colophon">
-    <h2 class="section-label">What this reads, and what it cannot</h2>
-    <dl class="ledger">
-      <dt>Carries the whole path</dt>
-      <dd><code>GPX</code> tracks, routes and waypoints · <code>TCX</code>
-        activities and courses, including Garmin's course points, which are real
-        turn instructions · <code>KML</code> and <code>KMZ</code>, including
-        Google <em>My Maps</em> exports · <code>GeoJSON</code> · a response from
-        the Google Directions, OSRM, Mapbox or GraphHopper routing APIs, whose
-        written instructions are used as they are · an encoded polyline pasted
-        on its own.</dd>
-
-      <dt>Carries only the stops</dt>
-      <dd>Links from <strong>Google Maps</strong>, <strong>Waze</strong>,
-        <strong>Apple Maps</strong>, <strong>OpenStreetMap</strong> and
-        <strong>Bing</strong>. None of the five publishes the road between the
-        stops, so the sheet draws a dashed line and labels it as not a road.
-        A <code>maps.app.goo.gl</code> short link cannot be opened here at all:
-        following it is a cross-origin redirect the browser forbids, and
-        resolving it on a server somewhere would hand your destination to a
-        stranger to save you a paste. Open it in Maps and copy the long address.</dd>
-
-      <dt>Does not read</dt>
-      <dd>Garmin's binary <code>FIT</code>. Every app that writes one also
-        exports GPX or TCX for the same ride.</dd>
-
-      <dt>Where the instructions come from</dt>
-      <dd>If the file has them, they are used and the street names come with
-        them. A recorded track has none, so they are worked out from the shape
-        of the path: the direction of travel is measured over a window either
-        side of each point, and where it changes by enough the tool says so,
-        with the angle it turned through and the compass heading it leaves on.
-        That is less than a routing engine knows — it can never name a road —
-        but it is all that can be had without sending your route to somebody
-        else, and next to a map it is enough to follow.</dd>
-
-      <dt>The one thing that leaves</dt>
-      <dd>With <strong>Map</strong> set to anything but <em>None</em>, this page
-        asks <code>tile.openstreetmap.org</code> for the squares of map the
-        route crosses. That request carries your IP address and, in the squares
-        it asks for, where you are going. Nothing is uploaded, nothing is kept,
-        and the tiles are held in memory for as long as the tab is open and no
-        longer. Set it to <em>None</em> and the page opens no socket at all.</dd>
-    </dl>
   </section>
 </div>
 

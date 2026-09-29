@@ -64,15 +64,14 @@ function rebuildNow() {
            (state.built.points[i].y - state.samples[i].y) ** 2;
   }
   err = Math.sqrt(err / state.samples.length);
-  const bg = state.loops.dropped ? ", " + state.loops.dropped + " background shape" +
-    (state.loops.dropped > 1 ? "s" : "") + " dropped" : "";
+  const bg = state.loops.dropped ? ", " + state.loops.dropped + " background dropped" : "";
   const s1 = state.single;
   const joins = s1 && s1.total > 0
-    ? " · joins are " + ((2 * s1.bridge / s1.total) * 100).toFixed(1) + "% of the line" : "";
+    ? " · joins " + ((2 * s1.bridge / s1.total) * 100).toFixed(1) + "% of the line" : "";
   $("stats").textContent =
-    state.loops.length + " loops joined into one line" + bg + " · " +
+    state.loops.length + " shapes" + bg + " · " +
     state.samples.length + " samples · " + state.built.kept.length +
-    " circles · mean error " + (err / BOX * 100).toFixed(2) + "% of the frame" + joins;
+    " circles · mean error " + (err / BOX * 100).toFixed(2) + "%" + joins;
   paintCurve();
   resetTrace();
   showFunction();
@@ -121,9 +120,7 @@ function showFunction() {
   }
   $("termTable").querySelector("tbody").innerHTML = body.join("");
   $("fnNote").textContent =
-    "Radii are in the units of the frame, which is 1000 across. A term with n = 3 " +
-    "turns three times while the pen goes round once; a negative n turns the other way. " +
-    "Showing " + rows + " of " + kept.length + ".";
+    "Showing " + rows + " of " + kept.length + ". The frame is 1000 units wide.";
 }
 
 function termsCSV() {
@@ -176,7 +173,7 @@ async function copyOut(text, label, button) {
     ok = copyTheOldWay(text);
   }
   if (!ok) {
-    say("the browser would not let this page reach the clipboard, so " + label + " was not copied");
+    say("the browser blocked the clipboard, " + label + " not copied");
     return;
   }
   const was = button.textContent;
@@ -441,7 +438,7 @@ async function loadFile(file) {
     return;
   }
   if (!state.loops.length) {
-    say("nothing drawable in that file — every shape was shorter than the smallest loop allowed");
+    say("nothing drawable: every shape is shorter than Smallest shape");
     return;
   }
   $("work").hidden = false;
@@ -549,4 +546,3 @@ $("saveSvg").addEventListener("click", () => {
 setupNavigation();
 showZoom();
 window.addEventListener("resize", fitStage);
-say("drop an SVG anywhere, or use the file button");

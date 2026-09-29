@@ -15,9 +15,9 @@
   /* Who else can see a value. The three answers this tool gives, named once so
      a row cannot invent a fourth. */
   const WHO = {
-    local: ['local', 'stays in your browser'],
-    isp: ['network', 'your ISP and anyone operating this network'],
-    site: ['any site', 'readable by every site you open, no permission needed'],
+    local: ['local', 'Stays in your browser'],
+    isp: ['network', 'Visible to your ISP and network'],
+    site: ['any site', 'Readable by any site'],
   };
 
   // ── Rendering ────────────────────────────────────────────────────────────
@@ -132,7 +132,7 @@
   function renderLine() {
     const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     const rows = [
-      ['Online', navigator.onLine ? 'yes' : 'no, the browser thinks it is offline', 'local'],
+      ['Online', navigator.onLine ? 'yes' : 'no', 'local'],
     ];
     if (c) {
       rows.push(
@@ -175,12 +175,12 @@
     fill($('tPlace'), [
       ['Time zone', dt.timeZone, 'site'],
       ['Offset from UTC', utc, 'site'],
-      ['Observes daylight saving', jan === jul ? 'no' : 'yes', 'site'],
+      ['Daylight saving', jan === jul ? 'no' : 'yes', 'site'],
       ['Locale', dt.locale, 'site'],
-      ['Languages, in order', (navigator.languages || []).join(', ') || navigator.language, 'site'],
+      ['Languages', (navigator.languages || []).join(', ') || navigator.language, 'site'],
       ['Calendar and numerals', `${dt.calendar}, ${dt.numberingSystem}`, 'site'],
-      ['Country your locale implies', regionOf(dt.locale), 'site'],
-      ['Your clock, as this page reads it', new Date().toString(), 'site'],
+      ['Country from locale', regionOf(dt.locale), 'site'],
+      ['Your clock', new Date().toString(), 'site'],
     ]);
   }
 
@@ -221,7 +221,7 @@
           ['Mobile', nav.userAgentData.mobile ? 'yes' : 'no', 'site'],
         );
       } catch {
-        rows.push(['Client Hints', 'present, but the high-entropy set was refused', 'site']);
+        rows.push(['Client Hints', 'refused', 'site']);
       }
     } else {
       rows.push(['Platform', nav.platform || null, 'site']);
@@ -229,7 +229,7 @@
 
     rows.push(
       ['CPU cores', nav.hardwareConcurrency || null, 'site'],
-      ['Memory, as reported', nav.deviceMemory ? `${nav.deviceMemory} GB or more` : null, 'site'],
+      ['Memory', nav.deviceMemory ? `${nav.deviceMemory} GB or more` : null, 'site'],
       ['Screen', `${screen.width} x ${screen.height}, ${screen.colorDepth}-bit`, 'site'],
       ['Available screen', `${screen.availWidth} x ${screen.availHeight}`, 'site'],
       ['Window', `${innerWidth} x ${innerHeight}`, 'site'],
@@ -237,23 +237,23 @@
       ['Touch points', nav.maxTouchPoints, 'site'],
       ['Graphics', gpu(), 'site'],
       ['Graphics limits', glDetail(), 'site'],
-      ['Video it can decode', codecs(), 'site'],
+      ['Video codecs', codecs(), 'site'],
       ['Keyboard layout', await keyboardLayout(), 'site'],
       ['Cameras and microphones', await mediaDevices(), 'site'],
-      ['Speech voices installed', await voices(), 'site'],
-      ['Permissions already decided', await permissions(), 'site'],
-      ['JavaScript heap ceiling', performance.memory
+      ['Speech voices', await voices(), 'site'],
+      ['Permissions set', await permissions(), 'site'],
+      ['JS heap limit', performance.memory
         ? `${Math.round(performance.memory.jsHeapSizeLimit / 1048576)} MB` : null, 'site'],
       ['Built-in PDF viewer', nav.pdfViewerEnabled == null ? null
         : (nav.pdfViewerEnabled ? 'yes' : 'no'), 'site'],
       /* The referring page. Not a property of the machine, but it is handed
          over without being asked for. */
-      ['The page that sent you here', document.referrer || 'opened directly, no referrer', 'site'],
+      ['Referrer', document.referrer || 'none', 'site'],
       ['Cookies enabled', nav.cookieEnabled ? 'yes' : 'no', 'site'],
-      ['Do Not Track', nav.doNotTrack === '1' ? 'on, and almost universally ignored' : 'not set', 'site'],
+      ['Do Not Track', nav.doNotTrack === '1' ? 'on' : 'not set', 'site'],
       ['Global Privacy Control', nav.globalPrivacyControl ? 'on' : 'not set', 'site'],
-      ['Colour scheme preferred', matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light', 'site'],
-      ['Reduced motion preferred', matchMedia('(prefers-reduced-motion: reduce)').matches ? 'yes' : 'no', 'site'],
+      ['Colour scheme', matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light', 'site'],
+      ['Reduced motion', matchMedia('(prefers-reduced-motion: reduce)').matches ? 'yes' : 'no', 'site'],
       ['Canvas signature', hash(canvasPrint()), 'site'],
       ['Audio signature', hash(String(await audioPrint())), 'site'],
       ['Fonts detected', fontList(), 'site'],
@@ -262,7 +262,7 @@
     if (nav.storage && nav.storage.estimate) {
       try {
         const e = await nav.storage.estimate();
-        rows.push(['Storage quota for this site', bytes(e.quota), 'local']);
+        rows.push(['Storage quota', bytes(e.quota), 'local']);
       } catch { /* Firefox in private mode rejects this */ }
     }
     if (nav.getBattery) {
@@ -293,7 +293,7 @@
         if (s.state !== 'prompt') out.push(`${name} ${s.state}`);
       } catch { /* the browser does not know this permission */ }
     }
-    return out.length ? out.join(', ') : 'nothing granted or denied yet';
+    return out.length ? out.join(', ') : 'none';
   }
 
   /* How many cameras and microphones you have, with no permission and no
@@ -310,7 +310,7 @@
       return [count(n('videoinput'), 'camera', 'cameras'),
         count(n('audioinput'), 'microphone', 'microphones'),
         count(n('audiooutput'), 'output', 'outputs')].join(', ')
-        + (named ? ', and their names, because access was granted before' : ', names hidden');
+        + (named ? ', names visible' : ', names hidden');
     } catch {
       return null;
     }
@@ -325,7 +325,7 @@
         const v = speechSynthesis.getVoices();
         if (!v.length) return null;
         const langs = [...new Set(v.map((x) => x.lang))];
-        return `${v.length} installed, covering ${langs.length} languages`;
+        return `${v.length}, in ${langs.length} languages`;
       };
       const first = read();
       if (first) return resolve(first);
@@ -365,7 +365,7 @@
       const map = await navigator.keyboard.getLayoutMap();
       const top = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY']
         .map((k) => (map.get(k) || '?').toUpperCase()).join('');
-      return `${top}, read straight off your physical keys`;
+      return top;
     } catch {
       return null;
     }
@@ -649,7 +649,7 @@
     const s = el('div', 'sheet');
     const cap = el('div', 'sheet-cap');
     cap.append(el('code', null, 'Measured'));
-    cap.append(el('code', 'meta', `${bytes(bytesPulled)} pulled over ${seconds.toFixed(1)}s`));
+    cap.append(el('code', 'meta', `${bytes(bytesPulled)} in ${seconds.toFixed(1)}s`));
     s.append(cap);
     const dl = el('div', 'readings');
     const reading = (label, value, sub) => {
@@ -671,8 +671,7 @@
     s.append(dl);
     wrap.append(s);
 
-    note(wrap, 'The path between you and this one server, not a rating of your connection. No upload '
-      + 'figure: measuring it needs a server that accepts a large POST, and this site has none.');
+    note(wrap, 'Measured to this site\'s server only. No upload test.');
 
     done(btn);
   }
@@ -692,9 +691,7 @@
     ]);
 
     if (infoRes.status !== 'fulfilled' || !infoRes.value || infoRes.value.success === false) {
-      wrap.append(el('p', 'hint', 'The lookup did not come back. That is usually an ad blocker, a '
-        + 'privacy extension, or the service being rate limited. Nothing about your connection '
-        + 'is broken.'));
+      wrap.append(el('p', 'hint', 'The lookup failed. An ad blocker or a rate limit is the usual cause.'));
       done(btn);
       return;
     }
@@ -704,25 +701,25 @@
     const conn = d.connection || {};
     const tz = d.timezone || {};
 
-    const tb = sheet(wrap, 'Handed over by one request', 'source: ipwho.is');
+    const tb = sheet(wrap, 'IP lookup', 'source: ipwho.is');
     const rows = [
-      ['Address it saw', d.ip, 'isp'],
-      ['Address family', d.type, 'isp'],
+      ['IP address', d.ip, 'isp'],
+      ['IP type', d.type, 'isp'],
     ];
     /* Showing both stacks matters: people who assume they have one address
        often have two, and blocking or rotating one leaves the other. */
-    if (v4 && v4 !== d.ip) rows.push(['Your IPv4, separately', `${v4} (you are dual stack)`, 'isp']);
+    if (v4 && v4 !== d.ip) rows.push(['IPv4', `${v4} (dual stack)`, 'isp']);
     rows.push(
       ['Internet provider', conn.isp, 'isp'],
       ['Network operator', conn.org, 'isp'],
       ['Autonomous system', conn.asn ? `AS${conn.asn}` : null, 'isp'],
-      ['Their domain', conn.domain, 'isp'],
+      ['ISP domain', conn.domain, 'isp'],
       ['Country', d.country ? `${d.country} (${d.country_code})` : null, 'isp'],
       ['Region', d.region, 'isp'],
       ['City', d.city, 'isp'],
       ['Postal code', d.postal, 'isp'],
       ['Coordinates', d.latitude != null ? `${d.latitude}, ${d.longitude}` : null, 'isp'],
-      ['Time zone they infer', tz.id, 'isp'],
+      ['Time zone', tz.id, 'isp'],
       ['In the EU', d.is_eu ? 'yes' : 'no', 'isp'],
     );
     fill(tb, rows);
@@ -737,7 +734,6 @@
       try { return new Intl.Locale(navigator.language).maximize().region; } catch { return null; }
     })();
     const tzAgrees = tz.id && mine && tz.id === mine;
-    const ctryAgrees = region && d.country_code && region === d.country_code;
 
     const vb = sheet(wrap, 'Cross-check', 'browser against address');
     fill(vb, [
@@ -753,20 +749,10 @@
        of a VPN: much of the world browses in en-US, so it disagrees with the
        address constantly on connections with no VPN. */
     if (tzAgrees) {
-      note(wrap, 'Clock and address agree, which is what no VPN looks like. A VPN that moves your time '
-        + 'zone too would look the same, so this is consistency, not proof.');
+      note(wrap, 'Time zones agree, so probably no VPN.');
     } else if (tz.id && mine) {
-      note(wrap, 'Clock and address disagree. That gap is what a VPN produces, and also what travelling '
-        + 'with an unchanged clock produces. A hint, not a verdict.');
+      note(wrap, 'Time zones differ. That suggests a VPN, or travel.');
     }
-
-    if (region && !ctryAgrees) {
-      note(wrap, `Your language implies ${region} while your address says ${d.country_code}. Weak on its `
-        + 'own, since English is the default everywhere, but one more field you never chose to publish.');
-    }
-
-    note(wrap, 'All of it from one request that carried nothing but the fact you made it. The postal '
-      + 'code is real.');
 
     done(btn);
   }
@@ -788,7 +774,7 @@
     const found = new Map();
 
     if (!window.RTCPeerConnection) {
-      wrap.append(el('p', 'hint', 'WebRTC is not available in this browser, so this leak does not apply to you.'));
+      wrap.append(el('p', 'hint', 'WebRTC is not available in this browser.'));
       done(btn);
       return;
     }
@@ -820,10 +806,10 @@
   }
 
   const RTC_KIND = {
-    host: 'an address on your own machine',
-    srflx: 'the address the internet sees, as told by a STUN server',
-    prflx: 'an address discovered mid-connection',
-    relay: 'a relay, your real address stayed hidden',
+    host: 'Local address',
+    srflx: 'Public address',
+    prflx: 'Peer address',
+    relay: 'Relay',
   };
 
   let rtcLocalV4 = null;
@@ -831,11 +817,10 @@
   function renderRtc(wrap, cands) {
     if (!cands.length) {
       wrap.replaceChildren();
-      wrap.append(el('p', 'hint', 'No candidates came back, which usually means WebRTC is disabled or '
-        + 'blocked by an extension. That is the leak being closed.'));
+      wrap.append(el('p', 'hint', 'No addresses came back. WebRTC is probably blocked.'));
       return;
     }
-    const tb = sheet(wrap, 'Addresses your browser offered up', `${cands.length} candidates`);
+    const tb = sheet(wrap, 'Addresses offered', `${cands.length} candidates`);
     let mdns = 0;
     for (const c of cands) {
       const isMdns = /\.local$/i.test(c.address || '');
@@ -846,11 +831,9 @@
         c.type === 'host' ? 'local' : 'isp');
     }
     if (mdns) {
-      note(wrap, `${mdns} came back as a random .local name instead of a real private address. That is `
-        + 'your browser closing the oldest WebRTC leak.');
+      note(wrap, `${mdns} hidden behind a random .local name.`);
     } else {
-      note(wrap, 'Your private address came back in full. Any page can read it the same way, VPN or '
-        + 'not, and it maps out your network.');
+      note(wrap, 'Your private address is visible to any page.');
     }
   }
 
@@ -965,7 +948,7 @@
 
   async function portScan() {
     const btn = $('ports');
-    busy(btn, 'Knocking');
+    busy(btn, 'Scanning');
     const wrap = section('portsWrap');
 
     const bar = el('div', 'sheet');
@@ -989,27 +972,21 @@
     const open = results.filter((r) => r.state !== 'closed')
       .sort((a, b) => a.port - b.port);
 
-    const tb = sheet(wrap, 'Ports that answered', `${open.length} of ${PORTS.length} knocked on`);
+    const tb = sheet(wrap, 'Ports that answered', `${open.length} of ${PORTS.length}`);
     if (!open.length) {
-      row(tb, 'Nothing answered', `${PORTS.length} ports tried, every one refused`, null);
+      row(tb, 'Nothing answered', `${PORTS.length} ports tried, all closed`, null);
     } else {
       for (const r of open) {
         row(tb, `Port ${r.port}`,
-          `${names.get(r.port)}, ${r.state === 'http' ? 'answered as a web server' : 'accepted the connection'} in ${ms(r.took)}`,
+          `${names.get(r.port)} (${r.state === 'http' ? 'web server' : 'open'}, ${ms(r.took)})`,
           'site');
       }
     }
 
     if (open.length) {
-      note(wrap, 'Software on your computer, identified by a web page with no prompt and no permission. '
-        + 'Nothing went over your network, so a VPN does nothing about it.');
-      note(wrap, 'The names are what normally sits on each port, not what was identified. That something '
-        + 'answered is the fact, the program is the convention.');
-      note(wrap, 'A floor, not a total. Anything that greets you on connect, like SSH, is refused as '
-        + 'fast as a closed port and cannot be told apart from one.');
+      note(wrap, 'Names are the usual software on each port.');
     } else {
-      note(wrap, 'Nothing answered: either none of this software is running, or your browser already '
-        + 'blocks pages from reaching your own machine.');
+      note(wrap, 'None of this software is running, or the browser blocked the scan.');
     }
 
     done(btn);
@@ -1019,7 +996,7 @@
 
   async function scan() {
     const btn = $('scan');
-    busy(btn, 'Sweeping');
+    busy(btn, 'Scanning');
     const wrap = section('scanWrap');
 
     /* Always http:, whatever this page is served over. Measured from an HTTPS
@@ -1043,12 +1020,12 @@
     if (subnet) subnets.add(subnet);
 
     if (!subnet) {
-      busy(btn, 'Finding your range');
+      busy(btn, 'Finding range');
       seeds = await pool(GATEWAYS, (ip) => probe(ip, scheme), () => {});
       for (const s of seeds) {
         if (s.state === 'answered') subnets.add(s.ip.split('.').slice(0, 3).join('.'));
       }
-      busy(btn, 'Sweeping');
+      busy(btn, 'Scanning');
     }
 
     /* Only the addresses phase one did not already cover. When it found no
@@ -1091,15 +1068,14 @@
       `${hits.length} of ${probed} probed${ranges ? `, across ${ranges}` : ''}`);
 
     if (!hits.length) {
-      row(tb, 'Nothing answered', `${probed} addresses probed, every one silent`, null);
+      row(tb, 'Nothing answered', `${probed} addresses probed, none answered`, null);
       /* The most likely outcome, and worth explaining: "found nothing" reads
          as "nothing is there", and usually is not. The probe can only see a
          device that actively refuses the connection. A device that drops the
          packet is indistinguishable from an empty address, and dropping is the
          normal, correct behaviour for most hardware. Verified on a network
          with six devices, none of which this technique could see. */
-      note(wrap, 'Silence is not an empty network. This only sees a device that answers to say no, and '
-        + 'most drop the packet without a word. Your network can be full and still look like this.');
+      note(wrap, 'Most devices do not answer, so this can miss them.');
     } else {
       for (const h of hits) {
         const isGw = h.ip.endsWith('.1') || h.ip.endsWith('.254');
@@ -1109,18 +1085,8 @@
     }
 
     if (!subnets.size) {
-      note(wrap, 'No common router address answered, so there was no range to sweep. Either yours is '
-        + 'unusual, or the browser blocked the requests.');
-    } else if (!rtcLocalV4) {
-      note(wrap, 'Your browser refused to hand over your private address, so the range was found by '
-        + 'knocking on router addresses instead. Closing one leak does not close the question.');
+      note(wrap, 'No common router address answered, so no range was scanned.');
     }
-    if (location.protocol === 'https:') {
-      note(wrap, 'This page is encrypted and still knocked on your network in plain HTTP. Encryption on '
-        + 'the page says nothing about where it may reach.');
-    }
-    note(wrap, 'Inference, not a scan. A real tool with a real socket would see the whole network in a '
-      + 'second. A web page cannot, and that is the browser protecting you.');
 
     done(btn);
   }

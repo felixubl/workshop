@@ -20,15 +20,15 @@
 
   // key -> [label, risk, note]
   const INFO_FIELDS = {
-    Title:        ['Title', MED, 'Often the name of the file it was written from, or of the template.'],
-    Author:       ['Author', HIGH, 'A person, or the account the document was written under.'],
-    Subject:      ['Subject', MED, 'A description written by hand or by a template.'],
-    Keywords:     ['Keywords', MED, 'Written by hand, and sometimes left over from a template.'],
-    Creator:      ['Written in', MED, 'The program the document was written in, and its version.'],
-    Producer:     ['Written out by', MED, 'The program that produced the PDF, and its version.'],
-    CreationDate: ['Created', MED, 'When the document was first written, to the second, with the time zone.'],
-    ModDate:      ['Last changed', MED, 'When it was last saved, to the second, with the time zone.'],
-    Trapped:      ['Trapped', LOW, 'A printing flag. It says nothing about you.'],
+    Title:        ['Title', MED, 'Often a file or template name'],
+    Author:       ['Author', HIGH, 'A person or account name'],
+    Subject:      ['Subject', MED, 'A description'],
+    Keywords:     ['Keywords', MED, 'Sometimes left from a template'],
+    Creator:      ['Written in', MED, 'Program and version'],
+    Producer:     ['Written out by', MED, 'PDF program and version'],
+    CreationDate: ['Created', MED, 'Time and time zone'],
+    ModDate:      ['Last changed', MED, 'Time and time zone'],
+    Trapped:      ['Trapped', LOW, 'A printing flag'],
   };
 
   // The XMP tags worth naming. Everything else in the packet is counted rather
@@ -114,8 +114,8 @@
       let risk = spec ? spec[1] : MED;
       if (PATHY.test(value)) risk = HIGH;
 
-      let note = spec ? spec[2] : 'A field this file\'s writer invented. Nothing says what is in it.';
-      if (WRITTEN[key]) note += ' Kept, the saved file records ' + WRITTEN[key] + '.';
+      let note = spec ? spec[2] : 'A custom field';
+      if (WRITTEN[key]) note += ' (if kept, the saved file records ' + WRITTEN[key] + ')';
 
       // A field this tool would not carry across in any case is shown without
       // a switch: there is no decision to offer.
@@ -190,7 +190,7 @@
         label,
         value,
         risk: PATHY.test(value) ? HIGH : risk,
-        note: 'From the XMP packet, which this tool never copies into the file it saves.',
+        note: 'From the XMP packet, never saved',
         removable: false,
         fixedNote: 'dropped',
       });
@@ -203,7 +203,7 @@
       label: 'XMP packet',
       value: Math.round(packet.size / 102.4) / 10 + ' kB of XML, ' + tags + ' tags',
       risk: MED,
-      note: 'An XML block in the catalog. It repeats most of the information dictionary and adds the identifiers that tie copies of a document together.',
+      note: 'XML copy of the metadata, with document identifiers',
       removable: false,
       fixedNote: 'dropped',
     });
@@ -224,7 +224,7 @@
       label: 'File identifier',
       value: hex(first),
       risk: LOW,
-      note: 'Two byte strings a reader uses to tell one file from another. A fresh pair is written every time this tool saves.',
+      note: 'Replaced with a new one on save',
       removable: false,
       fixedNote: 'replaced',
     }];
@@ -263,7 +263,7 @@
         label: 'Attached to the pages',
         value: parts.join(', '),
         risk: MED,
-        note: 'What an editor left on the page itself: its own working data, and sometimes a second copy of the document metadata. It travels with the page unless it is dropped here.',
+        note: 'Editor data and metadata on the pages',
         removable: true,
       });
     }
@@ -280,7 +280,7 @@
         label: 'Comment authors and dates',
         value,
         risk: authors.size ? HIGH : MED,
-        note: 'Every comment, note and stamp carries who wrote it and when. Dropping these leaves the comments themselves in place.',
+        note: 'Who wrote each comment and when (comments stay)',
         removable: true,
       });
     }

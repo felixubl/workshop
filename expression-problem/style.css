@@ -301,12 +301,6 @@
   font-weight: 700;
 }
 
-.sheet-note code,
-.note code {
-  font-family: var(--pp-font-mono);
-  font-size: 0.86em;
-}
-
 /* Something in a cell will not parse. The one red on a tool page, and it always
    sits beside the words that say what is wrong. */
 .is-broken {

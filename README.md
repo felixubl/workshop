@@ -19,8 +19,8 @@ claim, every card on the index carries a custody rating on a five-rung scale:
 The rating is drawn in ink rather than in a plate colour, because the plates
 are the index's category vocabulary and a second colour code on the same card
 would make both harder to read. It appears as five squares filled from the
-left plus one word. The key at the foot of the index defines all five; a card
-carries the rating and nothing more.
+left plus one word. The key at the foot of the index defines the rungs in use;
+a card carries the rating and nothing more.
 
 No tool is above `fetch` today: sixteen never open a socket, five read public
 data and keep nothing. `store` and `account` are defined ahead of the tools
@@ -28,7 +28,7 @@ that will need them.
 
 Each of the four on `fetch` names the hosts it contacts on its own page,
 before anything is sent. In two of them the traffic is the subject of the tool
-rather than an aside — see Network Inspector and Eclipse Recon below. In Route
+rather than an aside — see Network Inspector and Eclipse Planner below. In Route
 Sheet the socket is a setting rather than a fact about the tool, so the page
 restates its own rung live as that setting changes.
 
@@ -42,11 +42,11 @@ index each is kept as a comment in the section that will hold it.
 
 Raster and vector images, type, colour, audio and video.
 
-- [Pixel Art SVG Drawer](draw-svg/) — draw pixel art on a grid-snapped canvas,
+- [Pixel Art Editor](draw-svg/) — draw pixel art on a grid-snapped canvas,
   starting from a standard sprite size or a custom one, and export the result
   as an SVG file.
 
-- [Image Metadata Cleaner](metadata-cleaner/) — read every metadata field a
+- [Metadata Cleaner](metadata-cleaner/) — read every metadata field a
   JPEG, PNG or WebP carries (EXIF, GPS, XMP, IPTC, colour profile, embedded
   thumbnail), see what each one discloses, and choose field by field what to
   remove. Works on batches or single files, and is lossless: the pixels are
@@ -74,7 +74,7 @@ Raster and vector images, type, colour, audio and video.
   from what was heard. A song is a few kilobytes of integers, saved to a file
   rather than a server. Note entry wants a keyboard, and the page says so.
 
-- [Fourier Bench](fourier-bench/) — take a sound apart into the sinusoids it is
+- [Sound Spectrum](fourier-bench/) — take a sound apart into the sinusoids it is
   made of. Drop in a file, record through the microphone, or start from a
   signal whose answer is already known. What comes back is a spectrogram with
   the window in your hands, and a table of partials at one moment: frequency,
@@ -200,7 +200,7 @@ Raster and vector images, type, colour, audio and video.
   gating it, ramped over a few milliseconds at each end. Gating a sine by
   starting and stopping it clicks, and the click is louder than the note.
 
-- [Morse Bench](morse-bench/) — a typing test for the key next door. A set of
+- [Morse Speed Test](morse-bench/) — a typing test for the key next door. A set of
   words goes up, you send them on the space bar, and the clock starts on your
   first press. With the crib shown the dits and dahs sit under every letter of
   the word in hand and you are practising your hand; with it hidden the word is
@@ -248,7 +248,7 @@ Raster and vector images, type, colour, audio and video.
   The alphabet, the thresholds, the sidetone and the key itself are
   [`morse-key/morse.js`](morse-key/morse.js), loaded from the neighbouring
   folder rather than copied, the same arrangement Eclipse Countdown has with
-  Eclipse Recon, so the two tools cannot disagree about what a pattern means or
+  Eclipse Planner, so the two tools cannot disagree about what a pattern means or
   where a letter ends.
 
 - [Portrait](portrait/) — reduce a photograph of a face to one bit. Two models
@@ -288,7 +288,7 @@ Raster and vector images, type, colour, audio and video.
   measured, not guessed: detection holds at twelve per cent and fails at
   eleven. This is a portrait tool, not a way to pick a face out of a crowd.
 
-- [Fourier Atelier](fourier-atelier/) — drop in an SVG and watch a chain of
+- [Fourier Drawing](fourier-atelier/) — drop in an SVG and watch a chain of
   rotating circles draw it as one unbroken line. The transform is the easy half.
   A chain of circles can draw exactly one closed curve, so the shapes in the
   file — a portrait exported from the tool above arrives with two thousand of
@@ -372,7 +372,7 @@ browser, and this prints a file the reader supplied.
   looked right and `strings` still found the words. The same assertions run
   under node with `node pdf-toolkit/selftest.js`.
 
-- [Bingo Card Generator](bingo-cards/) — enter the squares and it counts the
+- [Bingo Cards](bingo-cards/) — enter the squares and it counts the
   number of distinct cards that list can produce, exactly, at any number of
   digits. Request any number of cards and it generates that many, all
   different, from a seed so the same set can be reproduced. A logo or a QR code
@@ -416,16 +416,16 @@ browser, and this prints a file the reader supplied.
 
 Planned: QR codes and barcodes, text and document utilities, email tools.
 
-### Data & Computation
+### Maths & Code
 
 Numbers, text as data, tables, archives and code — work whose output is a
 figure or another file rather than a rendering.
 
-- [Random Number Generator](random-numbers/) — draw from eleven distributions
+- [Random Numbers](random-numbers/) — draw from eleven distributions
   in up to ten dimensions, seeded and reproducible, with summary statistics and
   CSV/JSON export.
 
-- [Abecedarian Distance](abecedarian/) — *billowy* and *almost* are already in
+- [Alphabet Distance](abecedarian/) — *billowy* and *almost* are already in
   alphabetical order; most other words would be under some other alphabet. This
   finds the nearest such alphabet and counts the letter swaps needed to reach
   it — the minimum Cayley distance over all 26! orderings. That claim cannot be
@@ -598,7 +598,7 @@ figure or another file rather than a rendering.
   pick one of them and then explain which — counts need no denominator, and
   every share either figure draws can be got from them.
 
-- [Neuron Bench](neuron-bench/) — build a neural network a neuron at a time and
+- [Neural Network](neuron-bench/) — build a neural network a neuron at a time and
   watch what each one adds. It starts where the whole subject starts: one neuron
   with an identity activation is a linear regression, and the page does not ask
   to be believed about that. It fits the closed-form least squares line on
@@ -681,7 +681,7 @@ figure or another file rather than a rendering.
   pairing the interface can produce, in
   [`js/selftest.js`](neuron-bench/js/selftest.js), which also runs under node.
 
-- [Expression Problem Bench](expression-problem/) — how objects and functions
+- [Expression Problem](expression-problem/) — how objects and functions
   relate, which is not that one is better. A program that handles several cases
   and does several things with each of them is a grid: cases down the side,
   operations along the top, one expression per cell. A language does not get to
@@ -756,7 +756,7 @@ figure or another file rather than a rendering.
 Planned: CSV and spreadsheet toolkit, developer tools, archive and file tools,
 calendar and date tools.
 
-### Geospatial & Networks
+### Sky & Network
 
 Tools that measure something outside the browser rather than a file the reader
 supplied: terrain, sky and the network connection. Every rung above `local` is
@@ -791,7 +791,7 @@ in this category, which follows from the definition.
   `fetch` for one reason: turning a typed place name into coordinates. Type
   coordinates, or press *here*, and it opens no socket.
 
-- [Eclipse Recon](eclipse-recon/) — a planning console for a solar eclipse.
+- [Eclipse Planner](eclipse-recon/) — a planning console for a solar eclipse.
   The path is computed from Besselian elements in the browser, with an animated
   umbra that can be scrubbed through time and a report for any point clicked or
   entered as coordinates: contact times, Sun altitude, a terrain-masked horizon
@@ -904,8 +904,8 @@ built. The section carries the register class (`reg-N`), so a tool takes the
 colour of the category it sits in; the section's band prints that colour as a
 small square, which is why the index needs no legend.
 
-A card carries the tool's name, one sentence describing it, two dates written
-by `tools/stamp-dates` from git history, a pin, and the custody rating as
+A card carries the tool's name, one sentence describing it, a pin, and the
+custody rating as
 `<code class="plate-custody" data-custody="…">`. One attribute sets both the
 number of filled squares and the ink, and the key at the foot reads the same
 attribute, so the two cannot disagree.
@@ -913,7 +913,7 @@ attribute, so the two cannot disagree.
 ## Stack
 
 Plain HTML, CSS and JS per tool: no bundler, no framework. The one library is
-Leaflet 1.9.4 (BSD-2), vendored into Eclipse Recon for the map pane; the
+Leaflet 1.9.4 (BSD-2), vendored into Eclipse Planner for the map pane; the
 eclipse engine, terrain reader and weather client are written from scratch, and
 everything the tool draws reads its colours from the PREPRINT tokens at draw
 time, so changing mode restyles the map with the page.
@@ -1012,18 +1012,17 @@ declares must not change.
    for the tool's domain. The section carries the register class, so the card
    does not. Add a `div` in that section's `.plates` with `data-tool`, holding
    a `.plate.plate-live`: the name in an `h3` wrapped in `a.plate-open`, the
-   pin, and one `.plate-say` sentence. Remove the tool from that section's
-   planned-tools comment and update the section count and the inventory line.
-   If no section fits, use `General`, which prints its band for the first time.
+   pin, and one `.plate-say` sentence. The same sentence is the tool page's
+   lede and its `<meta name="description">`. Remove the tool from that
+   section's planned-tools comment. If no section fits, use `General`, which
+   prints its band for the first time.
 6. Give the card its rating. Copy a `code.plate-custody` from another card and
    set `data-custody` to the highest rung the tool reaches: a tool that keeps
    one thing on a server is `store` even if the rest is local. The word and the
    meter are the whole line; hosts and conditions belong on the tool's own
    page. The five `<i>` squares are always five, and the attribute decides how
-   many are filled.
-7. Commit, then run `tools/stamp-dates` and commit what it rewrites. It is the
-   only thing that writes the date lines. Run it again after any later change
-   to a tool.
+   many are filled. If the tool uses a rung the key does not print yet, add
+   that rung to the key.
 
 ## License
 

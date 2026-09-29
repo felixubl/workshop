@@ -79,7 +79,7 @@
     S.worker = new Worker('js/worker.js');
     S.worker.onmessage = (e) => onWorker(e.data);
     S.worker.onerror = (e) => {
-      setStatus('the training thread failed: ' + (e.message || 'unknown error'), true);
+      setStatus('training failed: ' + (e.message || 'unknown error'), true);
       S.running = false;
       syncButtons();
     };
@@ -140,7 +140,7 @@
     } else if (m.type === 'done') {
       S.running = false;
       if (m.reason === 'diverged') {
-        setStatus('the loss stopped being a number. The learning rate is too large for this network — halve it and reset.', true);
+        setStatus('the loss diverged. Halve the learning rate and reset.', true);
       } else if (m.reason === 'reached') {
         setStatus('finished ' + m.epoch + ' epochs.');
       } else {
@@ -201,13 +201,13 @@
     const view = mainView();
 
     el('mainCaption').textContent = {
-      reg1d: 'The data, and the line the network currently draws through it.',
+      reg1d: '',
       surface: S.ds.task === 'binary'
-        ? `Height is what the network answers: the probability it puts on ${S.ds.classNames[1]}. The cases sit at the corners, and the dashed square at half height is where it changes its mind. Drag to turn it.`
-        : 'Two inputs, so the network is a surface. Drag to turn it.',
-      boundary: 'Where the network would put the boundary, banded by how sure it is.',
-      scatter: 'More than two inputs, so there is no boundary to draw. This is what it predicted against what was true.',
-      confusion: 'More than two inputs, so there is no boundary to draw. Rows are the truth, columns the guess: blue down the diagonal is what it got right, red is everything it mistook for something else.',
+        ? `Height is the probability of ${S.ds.classNames[1]}. Drag to turn.`
+        : 'Drag to turn.',
+      boundary: 'Shaded by how sure the network is.',
+      scatter: 'Predicted against true.',
+      confusion: 'Rows are the true class, columns the guess. Blue is right, red is wrong.',
       none: ''
     }[view];
 
@@ -295,10 +295,10 @@
       const outs = [];
       const showOut = Math.min(nxt.units, 6);
       for (let u = 0; u < showOut; u++) outs.push(num(nxt.W[u * nxt.fanIn + f.unit], 3));
-      t += ` What the next layer makes of it: ${outs.join(', ')}` +
+      t += ` Weights out: ${outs.join(', ')}` +
         (nxt.units > showOut ? `, and ${nxt.units - showOut} more` : '') + '.';
     }
-    n.textContent = t + ' Click it again to unpin it.';
+    n.textContent = t + ' Click again to unpin.';
     n.hidden = false;
   }
 
@@ -454,7 +454,7 @@
       const wOut = recoveredLine();
       el('rLine').textContent = wOut
         ? `y = ${num(wOut.w, 3)}·x ${wOut.b >= 0 ? '+' : '−'} ${num(Math.abs(wOut.b), 3)}`
-        : 'more than one neuron — no single line to read off';
+        : 'no single line';
       el('rOls').textContent = `y = ${num(S.reference.weights[0], 3)}·x ${S.reference.bias >= 0 ? '+' : '−'} ${num(Math.abs(S.reference.bias), 3)}`;
     } else ref.hidden = true;
   }
@@ -548,16 +548,13 @@
     const note = el('bestNote');
     const conditions = conditionsLabel(c, ', ');
     if (S.best) {
-      const acc = S.best.accuracy == null ? '' : `, getting ${(S.best.accuracy * 100).toFixed(1)}% of them right`;
+      const acc = S.best.accuracy == null ? '' : `, ${(S.best.accuracy * 100).toFixed(1)}% right`;
       note.textContent =
-        `On ${S.ds.name} — ${conditions} — the lowest ${S.best.metric} loss this browser ` +
-        `has reached is ${num(S.best.loss)}${acc}, from ${S.best.arch} at a learning rate of ` +
-        `${dial(S.best.lr)}, at epoch ${S.best.epoch}. ` +
-        (S.best.t >= SESSION_START ? 'Set in this sitting.' : 'Set on ' + S.best.at + '.');
+        `${S.ds.name} (${conditions}): lowest ${S.best.metric} loss ${num(S.best.loss)}${acc}. ` +
+        `${S.best.arch}, rate ${dial(S.best.lr)}, epoch ${S.best.epoch}. ` +
+        (S.best.t >= SESSION_START ? 'Set this visit.' : 'Set on ' + S.best.at + '.');
     } else {
-      note.textContent =
-        `Nothing recorded on ${S.ds.name} — ${conditions} — yet. Train it once and the lowest ` +
-        'loss it reaches is kept here, with the network that reached it.';
+      note.textContent = `No record yet for ${S.ds.name} (${conditions}).`;
     }
 
     /* The list is rebuilt only when it has actually changed. A run offers a
@@ -598,7 +595,7 @@
       drop.type = 'button';
       drop.className = 'btn-ghost nb-record-forget';
       drop.textContent = 'forget';
-      drop.setAttribute('aria-label', 'forget the record on ' + (r.name || r.set));
+      drop.setAttribute('aria-label', 'forget ' + (r.name || r.set));
       drop.addEventListener('click', () => { Records.forget(item.key); syncRecords(); scheduleDraw(); });
 
       /* The button before the conditions, though it is read after them: the
@@ -635,7 +632,7 @@
     if (hiddenCount < 1) {
       const p = document.createElement('p');
       p.className = 'note';
-      p.textContent = 'No hidden layer. The output unit is the whole network — whatever it computes is what you see above.';
+      p.textContent = 'No hidden layer.';
       host.appendChild(p);
       return;
     }
@@ -677,8 +674,8 @@
     if (!S.net) return;
     const twoD = S.ds.d === 2;
     el('neuronNote').textContent = twoD
-      ? 'Each panel is one hidden unit, drawn over the same axes as the plot above: dark where that unit fires. Units in a layer share one scale, so a pale panel is a unit barely contributing and a blank one is a unit that has died. The network can only build its answer out of these.'
-      : 'With more than two inputs there is nothing to draw the unit over, so each panel is what the unit actually is: one weight per input, and a bias. Bars right are positive, left negative.';
+      ? 'Each panel is one hidden unit, on the same axes as the plot above. Dark is where it fires.'
+      : 'Each panel is one hidden unit: a weight per input, and a bias. Bars right are positive.';
 
     /* One field per layer rather than one per panel: the units share a scale,
        and the grid is walked once instead of once per unit. */
@@ -726,7 +723,7 @@
       const n = document.createElement('input');
       n.type = 'number'; n.min = '1'; n.max = '2048'; n.step = '1';
       n.value = layer.units;
-      n.setAttribute('data-tip', 'How many neurons in this layer');
+      n.setAttribute('data-tip', 'Neurons');
       n.addEventListener('change', () => {
         layer.units = Math.max(1, Math.round(+n.value) || 1);
         n.value = layer.units;
@@ -735,7 +732,7 @@
       row.appendChild(n);
 
       const sel = document.createElement('select');
-      sel.setAttribute('data-tip', 'The bend this layer applies');
+      sel.setAttribute('data-tip', 'Activation');
       for (const shelf of ACT_SHELVES) {
         const keys = Object.keys(MLP.ACT).filter((k) => MLP.ACT[k].family === shelf.family);
         if (!keys.length) continue;
@@ -757,8 +754,8 @@
       const face = document.createElement('canvas');
       face.className = 'nb-act-face';
       face.dataset.act = layer.act;
-      face.setAttribute('aria-label', MLP.ACT[layer.act].label + ': what this layer does to a unit’s total, and the slope of it');
-      face.setAttribute('data-tip', 'The bend itself. Solid is the function, dashed is its slope — the part training can see');
+      face.setAttribute('aria-label', MLP.ACT[layer.act].label + ' and its slope');
+      face.setAttribute('data-tip', 'Solid is the function, dashed its slope');
       row.appendChild(face);
 
       const rm = document.createElement('button');
@@ -772,13 +769,10 @@
 
     const out = outputFor(S.ds);
     el('outputNote').textContent = S.ds.task === 'regression'
-      ? `Output: 1 unit, identity, mean squared error. Identity because the answer is a number and squashing it would cap what the network can say.`
+      ? 'Output: 1 unit, identity, mean squared error.'
       : S.ds.task === 'binary'
-        ? `Output: 1 unit, sigmoid, binary cross-entropy. That pairing is what makes the output gradient come out as simply (prediction − target).`
-        : `Output: ${out.units} units, softmax, cross-entropy. Softmax makes the ${out.units} outputs a set of probabilities that add to one.`;
-
-    const act = MLP.ACT[S.hidden.length ? S.hidden[S.hidden.length - 1].act : 'identity'];
-    el('actNote').textContent = S.hidden.length ? act.note : '';
+        ? 'Output: 1 unit, sigmoid, binary cross-entropy.'
+        : `Output: ${out.units} units, softmax, cross-entropy.`;
 
     const allLinear = S.hidden.length > 0 && S.hidden.every((l) => MLP.ACT[l.act].linear);
     const warn = el('linearWarn');

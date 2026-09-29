@@ -3,6 +3,10 @@
    styles the file rail and a table whose rows are switches rather than
    figures. */
 
+.lede {
+  margin: 0 0 0.9rem;
+}
+
 /* The drop target has two sizes. Open, it fills the page and is the only thing
    to do. Once files are loaded it drops to a line: still a target, no longer
    an invitation. */

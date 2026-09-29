@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Odometer — Felix' Workshop</title>
-<meta name="description" content="A row of reels that counts in any base from 2 to 16. Each reel has one tooth that pushes the next reel on its way back to 0, so a run of full reels tips over one after another.">
+<meta name="description" content="Count in any base from 2 to 16.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
@@ -53,22 +53,18 @@
       </a>
       <div class="title-row">
         <h1 class="tool-title">Odometer</h1>
-        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+        <button class="share-btn" type="button" data-share>
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
           <span data-share-label>copy link</span>
         </button>
-        <button class="share-btn pin-btn" type="button" data-pin="odometer" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+        <button class="share-btn pin-btn" type="button" data-pin="odometer" aria-label="Pin this tool"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
       </div>
     </div>
   </header>
 
   <div class="spine"></div>
 
-  <p class="lede">
-    A row of reels. Each one shows a digit from 0 up to one less than the base.
-    When a reel passes its last digit it goes back to 0 and pushes the reel on
-    its left up by one.
-  </p>
+  <p class="lede">Count in any base from 2 to 16.</p>
 
   <div class="toolbar">
     <div class="group">
@@ -78,7 +74,7 @@
       <button class="btn-ghost preset" type="button" data-base="8">8</button>
       <button class="btn-ghost preset" type="button" data-base="10">10</button>
       <button class="btn-ghost preset" type="button" data-base="16">16</button>
-      <input class="field" type="number" id="base" min="2" max="16" step="1" value="2" aria-label="Base" data-tip="How many digits each reel has, from 2 to 16. Past 9 the digits are A to F">
+      <input class="field" type="number" id="base" min="2" max="16" step="1" value="2" aria-label="Base" data-tip="Past 9 the digits are A to F">
     </div>
 
     <div class="group">
@@ -89,17 +85,17 @@
 
     <div class="group">
       <label for="speed">Speed</label>
-      <input class="field" type="number" id="speed" min="1" max="30" step="1" value="2" aria-label="Counts per second when running" data-tip="Counts per second while running. A long carry takes the time it takes, so a run pauses on it">
+      <input class="field" type="number" id="speed" min="1" max="30" step="1" value="2" aria-label="Counts per second" data-tip="Counts per second">
     </div>
 
     <div class="group">
       <label for="jump">Set to</label>
-      <input class="field field--wide" type="number" id="jump" min="0" step="1" value="0" aria-label="Set the reels to a number" data-tip="Type a number in base 10 and the reels show it">
+      <input class="field field--wide" type="number" id="jump" min="0" step="1" value="0" aria-label="Set the reels to a number" data-tip="A number in base 10">
     </div>
 
     <div class="group">
-      <button class="btn-ghost" type="button" id="down" data-tip="Count one down. Arrow down does the same">−1</button>
-      <button class="btn-ghost" type="button" id="up" data-tip="Count one up. Arrow up does the same">+1</button>
+      <button class="btn-ghost" type="button" id="down" data-tip="Down arrow key">−1</button>
+      <button class="btn-ghost" type="button" id="up" data-tip="Up arrow key">+1</button>
       <button class="btn-ghost" type="button" id="run">run</button>
       <button class="btn-ghost" type="button" id="reset">reset</button>
     </div>
@@ -122,39 +118,19 @@
     </div>
     <button class="key-slab" type="button" id="slab" aria-label="Count one up">
       <span class="key-cap">+1</span>
-      <span class="key-say">or click a reel to add its worth</span>
+      <span class="key-say">or click a reel</span>
     </button>
   </div>
 
   <div class="result-bar">
     <p class="section-label">Place values</p>
-    <span class="tag" id="rollOut" hidden>ran off the last reel, back to 0</span>
+    <span class="tag" id="rollOut" hidden>overflow</span>
   </div>
   <code class="sum" id="sumOut"></code>
   <div class="other" id="otherOut"></div>
 
-  <p class="note">
-    A reel with b digits has to turn b times to come back to 0. So one full turn
-    of a reel is one step of the reel on its left, and each reel is worth b
-    times the one on its right: 1, 2, 4, 8 in base 2, and 1, 10, 100 in base 10.
-  </p>
 
-  <p class="note">
-    The reels are geared to each other, and differently on each side. On its
-    right edge a reel has one tooth per digit. On its left edge it has a single
-    red tooth, where it passes from its last digit back to 0. A reel turns
-    freely until that tooth comes round; then the tooth catches the tooth of
-    the reel on its left and pushes it up one. A reel showing its last digit
-    has its red tooth waiting just under its neighbour's, so a run of them tips
-    over one after another, each a moment after the one that pushes it.
-  </p>
 
-  <p class="note">
-    The teeth are drawn only around the reading line. Anywhere else, a red tooth
-    moving one digit would run into a tooth of its neighbour's full row, which
-    is why a real counter has a small transfer wheel behind the frame at exactly
-    this one spot, doing the pushing.
-  </p>
 </div>
 
 <script src="script.js"></script>

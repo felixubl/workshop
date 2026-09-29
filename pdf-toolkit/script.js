@@ -73,15 +73,14 @@
   function undo() {
     const prev = history.pop();
     if (!prev) {
-      announce('There is nothing to undo.');
+      announce('Nothing to undo.');
       return;
     }
     pile = prev.pile;
     render();
     setSelection(prev.selected);
     undoBtn.disabled = !history.length;
-    announce('Stepped back. ' + pile.length + (pile.length === 1 ? ' page' : ' pages') +
-             ', ' + history.length + ' more to undo.');
+    announce('Undone. ' + pile.length + (pile.length === 1 ? ' page.' : ' pages.'));
   }
 
   undoBtn.addEventListener('click', undo);
@@ -103,7 +102,7 @@
   async function addFiles(files) {
     const list = Array.from(files).filter((f) => /\.pdf$/i.test(f.name) || f.type === 'application/pdf');
     if (!list.length) {
-      note('That did not look like a PDF.');
+      note('Not a PDF.');
       return;
     }
     note('Reading ' + list.length + (list.length === 1 ? ' file…' : ' files…'));
@@ -120,11 +119,11 @@
         // while every stream is still ciphertext: it would preview blank and
         // save unreadable.
         if (doc.encrypted) {
-          problems.push(file.name + ' is password protected, which this tool cannot open yet');
+          problems.push(file.name + ' is password protected');
           continue;
         }
         if (!doc.pageCount) {
-          problems.push(file.name + ' has no pages this tool could find');
+          problems.push(file.name + ' has no pages');
           continue;
         }
         const entry = { id: docs.length, name: file.name, doc };
@@ -613,7 +612,7 @@
       elem.style.width = box.width + 'px';
       elem.style.height = box.height + 'px';
       elem.title = (mark.kind === 'censor' ? 'Blackout' : 'Highlight in ' + PDF.marks.tone(mark.tone).label) +
-                   ' — click to lift it';
+                   ', click to remove';
       elem.dataset.mark = String(i);
       markLayer.appendChild(elem);
     });
@@ -632,7 +631,7 @@
     if (!mark) return;
     setMarks(at.item, (at.item.marks || []).concat([mark]));
     announce(mark.kind === 'censor'
-      ? 'Blacked out. The text under it will be deleted from the file, not covered.'
+      ? 'Blacked out. The text will be deleted.'
       : 'Highlighted in ' + PDF.marks.tone(mark.tone).label + '.');
   }
 
@@ -643,7 +642,7 @@
     const i = PDF.marks.markAt(at.frame, marks, p[0], p[1]);
     if (i < 0) return;
     setMarks(at.item, marks.slice(0, i).concat(marks.slice(i + 1)));
-    announce('Mark lifted.');
+    announce('Mark removed.');
   }
 
   function setPen(next) {
@@ -661,9 +660,9 @@
     if (next && next.tone) lastTone = next.tone;
 
     el('penNote').textContent =
-      kind === 'censor' ? 'Drag over what has to go. What it covers is deleted, not hidden.'
-      : kind === 'highlight' ? 'Drag across the words. Click a mark to lift it.'
-      : 'Reading. Click a mark to lift it.';
+      kind === 'censor' ? 'Drag over text to delete it.'
+      : kind === 'highlight' ? 'Drag across text. Click a mark to remove it.'
+      : 'Click a mark to remove it.';
     if (markLayer) markLayer.classList.toggle('is-drawing', !!pen);
   }
 
@@ -689,7 +688,7 @@
     if (!at || !(at.item.marks || []).length) return;
     const gone = at.item.marks.length;
     setMarks(at.item, []);
-    announce('Lifted ' + gone + (gone === 1 ? ' mark' : ' marks') + ' off this page.');
+    announce('Removed ' + gone + (gone === 1 ? ' mark.' : ' marks.'));
   });
   setPen(null);
 
@@ -729,7 +728,7 @@
     const was = viewAt + 1;
     deletePages([viewAt]);
     if (!pile.length) {
-      announce('Removed page ' + was + '. Nothing left to show.');
+      announce('Removed page ' + was + '. No pages left.');
       closeViewer();
       return;
     }
@@ -745,8 +744,8 @@
     gridStale = true;
     refreshSelection();
     announce(selected.has(viewAt)
-      ? 'Marked. ' + selected.size + ' in hand.'
-      : 'Unmarked. ' + selected.size + ' in hand.');
+      ? 'Selected. ' + selected.size + ' in total.'
+      : 'Deselected. ' + selected.size + ' in total.');
   }
 
   viewBtn.addEventListener('click', () => {
@@ -901,7 +900,7 @@
 
   function requireSelection() {
     if (selected.size) return true;
-    announce('Select some pages first, by clicking them or typing a range.');
+    announce('Select pages first.');
     return false;
   }
 
@@ -973,15 +972,14 @@
   el('del').addEventListener('click', () => {
     if (!requireSelection()) return;
     const gone = deletePages(selectedSorted());
-    announce('Removed ' + gone + (gone === 1 ? ' page.' : ' pages.') +
-             ' The file on your disk is untouched.');
+    announce('Removed ' + gone + (gone === 1 ? ' page.' : ' pages.'));
   });
 
   el('clearMarks').addEventListener('click', () => {
     if (!requireSelection()) return;
     const items = selectedSorted().map((i) => pile[i]).filter((item) => (item.marks || []).length);
     if (!items.length) {
-      announce('None of the selected pages carries a mark.');
+      announce('No marks on the selected pages.');
       return;
     }
     const gone = items.reduce((n, item) => n + item.marks.length, 0);
@@ -990,8 +988,7 @@
     const keep = markedItems();
     render();
     reselect(keep);
-    announce('Lifted ' + gone + (gone === 1 ? ' mark' : ' marks') + ' off ' +
-             items.length + (items.length === 1 ? ' page.' : ' pages.'));
+    announce('Removed ' + gone + (gone === 1 ? ' mark.' : ' marks.'));
   });
 
   el('keepOnly').addEventListener('click', () => {
@@ -1049,7 +1046,7 @@
       }
     });
     render();
-    announce('Back to the pages as they were loaded.');
+    announce('Back to the loaded pages.');
   });
 
   // --- metadata -----------------------------------------------------------------
@@ -1074,9 +1071,9 @@
   let dropAnnotAuthors = false;
 
   const META_GROUPS = [
-    ['info', 'Document information', 'The named fields a reader lists under File, Properties.'],
-    ['attached', 'Attached to the file', 'Written beside the document rather than into it.'],
-    ['pages', 'On the pages', 'Travels with a page wherever that page ends up.'],
+    ['info', 'Document information', 'Shown under File, Properties'],
+    ['attached', 'Attached to the file', ''],
+    ['pages', 'On the pages', ''],
   ];
 
   function metaRowsFor(docId) {
@@ -1203,7 +1200,7 @@
       const body = metaTable.createTBody();
       const cell = body.insertRow().insertCell();
       cell.colSpan = 4;
-      cell.textContent = 'This file carries no metadata this tool can find.';
+      cell.textContent = 'No metadata found.';
     }
 
     let id = 0;
@@ -1273,7 +1270,7 @@
           why.className = 'risk';
           why.textContent = row.fixedNote || 'not carried';
           why.dataset.tip = row.group === 'info' && row.removable
-            ? 'Only the first page\'s file supplies the information dictionary of the saved file.'
+            ? 'Taken from the first page’s file'
             : row.note;
           note.appendChild(why);
         } else if (row.risk === 'high' || row.risk === 'med') {
@@ -1288,12 +1285,8 @@
 
     const others = docs.length > 1 && docId !== source;
     el('metaNote').textContent = others
-      ? 'Read out of ' + docs[docId].name + ' as it stands. Its information dictionary is not the ' +
-        'one the saved file carries — that comes from ' + docs[source].name + ', the file the first ' +
-        'page came from — so the fields above are shown rather than offered.'
-      : 'Read out of the file as it stands. What is left ticked is what the saved file carries: the ' +
-        'information dictionary is written fresh from these fields, the XMP packet and the file ' +
-        'identifier are never copied, and the page-level rows cover every page in the pile.';
+      ? 'The saved file takes its document information from ' + docs[source].name + ', the first page’s file.'
+      : 'Ticked fields are saved.';
   }
 
   el('metaToggle').addEventListener('click', () => {
@@ -1309,7 +1302,7 @@
     if (docId < 0) return;
     for (const row of metaRowsFor(docId)) if (switchable(docId, row)) setCut(docId, row, true);
     updateTally();
-    announce('Every field this tool can drop is struck out. Nothing changes on your disk until you save.');
+    announce('All removable fields struck out.');
   });
 
   el('metaKeepAll').addEventListener('click', () => {
@@ -1317,7 +1310,7 @@
     if (docId < 0) return;
     for (const row of metaRowsFor(docId)) if (switchable(docId, row)) setCut(docId, row, false);
     updateTally();
-    announce('Every field is back.');
+    announce('All fields kept.');
   });
 
   // --- saving -----------------------------------------------------------------------
@@ -1356,14 +1349,14 @@
 
   function saveList(items, name) {
     if (!items.length) {
-      announce('There are no pages to save.');
+      announce('No pages to save.');
       return;
     }
     try {
       const report = {};
       const bytes = PDF.ops.assemble(entriesFor(items), saveOptions(report));
       download(bytes, name);
-      announce('Saved ' + name + ' — ' + items.length +
+      announce('Saved ' + name + ': ' + items.length +
                (items.length === 1 ? ' page' : ' pages') + describeSave(report) + '.');
     } catch (e) {
       announce('Could not build that file: ' + e.message);
@@ -1377,7 +1370,7 @@
     const parts = [];
     if (report.censored) {
       parts.push(report.censored + (report.censored === 1 ? ' blackout' : ' blackouts') +
-                 ', with the text under ' + (report.censored === 1 ? 'it' : 'them') + ' deleted');
+                 ' (text deleted)');
     }
     if (report.highlighted) {
       parts.push(report.highlighted + (report.highlighted === 1 ? ' highlight' : ' highlights'));
@@ -1387,7 +1380,7 @@
     let out = parts.length ? ', ' + parts.join(', ') : '';
     if (report.unsure) {
       out += '. Warning: ' + report.unsure + (report.unsure === 1 ? ' run of text' : ' runs of text') +
-             ' could not be read well enough to be sure it went. Check the saved file';
+             ' may not be deleted. Check the saved file';
     }
     return out;
   }
@@ -1401,7 +1394,7 @@
 
   el('split').addEventListener('click', () => {
     const every = Math.max(1, parseInt(el('splitEvery').value, 10) || 1);
-    if (!pile.length) { announce('There are no pages to split.'); return; }
+    if (!pile.length) { announce('No pages to split.'); return; }
     const base = cleanName('part.pdf').replace(/\.pdf$/i, '');
     saveNote.textContent = '';
     let count = 0;
@@ -1416,7 +1409,7 @@
       } catch { /* skip a chunk that will not build */ }
     }
     announce('Saved ' + count + (count === 1 ? ' file.' : ' files.') +
-             (count > 5 ? ' Your browser may ask to allow multiple downloads.' : ''));
+             (count > 5 ? ' Your browser may ask to allow them.' : ''));
   });
 
   // --- file input and drop target ------------------------------------------------------

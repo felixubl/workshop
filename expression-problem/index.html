@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Expression Problem Bench — Felix' Workshop</title>
-<meta name="description" content="Objects and functions are two ways of drawing boxes around the same grid of code. Regroup the grid, add a case or an operation, and watch the cost land on opposite sides.">
+<title>Expression Problem — Felix' Workshop</title>
+<meta name="description" content="Compare how objects and functions organise the same code.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
@@ -52,12 +52,12 @@
         Felix' Workshop
       </a>
       <div class="title-row">
-        <h1 class="tool-title">Expression Problem Bench</h1>
-        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+        <h1 class="tool-title">Expression Problem</h1>
+        <button class="share-btn" type="button" data-share>
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
           <span data-share-label>copy link</span>
         </button>
-        <button class="share-btn pin-btn" type="button" data-pin="expression-problem" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+        <button class="share-btn pin-btn" type="button" data-pin="expression-problem" aria-label="Pin this tool"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
       </div>
     </div>
   </header>
@@ -65,24 +65,20 @@
   <div class="spine"></div>
 
   <p class="lede">
-    A program is a grid. Down one side are the cases it has to handle; along the
-    other are the things it has to do with them. Every cell is one expression,
-    and a language does not get to decide what goes in them &mdash; only how they
-    are boxed up. Objects draw the boxes across the rows. Functions draw them
-    down the columns. Same grid, same cells, same answers; two arrangements, and
-    each one is easy to extend in exactly the direction the other is hard.
+    Compare how objects and functions organise the same code.
+    Each cell is a Python expression over its row's fields.
   </p>
 
   <div class="toolbar">
     <div class="group">
-      <label>Boxes drawn</label>
-      <button class="btn-ghost preset is-active" type="button" data-group="type" data-tip="Across the rows: each case gets a class holding every operation on it">By case</button>
-      <button class="btn-ghost preset" type="button" data-group="operation" data-tip="Down the columns: each operation gets a function matching on every case">By operation</button>
+      <label>Group</label>
+      <button class="btn-ghost preset is-active" type="button" data-group="type" data-tip="A class per case">By case</button>
+      <button class="btn-ghost preset" type="button" data-group="operation" data-tip="A function per operation">By operation</button>
     </div>
     <div class="group">
       <label>Add</label>
-      <button class="btn-ghost" type="button" id="addVariant" data-tip="A new row: one more shape the program has to handle">A case</button>
-      <button class="btn-ghost" type="button" id="addOperation" data-tip="A new column: one more thing the program has to do with every shape">An operation</button>
+      <button class="btn-ghost" type="button" id="addVariant" data-tip="New row">A case</button>
+      <button class="btn-ghost" type="button" id="addOperation" data-tip="New column">An operation</button>
     </div>
     <div class="group">
       <button class="btn-ghost" type="button" id="reset">Reset</button>
@@ -96,7 +92,7 @@
   <p class="note" id="boardNote"></p>
 
   <div class="result-bar">
-    <p class="section-label">What the next change costs</p>
+    <p class="section-label">Cost of a change</p>
     <code id="costMeta"></code>
   </div>
   <div class="sheet cost-sheet">
@@ -104,39 +100,29 @@
       <table id="costTable"></table>
     </div>
   </div>
-  <p class="sheet-note">
-    That is the expression problem, and the table is the whole of it. Neither
-    arrangement is behind the other: one is cheap in the direction the other is
-    dear, and the numbers cross over as the grid grows.
-  </p>
 
   <div class="result-bar">
-    <p class="section-label">The assembled source</p>
+    <p class="section-label">Source</p>
     <code id="listingMeta"></code>
   </div>
   <pre class="listing" id="listing" tabindex="0"></pre>
-  <p class="sheet-note">
-    Generated from the cells above, not written out twice. Press the other
-    arrangement and every character in the boxes stays the same; only the
-    scaffolding around them moves.
-  </p>
 
   <div class="result-bar">
-    <p class="section-label">Walk one call down both roads</p>
+    <p class="section-label">Step through a call</p>
     <code id="traceMeta"></code>
   </div>
 
   <div class="trace">
     <div class="trace-bar">
-      <button class="btn-ghost icon-only" type="button" id="traceBack" aria-label="Back a step">
+      <button class="btn-ghost icon-only" type="button" id="traceBack" aria-label="Previous step">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5"></path></svg>
       </button>
       <span class="tag readout" id="traceStep"></span>
-      <button class="btn-ghost icon-only" type="button" id="traceNext" aria-label="On a step">
+      <button class="btn-ghost icon-only" type="button" id="traceNext" aria-label="Next step">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"></path></svg>
       </button>
       <button class="btn-ghost" type="button" id="tracePlay">Play</button>
-      <span class="trace-aim">Focus any cell in the grid to walk that one instead.</span>
+      <span class="trace-aim">Click a cell to step through it.</span>
     </div>
 
     <div class="trace-roads">
@@ -155,13 +141,6 @@
     <p class="trace-join" id="traceJoin" hidden></p>
   </div>
 
-  <p class="sheet-note">
-    The class knows its own methods, so the lookup is one hop whatever the case
-    is. The match has to ask, and it asks its arms in order, so a case near the
-    bottom of the list costs more questions than one near the top &mdash; walk a
-    triangle and then walk a circle. Both roads end on the same line.
-  </p>
-
   <div class="result-bar">
     <p class="section-label">Run</p>
     <code id="agreement"></code>
@@ -172,39 +151,6 @@
     </div>
   </div>
   <p class="sheet-note" id="runNote"></p>
-
-  <p class="note">
-    The Python is read rather than mimed.
-    <a href="https://github.com/felixubl/workshop/blob/main/expression-problem/python.js">python.js</a>
-    is a small one written for this page &mdash; a lexer, a Pratt parser over the
-    expression grammar a cell is allowed, and an evaluator that keeps ints and
-    floats apart the way Python does, so <code>b * h / 2</code> comes back
-    <code>6.0</code> and not <code>6</code>. The same token stream that runs a
-    cell is the one that colours it, so a thing painted as a number is a thing
-    the evaluator read as a number.
-    <a href="https://github.com/felixubl/workshop/blob/main/expression-problem/selftest.js">selftest.js</a>
-    checks it against CPython's own answers, in the browser at
-    <a href="../tools/verify/expression-problem.html">tools/verify</a> and under
-    node with <code>node expression-problem/selftest.js</code>.
-  </p>
-
-  <p class="note">
-    Only expressions, which is all a cell is ever allowed to be: names,
-    attributes, calls, numbers, strings and f-strings, the arithmetic and
-    comparison operators, and <code>not</code>, <code>and</code>,
-    <code>or</code>. No statements, no lambdas, no comprehensions. A cell that
-    reaches past that gets a parse error where its answer would be, which is the
-    honest report. Transcendental functions come from the browser's own library
-    rather than CPython's, and the two are entitled to differ in the last bit.
-  </p>
-
-  <p class="note">
-    The cells are yours to edit. Anything you type is an expression over that
-    row's own field names, which is why one cell can serve both arrangements
-    without being rewritten: the class binds those names off <code>self</code>,
-    the match binds them in its pattern, and the expression in between never
-    learns which happened.
-  </p>
 </div>
 
 <script src="python.js"></script>

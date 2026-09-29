@@ -215,23 +215,10 @@
   text-align: right;
 }
 
-/* ── Running text between the sheets ──────────────────────────────────────── */
+/* ── Sheets ───────────────────────────────────────────────────────────────── */
 
 .sec {
   margin-top: 2.6rem;
-}
-.prose {
-  max-width: var(--pp-measure);
-  margin: 0 0 1.2rem;
-  font-size: 0.92rem;
-  line-height: 1.65;
-  color: var(--pp-muted);
-}
-.notes p + p {
-  margin-top: 0.9rem;
-}
-.notes strong {
-  color: var(--pp-ink);
 }
 
 /* A partial the analysis could not fit into the harmonic series. Not an error

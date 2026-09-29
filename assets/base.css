@@ -348,6 +348,11 @@ button[disabled] {
   font-size: 0.72rem;
   padding: 0.18rem 0.55rem;
 }
+/* Dotted marks the provisional, as it does for a prompt: a tool that is only
+   partly working carries one. */
+.tag--provisional {
+  border-style: dotted;
+}
 
 /* Cards are a 1px border and no shadow. */
 .card {

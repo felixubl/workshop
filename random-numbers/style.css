@@ -31,12 +31,6 @@
   line-height: 1.62;
   color: var(--pp-muted);
 }
-.card.prompt strong {
-  font-family: var(--pp-font-mono);
-  font-size: 0.82rem;
-  font-weight: 400;
-  color: var(--pp-ink);
-}
 
 .summary-label {
   margin: 1.75rem 0 0.85rem;

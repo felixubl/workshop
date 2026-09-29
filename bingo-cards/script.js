@@ -202,8 +202,8 @@ function renderCount() {
   ]);
   if (carried.affected) {
     itemsNote.textContent +=
-      ` · ${carried.affected} of these lose characters the printed font cannot set` +
-      (carried.blank ? `, and ${carried.blank} would print blank` : "");
+      ` · ${carried.affected} lose characters in print` +
+      (carried.blank ? `, ${carried.blank} print blank` : "");
   }
 
   countFacts.textContent = "";
@@ -213,7 +213,7 @@ function renderCount() {
     countCap.textContent = "—";
     countMeta.textContent = "";
     countBig.textContent = "—";
-    fact("Grid", "Between 2 and 8 squares a side.");
+    fact("Grid", "2 to 8 squares a side");
     return state;
   }
 
@@ -228,7 +228,7 @@ function renderCount() {
     countBig.textContent = "none";
     countBig.classList.add("is-none");
     fact("Short by", plural(shape.fill - n, "square"));
-    fact("Needed", `${plural(shape.fill, "square")} for this grid`);
+    fact("Needed", plural(shape.fill, "square"));
     fact("Typed", plural(n, "square"));
     return state;
   }
@@ -239,13 +239,11 @@ function renderCount() {
   countExact.textContent = arrangements.exact || "";
 
   const sets = readable(state.sets);
-  fact("Squares used per card", `${shape.fill} of ${n}`);
-  fact("Different sets of squares", sets.short);
+  fact("Squares per card", `${shape.fill} of ${n}`);
+  fact("Different sets", sets.short);
   fact(
-    "Most you can ask for",
-    state.arrangements < BigInt(MAX_CARDS)
-      ? `${state.arrangements} — the list runs out first`
-      : `${MAX_CARDS} — one file, one page each`
+    "Most you can make",
+    state.arrangements < BigInt(MAX_CARDS) ? String(state.arrangements) : `${MAX_CARDS} (limit)`
   );
   return state;
 }
@@ -278,8 +276,8 @@ function markTrouble() {
   const shape = readShape();
   if (!shape.valid || shape.free) return "";
   return shape.odd
-    ? "The image is set to fill the free square, and the free square is switched off."
-    : `The image is set to fill the free square, and ${article(shape.size).toLowerCase()} ${shape.size} × ${shape.size} grid has no centre to put it in.`;
+    ? "The image is set to the free square, which is off."
+    : `The image is set to the free square, but ${article(shape.size).toLowerCase()} ${shape.size} × ${shape.size} grid has none.`;
 }
 
 function renderMark() {
@@ -288,7 +286,7 @@ function renderMark() {
   if (mark) {
     markThumb.src = mark.url;
     markName.textContent = mark.name;
-    markName.dataset.tip = `${mark.name} — ${mark.weight} of the PDF, however many cards it prints on`;
+    markName.dataset.tip = `${mark.weight} in the PDF`;
   } else {
     // The blob URL behind these has just been revoked, and an <img> left
     // pointing at a revoked URL is a decoded bitmap nothing will ever show.
@@ -318,7 +316,7 @@ async function loadMark(file) {
       markWhere.dispatchEvent(new Event("change", { bubbles: true }));
     }
   } catch {
-    failed = "That file could not be read as an image. PNG, JPEG, WebP, GIF and SVG all work.";
+    failed = "Could not read that image. Use PNG, JPEG, WebP, GIF or SVG.";
   }
   markPick.disabled = false;
   renderMark();
@@ -416,11 +414,11 @@ function build() {
   const state = renderCount();
   const { shape, list, n } = state;
 
-  if (!shape.valid) return showHint("A grid is between 2 and 8 squares a side.");
-  if (!n) return showHint("Type the squares first — one per line.");
+  if (!shape.valid) return showHint("A grid has 2 to 8 squares a side.");
+  if (!n) return showHint("Type the squares first.");
   if (!state.enough) {
     return showHint(
-      `${article(shape.size)} ${shape.size} × ${shape.size} card${shape.free ? " with a free centre" : ""} needs ${plural(shape.fill, "square")}, and there ${n === 1 ? "is" : "are"} ${n}.`
+      `${article(shape.size)} ${shape.size} × ${shape.size} card needs ${plural(shape.fill, "square")}. You have ${n}.`
     );
   }
 
@@ -432,8 +430,8 @@ function build() {
   if (wanted > ceiling) {
     capped =
       ceiling === MAX_CARDS
-        ? `Asked for ${wanted}, capped at ${MAX_CARDS} — that is one page each and as far as this tool goes in one file.`
-        : `Asked for ${wanted}, but ${plural(ceiling, "card")} ${ceiling === 1 ? "is" : "are"} all this list can make without repeating one.`;
+        ? `Capped at ${MAX_CARDS} cards.`
+        : `This list makes only ${plural(ceiling, "card")}.`;
     wanted = ceiling;
     wantedInput.value = String(wanted);
   }
@@ -455,7 +453,7 @@ function build() {
   showing = 0;
 
   if (picks.length < wanted) {
-    dealNote.textContent = `Stopped at ${plural(picks.length, "card")}: every further draw came back as one already dealt.`;
+    dealNote.textContent = `Stopped at ${plural(picks.length, "card")}: no new ones found.`;
   } else {
     dealNote.textContent = "";
   }
@@ -473,7 +471,7 @@ function renderDeal() {
   const reuse = document.createElement("button");
   reuse.className = "seed-tag";
   reuse.type = "button";
-  reuse.dataset.tip = "Put this seed in the seed field";
+  reuse.dataset.tip = "Use this seed";
   reuse.textContent = seed;
   reuse.addEventListener("click", () => {
     seedInput.value = seed;
@@ -675,7 +673,7 @@ clearItemsBtn.addEventListener("click", () => {
 
 maxOutBtn.addEventListener("click", () => {
   const state = survey();
-  if (!state.enough) return showHint("There are not enough squares to make a card yet.");
+  if (!state.enough) return showHint("Not enough squares yet.");
   const ceiling = state.arrangements < BigInt(MAX_CARDS) ? Number(state.arrangements) : MAX_CARDS;
   wantedInput.value = String(ceiling);
   wantedInput.dispatchEvent(new Event("input", { bubbles: true }));

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Random Number Generator — Felix' Workshop</title>
-<meta name="description" content="Draw random numbers from uniform, normal, exponential, binomial, Poisson and other distributions, in up to ten dimensions at once, with an optional seed for reproducible runs.">
+<title>Random Numbers — Felix' Workshop</title>
+<meta name="description" content="Generate random numbers from 11 distributions.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
@@ -56,17 +56,19 @@
         Felix' Workshop
       </a>
       <div class="title-row">
-        <h1 class="tool-title">Random Number Generator</h1>
-        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+        <h1 class="tool-title">Random Numbers</h1>
+        <button class="share-btn" type="button" data-share>
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
           <span data-share-label>copy link</span>
         </button>
-        <button class="share-btn pin-btn" type="button" data-pin="random-numbers" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+        <button class="share-btn pin-btn" type="button" data-pin="random-numbers" aria-label="Pin this tool"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
       </div>
     </div>
   </header>
 
   <div class="spine"></div>
+
+  <p class="lede">Generate random numbers from 11 distributions.</p>
 
   <div class="toolbar">
     <div class="group">
@@ -105,11 +107,7 @@
 
   <p class="hint" id="hint" hidden></p>
 
-  <div class="card prompt" id="empty">
-    Pick a distribution, say how many numbers you want, and press Draw. Leave the seed on
-    <strong>auto</strong> for a fresh run every time. The seed each run used is printed with the
-    results, so any run can be repeated afterwards. Everything is generated in your browser.
-  </div>
+  <div class="card prompt" id="empty">Press Draw.</div>
 
   <section id="results" hidden>
     <div class="result-bar">
@@ -147,10 +145,6 @@
       </div>
       <div class="plots" id="plots"></div>
     </div>
-    <p class="sheet-note">
-      Bars count the draws that landed in each bin, against the tallest bin in that plot. The ticks
-      under the baseline are the draws themselves.
-    </p>
   </section>
 </div>
 

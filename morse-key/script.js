@@ -284,7 +284,7 @@ function wake() {
 function applyUnit() {
   const t = keyer.speed(Number(wpm.value), Number(spacing.value));
 
-  unitOut.textContent = Math.round(t.unit) + " ms";
+  unitOut.textContent = "dit " + Math.round(t.unit) + " ms";
   gapOut.textContent = "letter " + Math.round(t.letterAt) +
                        " · word " + Math.round(t.wordAt) + " ms";
   tapeLegend.textContent = TAPE_UNITS + " units · " + (t.unit * TAPE_UNITS / 1000).toFixed(1) + " s";

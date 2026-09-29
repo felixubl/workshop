@@ -112,8 +112,7 @@
     const wanted = (range.x1 - range.x0 + 1) * (range.y1 - range.y0 + 1);
     if (wanted > MAX_PER_PANEL) {
       throw new Error(
-        `That panel needs ${wanted} map squares, past the ${MAX_PER_PANEL} this ` +
-        `tool will ask for at once. Fewer detail pages, or a shorter route.`
+        `That map needs ${wanted} squares, more than the ${MAX_PER_PANEL} limit. Try fewer detail pages.`
       );
     }
 

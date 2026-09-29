@@ -503,7 +503,7 @@ function drawPatternControls() {
 }
 
 orderAdd.addEventListener("click", function () {
-  if (song.order.length >= Song.MAX_ORDER) return say("The order holds " + Song.MAX_ORDER + " positions.");
+  if (song.order.length >= Song.MAX_ORDER) return say("The order is full at " + Song.MAX_ORDER + " positions.");
   pushUndo();
   song.order.splice(cursor.at + 1, 0, song.order[cursor.at]);
   cursor.at++;
@@ -538,7 +538,7 @@ patAtInput.addEventListener("change", function () {
 });
 
 patNewBtn.addEventListener("click", function () {
-  if (song.patterns.length >= Song.MAX_PATTERNS) return say("There are " + Song.MAX_PATTERNS + " patterns, which is all of them.");
+  if (song.patterns.length >= Song.MAX_PATTERNS) return say("All " + Song.MAX_PATTERNS + " patterns are in use.");
   pushUndo();
   song.patterns.push(Song.makePattern(currentPattern().rows));
   song.order[cursor.at] = song.patterns.length - 1;
@@ -550,7 +550,7 @@ patNewBtn.addEventListener("click", function () {
 });
 
 patCloneBtn.addEventListener("click", function () {
-  if (song.patterns.length >= Song.MAX_PATTERNS) return say("There are " + Song.MAX_PATTERNS + " patterns, which is all of them.");
+  if (song.patterns.length >= Song.MAX_PATTERNS) return say("All " + Song.MAX_PATTERNS + " patterns are in use.");
   pushUndo();
   const from = currentPattern();
   const copy = Song.makePattern(from.rows);
@@ -582,10 +582,10 @@ rowsInput.addEventListener("change", function () {
 /* ── Instruments ──────────────────────────────────────────────────────────── */
 
 const SEQ_SPECS = [
-  { key: "vol", label: "Volume", min: 0, max: 15, tip: "0 to 15, one value per frame. On the triangle only the difference between zero and everything else is heard." },
-  { key: "arp", label: "Arpeggio", min: -24, max: 24, tip: "Semitones added to the note, one per frame. On the noise channel this is what steps through the sixteen periods, one per semitone." },
-  { key: "pitch", label: "Pitch", min: -16, max: 16, tip: "Added to the timer period every frame, and it accumulates. Positive falls, because a longer period is a lower note. The noise channel has no timer, so it ignores this — use the arpeggio for a noise sweep." },
-  { key: "duty_", label: "Duty", min: 0, max: 3, tip: "Switches the pulse waveform per frame. Two or three values here are the difference between a pluck and an organ." },
+  { key: "vol", label: "Volume", min: 0, max: 15, tip: "0 to 15 per frame (triangle: on or off)" },
+  { key: "arp", label: "Arpeggio", min: -24, max: 24, tip: "Semitones added per frame" },
+  { key: "pitch", label: "Pitch", min: -16, max: 16, tip: "Bend per frame (positive goes lower)" },
+  { key: "duty_", label: "Duty", min: 0, max: 3, tip: "Pulse waveform per frame" },
 ];
 
 function currentInstrument() {
@@ -640,7 +640,7 @@ dutyPresets.addEventListener("click", function (ev) {
 });
 
 instNewBtn.addEventListener("click", function () {
-  if (song.instruments.length >= Song.MAX_INSTRUMENTS) return say("There are " + Song.MAX_INSTRUMENTS + " instruments, which is all of them.");
+  if (song.instruments.length >= Song.MAX_INSTRUMENTS) return say("All " + Song.MAX_INSTRUMENTS + " instruments are in use.");
   pushUndo();
   song.instruments.push(Song.makeInstrument("instrument " + song.instruments.length));
   instrument = song.instruments.length - 1;
@@ -650,7 +650,7 @@ instNewBtn.addEventListener("click", function () {
 });
 
 instDupBtn.addEventListener("click", function () {
-  if (song.instruments.length >= Song.MAX_INSTRUMENTS) return say("There are " + Song.MAX_INSTRUMENTS + " instruments, which is all of them.");
+  if (song.instruments.length >= Song.MAX_INSTRUMENTS) return say("All " + Song.MAX_INSTRUMENTS + " instruments are in use.");
   pushUndo();
   const from = currentInstrument();
   const copy = Song.makeInstrument(from.name + " copy");
@@ -909,9 +909,9 @@ function startPlaying(order, row) {
   try {
     rendered = APU.render(Song.forPlayback(song), { rate: ac.sampleRate, loops: 1 });
   } catch (e) {
-    return say("The song could not be rendered: " + e.message);
+    return say("Could not render the song: " + e.message);
   }
-  if (!rendered.samples.length) return say("There is nothing to play yet.");
+  if (!rendered.samples.length) return say("Nothing to play yet.");
 
   source = ac.createBufferSource();
   source.buffer = toBuffer(ac, rendered);
@@ -1047,10 +1047,9 @@ function drawTempo() {
   bpmOut.textContent = bpm.toFixed(1) + " BPM";
   bpmOut.setAttribute(
     "data-tip",
-    "A row is " + song.speed + " frames at " + APU.FRAME_HZ.toFixed(4) +
-      " Hz, counted four to the beat. Speed " + (song.speed - 1) + " would be " +
-      Song.bpmFor(song.speed - 1, song.highlight).toFixed(1) + " and speed " + (song.speed + 1) + " would be " +
-      Song.bpmFor(song.speed + 1, song.highlight).toFixed(1) + "."
+    "Speed " + (song.speed - 1) + " is " +
+      Song.bpmFor(song.speed - 1, song.highlight).toFixed(1) + ", speed " + (song.speed + 1) + " is " +
+      Song.bpmFor(song.speed + 1, song.highlight).toFixed(1)
   );
 }
 
@@ -1099,7 +1098,7 @@ exportBtn.addEventListener("click", function () {
         download(APU.wav(out.samples, out.rate), fileName("wav"));
         say("");
       } catch (e) {
-        say("The song could not be rendered: " + e.message);
+        say("Could not render the song: " + e.message);
       }
       exportBtn.disabled = false;
     }, 0);
@@ -1127,7 +1126,7 @@ loadInput.addEventListener("change", function () {
       touch();
       say("");
     } catch (e) {
-      say("That file could not be read as a song: " + e.message);
+      say("Could not read this song file: " + e.message);
     }
     loadInput.value = "";
   };
@@ -1154,7 +1153,7 @@ clearBtn.addEventListener("click", function () {
   stopPlaying();
   drawAll();
   touch();
-  say("Every pattern is empty. The instruments were kept; Undo brings the song back.");
+  say("Patterns cleared, instruments kept. Undo restores the song.");
 });
 
 titleInput.addEventListener("input", function () {
@@ -1181,7 +1180,7 @@ function drawEffectTable() {
     const td1 = document.createElement("td");
     td1.textContent = fx.syntax;
     const td2 = document.createElement("td");
-    td2.textContent = fx.name + " — " + fx.help;
+    td2.textContent = fx.name + ". " + fx.help;
     tr.appendChild(td1);
     tr.appendChild(td2);
     fxTable.appendChild(tr);

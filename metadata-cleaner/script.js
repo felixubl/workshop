@@ -699,11 +699,11 @@
   function sniffSensitive(text) {
     if (!text || text.length > 4096) return null;
     if (/[A-Za-z]:\\Users\\|\/Users\/|\/home\/|\\Documents\\|\/Documents\//.test(text)) {
-      return "holds a file path with an account name in it";
+      return "Has a file path with an account name";
     }
-    if (/[\w.+-]+@[\w-]+\.[\w.]{2,}/.test(text)) return "holds an email address";
-    if (/\+\d[\d\s()-]{9,}\d/.test(text)) return "holds something shaped like a phone number";
-    if (/\b[A-Z0-9]{10,}\b/.test(text)) return "holds something shaped like a serial number";
+    if (/[\w.+-]+@[\w-]+\.[\w.]{2,}/.test(text)) return "Has an email address";
+    if (/\+\d[\d\s()-]{9,}\d/.test(text)) return "Looks like a phone number";
+    if (/\b[A-Z0-9]{10,}\b/.test(text)) return "Looks like a serial number";
     return null;
   }
 
@@ -777,7 +777,7 @@
       return count ? null : { name, offset, le, entries: [], decoded: new Map(), next: 0 };
     }
     if (offset + 2 + count * 12 + 4 > block.length) {
-      tiff.warnings.push("The EXIF block is truncated; part of it could not be read.");
+      tiff.warnings.push("The EXIF block is cut short. Part of it could not be read.");
       return null;
     }
 
@@ -865,7 +865,7 @@
       const ifd1 = parseIfd(tiff, ifd0.next, "ifd1", seen, 1);
       if (ifd1) {
         tiff.ifds.ifd1 = ifd1;
-        if (ifd1.next) tiff.warnings.push("Extra image directories past the thumbnail were found and will not be carried over.");
+        if (ifd1.next) tiff.warnings.push("Extra image directories after the thumbnail will be dropped.");
       }
     }
 
@@ -883,7 +883,7 @@
       if (start && size && start + size <= block.length && block[start] === 0xff && block[start + 1] === 0xd8) {
         tiff.thumb = block.slice(start, start + size);
       } else if (start || size) {
-        tiff.warnings.push("The embedded thumbnail is damaged and will not be carried over.");
+        tiff.warnings.push("The thumbnail is damaged and will be dropped.");
       }
     }
 
@@ -1495,10 +1495,10 @@
     const sniff = sniffSensitive(field.value);
     if (sniff) {
       field.risk = HIGH;
-      field.note = field.note || "This value " + sniff + ".";
+      field.note = field.note || sniff;
     } else if (field.blank) {
       field.risk = LOW;
-      field.note = field.note || "Empty.";
+      field.note = field.note || "Empty";
     }
     return field;
   }
@@ -1520,10 +1520,7 @@
           if (n && n !== 1) {
             warn = {
               kind: "orientation",
-              text:
-                "This photo is stored " + (ORIENTATION[n] || "rotated").toLowerCase() +
-                " and relies on the orientation tag to appear the right way up. " +
-                "Remove it and most viewers will show it sideways.",
+              text: "Without it, most viewers will show this photo sideways.",
             };
           }
         }
@@ -1537,7 +1534,7 @@
           value,
           warn,
           note: entry.tag === 0x927c
-            ? "Camera makers put body and lens serial numbers, shutter counts and owner names in here. Its contents are undocumented, so this tool shows the size and the vendor and nothing more."
+            ? "Can hold serial numbers and owner names"
             : "",
         }));
       }
@@ -1551,7 +1548,7 @@
         group: "thumbnail",
         risk: HIGH,
         value: "JPEG preview · " + fileSize(tiff.thumb.length),
-        note: "A thumbnail is a second copy of the picture, and it is often the copy from before you cropped or edited. It can show what you took out.",
+        note: "May show the photo before cropping",
       }));
     }
   }
@@ -1566,7 +1563,7 @@
       group: props.some(([k]) => /creator|author|owner|rights|person/i.test(k)) ? "people" : "text",
       risk: HIGH,
       value: lines.length ? lines.join("\n") : text.length + " bytes of XMP",
-      note: "XMP collects everything else in one place: authorship, ratings, editing history, and often the names of the files a photo was built from. It is removed as a whole packet rather than property by property.",
+      note: "Author, edit history, file names. Removed as one block",
     }));
   }
 
@@ -1582,12 +1579,10 @@
       warn: icc.wide
         ? {
             kind: "icc",
-            text:
-              "This is a wide-gamut profile (" + icc.name + "). Removing it makes viewers " +
-              "treat the picture as plain sRGB, and the colours will look over-saturated.",
+            text: "Wide-gamut profile (" + icc.name + "). Without it, colours will look dull.",
           }
         : null,
-      note: icc.wide ? "" : "This looks like ordinary sRGB, which is what a viewer assumes anyway, so removing it changes very little.",
+      note: icc.wide ? "" : "Plain sRGB, safe to remove",
     }));
   }
 
@@ -1628,7 +1623,7 @@
 
   async function readJpeg(doc) {
     const parts = walkJpeg(doc.bytes);
-    if (!parts) { doc.error = "This does not look like a readable JPEG."; return; }
+    if (!parts) { doc.error = "Not a readable JPEG."; return; }
     doc.parts = parts;
 
     const iccChunks = [];
@@ -1679,11 +1674,7 @@
           group: "other", risk: HIGH, value: fileSize(p.length),
           warn: {
             kind: "mpf",
-            text:
-              "This file carries a multi-picture index, which is how phones attach an HDR gain " +
-              "map or a linked second frame. Those extra images sit past the end of this one and " +
-              "the index points at them by position, so any rewrite breaks it. Keeping the index " +
-              "without its images is no better. Expect to lose the gain map.",
+            text: "Links an HDR gain map or second frame. Cleaning loses them either way.",
           },
         }));
         continue;
@@ -1752,9 +1743,7 @@
         group: "other", risk: HIGH, value: fileSize(parts.trailer.length),
         warn: {
           kind: "trailer",
-          text:
-            "There are " + fileSize(parts.trailer.length) + " past the end marker. This is where " +
-            "phones hide the video half of a motion photo. Removing it makes this an ordinary still.",
+          text: "Often the video of a motion photo. Removing it leaves a still photo.",
         },
       }));
     }
@@ -1764,7 +1753,7 @@
 
   async function readPng(doc) {
     const parts = walkPng(doc.bytes);
-    if (!parts) { doc.error = "This does not look like a readable PNG."; return; }
+    if (!parts) { doc.error = "Not a readable PNG."; return; }
     doc.parts = parts;
 
     const pending = [];
@@ -1867,7 +1856,7 @@
 
   async function readWebp(doc) {
     const parts = walkWebp(doc.bytes);
-    if (!parts) { doc.error = "This does not look like a readable WebP."; return; }
+    if (!parts) { doc.error = "Not a readable WebP."; return; }
     doc.parts = parts;
 
     for (const chunk of parts.chunks) {
@@ -1909,7 +1898,7 @@
     else if (sigAt(bytes, 1, "PNG")) doc.kind = "png";
     else if (sigAt(bytes, 0, "RIFF") && sigAt(bytes, 8, "WEBP")) doc.kind = "webp";
     else {
-      doc.error = "Only JPEG, PNG and WebP are supported. This file is neither.";
+      doc.error = "Not a JPEG, PNG or WebP file.";
       return doc;
     }
 
@@ -1918,7 +1907,7 @@
       else if (doc.kind === "png") await readPng(doc);
       else await readWebp(doc);
     } catch (err) {
-      doc.error = "This file could not be read: " + (err && err.message ? err.message : "unknown error");
+      doc.error = "Could not read this file: " + (err && err.message ? err.message : "unknown error");
       return doc;
     }
 
@@ -2025,7 +2014,7 @@
 
   async function verify(doc, outBytes, keep) {
     const after = await inspectBytes(doc.name, outBytes);
-    if (after.error) return ["The cleaned file could not be read back: " + after.error];
+    if (after.error) return ["Could not read the cleaned file: " + after.error];
 
     const problems = [];
     const survived = new Set(after.fields.map((f) => f.id));
@@ -2035,7 +2024,7 @@
         problems.push(field.label + " was marked for removal but is still in the file.");
       }
       if (wanted && !survived.has(field.id)) {
-        problems.push(field.label + " was marked to keep but did not survive the rewrite.");
+        problems.push(field.label + " was marked to keep but was lost.");
       }
     }
     return problems.slice(0, 6);
@@ -2148,7 +2137,7 @@
         const get = document.createElement("button");
         get.type = "button";
         get.className = "slip-get";
-        get.setAttribute("data-tip", "Download this file, cleaned");
+        get.setAttribute("data-tip", "Download cleaned");
         get.setAttribute("aria-label", "Download " + doc.name + ", cleaned");
         get.innerHTML =
           '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M8 2.5v7.5M4.5 6.5 8 10l3.5-3.5M2.5 13.5h11"></path></svg>';
@@ -2198,7 +2187,7 @@
       const row = body.insertRow();
       const cell = row.insertCell();
       cell.colSpan = 4;
-      cell.textContent = "There is no metadata in this file. Nothing to remove.";
+      cell.textContent = "No metadata found.";
       fieldTable.appendChild(body);
       paneNote.textContent = "";
       return;
@@ -2227,7 +2216,7 @@
       const master = document.createElement("input");
       master.type = "checkbox";
       master.dataset.master = key;
-      master.setAttribute("aria-label", "Keep every field under " + title);
+      master.setAttribute("aria-label", "Keep all " + title + " fields");
       boxLabel.appendChild(master);
       boxWrap.appendChild(boxLabel);
 
@@ -2329,9 +2318,7 @@
       fieldTable.appendChild(body);
     }
 
-    paneNote.textContent =
-      "Every value above is read straight out of the file. The picture itself is never decoded, " +
-      "so a cleaned copy is the same image data, byte for byte, with the container rewritten around it.";
+    paneNote.textContent = "";
   }
 
   /* ── Render: warnings ──────────────────────────────────────────────────
@@ -2437,10 +2424,7 @@
       if (button) flash(button, "Saved");
       announce("Saved " + outputName(doc, index) + ", " + fileSize(bytes.length) + ".");
     } catch (err) {
-      showHint(
-        "The cleaned copy of " + doc.name + " did not come back correct, so it has not been saved. " +
-        err.message
-      );
+      showHint("Could not clean " + doc.name + ", so it was not saved. " + err.message);
     }
   }
 
@@ -2471,7 +2455,7 @@
       if (button) flash(button, "Saved " + entries.length);
       announce("Saved a zip of " + entries.length + " cleaned files.");
     } catch (err) {
-      showHint("One of the cleaned copies did not come back correct, so nothing has been saved. " + err.message);
+      showHint("Could not clean one of the files, so nothing was saved. " + err.message);
     }
   }
 
@@ -2481,7 +2465,7 @@
     const incoming = Array.from(list).filter((f) => f.size > 0);
     if (!incoming.length) return;
     if (incoming.length > 200) {
-      showHint("That is more than 200 files. Only the first 200 were read.");
+      showHint("Only the first 200 files were read.");
       incoming.length = 200;
     }
 
@@ -2561,10 +2545,7 @@
   el("dlAll").addEventListener("click", (e) => downloadAll(e.currentTarget));
 
   if (typeof DecompressionStream !== "function") {
-    showHint(
-      "This browser cannot decompress PNG text chunks, so some PNG metadata will be listed as " +
-      "unreadable. JPEG and WebP are unaffected."
-    );
+    showHint("This browser cannot read compressed PNG text. Some PNG fields will show as unreadable.");
   }
 
   renderPresets();

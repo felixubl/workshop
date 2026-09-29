@@ -2,6 +2,10 @@
    and the table come from ../assets/base.css over the vendored system. This
    file draws the intake, the map stage, the custody line and the cue table. */
 
+.lede {
+  margin: 0 0 0.9rem;
+}
+
 /* --- intake ---------------------------------------------------------------- */
 
 /* Two doors, side by side and equal, because they are equal: a file is the
@@ -259,48 +263,6 @@
 }
 .cues tbody tr:hover td {
   background: var(--pp-marker-citron);
-}
-
-/* --- the ledger at the foot ---------------------------------------------------- */
-
-.colophon {
-  margin-top: var(--pp-space-6);
-  padding-top: var(--pp-space-4);
-  border-top: var(--pp-rule-structure) solid var(--pp-line);
-}
-.ledger {
-  display: grid;
-  grid-template-columns: minmax(150px, 210px) 1fr;
-  gap: 0;
-  margin: var(--pp-space-3) 0 0;
-}
-@media (max-width: 700px) {
-  .ledger { grid-template-columns: 1fr; }
-  .ledger dd { padding-top: 0; }
-}
-.ledger dt,
-.ledger dd {
-  margin: 0;
-  padding: var(--pp-space-3) var(--pp-space-3) var(--pp-space-3) 0;
-  border-top: var(--pp-rule-hairline) solid var(--pp-hair);
-}
-.ledger dt {
-  font-family: var(--pp-font-display);
-  font-size: 0.92rem;
-  line-height: 1.35;
-}
-.ledger dd {
-  font-size: var(--pp-size-micro);
-  line-height: 1.6;
-  color: var(--pp-muted);
-}
-.ledger dd code {
-  font-size: 0.74rem;
-  letter-spacing: var(--w-track-mono);
-}
-.ledger dd strong,
-.ledger dd em {
-  color: var(--pp-ink);
 }
 
 /* --- the prompt ------------------------------------------------------------------ */

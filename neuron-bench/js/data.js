@@ -188,27 +188,27 @@ var Data = (function () {
   const GATES = {
     and: {
       label: 'AND', y: [0, 0, 0, 1],
-      note: 'True only when both inputs are. One straight line puts that single corner on its own side, so one neuron settles it and the hidden layer can go.'
+      note: 'True when both inputs are 1.'
     },
     or: {
       label: 'OR', y: [0, 1, 1, 1],
-      note: 'True when either input is. One line again, this time with the single false corner cut off. Same neuron, different two numbers.'
+      note: 'True when either input is 1.'
     },
     nand: {
       label: 'NAND', y: [1, 1, 1, 0],
-      note: 'AND turned upside down, and still one line. Every other gate can be built out of NAND, but that is a fact about wiring: this network still only ever draws the one line.'
+      note: 'True unless both inputs are 1.'
     },
     nor: {
       label: 'NOR', y: [1, 0, 0, 0],
-      note: 'OR turned upside down. Separable, like the other three, and the neuron finds it as quickly.'
+      note: 'True when both inputs are 0.'
     },
     xor: {
       label: 'XOR', y: [0, 1, 1, 0],
-      note: 'True when the inputs differ. The two true corners sit diagonally opposite, and no straight line puts that pair on one side, so no single neuron can ever get this right however long it trains. Two hidden units can.'
+      note: 'True when the inputs differ.'
     },
     xnor: {
       label: 'XNOR', y: [1, 0, 0, 1],
-      note: 'True when the inputs agree — XOR upside down, and out of reach of a single neuron for exactly the same reason. Whatever solves one solves the other with the output weights flipped.'
+      note: 'True when the inputs match.'
     }
   };
 
@@ -226,7 +226,7 @@ var Data = (function () {
     }
     return stats(make({
       id, name: gate.label,
-      note: gate.note + ` Each of the four cases appears ${GATE_COPIES} times, so holding rows back takes copies and never takes a case away.`,
+      note: gate.note + ` Each case appears ${GATE_COPIES} times.`,
       task: 'binary', view: 'surface',
       featureNames: ['input A', 'input B'], targetName: 'output',
       classNames: ['0', '1'], X, Y
@@ -248,7 +248,7 @@ var Data = (function () {
 
   function circles() {
     return synth('circles', 'Rings',
-      'One class surrounds the other. A straight boundary cannot do it; a few hidden units bend one around.',
+      'One class surrounds the other.',
       400, 'ring', (rand) => {
         const inner = rand() < 0.5;
         const r = inner ? rand() * 0.8 : 1.6 + rand() * 0.8;
@@ -259,7 +259,7 @@ var Data = (function () {
 
   function spiral() {
     return synth('spiral', 'Spiral',
-      'Two interleaved arms. This is the one that needs real depth or real width — it is where a network that looked fine on the rings starts to fail.',
+      'Two interleaved arms.',
       500, 'spi', (rand, i, n) => {
         const c = i % 2;
         const t = (i / n) * 4.2 + 0.4;
@@ -271,7 +271,7 @@ var Data = (function () {
 
   function moons() {
     return synth('moons', 'Two moons',
-      'Curved but not tangled. A small hidden layer handles it, and it is a good place to watch each unit claim a piece of the boundary.',
+      'Two curved, interlocking classes.',
       400, 'moon', (rand, i) => {
         const c = i % 2;
         const a = rand() * Math.PI;
@@ -292,7 +292,7 @@ var Data = (function () {
     }
     return stats(make({
       id: 'line', name: 'A straight line with noise',
-      note: 'Made by y = 2.4x - 1.1 plus noise, so the right answer is known. One identity neuron should find those two numbers and nothing else can improve on them.',
+      note: 'y = 2.4x - 1.1 plus noise.',
       task: 'regression', featureNames: ['x'], targetName: 'y', X, Y
     }));
   }
@@ -308,7 +308,7 @@ var Data = (function () {
     }
     return stats(make({
       id: 'curve', name: 'A curve',
-      note: 'A straight line is the best a single identity neuron can do here, and it is visibly not good enough. Add hidden units with a bend in them and watch the fit follow.',
+      note: 'A wave on a slope, plus noise.',
       task: 'regression', featureNames: ['x'], targetName: 'y', X, Y
     }));
   }
@@ -327,7 +327,7 @@ var Data = (function () {
     for (let i = 0; i < n; i++) { X[i] = sel[i].year; Y[i] = sel[i].circ; }
     return stats(make({
       id: 'ash', name: 'Ash trees: planting year to trunk',
-      note: 'Every common ash in the Vienna registry. Older trees are thicker, near enough to a straight line, which is why this is the first thing a single neuron should be pointed at. Leave normalisation off and it will not learn at all: the years are around 1990 and the trunks around 100.',
+      note: 'Every common ash tree in Vienna.',
       task: 'regression', featureNames: ['planting year'], targetName: 'trunk circumference (cm)',
       X, Y
     }));
@@ -344,7 +344,7 @@ var Data = (function () {
     }
     return stats(make({
       id: 'surface', name: 'Trees: year and height to trunk',
-      note: 'Two inputs, so what the network computes is a surface rather than a line. Height is recorded in bands, which is why the points sit in rows — real data has a resolution and this one shows it.',
+      note: 'Height is recorded in 5 m bands.',
       task: 'regression', featureNames: ['planting year', 'height (m)'], targetName: 'trunk circumference (cm)',
       X, Y
     }));
@@ -361,7 +361,7 @@ var Data = (function () {
     }
     return stats(make({
       id: 'two-species', name: 'Maple or chestnut',
-      note: 'Two real species from trunk and height alone. They overlap, heavily, so perfect accuracy is not available at any size — a network that claims it has memorised the training set. This is the honest one: watch the test score stop improving while the training score keeps going.',
+      note: 'Norway maple or horse chestnut, from trunk and height.',
       task: 'binary', featureNames: ['trunk circumference (cm)', 'height (m)'],
       targetName: 'species', classNames: [SPECIES[0] + ' (' + COMMON[SPECIES[0]] + ')', SPECIES[1] + ' (' + COMMON[SPECIES[1]] + ')'],
       X, Y
@@ -382,7 +382,7 @@ var Data = (function () {
     }
     return stats(make({
       id: 'species', name: 'Four species, four measurements',
-      note: 'Four inputs, so there is no picture of the whole thing to draw. This is where the per-neuron view earns its keep: you cannot see the boundary, but you can see what each unit responds to.',
+      note: 'Four species, from trunk, height, crown and planting year.',
       task: 'multiclass',
       featureNames: ['trunk circumference (cm)', 'height (m)', 'crown (m)', 'planting year'],
       targetName: 'species',
@@ -433,7 +433,7 @@ var Data = (function () {
       for (let i = 0; i < n; i++) { for (let j = 0; j < d; j++) X[i * d + j] = feats[i][j]; Y[i] = +targets[i]; }
       return stats(make({
         id: 'user', name: name || 'Your data',
-        note: `${n} rows, ${d} feature${d === 1 ? '' : 's'}, a numeric target. Treated as a regression.`,
+        note: '',
         task: 'regression', featureNames: names.slice(0, d), targetName: names[d], X, Y
       }));
     }
@@ -450,7 +450,7 @@ var Data = (function () {
     }
     return stats(make({
       id: 'user', name: name || 'Your data',
-      note: `${n} rows, ${d} feature${d === 1 ? '' : 's'}, ${k} classes. Treated as a ${binary ? 'binary' : 'multiclass'} classification.`,
+      note: '',
       task: binary ? 'binary' : 'multiclass',
       featureNames: names.slice(0, d), targetName: names[d], classNames: uniq, X, Y
     }));
@@ -474,13 +474,13 @@ var Data = (function () {
     load, logic, fromCsv, prepare, split, gather, stats, parseCsv,
     SPECIES, COMMON, HEIGHT_M, CROWN_M,
     catalogue: [
-      { group: 'Vienna tree registry', items: [
+      { group: 'Vienna trees', items: [
         { id: 'ash', label: 'Ash: year to trunk' },
         { id: 'surface', label: 'Year + height to trunk' },
         { id: 'two-species', label: 'Maple or chestnut' },
         { id: 'species', label: 'Four species' }
       ] },
-      { group: 'Made up, so the answer is known', items: [
+      { group: 'Made up', items: [
         { id: 'line', label: 'Straight line' },
         { id: 'curve', label: 'A curve' },
         { id: 'moons', label: 'Two moons' },

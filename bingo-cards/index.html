@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bingo Card Generator — Felix' Workshop</title>
-<meta name="description" content="Type a list of squares, see exactly how many different bingo cards that list can make, then print as many of them as you want — one card per page, as a PDF written from scratch in the browser.">
+<title>Bingo Cards — Felix' Workshop</title>
+<meta name="description" content="Print bingo cards from your own list of words.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
@@ -52,17 +52,19 @@
         Felix' Workshop
       </a>
       <div class="title-row">
-        <h1 class="tool-title">Bingo Card Generator</h1>
-        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+        <h1 class="tool-title">Bingo Cards</h1>
+        <button class="share-btn" type="button" data-share>
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
           <span data-share-label>copy link</span>
         </button>
-        <button class="share-btn pin-btn" type="button" data-pin="bingo-cards" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+        <button class="share-btn pin-btn" type="button" data-pin="bingo-cards" aria-label="Pin this tool"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
       </div>
     </div>
   </header>
 
   <div class="spine"></div>
+
+  <p class="lede">Print bingo cards from your own list of words.</p>
 
   <div class="toolbar">
     <div class="group">
@@ -82,12 +84,12 @@
         <button class="btn-ghost preset" type="button" data-size="4">4×4</button>
         <button class="btn-ghost preset" type="button" data-size="5">5×5</button>
       </div>
-      <input class="field num narrow" type="number" id="size" min="2" max="8" step="1" value="5" aria-label="Grid size, squares per side">
+      <input class="field num narrow" type="number" id="size" min="2" max="8" step="1" value="5" aria-label="Squares per side">
     </div>
 
     <div class="group">
-      <label class="checkbox" data-tip="The centre square, given away. It only exists on an odd grid, because an even one has no centre."><input type="checkbox" id="freeSpace" checked> Free square</label>
-      <input class="field freelabel" type="text" id="freeLabel" value="FREE" maxlength="24" aria-label="What the free square says">
+      <label class="checkbox" data-tip="Odd grids only"><input type="checkbox" id="freeSpace" checked> Free square</label>
+      <input class="field freelabel" type="text" id="freeLabel" value="FREE" maxlength="24" aria-label="Free square text">
     </div>
 
     <div class="group">
@@ -101,7 +103,7 @@
     <div class="group">
       <label id="markLabel">Image</label>
       <button class="btn-ghost" type="button" id="markPick" aria-describedby="markLabel"
-        data-tip="A logo, a badge or a QR code, printed on every card. In a corner it comes out about 22 mm across; in the free square it fills the cell. Read in this tab like everything else here, and never uploaded.">Choose a file</button>
+        data-tip="Printed on every card">Choose a file</button>
       <input type="file" id="markFile" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" hidden>
       <span class="mark-set" id="markSet" hidden>
         <span class="mark-chip">
@@ -109,7 +111,7 @@
           <span class="mark-name" id="markName"></span>
           <button class="mark-drop" type="button" id="markClear" aria-label="Remove the image">×</button>
         </span>
-        <select class="field mark-where" id="markWhere" aria-label="Where the image goes on the card">
+        <select class="field mark-where" id="markWhere" aria-label="Image position">
           <option value="free">Free square</option>
           <option value="tl">Top left</option>
           <option value="tr">Top right</option>
@@ -120,14 +122,14 @@
     </div>
 
     <div class="group">
-      <label class="checkbox" data-tip="Every card prints one small line at the foot saying where it was made, and the same line sits in the PDF's properties. Turning this off removes both. :("><input type="checkbox" id="credit" checked> Workshop line</label>
+      <label class="checkbox"><input type="checkbox" id="credit" checked> Credit line</label>
     </div>
   </div>
 
   <div class="bench">
     <section class="entries">
       <div class="result-bar">
-        <p class="section-label">The squares</p>
+        <p class="section-label">Squares</p>
         <div class="group">
           <button class="btn-ghost" type="button" id="example">Example list</button>
           <button class="btn-ghost" type="button" id="clearItems">Clear</button>
@@ -139,7 +141,7 @@
     </section>
 
     <section class="count">
-      <p class="section-label">How many cards exist</p>
+      <p class="section-label">Possible cards</p>
       <div class="sheet">
         <div class="sheet-cap">
           <code id="countCap">—</code>
@@ -151,11 +153,6 @@
           <dl class="count-facts" id="countFacts"></dl>
         </div>
       </div>
-      <p class="sheet-note" id="countNote">
-        A card is an arrangement, not a bag: the same squares in different
-        places win on different lines, so two cards holding the same list are
-        two different cards.
-      </p>
     </section>
   </div>
 
@@ -165,7 +162,7 @@
     <div class="group">
       <label for="wanted">Cards to make</label>
       <input class="field num" type="number" id="wanted" min="1" max="500" step="1" value="12">
-      <button class="btn-ghost" type="button" id="maxOut" data-tip="Fill in the most this list can make, up to the 500-page limit">Most possible</button>
+      <button class="btn-ghost" type="button" id="maxOut" data-tip="Up to 500">Most possible</button>
     </div>
 
     <div class="group">
@@ -183,17 +180,12 @@
   </div>
 
   <div class="card prompt" id="empty">
-    Type your squares one per line, and the panel above counts every card that
-    list can make. Then say how many you want and press <strong>Deal the
-    cards</strong>: each one is a different arrangement, no two alike, and the
-    PDF puts one on every page. The seed is printed on the cards, so the same
-    set can be dealt again. Nothing leaves your browser — the PDF is written
-    here, byte by byte.
+    Press <strong>Deal the cards</strong> to see them here. Nothing is uploaded.
   </div>
 
   <section id="results" hidden>
     <div class="result-bar">
-      <p class="section-label">The deal</p>
+      <p class="section-label">Cards</p>
       <div class="group">
         <button class="btn-ghost" type="button" id="copyList">Copy caller's list</button>
         <button class="btn-primary" type="button" id="download">
@@ -213,7 +205,7 @@
         <code class="pager-at" id="pagerAt">1 / 1</code>
         <button class="btn-ghost preset" type="button" id="next" aria-label="Next card">›</button>
         <span class="pager-rule" aria-hidden="true"></span>
-        <code class="pager-note">a preview of the page</code>
+        <code class="pager-note">preview</code>
       </div>
       <div class="card-stage">
         <div class="card-page" id="cardPage">

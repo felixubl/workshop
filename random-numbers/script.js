@@ -302,7 +302,7 @@ const DISTRIBUTIONS = [
         ? "Max has to be greater than min."
         : p.mode >= p.min && p.mode <= p.max
           ? null
-          : "Mode has to sit between min and max.",
+          : "Mode has to be between min and max.",
     make: (p) => (rng) => {
       const split = (p.mode - p.min) / (p.max - p.min);
       const u = rng();
@@ -382,9 +382,7 @@ function draw() {
     return showHint("Dimensions has to be between 1 and 10.");
   }
   if (count * dims > MAX_VALUES) {
-    return showHint(
-      `That is ${(count * dims).toLocaleString()} numbers. Draws × dimensions has to stay at or under ${MAX_VALUES.toLocaleString()}.`
-    );
+    return showHint(`Draws × dimensions can be at most ${MAX_VALUES.toLocaleString()}.`);
   }
   if (!Number.isFinite(decimals) || decimals < 0 || decimals > 15) {
     return showHint("Decimals has to be between 0 and 15.");
@@ -430,7 +428,7 @@ function render(run) {
   const reuse = document.createElement("button");
   reuse.className = "seed-tag";
   reuse.type = "button";
-  reuse.dataset.tip = "Put this seed in the seed field";
+  reuse.dataset.tip = "Reuse this seed";
   reuse.textContent = run.seed;
   reuse.addEventListener("click", () => {
     seedInput.value = run.seed;
@@ -453,7 +451,7 @@ function render(run) {
 
   drawNote.textContent =
     run.count > shown
-      ? `Showing the first ${shown} of ${run.count.toLocaleString()} draws. The exports carry the whole set.`
+      ? `Showing ${shown} of ${run.count.toLocaleString()} draws. Exports include all.`
       : "";
   drawNote.hidden = run.count <= shown;
 

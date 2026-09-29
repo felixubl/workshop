@@ -49,13 +49,6 @@ function plural(n, one, many) {
   return n + ' ' + (n === 1 ? one : many);
 }
 
-/* "a", "a and b", "a, b and c" — letters read out in a sentence, where a
-   comma-joined list of one would read as a list that failed to fill. */
-function list(items) {
-  if (items.length <= 1) return items.join('');
-  return items.slice(0, -1).join(', ') + ' and ' + items[items.length - 1];
-}
-
 function el(tag, cls, text) {
   var e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -94,10 +87,9 @@ function drawStrip(p) {
   }
 
   stripKey.textContent = moved === 0
-    ? 'Nothing moved: the ordinary alphabet already sorts this word.'
-    : plural(moved, 'letter sits', 'letters sit') + ' somewhere other than usual' +
-      ', and the small struck letter above one is the letter that normally has that place. ' +
-      'The word’s own ' + plural(p.order.length, 'letter is', 'letters are') + ' boxed.';
+    ? 'A to Z already sorts this word.'
+    : plural(moved, 'letter', 'letters') + ' moved. The struck letter is the usual one. ' +
+      'The word’s letters are boxed.';
 }
 
 function drawSwaps(p) {
@@ -108,7 +100,7 @@ function drawSwaps(p) {
   if (!p.swaps.length) {
     swaps.appendChild(el('li', 'swap-none', 'nothing to swap'));
     swapMeta.textContent = 'none needed';
-    swapNote.textContent = 'The ordinary alphabet is already the answer.';
+    swapNote.textContent = '';
     return;
   }
   for (var i = 0; i < p.swaps.length; i++) {
@@ -117,8 +109,7 @@ function drawSwaps(p) {
     swaps.appendChild(li);
   }
   swapMeta.textContent = plural(p.swaps.length, 'swap', 'swaps');
-  swapNote.textContent = 'Applied to the ordinary alphabet in this order, these build the ' +
-    'alphabet above. There are other sequences of the same length; there is none shorter.';
+  swapNote.textContent = 'Apply these to A to Z, in order.';
 }
 
 /* The word read back under its new alphabet, letter by letter with the
@@ -137,13 +128,7 @@ function drawReread(p) {
   readMeta.textContent = p.word.length === p.order.length
     ? plural(p.word.length, 'letter', 'letters')
     : p.word.length + ' letters, ' + p.order.length + ' different';
-  /* The second sentence appears only for a word with repeats; without them the
-     root is the word itself. */
-  rereadNote.textContent = 'The place each letter takes under the alphabet above. ' +
-    'They never decrease — which is what it means for the word to be sorted.' +
-    (p.word.length === p.order.length ? '' :
-      ' The repeats change nothing: every word with the root ' +
-      p.order.toLowerCase() + ' answers the same way.');
+  rereadNote.textContent = 'Each letter’s place in the new alphabet.';
 }
 
 /* ── Taking the word apart ─────────────────────────────────────────────────
@@ -193,14 +178,13 @@ function carryCell(letter, without, base) {
   cell.appendChild(el('span', 'carry-n', pending ? '·' : String(without)));
   cell.setAttribute('aria-label', pending
     ? letter + ': not measured yet'
-    : letter + ': without it the word costs ' + plural(without, 'swap', 'swaps') +
-      (without < base ? ', ' + (base - without) + ' fewer' : ', the same'));
+    : letter + ': ' + plural(without, 'swap', 'swaps') + ' without it');
   return cell;
 }
 
 function drawReduction(p) {
   var run = ++searchRun;
-  var order = p.order, base = p.distance, word = p.word.toLowerCase();
+  var order = p.order, base = p.distance;
   var search = ABC.coreSearch(p.word);
   var s = search.state();
   var without = s.without;
@@ -213,57 +197,20 @@ function drawReduction(p) {
   }
 
   function sayCarry() {
-    var load = [], free = [], big = 0, done = measured();
-    for (var j = 0; j < order.length; j++) {
-      if (without[j] === null) continue;
-      if (without[j] < base) {
-        load.push(order[j].toLowerCase());
-        if (base - without[j] > big) big = base - without[j];
-      } else free.push(order[j].toLowerCase());
-    }
+    var load = 0, done = measured();
+    for (var j = 0; j < order.length; j++)
+      if (without[j] !== null && without[j] < base) load++;
+
+    carryNote.textContent = base === 0 ? '' : 'The distance without each letter. Marked letters lower it.';
 
     if (done < order.length) {
       carryMeta.textContent = done + ' of ' + order.length + ' measured';
-      carryNote.textContent = 'Measuring — each letter is another search of the alphabet, ' +
-        'and this word has ' + order.length + ' of them to do.';
       return;
     }
 
-    carryMeta.textContent = base === 0 ? 'nothing to carry'
-      : load.length === 0 ? 'no single letter'
-      : load.length + ' of ' + plural(order.length, 'letter', 'letters');
-
-    /* The rule of the figure first, because the numbers under the letters mean
-       nothing without it, then what this particular word turned out to say. */
-    var note = 'Each letter of the root taken out in turn: the number under it is what the ' +
-      'word would cost without it. Removing a letter can never raise the distance — an alphabet ' +
-      'that sorts a word still sorts what is left of it — so a letter still showing the full ' +
-      base + ' is one the word does not need, and one showing less was carrying the difference. ';
-
-    if (base === 0) {
-      note = 'Nothing to carry: the ordinary alphabet already sorts ' + word +
-        ', and taking any letter out leaves it sorted.';
-    } else if (load.length === 0) {
-      note += 'Not one letter of ' + word + ' is carrying that ' + plural(base, 'swap', 'swaps') +
-        ' on its own — take any single one away and the cost is unchanged. The word is ' +
-        'still out of order, and it is pairs of these letters that put it there.';
-    } else {
-      note += free.length === 0
-        ? 'Here that is every letter of it: there is nothing in ' + word +
-          ' that could go for nothing.'
-        : 'Here that is ' + list(load) + '; ' + list(free) + ' ' +
-          (free.length === 1 ? 'is' : 'are') + ' free.';
-      if (big > 1) {
-        note += ' A letter can be worth more than one swap — the most any of these is holding ' +
-          'up is ' + big + '.';
-      }
-      if (free.length > 1) {
-        note += ' They are not shares of the ' + base + ' and do not add up to it: this is one ' +
-          'question asked of each letter on its own, and letters that are each free can still ' +
-          'cost a swap between them.';
-      }
-    }
-    carryNote.textContent = note;
+    carryMeta.textContent = base === 0 ? 'none needed'
+      : load === 0 ? 'no single letter'
+      : load + ' of ' + plural(order.length, 'letter', 'letters');
   }
 
   /* ── The word inside the word ──────────────────────────────────────────
@@ -275,18 +222,14 @@ function drawReduction(p) {
 
     if (!settled) {
       coreMeta.textContent = 'searching';
-      coreNote.textContent = 'Working out the shortest run of these letters that still costs ' +
-        'the same. Every letter the audit above found to be carrying has to be in it, which is ' +
-        'most of the search gone before it starts.';
+      coreNote.textContent = '';
       coreFact.textContent = '…';
       return;
     }
 
     if (base === 0) {
-      coreMeta.textContent = 'nothing to take out';
-      coreNote.textContent = 'The ordinary alphabet already sorts ' + word +
-        ', so there is nothing inside it to find: the shortest run of these letters costing ' +
-        'nothing is none of them.';
+      coreMeta.textContent = 'none needed';
+      coreNote.textContent = '';
       coreFact.textContent = '—';
       return;
     }
@@ -304,33 +247,13 @@ function drawReduction(p) {
       ? one + ', or ' + grouped(s.count - 1) + (s.count === 2 ? ' other' : ' others')
       : one) + (gaveUp ? ' (at most)' : '');
 
-    var note;
-    if (s.size === order.length) {
-      note = 'Nothing comes out. Every letter of the root is carrying, so ' + word +
-        ' is already the shortest run of its own letters that costs ' +
-        plural(base, 'swap', 'swaps') + '.';
-    } else {
-      note = 'The shortest run of the root’s letters, in the root’s order, that still costs ' +
-        'all ' + plural(base, 'swap', 'swaps') + ': ' + s.size + ' of the ' + order.length +
-        ', with ' + plural(order.length - s.size, 'letter', 'letters') + ' taken out. ';
-      /* The search publishes real cores at every level and only claims that
-         none is shorter once it has ruled that out. Stopping early therefore
-         leaves a true answer and a weaker claim — so the weaker claim is the
-         one made, rather than the confident sentence with a retraction stapled
-         to the end of it. */
-      note += gaveUp
-        ? 'The search was stopped after ' + grouped(s.searched) + ' tries rather than run on, ' +
-          'so ' + s.size + ' is the shortest it reached and not necessarily the shortest there ' +
-          'is. ' + (s.count === 1 ? 'One run of ' : grouped(s.count) + ' different runs of ') +
-          s.size + ' cost the same. Press one'
-        : (s.count === 1
-            ? 'There is exactly one way to do it. Press it'
-            : 'The length is the fact; which letters is not — ' + grouped(s.count) +
-              ' different runs of ' + s.size + ' cost the same, and none of them is the answer ' +
-              'more than the others are. Press one');
-      note += ' to put it in the field: the number at the top of the page does not move.';
-    }
-    coreNote.textContent = note;
+    /* The search publishes real cores at every level and only claims that
+       none is shorter once it has ruled that out, so stopping early leaves a
+       true answer and a weaker claim. */
+    coreNote.textContent = s.size === order.length
+      ? 'Every letter is needed.'
+      : 'The fewest letters, in order, with the same distance.' +
+        (gaveUp ? ' The search stopped early, so a shorter one may exist.' : '');
   }
 
   function paintCarry() {
@@ -354,7 +277,7 @@ function drawReduction(p) {
     s.cores.slice(0, CORES_SHOWN).forEach(function (w) {
       var b = el('button', 'core-word', w.toLowerCase());
       b.type = 'button';
-      b.dataset.tip = 'Put ' + w.toLowerCase() + ' in the field and work it out';
+      b.dataset.tip = 'Try this word';
       b.addEventListener('click', function () { CORPUS.runWord(w.toLowerCase()); });
       coresEl.appendChild(b);
     });
@@ -408,9 +331,8 @@ function showWord(input) {
     /* Refused rather than stripped: dropping a hyphen would silently turn two
        words into one. */
     var uniq = norm.rejected.split('').filter(function (c, i, a) { return a.indexOf(c) === i; });
-    showNothing('Letters A to Z only — this has ' +
-      uniq.map(function (c) { return c === ' ' ? 'a space' : '“' + c + '”'; }).join(', ') +
-      ' in it.');
+    showNothing('Letters A to Z only, not ' +
+      uniq.map(function (c) { return c === ' ' ? 'spaces' : '“' + c + '”'; }).join(', ') + '.');
     return;
   }
 
@@ -419,8 +341,7 @@ function showWord(input) {
   result.hidden = false;
   hint.hidden = !norm.changed;
   if (norm.changed) {
-    hint.textContent = 'Read as ' + norm.word.toLowerCase() +
-      ' — accents and ß fold to the letters underneath them.';
+    hint.textContent = 'Read as ' + norm.word.toLowerCase() + '.';
   }
 
   /* ── The word no alphabet sorts ─────────────────────────────────────────
@@ -432,19 +353,18 @@ function showWord(input) {
     var w = p.word.toLowerCase();
     distanceEl.textContent = 'no distance';
     distanceEl.className = 'count-big is-none';
-    verdictMeta.textContent = 'not abecedarisable';
+    verdictMeta.textContent = 'not sortable';
     /* The word printed back with both appearances of the offending letter in
        ink and everything between them faint: the reader sees the letter leave
        and return rather than being told it did. */
     var quote = w.slice(0, b.first) +
       '<b>' + w[b.first] + '</b>' + w.slice(b.first + 1, b.again) +
       '<b>' + w[b.again] + '</b>' + w.slice(b.again + 1);
-    verdictSay.innerHTML = 'No alphabet in any order sorts <em>' + w + '</em>. ' +
-      'Under one ordering every copy of a letter sits together, and ' +
-      '<strong>' + b.letter.toLowerCase() + '</strong> leaves and comes back &mdash; ' +
+    verdictSay.innerHTML = 'No alphabet sorts <em>' + w + '</em>. ' +
+      '<strong>' + b.letter.toLowerCase() + '</strong> comes back: ' +
       '<span class="quote">' + quote + '</span>.';
     facts.textContent = '';
-    fact(facts, 'the letter that returns', b.letter);
+    fact(facts, 'returning letter', b.letter);
     fact(facts, 'first at', 'position ' + (b.first + 1));
     fact(facts, 'again at', 'position ' + (b.again + 1));
     fact(facts, 'alphabets that sort it', '0 of 26!');
@@ -460,18 +380,14 @@ function showWord(input) {
 
   distanceEl.className = 'count-big' + (p.distance === 0 ? ' is-zero' : '');
   distanceEl.textContent = p.distance === 0
-    ? 'already abecedarian'
+    ? 'already in order'
     : plural(p.distance, 'swap', 'swaps');
-  verdictMeta.textContent = p.distance + ' of a possible 25';
+  verdictMeta.textContent = 'max 25';
 
   verdictSay.innerHTML = p.distance === 0
-    ? 'The letters of <em>' + p.word.toLowerCase() +
-      '</em> are already in alphabetical order. Nothing has to move.'
+    ? '<em>' + p.word.toLowerCase() + '</em> is already in alphabetical order.'
     : 'Swap ' + plural(p.distance, 'pair of letters', 'pairs of letters') +
-      ' in the alphabet and <em>' + p.word.toLowerCase() +
-      '</em> comes out sorted. No fewer will do it, though ' +
-      (p.distance === 1 ? 'a different pair would serve as well'
-                        : 'other pairs would serve as well') + '.';
+      ' in the alphabet and <em>' + p.word.toLowerCase() + '</em> is sorted.';
 
   /* The root first, because after it nothing else about the word is used. It
      is printed as a word rather than as a list with arrows between the
@@ -482,7 +398,7 @@ function showWord(input) {
   fact(facts, 'root', p.order.toLowerCase());
   fact(facts, 'core', '…');
   coreFact = facts.lastChild;
-  fact(facts, 'adjacent swaps instead', p.kendall + ' of a possible 325');
+  fact(facts, 'adjacent swaps', p.kendall + ' (max 325)');
   fact(facts, 'alphabets that sort it',
        'one in ' + grouped(ABC.factorial(p.order.length)));
   fact(facts, 'which is', grouped(p.valid) + ' of them');

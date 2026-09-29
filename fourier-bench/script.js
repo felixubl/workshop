@@ -390,7 +390,7 @@
     const sig = S.sig && Signals.byId(S.sig);
     const fund = rows.filter((r) => r.n === 1)[0];
     const truth = sig && f0 ? Signals.truthFor(sig, f0.hz, fund ? fund.amp : 0) : null;
-    el('thTruth').textContent = truth ? 'Fourier says' : 'Off harmonic';
+    el('thTruth').textContent = truth ? 'Expected' : 'Off harmonic';
 
     for (const r of rows) {
       const tr = document.createElement('tr');
@@ -439,28 +439,26 @@
         // Below about 1e-5 there is no string stiff enough to mean it: a guitar
         // sits near 1e-5, a piano's bass strings a hundred times higher, and
         // anything under that is the fit absorbing measurement error.
-        ['stiffness B', f0.inharmonicity > 1e-5 ? f0.inharmonicity.toExponential(1) : 'none measurable'],
+        ['stiffness B', f0.inharmonicity > 1e-5 ? f0.inharmonicity.toExponential(1) : 'none'],
       ];
       el('f0Facts').innerHTML = facts
         .map(([k, v]) => '<div><dt>' + k + '</dt><dd>' + v + '</dd></div>')
         .join('');
     } else {
       el('f0Note').textContent = '—';
-      el('f0Hz').textContent = 'no pitch here';
+      el('f0Hz').textContent = 'no pitch';
       el('f0Facts').innerHTML = '';
     }
 
-    el('partNote').textContent = truth
-      ? 'The last column is the closed form for this waveform, anchored on the measured fundamental so the two columns compare the shape of the series rather than the level the file happens to sit at. The bench is not consulted in computing it.'
-      : 'A partial with no harmonic number is not an error. Bells, drums and most struck things are mostly such partials, and a fundamental fitted to them would be a fiction.';
+    el('partNote').textContent = truth ? 'Expected: the exact amplitude for this waveform.' : '';
   }
 
   const PROOF_SAYS = {
-    source: 'What went in, after mixing to mono.',
-    sines: 'Every bin under the main lobe of a detected peak, transformed back.',
-    residual: 'Every other bin. Breath, bow, hammer, room — whatever is not a steady sinusoid.',
-    sum: 'The two halves added together. They are bins of one spectrum split in two, so this is a check on the transform and the overlap-add, not on the analysis.',
-    additive: 'The table of partials played back through one oscillator each, with the spectrum thrown away. Nothing of the original is used except the numbers.',
+    source: 'The input, mixed to mono.',
+    sines: 'The bins under each peak.',
+    residual: 'All other bins.',
+    sum: 'Should equal the input.',
+    additive: 'One oscillator per partial in the table.',
   };
 
   function fillProof() {
@@ -512,25 +510,17 @@
       tr.append(c1, c2, c3, c4);
       body.appendChild(tr);
     }
-
-    const exact = Fourier.errorDb(x, sum);
-    el('proofNote').textContent =
-      'The third row is the one that cannot be argued with: ' + exact.toFixed(0) + ' dB is ' +
-      'the arithmetic’s own floor, and it is there because splitting a sum of bins and adding ' +
-      'the halves again is the same sum. The last row is the real claim, and it is a lossy one — ' +
-      'an onset is where it does worst, because no single spectrum describes a frame in which the ' +
-      'answer changed.';
   }
 
   function fillWindows() {
     const body = el('winTable').querySelector('tbody');
     if (body.childElementCount) return;      // measured once, never changes
     const says = {
-      rectangular: 'No window at all. Only for a signal that is a whole number of cycles long.',
-      hann: 'The default first guess. Sidelobes fall away fastest of any here.',
-      hamming: 'Lower first sidelobe than Hann, at the cost of the ones further out.',
-      blackman: 'When a quiet partial sits near a loud one.',
-      'blackman-harris': 'When it sits very near a very loud one. The widest lobe here, and 92 dB of quiet around it.',
+      rectangular: 'Signals of whole cycles',
+      hann: 'A first try',
+      hamming: 'A lower first sidelobe than Hann',
+      blackman: 'A quiet partial near a loud one',
+      'blackman-harris': 'A quiet partial very near a loud one',
     };
     for (const kind of Object.keys(Fourier.WINDOWS)) {
       const w = Fourier.window(kind, 1024);
@@ -639,9 +629,9 @@
 
       draw();
       fillProof();
-      el('gramCap').textContent = 'Press anywhere to read the spectrum at that moment.';
+      el('gramCap').textContent = 'Press to pick a moment.';
     } catch (e) {
-      warn('The analysis failed: ' + e.message);
+      warn('Analysis failed: ' + e.message);
       el('gramCap').textContent = '';
     }
 
@@ -676,17 +666,12 @@
     // no setting on this page, or anywhere, that improves both.
     el('trade').textContent =
       'frame ' + a.size + ' = ' + dt.toFixed(1) + ' ms  ·  bins ' + a.binHz.toFixed(2) + ' Hz  ·  ' +
-      'two partials separate at ' + df.toFixed(1) + ' Hz  ·  hop ' + a.hop + ' = ' +
-      ((a.hop / a.rate) * 1000).toFixed(1) + ' ms  ·  Δt × Δf = ' + enbw.toFixed(2) +
-      ', whatever the frame size';
+      'resolves ' + df.toFixed(1) + ' Hz  ·  hop ' + a.hop + ' = ' +
+      ((a.hop / a.rate) * 1000).toFixed(1) + ' ms  ·  Δt × Δf = ' + enbw.toFixed(2);
 
     const t = (S.frame * a.hop) / a.rate;
     el('sliceAt').textContent = t.toFixed(3) + ' s  ·  frame ' + (S.frame + 1) + ' of ' + a.frames;
-    el('sliceCap').textContent =
-      'One transform of ' + a.size + ' samples centred on ' + t.toFixed(3) + ' s. Dots are the ' +
-      'partials as measured — interpolated frequency, amplitude corrected for where in the ' +
-      'window’s lobe the bin fell — so a dot sitting a little off the top of its hump is the ' +
-      'correction doing its work.';
+    el('sliceCap').textContent = 'Dots are the measured partials.';
   }
 
   // ── Sources ───────────────────────────────────────────────────────────────
@@ -742,11 +727,11 @@
       const bytes = await file.arrayBuffer();
       const buf = await audioCtx().decodeAudioData(bytes);
       if (buf.length > buf.sampleRate * MAX_SEC) {
-        warn('Analysing the first ' + MAX_SEC + ' seconds. This is a bench for taking one sound apart, not a file of them.');
+        warn('Only the first ' + MAX_SEC + ' seconds are analysed.');
       }
       adopt(mono(buf), buf.sampleRate, file.name, null);
     } catch (e) {
-      warn('This browser could not decode that file. ' + (e.message || ''));
+      warn('This browser cannot decode that file. ' + (e.message || ''));
     }
   }
 
@@ -827,7 +812,7 @@
     let n = 0;
     for (const c of chunks) n += c.length;
     if (n < ctx.sampleRate * 0.1) {
-      warn('That recording was too short to analyse.');
+      warn('Recording too short.');
       return;
     }
     const out = new Float64Array(n);

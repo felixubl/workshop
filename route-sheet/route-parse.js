@@ -149,10 +149,7 @@
 
     if (!route.paths.length && route.markers.length >= 2) {
       addPath(route, "", "stops", route.markers.map((m) => point(m.lat, m.lon)));
-      route.notes.push(
-        "This GPX holds waypoints but no track or route, so the stops are " +
-        "joined in the order the file lists them. The line between them is not a road."
-      );
+      route.notes.push("Waypoints only, joined in file order.");
     }
   }
 
@@ -283,10 +280,7 @@
 
     if (!route.paths.length && route.markers.length >= 2) {
       addPath(route, "", "stops", route.markers.map((m) => point(m.lat, m.lon)));
-      route.notes.push(
-        "This KML holds pins but no line, so they are joined in file order. " +
-        "The line between them is not a road."
-      );
+      route.notes.push("Pins only, joined in file order.");
     }
   }
 
@@ -355,7 +349,7 @@
       const raw = bytes.subarray(from, from + compressed);
 
       if (method === 0) return new TextDecoder().decode(raw);
-      if (method !== 8) throw new Error(`This KMZ compresses ${name} in a way the browser cannot undo.`);
+      if (method !== 8) throw new Error(`This KMZ compresses ${name} in a way the browser cannot read.`);
       const stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
       return await new Response(stream).text();
     }
@@ -410,7 +404,7 @@
     route.name = route.paths.find((p) => p.name)?.name || "";
     if (!route.paths.length && route.markers.length >= 2) {
       addPath(route, "", "stops", route.markers.map((m) => point(m.lat, m.lon)));
-      route.notes.push("This file holds points but no line, so they are joined in file order.");
+      route.notes.push("Points only, joined in file order.");
     }
   }
 
@@ -551,10 +545,6 @@
 
   /* --- links -------------------------------------------------------------- */
 
-  const NOT_A_ROAD =
-    "joined by straight lines, which are not roads — the service does not " +
-    "publish the path between the stops.";
-
   /* Google Maps. There is no export, so what can be had is what the address
      bar happens to carry, and that is the stops rather than the route.
 
@@ -572,11 +562,7 @@
     route.source = "Google Maps link";
 
     if (/^(https?:\/\/)?(maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(url)) {
-      throw new Error(
-        "That is a Google short link. The browser is not allowed to follow it, " +
-        "and resolving it elsewhere would hand your destination to a stranger. " +
-        "Open it once in Maps and paste the full address from the bar instead."
-      );
+      throw new Error("Google short links cannot be read. Open it in Maps and paste the full address.");
     }
 
     const stops = [];
@@ -646,10 +632,7 @@
       const at = /[@!]?(-?\d{1,2}\.\d+),(-?\d{1,3}\.\d+)/.exec(url);
       if (at) {
         add(num(at[1]), num(at[2]));
-        route.notes.push(
-          "Only the map's centre could be read from this link, which is near " +
-          "the pin rather than exactly on it."
-        );
+        route.notes.push("Only the map centre was in this link. It is near the pin, not on it.");
       }
     }
 
@@ -755,9 +738,7 @@
   function finishLink(route, stops, names, service) {
     if (!stops.length) {
       throw new Error(
-        `No coordinates could be read from that ${service} link. Open it in ` +
-        `${service}, then copy the full address from the browser's bar — the ` +
-        `one with the numbers in it — rather than a shortened share link.`
+        `No coordinates in that ${service} link. Open it in ${service} and paste the full address.`
       );
     }
 
@@ -768,21 +749,16 @@
     }
 
     if (stops.length === 1) {
-      route.notes.push(
-        `This ${service} link holds one place, not a route. The sheet is a ` +
-        `locator for it: the coordinates, and a map around them.`
-      );
+      route.notes.push(`This ${service} link holds one place, not a route.`);
       route.name = names[0] || "";
       return;
     }
 
     addPath(route, "", "stops", stops.map((s) => point(s.lat, s.lon)));
-    route.notes.push(`${stops.length} stops read from a ${service} link, ${NOT_A_ROAD}`);
+    route.notes.push(`${stops.length} stops read from a ${service} link.`);
     if (names.length) {
       route.notes.push(
-        `The link also names ${names.map((n) => `“${n}”`).join(", ")}, which ` +
-        `cannot be turned into coordinates without asking a geocoder, so ` +
-        `${names.length > 1 ? "they are" : "it is"} left off the map.`
+        `Left off the map (no coordinates): ${names.map((n) => `“${n}”`).join(", ")}.`
       );
     }
     route.name = names.length ? names[names.length - 1] : "";
@@ -817,8 +793,8 @@
       route.markers.push({ lat: points[0].lat, lon: points[0].lon, name: "Destination", note: "" });
       route.notes.push(
         repeats
-          ? `${found.length} coordinates, all of them the same place. Read as latitude then longitude.`
-          : "One coordinate, read as latitude then longitude."
+          ? `${found.length} coordinates, all the same place. Read as latitude, longitude.`
+          : "One coordinate, read as latitude, longitude."
       );
       return true;
     }
@@ -826,15 +802,13 @@
     if (points.length <= STOPS_AT_MOST) {
       addPath(route, "", "stops", points);
       route.notes.push(
-        `${points.length} coordinates, read as latitude then longitude and ` +
-        `joined in the order given. The lines between them are not roads.`
+        `${points.length} coordinates (latitude, longitude), joined in order.`
       );
     } else {
       addPath(route, "", "line", points);
       route.notes.push(
-        `${points.length} coordinates, read as latitude then longitude and ` +
-        `taken as a path rather than as stops, because there are more than ` +
-        `${STOPS_AT_MOST} of them. The instructions come from its shape.`
+        `${points.length} coordinates (latitude, longitude), read as a path ` +
+        `because there are more than ${STOPS_AT_MOST}.`
       );
     }
     return true;
@@ -870,15 +844,13 @@
         if (pattern.test(url)) { reader(url, route); return route; }
       }
       throw new Error(
-        "That link is not from a mapping service this tool knows. Google Maps, " +
-        "Waze, Apple Maps, OpenStreetMap and Bing links are read; anything else " +
-        "has to come in as a file."
+        "Unknown link. Use Google Maps, Waze, Apple Maps, OpenStreetMap or Bing, or a file."
       );
     }
 
     if (trimmed[0] === "<") {
       const doc = parseXML(trimmed);
-      if (!doc) throw new Error("That file says it is XML, but it will not parse.");
+      if (!doc) throw new Error("That XML will not parse.");
       const root = doc.documentElement.localName.toLowerCase();
       if (root === "gpx") readGPX(doc, route);
       else if (root === "trainingcenterdatabase") readTCX(doc, route);
@@ -886,14 +858,14 @@
       else if (kids(doc.documentElement, "trkpt").length) readGPX(doc, route);
       else if (kids(doc.documentElement, "Placemark").length) readKML(doc, route);
       else if (kids(doc.documentElement, "Trackpoint").length) readTCX(doc, route);
-      else throw new Error(`This is XML, but its root element is <${root}> and not a route format.`);
+      else throw new Error(`XML, but <${root}> is not a route format.`);
       return finish(route, filename);
     }
 
     if (trimmed[0] === "{" || trimmed[0] === "[") {
       let data;
       try { data = JSON.parse(trimmed); }
-      catch (err) { throw new Error("That file says it is JSON, but it will not parse."); }
+      catch (err) { throw new Error("That JSON will not parse."); }
       readGeoJSON(data, route);
       return finish(route, filename);
     }
@@ -912,8 +884,7 @@
     }
 
     throw new Error(
-      "Nothing in that looked like a route. Drop a GPX, TCX, KML, KMZ or " +
-      "GeoJSON file, or paste a map link or a list of coordinates."
+      "No route found. Drop a GPX, TCX, KML, KMZ or GeoJSON file, or paste a map link or coordinates."
     );
   }
 
@@ -933,11 +904,7 @@
     }
 
     if (/\.fit$/i.test(name) || (head[8] === 0x2e && head[9] === 0x46)) {
-      throw new Error(
-        "That is a Garmin FIT file, which is a binary format this tool does " +
-        "not read. Every app that makes one can also export the same ride as " +
-        "a GPX or a TCX — use that."
-      );
+      throw new Error("FIT files are not read. Export the ride as GPX or TCX.");
     }
 
     return fromText(await file.text(), name);
@@ -948,7 +915,7 @@
   // one path so the caller knows to offer the choice.
   function finish(route, filename) {
     if (!route.paths.length && !route.markers.length) {
-      throw new Error("That parsed, but there is no route or place in it.");
+      throw new Error("No route or place in that.");
     }
     if (!route.name && filename) {
       route.name = filename.replace(/\.[a-z0-9]+$/i, "").replace(/[_-]+/g, " ").trim();
