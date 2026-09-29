@@ -372,6 +372,11 @@
     letter-spacing: var(--w-track-mono);
     color: var(--pp-faint);
   }
+  .plate-tag {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin-top: 0.3rem;
+  }
   [data-custody='send'],
   [data-custody='store'] {
     color: var(--pp-muted);
@@ -945,6 +950,7 @@
             <button class="pin" type="button" data-pin="eclipse-recon" aria-label="Pin Eclipse Planner"><span class="pin-head" aria-hidden="true"></span></button>
             <p class="plate-say">Plan where to watch a total solar eclipse.</p>
             <code class="plate-custody" data-custody="fetch"><span class="custody-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>fetch</code>
+            <span class="tag tag--provisional plate-tag">under construction</span>
           </div>
         </div>
 
