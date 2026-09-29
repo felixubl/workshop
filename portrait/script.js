@@ -34,7 +34,7 @@ let segmenter = null;
 
 async function models() {
   if (landmarker && segmenter) return;
-  say("loading the two models from this site (41 MB, cached after the first time)");
+  say("loading the models (41 MB the first time)");
   const files = await FilesetResolver.forVisionTasks(WASM_ROOT);
   // The landmarker runs on the CPU on purpose. On the GPU delegate it returns
   // exactly one face however high numFaces is set, so a picture of two people
@@ -50,7 +50,7 @@ async function models() {
     });
   };
   try { await makeSegmenter("GPU"); }
-  catch (e) { say("GPU delegate refused, segmenting on the CPU"); await makeSegmenter("CPU"); }
+  catch (e) { say("no GPU, segmenting on the CPU"); await makeSegmenter("CPU"); }
 }
 
 // ── Where the head is ───────────────────────────────────────────────────────
@@ -401,10 +401,9 @@ function report() {
   $("stats").innerHTML =
     "<strong>face:</strong> " + Math.round(state.box.faceWidth) + " x " +
       Math.round(state.box.faceHeight) + " px in a " + state.W + " x " + state.H + " image" +
-    "<br><strong>in the crop:</strong> " + (parts.join(", ") || "nothing but background") +
-    "<br><strong>kept as head:</strong> " + ((kept / n) * 100).toFixed(1) + "% of the crop" +
-    (fh ? "<br><strong>facial hair:</strong> " + (fh.share * 100).toFixed(1) +
-          "% of the face oval reads as hair (beard, moustache, brows)" : "");
+    "<br><strong>crop:</strong> " + (parts.join(", ") || "background only") +
+    "<br><strong>head:</strong> " + ((kept / n) * 100).toFixed(1) + "% of the crop" +
+    (fh ? "<br><strong>facial hair:</strong> " + (fh.share * 100).toFixed(1) + "% of the face" : "");
 }
 
 function rerun() {
@@ -426,7 +425,7 @@ function rerun() {
   renderThumbs(state, state.layers, globals, state.activeLayer);
   $("savePng").disabled = $("saveSvg").disabled = !state.out;
   window.__state = state;
-  say("rebuilt the matte in " + Math.round(performance.now() - t0) + " ms");
+  say("redrawn in " + Math.round(performance.now() - t0) + " ms");
 }
 
 async function loadFile(file) {
@@ -449,7 +448,7 @@ async function loadFile(file) {
   state.faceIndex = 0;
   buildFacePicker();
   state.landmarks = state.faces.length ? state.faces[0] : null;
-  if (state.faces.length > 1) say("found " + state.faces.length + " faces; showing the first");
+  if (state.faces.length > 1) say("found " + state.faces.length + " faces, showing the first");
   if (!state.landmarks) {
     state.cat = null;
     state.matte = null;
@@ -457,7 +456,7 @@ async function loadFile(file) {
     clear($("classes"), 10, 10);
     clear($("cut"), 10, 10);
     $("stats").textContent = "";
-    say("no face found, so there is no head to extract");
+    say("no face found");
     return;
   }
   recrop();
@@ -653,5 +652,3 @@ $("save").addEventListener("click", () => {
   a.href = state.cutCanvas.toDataURL("image/png");
   a.click();
 });
-
-say("drop a photograph anywhere, or use the file button");

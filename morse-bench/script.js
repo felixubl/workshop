@@ -36,9 +36,6 @@ const sheetSay = document.getElementById("sheetSay");
 const capSay = document.getElementById("capSay");
 const rows = document.getElementById("rows");
 
-const REST = "The two speeds are the reading. If they are far apart the time is " +
-             "going into the silences, not the elements.";
-
 const run = {
   words: [],
   w: 0,
@@ -123,8 +120,8 @@ function newRun() {
   charOut.textContent = "—";
   accOut.textContent = "—";
   timeOut.textContent = "—";
-  readSay.textContent = "no run finished yet";
-  splitSay.textContent = REST;
+  readSay.textContent = "no run yet";
+  splitSay.textContent = "";
   sheetSay.textContent = "—";
   capSay.textContent = "no run yet";
   rows.textContent = "";
@@ -226,21 +223,19 @@ function score() {
 
   const extra = run.attempts.length - charCount(run.words);
   readSay.textContent = run.words.length + " " +
-    (run.source === "groups" ? "groups" : "words") + " · crib " +
+    (run.source === "groups" ? "groups" : "words") + " · code " +
     (run.crib ? "shown" : "hidden") + " · " + asked + " units" +
     (extra > 0 ? " · " + extra + " resent" : "");
 
   const share = own.markTime / (run.endedAt - run.startedAt);
   splitSay.textContent =
-    "Of " + seconds.toFixed(1) + " seconds, " + (own.markTime / 1000).toFixed(1) +
-    " went on marks and " + ((run.endedAt - run.startedAt - own.markTime) / 1000).toFixed(1) +
-    " on silence — " + Math.round(share * 100) + " per cent of the run had the key down. " +
+    "Key down " + (own.markTime / 1000).toFixed(1) + " s of " + seconds.toFixed(1) +
+    " s (" + Math.round(share * 100) + " per cent)." +
     (own.wpm
       ? (own.wpm - effective > 2
-          ? "Your elements are going out at " + own.wpm.toFixed(1) +
-            " and the run at " + effective.toFixed(1) + ", so the difference is time spent between characters rather than in them."
-          : "The two speeds are within two words a minute of each other, which is what fluent sending looks like.")
-      : REST);
+          ? " Your pauses between letters slow you down."
+          : " Your 2 speeds are within 2 wpm.")
+      : "");
 
   run.measured = {
     wpm: Math.min(40, Math.max(5, Math.round(own.wpm))),
@@ -315,7 +310,7 @@ function render() {
   } else {
     const hit = CHAR_OF[keyer.code];
     const n = fitting(keyer.code);
-    if (isError(keyer.code)) liveSay.textContent = "error signal, resends the word";
+    if (isError(keyer.code)) liveSay.textContent = "restarts the word";
     else if (hit && n === 1) liveSay.textContent = hit + ", and nothing longer";
     else if (hit) liveSay.textContent = hit + ", or " + (n - 1) + " longer";
     else if (n === 0) liveSay.textContent = "no character fits";
@@ -349,7 +344,7 @@ function renderStage() {
   if (run.done) {
     const say = document.createElement("p");
     say.className = "stage-say";
-    say.textContent = "Run over. The reading is below.";
+    say.textContent = "Done. Your score is below.";
     stage.append(say);
     return;
   }
@@ -408,7 +403,7 @@ function stopClock() {
 
 function applyUnit() {
   const t = keyer.speed(Number(wpm.value), Number(spacing.value));
-  unitOut.textContent = Math.round(t.unit) + " ms";
+  unitOut.textContent = "dit " + Math.round(t.unit) + " ms";
   gapOut.textContent = "letter " + Math.round(t.letterAt) +
                        " · word " + Math.round(t.wordAt) + " ms";
 }

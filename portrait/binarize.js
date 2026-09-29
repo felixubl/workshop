@@ -373,7 +373,7 @@ export function renderMain(state, settings, globals) {
   const per = LAYERS.filter(([k]) => stats[k]).map(([k, , label]) =>
     label + " " + ((stats[k].inked / stats[k].n) * 100).toFixed(0) + "%");
   $("bwStats").textContent = size + " x " + size + " pixels, " +
-    ((on / ink.length) * 100).toFixed(1) + "% ink — inked per component: " +
+    ((on / ink.length) * 100).toFixed(1) + "% ink. Per part: " +
     (per.join(", ") || "nothing");
   return { ink, size };
 }

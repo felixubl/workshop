@@ -470,7 +470,7 @@
      horizon is what decides whether a magnitude-5 star is actually there to
      be seen. */
   function twilight(sunAlt) {
-    if (sunAlt > 0) return 'daylight — the stars are drawn, but you cannot see them';
+    if (sunAlt > 0) return 'daylight';
     if (sunAlt > -6) return 'civil twilight';
     if (sunAlt > -12) return 'nautical twilight';
     if (sunAlt > -18) return 'astronomical twilight';
@@ -762,7 +762,7 @@
       }
     }
 
-    ui.upList.innerHTML = html || '<p class="up-empty">nothing is above the horizon</p>';
+    ui.upList.innerHTML = html || '<p class="up-empty">nothing above the horizon</p>';
   }
 
   /* The lists are rewritten wholesale as the sky turns, so the selected row
@@ -866,7 +866,7 @@
     var hits = lookup(q);
     ui.findResults.innerHTML = hits.length
       ? hits.map(function (h) { return rowHtml(h.object, h.kind); }).join('')
-      : '<p class="up-empty">nothing by that name in the catalogue</p>';
+      : '<p class="up-empty">not found</p>';
   }
 
   ui.find.addEventListener('input', renderFind);
@@ -1117,7 +1117,7 @@
       ui.here.textContent = 'here';
     }).catch(function (err) {
       ui.here.textContent = 'here';
-      note(err && err.code === 1 ? 'permission refused' : 'could not get a position');
+      note(err && err.code === 1 ? 'permission refused' : 'could not get your location');
     });
   }
 
@@ -1133,7 +1133,7 @@
     if (!navigator.permissions || !navigator.permissions.query) return;
     navigator.permissions.query({ name: 'geolocation' }).then(function (st) {
       if (st.state === 'granted') useHere();
-      else note('This is ' + state.place.label + '. Press “here” for the sky over your own place.');
+      else note('Showing ' + state.place.label + '. Press “here” for your location.');
     }).catch(function () { /* older Safari has no geolocation permission to query */ });
   }
 
@@ -1162,7 +1162,7 @@
       setPlace(list[0]);
       if (list.length > 1) offer(list);
     }).catch(function (e) {
-      if (e.name !== 'AbortError') note('the geocoder did not answer');
+      if (e.name !== 'AbortError') note('place search failed');
     });
   }
 

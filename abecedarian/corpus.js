@@ -143,12 +143,6 @@ var CORPUS = (function () {
     if (n >= 0.1) return n.toFixed(3);
     return n.toPrecision(2);
   }
-  /* "a", "a and b", "a, b and c" — for naming the holders of a record in a
-     sentence, where a comma-joined list of one reads as a list that failed. */
-  function listOf(items) {
-    if (items.length <= 1) return items.join('');
-    return items.slice(0, -1).join(', ') + ' and ' + items[items.length - 1];
-  }
   function el(tag, cls, text) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -208,9 +202,8 @@ var CORPUS = (function () {
       b.dataset.lang = l.id;
       b.appendChild(el('i', 'pick-ink ' + inkClass(l)));
       b.appendChild(el('span', 'pick-name', l.name));
-      b.dataset.tip = grouped(l.sortable) + ' of ' + grouped(l.words) + ' ' +
-        l.name + ' words have a distance; ' + grouped(l.unsortable) + ' have none. ' +
-        l.dict + '.';
+      b.dataset.tip = grouped(l.sortable) + ' of ' + grouped(l.words) + ' words have a distance · ' +
+        l.dict;
       b.addEventListener('click', function () {
         toggle(l.id);
         /* Restyled, not rebuilt: rebuilding the row would destroy the element
@@ -510,10 +503,8 @@ var CORPUS = (function () {
       svg.setAttribute('width', W);
       svg.setAttribute('height', H);
       svg.setAttribute('aria-label',
-        'One bar per number of swaps, each made of ' +
-        list.map(function (l) { return l.name; }).join(', ') +
-        ', every one contributing the share of its own words that need that ' +
-        'many. Most need two or three. The full figures are in the table below.');
+        'Share of words at each number of swaps: ' +
+        list.map(function (l) { return l.name; }).join(', '));
 
       for (var v = 0; v <= top; v += step) {
         svg.appendChild(node('line', {
@@ -582,7 +573,7 @@ var CORPUS = (function () {
       }
 
       var xl = node('text', { class: 'ax-title', x: DPAD.left + plotW / 2, y: y0 + 36 });
-      xl.textContent = 'swaps of the alphabet';
+      xl.textContent = 'swaps';
       svg.appendChild(xl);
 
       if (hover !== null) place(hover);
@@ -665,10 +656,8 @@ var CORPUS = (function () {
     rows: function () { return ORDER; },
     rowLabel: function (l) { return pct((l.sortable / l.words) * 100) + '%'; },
     label: function (list) {
-      return 'One bar per dictionary, the whole of it, split by how many swaps ' +
-        'its words need and by the words that need no alphabet at all. Sorted ' +
-        'by how much of each has a distance, from ' + list[0].name + ' down to ' +
-        list[list.length - 1].name + '. The full figures are in the table below.';
+      return 'Each dictionary split by number of swaps, from ' + list[0].name + ' to ' +
+        list[list.length - 1].name;
     }
   });
 
@@ -713,7 +702,7 @@ var CORPUS = (function () {
       l.peakWords.forEach(function (w) {
         var b = el('button', 'peak-word', w);
         b.type = 'button';
-        b.dataset.tip = 'Put ' + w + ' in the field and work it out';
+        b.dataset.tip = 'Try this word';
         b.addEventListener('click', function () { runWord(w); });
         list.appendChild(b);
       });
@@ -774,7 +763,7 @@ var CORPUS = (function () {
       top.words.forEach(function (w) {
         var b = el('button', 'peak-word', w);
         b.type = 'button';
-        b.dataset.tip = 'Put ' + w + ' in the field and work it out';
+        b.dataset.tip = 'Try this word';
         b.addEventListener('click', function () { runWord(w); });
         rootBox.appendChild(b);
       });
@@ -844,13 +833,7 @@ var CORPUS = (function () {
     tableBox.textContent = '';
     tableBox.appendChild(scroll);
     tableBox.appendChild(el('p', 'sheet-note table-note',
-      'Counts, one number to a cell, in the order the figures use. The columns ' +
-      '0 to ' + MAXD + ' are how many of that dictionary’s words need exactly ' +
-      'that many swaps — the figures fold seven and up into one step, and this ' +
-      'is where they are separate. Then the three totals the figures divide by, ' +
-      'and the two collapses: how many distinct roots those words have, and how ' +
-      'many distinct cores the costing ones come down to. Cores outnumber roots ' +
-      'in every one of them, which is the point of the section above.'));
+      'Word counts. Columns 0 to ' + MAXD + ' are numbers of swaps.'));
   }
 
   tableBtn.addEventListener('click', function () {
@@ -874,95 +857,26 @@ var CORPUS = (function () {
   var sortable = LANGS.reduce(function (a, l) { return a + l.sortable; }, 0);
   var zero = LANGS.reduce(function (a, l) { return a + l.counts[0]; }, 0);
   var worst = LANGS.reduce(function (a, l) { return l.peak > a.peak ? l : a; }, LANGS[0]);
-  var first = ORDER[0], last = ORDER[ORDER.length - 1];
-  var noneShare = function (l) { return (l.unsortable / l.words) * 100; };
 
   meta.textContent = grouped(words) + ' words · ' + LANGS.length + ' spelling dictionaries';
   note.textContent =
-    'Every headword of ' + LANGS.length + ' Hunspell spelling dictionaries, folded ' +
-    'to A–Z and run through the engine above. One bar per number of swaps, and ' +
-    'each bar is made of the dictionaries the switches are on — every one ' +
-    'contributing the share of its OWN words that need exactly that many. So a ' +
-    'segment is a percentage and can be read straight off the bar; the bar’s ' +
-    'total is those percentages added together and is not a share of anything, ' +
-    'which is why the axis counts in points. Four inks, because four is how ' +
-    'many a red-green reader can still tell apart, and picking a fifth ' +
-    'dictionary hands it the ink of whichever has been drawn longest. The ' +
-    'figure below takes all ' + LANGS.length + ' the other way up. Sources are ' +
-    'pinned to wooorm/dictionaries @ ' + ABC_CORPUS.pin + '; each switch names its own.';
+    'Each segment is the % of one dictionary’s words with a distance. Up to 4 at a time. ' +
+    'Words from wooorm/dictionaries @ ' + ABC_CORPUS.pin + '.';
 
-  stackMeta.textContent = grouped(zero) + ' already abecedarian · ' +
-    pct((zero / words) * 100) + '% of every word';
-  stackNote.textContent =
-    'The same form, and the only change is what the bar is a hundred per cent ' +
-    'of: every word the dictionary holds, so the ones no ordering sorts are in ' +
-    'it too. They are the loosest figure in the survey, running from ' +
-    pct(noneShare(first)) + '% of ' + first.name + ' to ' + pct(noneShare(last)) +
-    '% of ' + last.name + ' — a language that builds long words by stacking ' +
-    'endings on them puts nearly all of them out of reach. Sorted by the ' +
-    'coloured band, ' + first.name + ' at the top down to ' + last.name + ' at the ' +
-    'foot. The ramp runs light to dark with the distance and ends at “' +
-    (RAMP - 1) + ' or more”, because past about eight shades of one hue a reader ' +
-    'cannot tell them apart; “none” is not a distance and takes a neutral off ' +
-    'the ramp. Every class present is drawn wide enough to see and those pixels ' +
-    'come off the widest segment, which can afford them; the table rounds nothing.';
+  stackMeta.textContent = grouped(zero) + ' already in order · ' +
+    pct((zero / words) * 100) + '% of all words';
+  stackNote.textContent = 'All words, including those with no distance.';
 
-  /* The two collapses, totalled across the survey. `lone` is how many roots
-     stand for exactly one word — spread[0], the first bucket — and the gap
-     between allCores and allRoots is the finding the section is about. */
+  /* `lone` is how many roots stand for exactly one word: spread[0], the first
+     bucket. */
   var allRoots = LANGS.reduce(function (a, l) { return a + l.roots; }, 0);
-  var allCores = LANGS.reduce(function (a, l) { return a + l.cores; }, 0);
-  var allCosting = LANGS.reduce(function (a, l) { return a + l.costing; }, 0);
-  var costingRoots = LANGS.reduce(function (a, l) { return a + l.costingRoots; }, 0);
   var lone = LANGS.reduce(function (a, l) { return a + l.spread[0]; }, 0);
-  var plural = LANGS.reduce(function (a, l) { return a + l.plural; }, 0);
-  /* The biggest of each kind anywhere in the survey, for the note to name.
-     Ties are named rather than broken: English xi and French xie both hold
-     nine, and calling one of them THE biggest would be picking by iteration
-     order and printing it as a finding. */
-  function topAcross(key) {
-    var best = 0;
-    LANGS.forEach(function (l) { if (l[key][0].n > best) best = l[key][0].n; });
-    return {
-      n: best,
-      held: LANGS.filter(function (l) { return l[key][0].n === best; })
-                 .map(function (l) { return l[key][0][key === 'rootTop' ? 'root' : 'core']
-                                            .toLowerCase() + ' in ' + l.name; })
-    };
-  }
-  var bigRoot = topAcross('rootTop');
-  var bigCore = topAcross('coreTop');
 
   metMeta.textContent = pct((lone / allRoots) * 100) + '% of roots are one word';
-  metNote.textContent =
-    'Two ways for words to land on the same thing, and they behave nothing ' +
-    'alike. Taking the repeats out merges almost nothing: ' + grouped(lone) +
-    ' of the survey’s ' + grouped(allRoots) + ' roots stand for a single word, ' +
-    'because collapsing repeats only ever joins spellings that differ in a ' +
-    'doubled letter and a dictionary rarely carries both. So a family here is a ' +
-    'set of spellings rather than of meanings, which is what the rows show: the ' +
-    'biggest anywhere in the survey is ' + bigRoot.n + ' words, ' +
-    listOf(bigRoot.held) + '. Going on to the core merges by the hundred — ' +
-    listOf(bigCore.held) + ' is a core of ' + grouped(bigCore.n) +
-    ' words. And it still does not shrink the vocabulary — ' +
-    grouped(costingRoots) + ' roots come down to ' + grouped(allCores) + ' ' +
-    'different cores, MORE than there were roots, because ' + grouped(plural) +
-    ' of those roots have more than one shortest core and each is a word in its ' +
-    'own right. A core’s count is how many words hold it among their shortest, ' +
-    'so these families overlap on purpose: zebra is counted under ebra, zeba ' +
-    'and zebr alike, and they do not sum to the ' + grouped(allCosting) +
-    ' words that cost anything. Roots are of every sortable word; cores only of ' +
-    'the ones that cost something, since an already-sorted word comes down to ' +
-    'no letters at all.';
+  metNote.textContent = 'Per dictionary: the root and the core shared by the most words.';
 
-  peakMeta.textContent = 'the record is ' + worst.peak + ', in ' + worst.name;
-  peakNote.textContent =
-    'The words inside the ramp’s last step, one row per dictionary, all ' +
-    LANGS.length + ' of them whatever the switches are set to. Ties are the rule ' +
-    'rather than the exception, so every word holding a record is listed, up to ' +
-    'six of them, in the order the dictionary prints them; where more tie than ' +
-    'fit, the count says how many. Click one to put it in the field at the top ' +
-    'and see the alphabet it needs.';
+  peakMeta.textContent = 'highest ' + worst.peak + ', ' + worst.name;
+  peakNote.textContent = 'The words with the most swaps in each dictionary.';
 
   drawPick();
   drawRampKey(keyB, true);

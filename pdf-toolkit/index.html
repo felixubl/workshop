@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PDF Toolkit — Felix' Workshop</title>
-<meta name="description" content="Merge, split, extract, reorder and rotate PDF pages, black out text so it is deleted rather than covered, highlight in six pastel colours, and strip the metadata. Runs entirely in your browser: nothing is uploaded.">
+<meta name="description" content="Merge, split, reorder, rotate and redact PDF pages.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
@@ -55,20 +55,22 @@
       </a>
       <div class="title-row">
         <h1 class="tool-title">PDF Toolkit</h1>
-        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+        <button class="share-btn" type="button" data-share>
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
           <span data-share-label>copy link</span>
         </button>
-        <button class="share-btn pin-btn" type="button" data-pin="pdf-toolkit" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+        <button class="share-btn pin-btn" type="button" data-pin="pdf-toolkit" aria-label="Pin this tool"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
       </div>
     </div>
   </header>
 
   <div class="spine"></div>
 
+  <p class="lede">Merge, split, reorder, rotate and redact PDF pages.</p>
+
   <div class="dropzone" id="drop">
     <p><strong>Drop PDFs here</strong>, or <button class="btn-ghost" type="button" id="pick">choose files</button></p>
-    <p class="sheet-note">Nothing is uploaded. Every file is read, rearranged and saved by this tab alone.</p>
+    <p class="sheet-note">Nothing is uploaded.</p>
     <input type="file" id="file" accept="application/pdf,.pdf" multiple hidden>
   </div>
 
@@ -92,30 +94,30 @@
       <div class="group">
         <label>Turn selected</label>
         <div class="btn-row">
-          <button class="btn-ghost" type="button" id="rotL" data-tip="Turn the selected pages a quarter turn anticlockwise">&#8630; Left</button>
-          <button class="btn-ghost" type="button" id="rotR" data-tip="Turn the selected pages a quarter turn clockwise">&#8631; Right</button>
+          <button class="btn-ghost" type="button" id="rotL">&#8630; Left</button>
+          <button class="btn-ghost" type="button" id="rotR">&#8631; Right</button>
         </div>
       </div>
       <div class="group">
         <label>Order</label>
         <div class="btn-row">
-          <button class="btn-ghost" type="button" id="moveUp" data-tip="Move the selected pages one place earlier">Earlier</button>
-          <button class="btn-ghost" type="button" id="moveDown" data-tip="Move the selected pages one place later">Later</button>
+          <button class="btn-ghost" type="button" id="moveUp">Earlier</button>
+          <button class="btn-ghost" type="button" id="moveDown">Later</button>
           <button class="btn-ghost" type="button" id="reverse">Reverse</button>
         </div>
       </div>
       <div class="group">
         <label>Remove</label>
         <div class="btn-row">
-          <button class="btn-ghost" type="button" id="del" data-tip="Take the selected pages out of the document being built">Delete</button>
-          <button class="btn-ghost" type="button" id="keepOnly" data-tip="Throw away everything except the selected pages">Keep only</button>
-          <button class="btn-ghost" type="button" id="clearMarks" data-tip="Lift every blackout and highlight off the selected pages">Marks</button>
+          <button class="btn-ghost" type="button" id="del">Delete</button>
+          <button class="btn-ghost" type="button" id="keepOnly">Keep only</button>
+          <button class="btn-ghost" type="button" id="clearMarks" data-tip="Blackouts and highlights">Marks</button>
         </div>
       </div>
       <div class="group">
         <label>Step back</label>
         <div class="btn-row">
-          <button class="btn-ghost" type="button" id="undo" data-tip="Undo the last change to the pile (⌘Z)" disabled>Undo</button>
+          <button class="btn-ghost" type="button" id="undo" data-tip="⌘Z" disabled>Undo</button>
           <button class="btn-ghost" type="button" id="reset">Start over</button>
         </div>
       </div>
@@ -124,7 +126,7 @@
     <div class="result-bar">
       <span class="section-label">Pages</span>
       <div class="result-right">
-        <button class="btn-ghost" type="button" id="view" data-tip="Read the pages full size, and turn, move, delete, black out or highlight them as you go" disabled>View full size</button>
+        <button class="btn-ghost" type="button" id="view" data-tip="Black out and highlight here" disabled>View full size</button>
         <span class="tag" id="tally">nothing loaded</span>
       </div>
     </div>
@@ -138,7 +140,7 @@
       <span class="section-label">Metadata</span>
       <div class="result-right">
         <span class="tag" id="metaTally"></span>
-        <button class="btn-ghost" type="button" id="metaToggle" aria-expanded="false" aria-controls="metaPanel" data-tip="Every field the loaded files carry, and a switch on each one this tool can drop">Show</button>
+        <button class="btn-ghost" type="button" id="metaToggle" aria-expanded="false" aria-controls="metaPanel">Show</button>
       </div>
     </div>
 
@@ -177,22 +179,10 @@
       </div>
 
       <p class="legend">
-        <span class="tag is-marked mk--citron">identifying</span> names a person or the machine they
-        worked on. <span class="tag">telling</span> narrows it down: the program, the version, the
-        minute it was saved. A row with a dash instead of a switch is one this tool never carries
-        into the file it writes.
+        <span class="tag is-marked mk--citron">identifying</span> names a person or machine.
+        <span class="tag">telling</span> narrows it down. Rows without a switch are never saved.
       </p>
       <p class="sheet-note" id="metaNote"></p>
-      <!-- The one claim on this page a reader cannot check by looking at it.
-           A blackout that covers and a blackout that deletes look identical on
-           screen and differ only in the bytes, so the assertions that read
-           those bytes are linked rather than described. -->
-      <p class="sheet-note">
-        A blackout deletes the words under it rather than covering them, and
-        that is the difference no screenshot can show —
-        <a href="../tools/verify/pdf-toolkit.html">the checks that read the saved bytes</a>
-        run in this browser, against the files this page loads.
-      </p>
     </section>
 
     <div class="toolbar save-bar">
@@ -204,7 +194,7 @@
         <label>&nbsp;</label>
         <div class="btn-row">
           <button class="btn-primary" type="button" id="save">Save PDF</button>
-          <button class="btn-ghost" type="button" id="saveSel" data-tip="Save only the selected pages as their own file">Save selection</button>
+          <button class="btn-ghost" type="button" id="saveSel">Save selection</button>
         </div>
       </div>
       <div class="group">
@@ -214,7 +204,7 @@
       <div class="group">
         <label>&nbsp;</label>
         <div class="btn-row">
-          <button class="btn-ghost" type="button" id="split" data-tip="Save one file per chunk of that many pages">Split into files</button>
+          <button class="btn-ghost" type="button" id="split">Split into files</button>
         </div>
       </div>
     </div>
@@ -239,9 +229,9 @@
       <span class="viewer-src" id="viewerSrc"></span>
       <span class="viewer-marked" id="viewerMarked"></span>
       <div class="btn-row">
-        <button class="btn-ghost" type="button" id="viewerPrev" aria-label="Previous page" data-tip="The page before this one (←)">&#8592;</button>
-        <button class="btn-ghost" type="button" id="viewerNext" aria-label="Next page" data-tip="The page after this one (→)">&#8594;</button>
-        <button class="btn-ghost" type="button" id="viewerClose" data-viewer-close data-tip="Back to the grid (Esc)">Close</button>
+        <button class="btn-ghost" type="button" id="viewerPrev" aria-label="Previous page" data-tip="← key">&#8592;</button>
+        <button class="btn-ghost" type="button" id="viewerNext" aria-label="Next page" data-tip="→ key">&#8594;</button>
+        <button class="btn-ghost" type="button" id="viewerClose" data-viewer-close data-tip="Esc key">Close</button>
       </div>
     </div>
 
@@ -253,23 +243,23 @@
     <div class="modal__bar viewer-pens">
       <span class="pen-label">Pen</span>
       <div class="btn-row">
-        <button class="btn-ghost pen is-on" type="button" id="penOff" aria-pressed="true" data-tip="Read without marking (V)">Off</button>
-        <button class="btn-ghost pen" type="button" id="penBlack" aria-pressed="false" data-tip="Drag over what must not leave the file. The text under it is deleted, not covered (B)">Blackout</button>
+        <button class="btn-ghost pen is-on" type="button" id="penOff" aria-pressed="true" data-tip="V key">Off</button>
+        <button class="btn-ghost pen" type="button" id="penBlack" aria-pressed="false" data-tip="Deletes the text under it (B key)">Blackout</button>
       </div>
       <div class="swatches" id="penTones" role="group" aria-label="Highlighters"></div>
       <span class="pen-note" id="penNote"></span>
-      <button class="btn-ghost" type="button" id="markClear" data-tip="Lift every mark off this page">Clear page</button>
+      <button class="btn-ghost" type="button" id="markClear" data-tip="Remove this page’s marks">Clear page</button>
     </div>
 
     <!-- Everything here acts on the page being shown, never on the selection:
          on a surface showing one page, that is the only reading that holds. -->
     <div class="modal__bar viewer-tools">
-      <button class="btn-ghost" type="button" id="viewerRotL" data-tip="Turn this page anticlockwise ([)">&#8634; Turn left</button>
-      <button class="btn-ghost" type="button" id="viewerRotR" data-tip="Turn this page clockwise (])">&#8635; Turn right</button>
-      <button class="btn-ghost" type="button" id="viewerEarlier" data-tip="Move this page one place earlier (Shift ←)">Earlier</button>
-      <button class="btn-ghost" type="button" id="viewerLater" data-tip="Move this page one place later (Shift →)">Later</button>
-      <button class="btn-ghost" type="button" id="viewerDel" data-tip="Take this page out of the document being built (Delete)">Delete</button>
-      <button class="btn-ghost viewer-mark" type="button" id="viewerSel" aria-pressed="false" data-tip="Pick this page up, to act on it back in the grid (Space)">Select</button>
+      <button class="btn-ghost" type="button" id="viewerRotL" data-tip="[ key">&#8634; Turn left</button>
+      <button class="btn-ghost" type="button" id="viewerRotR" data-tip="] key">&#8635; Turn right</button>
+      <button class="btn-ghost" type="button" id="viewerEarlier" data-tip="Shift ←">Earlier</button>
+      <button class="btn-ghost" type="button" id="viewerLater" data-tip="Shift →">Later</button>
+      <button class="btn-ghost" type="button" id="viewerDel" data-tip="Delete key">Delete</button>
+      <button class="btn-ghost viewer-mark" type="button" id="viewerSel" aria-pressed="false" data-tip="Space key">Select</button>
     </div>
   </div>
 </div>

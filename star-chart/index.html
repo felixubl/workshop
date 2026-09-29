@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Star Chart — Felix' Workshop</title>
-<meta name="description" content="The sky over any place, at any hour. Nine thousand stars, the eighty-eight figures, the planets and the Moon, drawn from real catalogues and reduced to the moment you ask for.">
+<meta name="description" content="See the sky for any place and time.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
@@ -53,33 +53,35 @@
       </a>
       <div class="title-row">
         <h1 class="tool-title">Star Chart</h1>
-        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+        <button class="share-btn" type="button" data-share>
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
           <span data-share-label>copy link</span>
         </button>
-        <button class="share-btn pin-btn" type="button" data-pin="star-chart" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+        <button class="share-btn pin-btn" type="button" data-pin="star-chart" aria-label="Pin this tool"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
       </div>
     </div>
   </header>
 
   <div class="spine"></div>
 
+  <p class="lede">See the sky for any place and time.</p>
+
   <div class="toolbar">
     <div class="group">
       <label for="place">Place</label>
-      <input class="field place" type="search" id="place" placeholder="Vienna, or 48.21, 16.37" autocomplete="off" aria-label="Place name or coordinates" data-tip="Type a town, or a pair of coordinates. Coordinates are read here and never sent anywhere.">
-      <button class="btn-ghost" type="button" id="here" data-tip="Ask the browser where you are. It will prompt you first.">here</button>
+      <input class="field place" type="search" id="place" placeholder="Vienna, or 48.21, 16.37" autocomplete="off" aria-label="Place name or coordinates">
+      <button class="btn-ghost" type="button" id="here" data-tip="Use my location">here</button>
     </div>
 
     <div class="group">
       <label for="when">When</label>
-      <input class="field" type="datetime-local" id="when" aria-label="Date and time, in the chart's own time zone">
-      <button class="btn-ghost" type="button" id="now" data-tip="Jump to this moment">now</button>
+      <input class="field" type="datetime-local" id="when" aria-label="Local date and time">
+      <button class="btn-ghost" type="button" id="now">now</button>
     </div>
 
     <div class="group">
-      <button class="btn-ghost" type="button" id="play" data-tip="Run the sky forward">play</button>
-      <select id="rate" aria-label="How fast time runs while playing" data-tip="How fast the sky moves while it is running">
+      <button class="btn-ghost" type="button" id="play">play</button>
+      <select id="rate" aria-label="Play speed">
         <option value="60">a minute a second</option>
         <option value="600" selected>ten minutes a second</option>
         <option value="3600">an hour a second</option>
@@ -89,7 +91,7 @@
 
     <div class="group">
       <label for="limit">Faintest</label>
-      <input class="field" type="number" id="limit" min="1" max="6.5" step="0.5" value="5" aria-label="Faintest magnitude drawn" data-tip="Magnitude runs backwards: the bigger the number the fainter the star. About 6 is the naked-eye limit under a dark sky, 4 in a town.">
+      <input class="field" type="number" id="limit" min="1" max="6.5" step="0.5" value="5" aria-label="Faintest magnitude drawn" data-tip="Star magnitude, higher is fainter">
       <span class="tag readout" id="countOut">—</span>
     </div>
 
@@ -114,7 +116,7 @@
   <div class="sky-column">
     <div class="sky-holder">
       <canvas id="sky" aria-label="Star chart" role="img"></canvas>
-      <p class="sky-loading" id="loading">reading the catalogue…</p>
+      <p class="sky-loading" id="loading">loading…</p>
       <div class="compass" aria-hidden="true">
         <span class="compass-n">N</span><span class="compass-e">E</span>
         <span class="compass-s">S</span><span class="compass-w">W</span>
@@ -130,27 +132,27 @@
     <div class="view-bar">
       <div class="group">
         <label>Face</label>
-        <button class="btn-ghost preset" type="button" data-look="0" data-tip="Turn to face north, as if you were standing outside">north</button>
-        <button class="btn-ghost preset" type="button" data-look="90" data-tip="Turn to face east">east</button>
-        <button class="btn-ghost preset" type="button" data-look="180" data-tip="Turn to face south">south</button>
-        <button class="btn-ghost preset" type="button" data-look="270" data-tip="Turn to face west">west</button>
-        <button class="btn-ghost preset" type="button" data-look="up" data-tip="Look straight up">overhead</button>
-        <button class="btn-ghost preset" type="button" id="reset" data-tip="Back to the whole sky at once, zenith in the middle">whole sky</button>
+        <button class="btn-ghost preset" type="button" data-look="0">north</button>
+        <button class="btn-ghost preset" type="button" data-look="90">east</button>
+        <button class="btn-ghost preset" type="button" data-look="180">south</button>
+        <button class="btn-ghost preset" type="button" data-look="270">west</button>
+        <button class="btn-ghost preset" type="button" data-look="up">overhead</button>
+        <button class="btn-ghost preset" type="button" id="reset">whole sky</button>
       </div>
       <div class="group">
         <label>Field</label>
-        <button class="btn-ghost preset" type="button" id="zoomOut" aria-label="Widen the field">−</button>
-        <button class="btn-ghost preset" type="button" id="zoomIn" aria-label="Narrow the field">+</button>
+        <button class="btn-ghost preset" type="button" id="zoomOut" aria-label="Zoom out">−</button>
+        <button class="btn-ghost preset" type="button" id="zoomIn" aria-label="Zoom in">+</button>
         <span class="tag readout" id="fovOut">—</span>
       </div>
-      <p class="view-hint">Drag the sky to turn it · scroll to zoom · arrow keys turn, + and − zoom</p>
+      <p class="view-hint">Drag to turn · scroll to zoom · or use the arrow keys and + −</p>
     </div>
   </div>
 
   <div class="side">
     <div class="group finder">
       <label for="find">Find</label>
-      <input class="field" type="search" id="find" placeholder="Saturn, Vega, Orion, M31" autocomplete="off" aria-label="Find a star, a planet, a figure or a Messier object" data-tip="Type a name and the chart turns to it. Nothing is sent anywhere; the catalogue is already here.">
+      <input class="field" type="search" id="find" placeholder="Saturn, Vega, Orion, M31" autocomplete="off" aria-label="Find a star, planet or figure">
     </div>
     <div class="find-results" id="findResults"></div>
 
@@ -174,41 +176,8 @@
 <div class="wrap">
   <p class="status-line"><span id="statusPlace">—</span> · <span id="statusTime">—</span> · <span id="statusSky">—</span></p>
 
-  <section class="notes">
-    <p class="section-label">What is drawn</p>
-    <p>Every position is worked out for the moment and the place you set, not
-      looked up. The stars arrive from the catalogue at their year-2000 places
-      and are carried forward by their own proper motion, then precessed,
-      nutated and aberrated to the equinox of the date. The Sun, Moon and
-      planets are summed from their series each time the clock moves. Nothing
-      is cached and nothing is approximated as "close enough for a picture".</p>
-
-    <p>How far off it can be, measured against
-      <a href="https://ssd.jpl.nasa.gov/planets/eph_export.html">JPL DE440s</a>
-      over 1950 to 2100, worst case: stars 0.5″, the Sun 1.5″, the planets 4″,
-      the Moon 27″. The Moon is the loosest because the tool carries only the
-      main problem of ELP2000-82B; twenty-seven arcseconds is a fiftieth of the
-      Moon's own width. The
-      <a href="../tools/verify/star-chart.html">assertions are on a page of their own</a>
-      and run against the same files this page loads.</p>
-
-    <p class="note" id="fetchNote">Typing a place name asks
-      <code>geocoding-api.open-meteo.com</code> to turn it into coordinates.
-      That is the only request this tool makes to anyone but this site, it
-      carries nothing but the words you typed, and it does not happen at all if
-      you enter coordinates or use <em>here</em>.</p>
-
-    <p class="section-label">Where it comes from</p>
-    <ul class="sources">
-      <li><span>Stars</span> Yale Bright Star Catalogue, 5th edition — Hoffleit &amp; Warren, ADC V/50. 9,096 stars to magnitude 6.5.</li>
-      <li><span>Distances</span> Hipparcos, the New Reduction — van Leeuwen 2007, I/311.</li>
-      <li><span>Star names</span> IAU Working Group on Star Names, the official catalogue. 338 of them land on a star this chart draws.</li>
-      <li><span>Figures</span> d3-celestial, Olaf Frohn, BSD-3-Clause. Every vertex is snapped to the nearest catalogue star, so a line always joins two stars you can click.</li>
-      <li><span>Deep sky</span> OpenNGC, Mattia Verga, CC BY-SA 4.0. 109 Messier objects; M102 is left out because it is a second sighting of M101.</li>
-      <li><span>Planets</span> VSOP87D — Bretagnon &amp; Francou.</li>
-      <li><span>Moon</span> ELP2000-82B main problem — Chapront-Touzé &amp; Chapront.</li>
-    </ul>
-  </section>
+  <p class="note" id="fetchNote">Place search uses Open-Meteo.</p>
+  <p class="sheet-note">Data: Yale Bright Star Catalogue, Hipparcos, IAU WGSN star names (CC BY), d3-celestial figures (BSD-3-Clause), OpenNGC (CC BY-SA 4.0).</p>
 </div>
 
 <script src="js/astro.js"></script>

@@ -28,9 +28,6 @@
 .result-bar.sec {
   margin-top: 2.25rem;
 }
-.sheet-note.foot {
-  margin-top: 2.25rem;
-}
 
 /* A key/value table rather than a grid of figures: the name is the quiet
    column, the value is the read. Values are mono and tabular so an address, a

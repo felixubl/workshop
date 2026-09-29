@@ -983,7 +983,7 @@
     }
 
     var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" ' +
-      'aria-label="Horizon profile with the Sun’s eclipse track">';
+      'aria-label="Horizon profile with the Sun’s path">';
     // gridlines: step fits the window
     var gStep = maxAng > 30 ? 10 : maxAng > 14 ? 5 : 2;
     for (var g = 0; g <= maxAng; g += gStep) {
@@ -1061,13 +1061,10 @@
       'font-size="10" fill="' + P.danger + '">hidden</text>';
     svg += '</svg>';
 
-    // verdict text
     var v = terrainVerdict();
-    var note = '<p class="terrain-note">r 120 km · obs ' +
-      Math.round(scan.siteElev) + ' m + 2 m · curvature + refraction k 0.13</p>';
     $('terrain-body').innerHTML =
       '<div class="hz-wrap">' + svg + '<div class="hz-tip"></div></div>' +
-      '<div class="terrain-verdict">' + v.html + '</div>' + note;
+      '<div class="terrain-verdict">' + v.html + '</div>';
     attachHzTip(prof, track, { azMin: azMin, azLo: azLo, azHi: azHi });
   }
 
@@ -1600,7 +1597,7 @@
   $('suit-grade').addEventListener('click', function () {
     SUIT.localGrade = !SUIT.localGrade;
     this.textContent = SUIT.localGrade ? 'graded on this view'
-                                       : 'graded on the band';
+                                       : 'graded on the path';
     if (SUIT.on) computeSuit();
   });
 
@@ -1677,7 +1674,7 @@
     if (!centralNodes.length) {
       clearRole('suit');
       $('suit-legend').hidden = false;
-      $('suit-mode').textContent = 'no band in view';
+      $('suit-mode').textContent = 'no path in view';
       suitProg(1);
       return;
     }
@@ -2208,7 +2205,7 @@
     if (isPhone()) {
       bar.hidden = false;
       bar.appendChild(block);
-      $('search').placeholder = 'search a place — or tap the map';
+      $('search').placeholder = 'search, or tap the map';
     } else {
       bar.hidden = true;
       $('sweep-btn').parentNode.insertBefore(block, $('sweep-btn'));
@@ -2397,7 +2394,7 @@
         var a = L.DomUtil.create('a', '', div);
         a.href = '#';
         a.setAttribute('role', 'button');
-        a.setAttribute('aria-label', 'Assess my location');
+        a.setAttribute('aria-label', 'Use my location');
         a.innerHTML = GLYPH_LOCATE;
         L.DomEvent.on(a, 'click', L.DomEvent.stop);
         L.DomEvent.on(a, 'click', function () {

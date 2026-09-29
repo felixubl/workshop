@@ -24,7 +24,7 @@ input[type='number'].field {
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   gap: var(--pp-space-3);
   align-items: stretch;
-  margin-bottom: var(--pp-space-4);
+  margin-bottom: var(--pp-space-3);
 }
 
 /* A key is a thing you hit, so it is drawn as one: a slab standing on a hard
@@ -108,6 +108,11 @@ input[type='number'].field {
   overflow-x: auto;
 }
 
+/* base.css gives a sheet-note no bottom margin, and the results follow. */
+.deck + .sheet-note {
+  margin-bottom: var(--pp-space-4);
+}
+
 /* ---- the tape ---- */
 
 .tape {
@@ -116,6 +121,7 @@ input[type='number'].field {
   height: 88px;
   border: var(--pp-rule-line) solid var(--pp-hair);
   border-top: 0;
+  margin-bottom: var(--pp-space-4);
   background: var(--pp-surface-well);
 }
 

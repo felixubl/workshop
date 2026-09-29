@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Morse Key — Felix' Workshop</title>
-<meta name="description" content="Tap the space bar and it reads your timing back as dits, dahs and letters. The whole alphabet is on the page, and a paper tape shows the units you actually sent.">
+<meta name="description" content="Tap morse code on the space bar and see it decoded.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
@@ -53,52 +53,47 @@
       </a>
       <div class="title-row">
         <h1 class="tool-title">Morse Key</h1>
-        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+        <button class="share-btn" type="button" data-share>
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
           <span data-share-label>copy link</span>
         </button>
-        <button class="share-btn pin-btn" type="button" data-pin="morse-key" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+        <button class="share-btn pin-btn" type="button" data-pin="morse-key" aria-label="Pin this tool"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
       </div>
     </div>
   </header>
 
   <div class="spine"></div>
 
-  <p class="lede">
-    Hold the space bar down. A short press is a dit, a long one a dah, and the
-    length of the silence after it decides where one letter ends and the next
-    begins. Nothing is typed here: the only thing the tool reads is how long you
-    held and how long you waited.
-  </p>
+  <p class="lede">Tap morse code on the space bar and see it decoded.</p>
 
   <div class="toolbar">
     <div class="group">
       <label for="wpm">Speed</label>
-      <input class="field" type="number" id="wpm" min="5" max="40" step="1" value="12" aria-label="Sending speed in words per minute" data-tip="Words per minute, by the standard word PARIS. It sets the unit every press is measured against">
-      <span class="tag readout" id="unitOut">100 ms</span>
+      <input class="field" type="number" id="wpm" min="5" max="40" step="1" value="12" aria-label="Speed in words per minute" data-tip="Words per minute">
+      <span class="tag readout" id="unitOut">dit 100 ms</span>
     </div>
 
     <div class="group">
       <label for="spacing">Spacing</label>
-      <input class="field" type="number" id="spacing" min="3" max="40" step="1" value="5" aria-label="Spacing speed in words per minute" data-tip="Farnsworth timing: the words a minute the GAPS are counted at, which for most hands is slower than the sending speed. Lower it to give yourself longer to find the next character without the tool calling the word over. Set it equal to the speed for strict timing">
+      <input class="field" type="number" id="spacing" min="3" max="40" step="1" value="5" aria-label="Gap speed in words per minute" data-tip="Gap speed in words per minute. Lower allows longer pauses">
       <span class="tag readout" id="gapOut">letter 410 · word 1200 ms</span>
     </div>
 
     <div class="group">
-      <label>Your hand</label>
+      <label>Your speed</label>
       <span class="tag readout" id="fistOut">—</span>
-      <button class="btn-ghost preset" type="button" id="match" disabled data-tip="Set the speed dial to the one you are actually sending at, measured from your own dits">match</button>
+      <button class="btn-ghost preset" type="button" id="match" disabled data-tip="Set both dials to your speed">match</button>
     </div>
 
     <div class="group">
       <label for="pitch">Tone</label>
-      <input class="field" type="number" id="pitch" min="300" max="1200" step="20" value="600" aria-label="Sidetone pitch in hertz" data-tip="Pitch of the sidetone, in hertz">
-      <label class="checkbox" data-tip="The note you hear while the key is down. It is how you hear your own rhythm"><input type="checkbox" id="sound" checked> Sidetone</label>
+      <input class="field" type="number" id="pitch" min="300" max="1200" step="20" value="600" aria-label="Pitch in hertz" data-tip="Pitch in hertz">
+      <label class="checkbox"><input type="checkbox" id="sound" checked> Sound</label>
     </div>
 
     <div class="group">
-      <button class="btn-ghost" type="button" id="copy" data-tip="Copy the decoded message">copy text</button>
-      <button class="btn-ghost" type="button" id="clear" data-tip="Empty the line and the tape">clear</button>
+      <button class="btn-ghost" type="button" id="copy">copy text</button>
+      <button class="btn-ghost" type="button" id="clear">clear</button>
     </div>
   </div>
 
@@ -106,7 +101,7 @@
     <!-- A button, so it is reachable and pressable without a pointer. Press and
        release are driven from pointer and key events rather than from click,
        because a click has no duration and duration is the entire signal. -->
-    <button class="key-slab" type="button" id="slab" aria-label="Morse key. Hold to send a mark, release to end it">
+    <button class="key-slab" type="button" id="slab" aria-label="Morse key. Hold to send">
       <span class="key-cap">space</span>
       <span class="key-say">tap for a dit, hold for a dah</span>
     </button>
@@ -119,18 +114,13 @@
       <code class="live-code" id="liveCode" aria-live="off"></code>
     </div>
   </div>
+  <p class="sheet-note">Backspace deletes the last letter.</p>
 
   <div class="result-bar">
     <p class="section-label">Paper tape</p>
-    <code id="tapeLegend">60 units wide</code>
+    <code id="tapeLegend">60 units</code>
   </div>
   <canvas class="tape" id="tape" aria-hidden="true"></canvas>
-  <p class="sheet-note">
-    The register drew marks on a moving tape and the operator read the lengths
-    off it. This one runs the same way, sixty units of tape wide, with a tick
-    for every unit along the bottom. The bar you are still holding is coloured
-    until you let go of it.
-  </p>
 
   <div class="result-bar">
     <p class="section-label">Message</p>
@@ -139,56 +129,14 @@
   <div class="line" id="line" aria-live="polite"><span class="caret" aria-hidden="true"></span></div>
 
   <div class="result-bar">
-    <p class="section-label">The alphabet</p>
+    <p class="section-label">Alphabet</p>
     <code id="chartSay">56 characters</code>
   </div>
   <div class="chart" id="chart"></div>
-
-  <p class="note">
-    Morse has one length in it, the dit, and everything else is counted in dits.
-    A dah is three. The gap inside a letter is one, between letters three, and
-    between words seven. So the whole code is a rhythm rather than an alphabet,
-    and two operators at different speeds send the same thing as long as the
-    ratios hold. The speed dial sets how long a dit is in milliseconds — at
-    twelve words a minute it is a tenth of a second — and everything else follows
-    from it.
-  </p>
-
-  <p class="note">
-    A press is read as a dah past two units, the midpoint of one and three.
-    Silences are read against a second unit, because a hand does not pause the
-    way it presses: the elements inside a character are muscle memory and come
-    out at the speed of the dial, while the gap before the next character also
-    holds however long it takes to remember what that character is. Counting
-    both against one unit is what makes a beginner's message arrive as single
-    letters — every thinking pause reads as the end of a word. The trade has
-    had a name for the fix since the 1950s: <em>Farnsworth timing</em>,
-    characters at one speed and the spacing at another, and the spacing dial is
-    that second speed. Set it equal to the sending speed and this reduces
-    exactly to strict timing.
-  </p>
-
-  <p class="note">
-    The thresholds stay midpoints, which is still where a guess is least likely
-    to be wrong: a silence ends the letter halfway between one character unit
-    and three spacing units, and adds a word space at five spacing units,
-    halfway between three and seven. Both are printed beside the dial in
-    milliseconds, so what the tool is waiting for is never a guess on your part
-    either. If your letters keep running together or breaking apart, the dials
-    are set to somebody else's hands rather than yours; the reading beside them
-    measures both your dits and your gaps, and the match button sets both.
-  </p>
-
-  <p class="note">
-    A pattern with no character against it is printed in angle brackets the way
-    an operator writes a prosign, so nothing is silently dropped. Backspace
-    clears the letter you are part way through, or removes the last one if you
-    are between letters.
-  </p>
 </div>
 
-<!-- The code, the thresholds and the key are shared with Morse Bench, which
-   loads this same file rather than keeping a copy of it. -->
+<!-- The code, the thresholds and the key are shared with Morse Speed Test,
+   which loads this same file rather than keeping a copy of it. -->
 <script src="morse.js"></script>
 <script src="script.js"></script>
 <script src="../assets/preprint/js/controls.js"></script>

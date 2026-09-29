@@ -402,7 +402,7 @@
     // a graze rounds to nothing, and "0% covered" says the wrong thing
     var deep = circ && (circ.obscuration < 0.005 ? '<1%'
       : Math.round(circ.obscuration * 100) + '%');
-    if (!circ) more = 'misses this place';
+    if (!circ) more = '—';
     else if (!circ.visible) more = deep + ', Sun down';
     else more = deep + ' covered' +
       (circ.duration ? ' · ' + lasting(circ.duration) : '');
@@ -421,8 +421,7 @@
     ui.choose.hidden = !rows.length;
     if (!rows.length) { state.picksKey = ''; return; }
     var seen = rows.filter(function (r) { return r.circ && r.circ.visible; }).length;
-    ui.chooseCap.textContent = rows.length + ' still to come · ' + seen +
-      ' above the horizon here';
+    ui.chooseCap.textContent = rows.length + ' to come · ' + seen + ' visible here';
     var key = coordWord(state.at.lat, state.at.lon) + '/' + rows.length;
     if (key !== state.picksKey) {
       state.picksKey = key;
@@ -462,11 +461,10 @@
     ui.empty.hidden = true;
     ui.whereCap.textContent = coordWord(state.at.lat, state.at.lon);
     ui.reportLabel.textContent = pickIndex === firstVisible(rows)
-      ? 'Next eclipse here' : 'The eclipse you picked';
+      ? 'Next eclipse here' : 'Picked eclipse';
     // the one warning that has to sit where the reader is already looking
     ui.clockCaveat.hidden = circ.type !== 'total' || !circ.visible;
-    ui.clockCaveat.textContent = 'Filters come off at the last bead of sunlight, ' +
-      'not on this clock.';
+    ui.clockCaveat.textContent = 'Take filters off when the Sun is fully covered, not by this clock.';
 
     var ring = circ.type === 'annular';
     var stats = [
@@ -494,62 +492,30 @@
 
     var notes = [];
     if (circ.type === 'partial') {
-      notes.push('The Moon’s full shadow misses this spot: the Sun is never completely ' +
-        'covered here, at most ' + Math.round(circ.obscuration * 100) + '%.');
+      notes.push('Partial here, at most ' + Math.round(circ.obscuration * 100) + '% covered.');
     }
-    /* Where the Sun is for it. An eclipse with no part of it above the
-       horizon has nothing to say about rising or setting, so that one line
-       replaces all three. */
+    // with no part of it above the horizon, rising and setting say nothing
     if (!circ.visible) {
-      notes.push('None of this eclipse is above the horizon here: the Sun is down ' +
-        'for all of it, and the disc draws it where it stands, behind the ground.');
+      notes.push('The Sun is below the horizon for all of it.');
     } else {
       if (circ.sunAltApparent < 8 && circ.sunAltApparent > UNDER) {
         notes.push('The Sun is ' + (circ.sunAltApparent < 0.5 ? 'on the horizon'
           : 'only ' + Math.round(circ.sunAltApparent) + '° up') + ' at maximum, towards ' +
-          compass(circ.sunAz) + '. Check that horizon for buildings or terrain.');
+          compass(circ.sunAz) + '. Check the horizon.');
       }
       if (circ.c4 && circ.c4.alt + Bessel.refraction(circ.c4.alt) < UNDER) {
-        notes.push('The Sun sets before the eclipse ends: the last phases are below the horizon.');
+        notes.push('The Sun sets before the eclipse ends.');
       }
       if (circ.c1 && circ.c1.alt + Bessel.refraction(circ.c1.alt) < UNDER) {
-        notes.push('The Sun rises with the eclipse already under way: the first phases are ' +
-          'below the horizon.');
+        notes.push('The eclipse starts before sunrise.');
       }
     }
     if (circ.type === 'total') {
-      notes.push('Only totality is safe to view without a solar filter, and only ' +
-        'while it lasts. Take the filter off when the last bead of sunlight has ' +
-        'gone, and put it back the moment the first one returns. The Sun is the ' +
-        'signal; a clock, this one included, is a prediction.');
-    } else if (circ.type === 'annular') {
-      notes.push('An annular eclipse is never safe to look at without a solar ' +
-        'filter. The ring is still the Sun, and it is bright enough to burn a ' +
-        'retina at every second of annularity.');
+      notes.push('Use a solar filter at all times except during totality.');
     } else {
-      notes.push('A partially eclipsed Sun needs a solar filter at all times.');
+      notes.push('Use a solar filter at all times.');
     }
-    notes.push(accuracyNote());
     ui.note.innerHTML = notes.join(' ');
-
-  }
-
-  /* What the times are worth, in the terms that actually limit them. The
-     elements and the reduction are the small part; the Earth's rotation years
-     from now and the Moon's ragged edge are the large one. */
-  function accuracyNote() {
-    var h = siteElev();
-    return 'The times come from JPL DE440s elements reduced in your browser, ' +
-      'which agree with a direct ephemeris solve to under 40 ms, for your ground ' +
-      (h ? 'at ' + Math.round(h) + ' m' : 'taken as sea level') + '. Two things ' +
-      'no reduction can pin down: how fast the Earth turns between now and then ' +
-      '(taken here as ΔT = ' + state.ecl.deltaT.toFixed(1) + ' s, worth about a ' +
-      'second for eclipses this decade and a few by the mid-2030s, and it shifts ' +
-      'the whole clock), and the Moon\u2019s edge, which is mountains rather ' +
-      'than a circle and moves second and third contact a second or two either ' +
-      'way. The cone here uses the smaller umbral radius the predictions have ' +
-      'always used, so the totality printed is a few seconds shorter than the ' +
-      'Moon\u2019s mean limb would give — the side to be wrong on.';
   }
 
   function renderNothing(rows) {
@@ -558,16 +524,11 @@
     ui.empty.hidden = false;
     var reached = rows.filter(function (r) { return r.circ; }).length;
     ui.empty.innerHTML = (reached
-      ? 'No eclipse on file is above the horizon at '
+      ? 'No eclipse on file is visible from '
       : 'No eclipse on file reaches ') +
-      '<strong>' + escapeHtml(state.at.name) + '</strong>. ' +
-      (reached
-        ? reached + ' of the ' + rows.length + ' still to come reach it with the ' +
-          'Sun already down; pick one from the strip above to see what it does there.'
-        : rows.length === 1 ? 'The one still to come passes it by.'
-          : 'All ' + rows.length + ' still to come pass it by.') +
-      ' More can be added by pasting the Besselian elements from a NASA page ' +
-      'into <a href="../eclipse-recon/">Eclipse Recon</a>, which this tool reads.';
+      '<strong>' + escapeHtml(state.at.name) + '</strong>.' +
+      (reached ? ' The Sun is down for ' + reached + ' of ' + rows.length + '. Pick one above.' : '') +
+      ' Add more eclipses in <a href="../eclipse-recon/">Eclipse Planner</a>.';
   }
 
   function escapeHtml(s) {
@@ -588,9 +549,9 @@
       var pf = frameAt(state.ecl, step.at);
       paint(pf);
       sayState(pf);
-      ui.clockLabel.textContent = 'preview, running at ×' + step.rate;
+      ui.clockLabel.textContent = 'preview ×' + step.rate;
       ui.clockTime.textContent = clockOf(new Date(step.at), state.at.tz);
-      ui.clockAt.textContent = 'the whole eclipse in 15 seconds, slowed through the middle';
+      ui.clockAt.textContent = 'whole eclipse in 15 seconds';
       markRow(step.at);
       return;
     }
@@ -625,7 +586,7 @@
     state.stateWord = s.word;
     ui.discState.textContent = s.word;
     ui.discNote.textContent = s.note;
-    ui.disc.setAttribute('aria-label', 'The Sun seen from this location: ' + s.word);
+    ui.disc.setAttribute('aria-label', 'The Sun from here: ' + s.word);
   }
 
   /* Which line of the running order is happening, or is about to. */
@@ -722,7 +683,7 @@
   function stopPreview(quiet) {
     state.preview = null;
     ui.play.classList.remove('is-on');
-    ui.playLabel.textContent = 'Preview it';
+    ui.playLabel.textContent = 'Preview';
     lastSecond = -1;
     if (!quiet) tick(window.performance.now());
   }
@@ -827,7 +788,7 @@
 
     hz.busy = true;
     ui.hzGo.disabled = true;
-    ui.hzStatus.textContent = 'reading the ground…';
+    ui.hzStatus.textContent = 'scanning…';
     Terrain.horizonScan(state.at.lat, state.at.lon, {
       azCenter: (lo + hi) / 2,
       azSpan: Math.max(20, Math.min(90, hi - lo + 8)),
@@ -837,7 +798,7 @@
       azStep: 0.25,
       maxKm: maxKm,
       onProgress: function (f) {
-        ui.hzStatus.textContent = 'reading the ground ' + Math.round(f * 100) + '%';
+        ui.hzStatus.textContent = 'scanning ' + Math.round(f * 100) + '%';
       }
     }).then(function (scan) {
       if (hzKey() !== key) return;              // the reader moved meanwhile
@@ -853,8 +814,7 @@
       }
     }).catch(function () {
       ui.hzStatus.textContent = 'no elevation data';
-      ui.hzBody.innerHTML = '<p class="sheet-note">The elevation tiles could ' +
-        'not be reached, so the skyline is unknown here.</p>';
+      ui.hzBody.innerHTML = '<p class="sheet-note">Elevation tiles could not be loaded.</p>';
     }).then(function () {
       hz.busy = false;
       ui.hzGo.disabled = false;
@@ -906,7 +866,7 @@
     }
 
     var svg = ['<svg viewBox="0 0 ' + W + ' ' + H + '" class="hz-fig" role="img" ' +
-      'aria-label="The Sun’s path through the eclipse against the skyline in that direction">'];
+      'aria-label="The Sun’s path against the skyline">'];
 
     // altitude gridlines, stepped to whatever the window turned out to be
     var span = altHi - altLo;
@@ -1003,22 +963,20 @@
     var featWord = feat ? (feat.distKm < 1
       ? 'The skyline there is only ' + Math.round(feat.distKm * 1000) +
         ' m away and ' + Math.round(feat.elevM - hz.scan.siteElev) +
-        ' m higher — at that range one tile pixel is worth about a degree, ' +
-        'so treat it as “something is close by”, not as a measurement.'
+        ' m higher, so treat it as rough.'
       : 'The skyline there is ' + (feat.distKm < 10 ? feat.distKm.toFixed(1)
         : Math.round(feat.distKm)) + ' km away, ' + Math.round(feat.elevM) +
         ' m above sea level.') : '';
 
     var word;
     if (frac >= 0.999) {
-      word = 'The skyline is clear: ' + what + ' happens ' + margin.toFixed(1) +
-        '° above the ground at its closest. ';
+      word = 'Clear: ' + what + ' stays at least ' + margin.toFixed(1) +
+        '° above the skyline. ';
     } else if (frac <= 0.001) {
-      word = 'The ground hides ' + what + ' entirely from this exact spot — ' +
-        'higher ground, or a few streets over, may not. ';
+      word = 'The skyline hides all of ' + what + ' from this spot. ';
     } else {
-      word = 'The ground hides ' + Math.round((1 - frac) * 100) + '% of ' + what +
-        ' from this exact spot. ';
+      word = 'The skyline hides ' + Math.round((1 - frac) * 100) + '% of ' + what +
+        ' from this spot. ';
     }
 
     // the disc has a real skyline to stand on now
@@ -1027,11 +985,7 @@
 
     ui.hzStatus.textContent = Terrain.cacheSize() + ' tiles read';
     ui.hzBody.innerHTML = '<figure class="hz-wrap">' + svg.join('') +
-      '<figcaption class="sheet-note">' + word + featWord + ' Elevation from ' +
-      '<a href="https://registry.opendata.aws/terrain-tiles/">AWS terrain tiles</a>, ' +
-      'about 30–90 m across on the ground and read as a surface, so a dense ' +
-      'city reads its own rooftops. Height is stretched against width — read ' +
-      'the degrees on both edges.</figcaption></figure>';
+      '<figcaption class="sheet-note">' + word + featWord + '</figcaption></figure>';
   }
 
   /* A new place or a new eclipse retires the old skyline rather than showing
@@ -1172,13 +1126,12 @@
     var url = 'https://geocoding-api.open-meteo.com/v1/search?name=' +
               encodeURIComponent(query) + '&count=6&language=en&format=json';
     window.fetch(url).then(function (res) {
-      if (!res.ok) throw new Error('the geocoder answered ' + res.status);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();
     }).then(function (data) {
       var list = (data && data.results) || [];
       if (!list.length) {
-        say('No match for “' + query + '”. Try a larger town nearby, or type ' +
-            'coordinates as latitude, longitude.', true);
+        say('No match for “' + query + '”. Try a nearby town or coordinates.', true);
         ui.alts.hidden = true;
         return;
       }
@@ -1187,8 +1140,7 @@
       setPlace({ lat: list[0].latitude, lon: list[0].longitude,
                  name: nameOf(list[0]), tz: list[0].timezone || null });
     }).catch(function (err) {
-      say('Place lookup failed (' + err.message + '). Coordinates typed as ' +
-          'latitude, longitude work without a network.', true);
+      say('Place search failed (' + err.message + '). Coordinates still work.', true);
     }).then(function () {
       ui.find.disabled = false;
     });
@@ -1196,10 +1148,10 @@
 
   function askTheBrowser() {
     if (!navigator.geolocation) {
-      say('This browser cannot report a position. Type a place or coordinates instead.', true);
+      say('This browser has no location. Type a place instead.', true);
       return;
     }
-    say('Asking the browser for your position…');
+    say('Getting your location…');
     navigator.geolocation.getCurrentPosition(function (pos) {
       say('');
       ui.alts.hidden = true;
@@ -1211,7 +1163,7 @@
     }, function (err) {
       say(err.code === 1
         ? 'Location permission was denied. Type a place instead.'
-        : 'The browser could not determine your position. Type a place instead.', true);
+        : 'Could not get your location. Type a place instead.', true);
     }, { timeout: 15000, maximumAge: 600000 });
   }
 
@@ -1241,7 +1193,7 @@
   ui.whereForm.addEventListener('submit', function (e) {
     e.preventDefault();
     var q = ui.place.value.trim();
-    if (!q) { say('Type a place name or a pair of coordinates.', true); return; }
+    if (!q) { say('Type a place or coordinates.', true); return; }
     lookUp(q);
   });
   ui.here.addEventListener('click', askTheBrowser);

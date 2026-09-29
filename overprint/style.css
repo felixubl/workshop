@@ -1,6 +1,10 @@
 /* Tool-specific layout only. Faces, buttons, tags, fields, the title and the
    toolbar come from ../assets/base.css over the vendored system. */
 
+.lede {
+  margin: 0 0 1.6rem;
+}
+
 .dim-sep {
   color: var(--pp-faint);
   font-family: var(--pp-font-mono);

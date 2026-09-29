@@ -777,7 +777,7 @@
       " /Subject " + literal(toWinAnsi(spec.footer || "").text) +
       (spec.credit === false
         ? ""
-        : " /Creator " + literal(toWinAnsi("Felix' Workshop — Bingo Card Generator").text) +
+        : " /Creator " + literal(toWinAnsi("Felix' Workshop — Bingo Cards").text) +
           " /Producer " + literal(toWinAnsi("workshop.fubl.org/bingo-cards").text)) +
       " /CreationDate " + literal(pdfDate(now)) +
       " /ModDate " + literal(pdfDate(now)) + " >>";

@@ -3,6 +3,10 @@
    is here is the stage — one big sheet with the result on it — and the rail of
    method samples beside it. */
 
+.lede {
+  margin: 0 0 0.9rem;
+}
+
 /* The drop target has two sizes. Open, it fills the page and is the only thing
    to do. Once a picture is loaded it drops to a line: still a target, no
    longer an invitation. */
@@ -18,7 +22,6 @@
   color: var(--pp-ink);
 }
 .dz-pick,
-.dz-formats,
 .dz-note {
   display: block;
   color: var(--pp-muted);
@@ -65,16 +68,12 @@ figure.sheet {
   color: var(--pp-muted);
 }
 .dropzone:not(.dz-open) .dz-pick,
-.dropzone:not(.dz-open) .dz-formats,
 .dropzone:not(.dz-open) .dz-note {
   display: none;
 }
 
 .innards { margin-top: 1.25rem; }
 
-/* The formula is set in the display face rather than the mono one: it is a
-   piece of notation, not a readout, and the mono face has no italic worth
-   reading at this size. */
 .formula {
   font-family: var(--pp-font-display);
   font-size: 1.15rem;
@@ -82,16 +81,6 @@ figure.sheet {
   color: var(--pp-ink);
   margin: 0.9rem 0 0.4rem;
 }
-.formula .sum {
-  font-size: 1.5em;
-  line-height: 0;
-  vertical-align: -0.18em;
-}
-.formula sup { font-size: 0.66em; }
-.formula sub { font-size: 0.66em; }
-
-/* The written-out head is the same statement with this drawing's own numbers
-   in it, so it is set smaller and in the mono face where the digits line up. */
 .formula--head {
   font-family: var(--pp-font-mono);
   font-size: var(--pp-size-label);

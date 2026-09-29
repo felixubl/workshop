@@ -449,16 +449,6 @@
 .notes .sheet-note {
   color: var(--pp-faint);
 }
-.notes code {
-  font-family: var(--pp-font-mono);
-  font-size: 0.85em;
-  color: var(--pp-ink);
-}
-.notecols {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 0 2rem;
-}
 .notes .sheet td:first-child {
   color: var(--pp-ink);
 }

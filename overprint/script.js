@@ -286,9 +286,9 @@ function render() {
 }
 
 function describe() {
-  if (!shapes.length) return "An empty sheet";
+  if (!shapes.length) return "Empty sheet";
   const kinds = shapes.map((s) => s.kind).join(", ");
-  return `${shapes.length} shapes on the sheet, mixed as ${model}: ${kinds}`;
+  return `${shapes.length} shapes, mixed as ${model}: ${kinds}`;
 }
 
 /* ── the list ───────────────────────────────────────────────────────────── */
@@ -343,7 +343,7 @@ function paintPalette() {
     const hex = pigment[model];
     btn.style.background = hex;
     btn.setAttribute("data-tip", `${pigment.name} ${hex}`);
-    btn.setAttribute("aria-label", `Ink the selected shape ${pigment.name}, ${hex}`);
+    btn.setAttribute("aria-label", `Colour ${pigment.name}`);
   });
 }
 

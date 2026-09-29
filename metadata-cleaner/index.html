@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Metadata Cleaner — Felix' Workshop</title>
-<meta name="description" content="See every piece of metadata hiding in a JPEG, PNG or WebP — GPS coordinates, camera serial numbers, timestamps, editing history — then choose field by field what to keep and what to strip. Runs entirely in your browser.">
+<title>Metadata Cleaner — Felix' Workshop</title>
+<meta name="description" content="See and remove hidden data in photos, like GPS location.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
@@ -56,31 +56,33 @@
         Felix' Workshop
       </a>
       <div class="title-row">
-        <h1 class="tool-title">Image Metadata Cleaner</h1>
-        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+        <h1 class="tool-title">Metadata Cleaner</h1>
+        <button class="share-btn" type="button" data-share>
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
           <span data-share-label>copy link</span>
         </button>
-        <button class="share-btn pin-btn" type="button" data-pin="metadata-cleaner" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+        <button class="share-btn pin-btn" type="button" data-pin="metadata-cleaner" aria-label="Pin this tool"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
       </div>
     </div>
   </header>
 
   <div class="spine"></div>
 
+  <p class="lede">See and remove hidden data in photos, like GPS location.</p>
+
   <div class="toolbar" id="toolbar" hidden>
     <div class="group">
       <label id="presetLabel">Preset</label>
       <div class="group" id="presets" role="group" aria-labelledby="presetLabel">
-        <button class="btn-ghost preset" type="button" data-preset="all" data-tip="Remove every field that can be removed without changing a pixel.">strip all</button>
-        <button class="btn-ghost preset" type="button" data-preset="safe" data-tip="Remove everything except the fields a viewer needs to draw the image correctly: orientation, colour space, resolution, and the colour profile.">safe for web</button>
-        <button class="btn-ghost preset" type="button" data-preset="location" data-tip="Remove GPS coordinates and nothing else.">location only</button>
-        <button class="btn-ghost preset" type="button" data-preset="none" data-tip="Change nothing. Useful for looking without touching.">keep all</button>
+        <button class="btn-ghost preset" type="button" data-preset="all">strip all</button>
+        <button class="btn-ghost preset" type="button" data-preset="safe" data-tip="Keep only what viewers need to show it">safe for web</button>
+        <button class="btn-ghost preset" type="button" data-preset="location" data-tip="Remove only the location">location only</button>
+        <button class="btn-ghost preset" type="button" data-preset="none">keep all</button>
       </div>
     </div>
 
     <div class="group">
-      <label class="checkbox" data-tip="A filename like IMG_20190602_143312.jpg still announces when the photo was taken. This renames the downloads to image-1, image-2, and so on."><input type="checkbox" id="rename"> Neutral filenames</label>
+      <label class="checkbox" data-tip="Save as image-1, image-2 and so on"><input type="checkbox" id="rename"> Neutral filenames</label>
     </div>
 
     <div class="group">
@@ -93,9 +95,9 @@
   <label class="dropzone dz-open" id="drop">
     <input type="file" id="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple>
     <span class="dz-head">Drop images here</span>
-    <span class="dz-pick">or press to choose files</span>
-    <span class="dz-formats">JPEG &middot; PNG &middot; WebP &mdash; one file or a hundred</span>
-    <span class="dz-note">Nothing is uploaded. The file is read, rewritten and saved by this tab alone.</span>
+    <span class="dz-pick">or choose files</span>
+    <span class="dz-formats">JPEG &middot; PNG &middot; WebP</span>
+    <span class="dz-note">Nothing is uploaded.</span>
   </label>
 
   <section id="work" hidden>
@@ -110,7 +112,7 @@
         <div class="result-bar">
           <p class="section-label" id="paneLabel">What's inside</p>
           <div class="group">
-            <button class="btn-ghost" type="button" id="dlOne">Download this one</button>
+            <button class="btn-ghost" type="button" id="dlOne">Download this</button>
             <button class="btn-primary" type="button" id="dlAll">
               <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M8 2.5v7.5M4.5 6.5 8 10l3.5-3.5M2.5 13.5h11"></path></svg>
               Download all
@@ -140,10 +142,8 @@
         </div>
 
         <p class="legend">
-          <span class="tag is-marked mk--citron">identifying</span> names a person, a place, or one specific
-          camera. <span class="tag">telling</span> narrows it down: model, software, timestamps,
-          exposure. Everything else describes the pixels rather than the photographer, and removing
-          it buys you nothing.
+          <span class="tag is-marked mk--citron">identifying</span> names a person, place or camera.
+          <span class="tag">telling</span> narrows it down.
         </p>
 
         <p class="sheet-note" id="paneNote"></p>

@@ -2,6 +2,10 @@
    come from ../assets/base.css over the vendored system. This file styles the
    page grid. */
 
+.lede {
+  margin: 0 0 0.9rem;
+}
+
 /* Several actions share one label, so they sit on their own row rather than
    each claiming a labelled group. */
 .btn-row {

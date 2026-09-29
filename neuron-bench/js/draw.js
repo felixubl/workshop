@@ -485,7 +485,7 @@ var Draw = (function () {
       legend(g, { x: 0, y: 4 }, p, [
         { colour: p.a, label: shortName(ds.classNames[0]), kind: 'dot' },
         { colour: p.b, label: shortName(ds.classNames[1]), kind: 'dot' },
-        net ? { colour: p.muted, label: 'what it answers', kind: 'line' } : null
+        net ? { colour: p.muted, label: 'prediction', kind: 'line' } : null
       ]);
     }
   }
@@ -714,7 +714,7 @@ var Draw = (function () {
     g.globalAlpha = 1;
     g.restore();
     frame(g, box, p);
-    legend(g, box, p, [{ colour: p.b, label: 'a perfect model sits here', kind: 'dash' }]);
+    legend(g, box, p, [{ colour: p.b, label: 'perfect', kind: 'dash' }]);
   }
 
   /* Same problem, classification answer: a confusion matrix. Rows are truth,
@@ -778,7 +778,7 @@ var Draw = (function () {
     g.textAlign = 'left';
     g.fillText('guessed →', 4, top - 6);
     g.textBaseline = 'top';
-    g.fillText('rows are what it really was', 4, h - 18);
+    g.fillText('rows: true class', 4, h - 18);
   }
 
   /* ---- 7: the network itself ----------------------------------------------

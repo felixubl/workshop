@@ -106,7 +106,7 @@ function build() {
     const face = document.createElement("button");
     face.type = "button";
     face.className = "reel";
-    face.setAttribute("aria-label", `Add ${weight}, one step on this reel`);
+    face.setAttribute("aria-label", `Add ${weight}`);
     face.addEventListener("click", () => count(i, 1));
     face.innerHTML = `<span class="reel-strip">${'<span class="reel-cell"></span>'.repeat(5)}</span>`;
 
@@ -227,7 +227,7 @@ function readout(overflow) {
     const d = state.digits[i];
     if (d) terms.push(`${SYMBOLS[d]}×${power(b, i)}`);
   }
-  sumOut.textContent = terms.length ? `${terms.join(" + ")} = ${v.toLocaleString("en")}` : "nothing on any reel";
+  sumOut.textContent = terms.length ? `${terms.join(" + ")} = ${v.toLocaleString("en")}` : "0";
   otherOut.textContent = "";
   [2, 8, 10, 16].forEach((ob) => {
     const tag = document.createElement("span");

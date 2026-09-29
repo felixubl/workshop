@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Neuron Bench — Felix' Workshop</title>
-<meta name="description" content="A bench for building a neural network a neuron at a time and taking it apart again. A dozen datasets from the logic gates to Vienna's tree registry or your own CSV, a network you assemble yourself, one observation at a time through it, and every unit open to inspection. Trains in your browser.">
+<title>Neural Network — Felix' Workshop</title>
+<meta name="description" content="Build and train a small neural network.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
@@ -52,12 +52,12 @@
         Felix' Workshop
       </a>
       <div class="title-row">
-        <h1 class="tool-title">Neuron Bench</h1>
-        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+        <h1 class="tool-title">Neural Network</h1>
+        <button class="share-btn" type="button" data-share>
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
           <span data-share-label>copy link</span>
         </button>
-        <button class="share-btn pin-btn" type="button" data-pin="neuron-bench" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+        <button class="share-btn pin-btn" type="button" data-pin="neuron-bench" aria-label="Pin this tool"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
       </div>
     </div>
   </header>
@@ -65,31 +65,30 @@
   <div class="spine"></div>
 
   <section class="nb-intro">
-    <p class="lede">A neuron is a function that multiplies each input by a weight, adds them up with a bias, and puts the total through one bend. That is the whole thing. Everything a network can do comes from stacking that.</p>
-    <p class="note">This is a bench rather than a course. Pick a set, build a network over it, train it, and then take it apart: every control stays live, so you can add and remove neurons, change the bend, break it on purpose, put one observation through by hand, and click any unit to see what it is doing.</p>
+    <p class="lede">Build and train a small neural network.</p>
   </section>
 
   <section>
-    <p class="section-label">The data</p>
+    <p class="section-label">Data</p>
     <div class="toolbar">
       <div class="group">
         <label for="dataset">set</label>
-        <select id="dataset" data-tip="What the network is being asked to learn"></select>
+        <select id="dataset"></select>
       </div>
       <div class="group">
-        <label class="checkbox" data-tip="Shift and scale every column to mean 0, spread 1"><input type="checkbox" id="normalise" checked> normalise inputs</label>
+        <label class="checkbox" data-tip="Each column to mean 0, spread 1"><input type="checkbox" id="normalise" checked> normalise inputs</label>
       </div>
       <div class="group">
         <label for="split">hold back %</label>
-        <input type="number" id="split" min="0" max="60" step="5" value="25" data-tip="Rows kept out of training, to check whether it learned or memorised">
+        <input type="number" id="split" min="0" max="60" step="5" value="25" data-tip="Rows kept out of training">
       </div>
       <div class="group">
         <label for="seed">seed</label>
-        <input type="text" id="seed" value="1" size="6" class="field" data-tip="Same seed, same run, every time">
+        <input type="text" id="seed" value="1" size="6" class="field" data-tip="Same seed, same run">
       </div>
       <div class="group">
         <label for="init">start from</label>
-        <select id="init" data-tip="How the weights are set before any training">
+        <select id="init" data-tip="Starting weights">
           <option value="auto">sensible random</option>
           <option value="zeros">all zeros</option>
           <option value="big">much too large</option>
@@ -101,20 +100,19 @@
   </section>
 
   <section>
-    <p class="section-label">The network</p>
+    <p class="section-label">Network</p>
     <div class="nb-build">
       <div class="nb-build-controls">
         <div id="layers"></div>
         <div class="group">
-          <button type="button" class="btn-ghost" id="addLayer">add a hidden layer</button>
+          <button type="button" class="btn-ghost" id="addLayer">add layer</button>
         </div>
-        <p class="note" id="actNote"></p>
         <p class="note" id="outputNote"></p>
-        <p class="hint" id="linearWarn" hidden>Every hidden layer here is the identity, which applies no bend at all. A stack of linear maps is just one linear map, so however many neurons you add this network can only draw a straight line. That is the point of an activation function.</p>
+        <p class="hint" id="linearWarn" hidden>Every hidden layer is identity, so the network can only draw a straight line.</p>
       </div>
       <figure class="nb-figure nb-net">
         <canvas id="netCanvas" height="240"></canvas>
-        <figcaption>One line per weight. The thicker it is the larger the weight; blue is positive, red is negative.</figcaption>
+        <figcaption>Thicker lines are larger weights. Blue is positive, red negative.</figcaption>
       </figure>
     </div>
   </section>
@@ -124,19 +122,19 @@
     <div class="toolbar">
       <div class="group">
         <label for="lr">learning rate</label>
-        <input type="number" id="lr" min="0.0001" max="100" step="0.05" value="0.4" data-tip="How far each step moves. Too small and it crawls, too large and it never settles">
+        <input type="number" id="lr" min="0.0001" max="100" step="0.05" value="0.4" data-tip="Step size">
       </div>
       <div class="group">
         <label for="batch">batch</label>
-        <input type="number" id="batch" min="1" max="100000" step="8" value="256" data-tip="Rows per update. The whole set at once is the smoothest and the slowest">
+        <input type="number" id="batch" min="1" max="100000" step="8" value="256" data-tip="Rows per update">
       </div>
       <div class="group">
         <label for="momentum">momentum</label>
-        <input type="number" id="momentum" min="0" max="0.99" step="0.05" value="0.9" data-tip="How much of the last step carries into the next">
+        <input type="number" id="momentum" min="0" max="0.99" step="0.05" value="0.9" data-tip="Share of the last step kept">
       </div>
       <div class="group">
         <label for="epochs">epochs</label>
-        <input type="number" id="epochs" min="1" max="1000000" step="100" value="400" data-tip="Passes over the data before it stops on its own">
+        <input type="number" id="epochs" min="1" max="1000000" step="100" value="400" data-tip="Passes over the data">
       </div>
       <div class="group">
         <button type="button" class="btn-primary" id="train">train</button>
@@ -151,24 +149,24 @@
       <div><span class="section-label">weights</span><code id="rParams">0</code></div>
       <div><span class="section-label">training loss</span><code id="rTrain">—</code></div>
       <div><span class="section-label">held-out loss</span><code id="rTest">—</code></div>
-      <div><span class="section-label">your best here</span><code id="rBest">—</code></div>
+      <div><span class="section-label">your best</span><code id="rBest">—</code></div>
     </div>
     <div class="nb-readout" id="accRow" hidden>
       <div><span class="section-label">training accuracy</span><code id="rTrainAcc">—</code></div>
       <div><span class="section-label">held-out accuracy</span><code id="rTestAcc">—</code></div>
     </div>
     <div class="nb-readout" id="refRow" hidden>
-      <div><span class="section-label">what the neuron learned</span><code id="rLine">—</code></div>
-      <div><span class="section-label">closed-form least squares</span><code id="rOls">—</code></div>
+      <div><span class="section-label">learned line</span><code id="rLine">—</code></div>
+      <div><span class="section-label">least squares</span><code id="rOls">—</code></div>
     </div>
   </section>
 
   <section>
     <div class="nb-viewbar">
-      <p class="section-label">What it currently believes</p>
+      <p class="section-label">Prediction</p>
       <div class="group" id="viewPick" hidden>
-        <button type="button" class="btn-ghost preset" data-view="boundary" data-tip="Colour carries the answer: the two inputs are the two axes">a flat map</button>
-        <button type="button" class="btn-ghost preset" data-view="surface" data-tip="Height carries the answer: the output itself, over the two inputs">a surface</button>
+        <button type="button" class="btn-ghost preset" data-view="boundary">flat map</button>
+        <button type="button" class="btn-ghost preset" data-view="surface">surface</button>
       </div>
     </div>
     <figure class="nb-figure">
@@ -178,42 +176,40 @@
   </section>
 
   <section>
-    <p class="section-label">The loss</p>
+    <p class="section-label">Loss</p>
     <figure class="nb-figure">
       <canvas id="lossCanvas" height="220"></canvas>
-      <figcaption>Training loss against held-out loss. When the two separate, the network has started memorising rows instead of learning the pattern.</figcaption>
     </figure>
   </section>
 
   <section>
     <div class="nb-viewbar">
-      <p class="section-label">Your best so far</p>
+      <p class="section-label">Your best</p>
       <div class="group" id="recordTools" hidden>
-        <button type="button" class="btn-ghost" id="forgetAll" data-tip="Empty the record book. There is no undo">forget all of them</button>
+        <button type="button" class="btn-ghost" id="forgetAll" data-tip="No undo">forget all</button>
       </div>
     </div>
     <p class="note" id="bestNote"></p>
     <ul class="nb-records" id="recordList"></ul>
-    <p class="note nb-records-say">A loss is only a score against the same question, so a record is kept per set together with the three things that decide what the number means: whether the inputs were normalised, how much was held back, and the seed that chose which rows those were. Change any of them and the bench starts a new record rather than pretending the old one still applies. Nothing leaves this browser — there is no scoreboard behind this page, and clearing the site's data clears the book.</p>
   </section>
 
   <section>
-    <p class="section-label">Neuron by neuron</p>
+    <p class="section-label">Neurons</p>
     <p class="note" id="neuronNote"></p>
     <div id="neurons"></div>
     <p class="note" id="unitNote" hidden></p>
   </section>
 
   <section>
-    <p class="section-label">One observation</p>
-    <p class="note">Put a single row in and watch it go through. Each hidden value is what that unit answered for this row alone, and the last line is what the network made of them. Click any of them to pin that unit above.</p>
+    <p class="section-label">One row</p>
+    <p class="note">Enter one row. Click a value to pin its unit.</p>
     <div class="toolbar" id="probeFields"></div>
     <div id="probeOut"></div>
   </section>
 
   <section>
-    <p class="section-label">Your own data</p>
-    <p class="note">CSV, one row per example. Every column but the last is an input and must be a number; the last column is the answer. A numeric last column with many distinct values is treated as a regression, anything else as classes. Nothing is uploaded — the file is read in this tab.</p>
+    <p class="section-label">Your data</p>
+    <p class="note">CSV, one row per example. Inputs must be numbers. The last column is the answer. Nothing is uploaded.</p>
     <label class="dropzone" id="drop">
       <strong>Drop a CSV here</strong>
       or choose a file
@@ -227,7 +223,7 @@
   </section>
 
   <footer>
-    <p>Runs entirely in this tab: the network is trained on your machine, in a background thread, and nothing about it is sent anywhere. The one thing kept between visits is your own record book, in this browser's storage and nowhere else. Tree measurements come from the <a href="https://www.data.gv.at/datasets/c91a4635-8b7d-43fe-9b27-d95dec8392a7?locale=en">Vienna Baumkataster</a> (Stadt Wien, CC BY 4.0), trimmed to the eight commonest species and the numeric columns. The network, the training and every plot are written from scratch for this page.</p>
+    <p>Tree data: <a href="https://www.data.gv.at/datasets/c91a4635-8b7d-43fe-9b27-d95dec8392a7?locale=en">Vienna Baumkataster</a> (Stadt Wien, CC BY 4.0).</p>
   </footer>
 </div>
 

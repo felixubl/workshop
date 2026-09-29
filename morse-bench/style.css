@@ -307,10 +307,6 @@ input[type='number'].field {
   margin-bottom: 0;
 }
 
-.sheet + .sheet-note {
-  margin-bottom: var(--pp-space-5);
-}
-
 @media (max-width: 620px) {
   .deck {
     grid-template-columns: minmax(0, 1fr);

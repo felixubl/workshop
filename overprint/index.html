@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Overprint — Felix' Workshop</title>
-<meta name="description" content="Lay coloured squares, circles, triangles and hexagons over one another and watch each overlap take the colour the two make — as ink or as light — then export the sheet as a real SVG.">
+<meta name="description" content="Overlap coloured shapes and see how their colours mix.">
 <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
 <script src="../assets/preprint/js/mode.js"></script>
 <link rel="stylesheet" href="../assets/preprint/styles.css">
@@ -53,16 +53,18 @@
       </a>
       <div class="title-row">
         <h1 class="tool-title">Overprint</h1>
-        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+        <button class="share-btn" type="button" data-share>
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
           <span data-share-label>copy link</span>
         </button>
-        <button class="share-btn pin-btn" type="button" data-pin="overprint" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+        <button class="share-btn pin-btn" type="button" data-pin="overprint" aria-label="Pin this tool"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
       </div>
     </div>
   </header>
 
   <div class="spine"></div>
+
+  <p class="lede">Overlap coloured shapes and see how their colours mix.</p>
 
   <div class="toolbar">
     <div class="group">
@@ -74,32 +76,32 @@
     </div>
     <div class="group" id="sheetPresets">
       <label>Sizes</label>
-      <button class="btn-ghost preset" type="button" data-w="640" data-h="480" data-tip="The sheet this starts on, 4:3">640&times;480</button>
-      <button class="btn-ghost preset" type="button" data-w="800" data-h="800" data-tip="Square">800&times;800</button>
-      <button class="btn-ghost preset" type="button" data-w="1200" data-h="675" data-tip="16:9, the shape of a slide">1200&times;675</button>
-      <button class="btn-ghost preset" type="button" data-w="595" data-h="842" data-tip="A4 upright at 72 to the inch, which is the unit a PDF is laid out in">595&times;842</button>
-      <button class="btn-ghost preset" type="button" data-w="842" data-h="595" data-tip="A4 on its side">842&times;595</button>
+      <button class="btn-ghost preset" type="button" data-w="640" data-h="480" data-tip="4:3">640&times;480</button>
+      <button class="btn-ghost preset" type="button" data-w="800" data-h="800">800&times;800</button>
+      <button class="btn-ghost preset" type="button" data-w="1200" data-h="675" data-tip="16:9">1200&times;675</button>
+      <button class="btn-ghost preset" type="button" data-w="595" data-h="842" data-tip="A4 portrait">595&times;842</button>
+      <button class="btn-ghost preset" type="button" data-w="842" data-h="595" data-tip="A4 landscape">842&times;595</button>
     </div>
     <div class="group">
-      <label>Lay down</label>
-      <button class="btn-ghost icon-only" type="button" data-add="square" aria-label="Add a square" data-tip="Add a square">
+      <label>Add</label>
+      <button class="btn-ghost icon-only" type="button" data-add="square" aria-label="Add a square" data-tip="Square">
         <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="miter" aria-hidden="true"><path d="M2.8 2.8h10.4v10.4H2.8Z"></path></svg>
       </button>
-      <button class="btn-ghost icon-only" type="button" data-add="circle" aria-label="Add a circle" data-tip="Add a circle">
+      <button class="btn-ghost icon-only" type="button" data-add="circle" aria-label="Add a circle" data-tip="Circle">
         <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" aria-hidden="true"><circle cx="8" cy="8" r="5.4"></circle></svg>
       </button>
-      <button class="btn-ghost icon-only" type="button" data-add="triangle" aria-label="Add a triangle" data-tip="Add a triangle">
+      <button class="btn-ghost icon-only" type="button" data-add="triangle" aria-label="Add a triangle" data-tip="Triangle">
         <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="miter" aria-hidden="true"><path d="M8 2.4 13.6 13H2.4Z"></path></svg>
       </button>
-      <button class="btn-ghost icon-only" type="button" data-add="hexagon" aria-label="Add a hexagon" data-tip="Add a hexagon">
+      <button class="btn-ghost icon-only" type="button" data-add="hexagon" aria-label="Add a hexagon" data-tip="Hexagon">
         <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="miter" aria-hidden="true"><path d="M8 2.2 13.2 5.1v5.8L8 13.8 2.8 10.9V5.1Z"></path></svg>
       </button>
     </div>
 
     <div class="group">
       <label>Mixing</label>
-      <button class="btn-ghost preset is-active" type="button" data-model="ink" data-tip="Subtractive. Plates on white paper, so every overlap goes darker">Ink</button>
-      <button class="btn-ghost preset" type="button" data-model="light" data-tip="Additive. Beams in a dark room, so every overlap goes lighter">Light</button>
+      <button class="btn-ghost preset is-active" type="button" data-model="ink" data-tip="Overlaps get darker">Ink</button>
+      <button class="btn-ghost preset" type="button" data-model="light" data-tip="Overlaps get lighter">Light</button>
     </div>
 
     <div class="group" id="shapeGroup">
@@ -111,7 +113,7 @@
       <label for="shapeTurn">Turn</label>
       <input type="range" id="shapeTurn" min="0" max="359" value="0" aria-label="Rotation of the selected shape">
       <span class="tag readout" id="turnValue">0&deg;</span>
-      <button class="btn-ghost" id="remove" data-tip="Take the selected shape off the sheet">Remove</button>
+      <button class="btn-ghost" id="remove">Remove</button>
     </div>
 
     <!-- The workshop's own colours, offered as pigments. Faces and names are
@@ -137,29 +139,10 @@
   </div>
 
   <div id="canvasWrap">
-    <svg id="canvas" xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" role="img" aria-label="An empty sheet"></svg>
+    <svg id="canvas" xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" role="img" aria-label="Empty sheet"></svg>
   </div>
 
-  <p class="note">Drag a shape to move it, and click the sheet to select nothing.
-    Arrow keys nudge whatever is selected; Delete takes it off. Setting the sheet
-    crops rather than scales: nothing is resized, the sheet grows and shrinks
-    about its middle, and only a shape left outside a smaller one is pulled back
-    to its edge.</p>
-
-  <p class="note">
-    An overlap here is a region and not a blend mode. The tool works out which
-    shapes cover which patch of the sheet, mixes those colours once, and prints
-    the patch as a flat opaque shape clipped to it &mdash; so the exported file
-    is the picture on the screen, arrived at the same way, and it opens the same
-    in a browser, in Illustrator or in anything else that reads plain SVG.
-  </p>
-
-  <p class="note">
-    Nothing here has a z-order, because ink does not have one. A patch covered
-    by cyan and by yellow is green whichever plate went down first, and the same
-    is true of two beams in a dark room. The order shapes were added in decides
-    which one a click picks up and nothing else about the sheet.
-  </p>
+  <p class="note">Drag a shape to move it. Arrow keys nudge it. Delete removes it.</p>
 </div>
 
 <script src="script.js"></script>

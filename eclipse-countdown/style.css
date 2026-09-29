@@ -405,11 +405,6 @@
   fill: var(--ec-overprint);
 }
 
-.colophon {
-  max-width: 66ch;
-  margin-top: 2.5rem;
-}
-
 /* ---- the horizon ------------------------------------------------------
    Recon's terrain question, asked only about the strip of sky this eclipse
    crosses and printed upright. The figure is SVG drawn by the script but

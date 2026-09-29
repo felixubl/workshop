@@ -390,14 +390,6 @@ table.circ tr.hl td { color: var(--pp-plate-3-text); }
 #survey-row code { color: var(--pp-faint); font-size: 0.68rem;
   margin-left: auto; }
 
-.score-how { margin-top: 0.6rem; font-size: 0.74rem; }
-.score-how summary { color: var(--pp-faint); font-size: 0.66rem;
-  text-transform: uppercase; letter-spacing: 0.05em;
-  cursor: var(--pp-cursor-point, pointer); }
-.score-how code { display: block; margin: 0.45rem 0;
-  font-size: 0.74rem; }
-.score-how p { margin: 0; line-height: 1.5; color: var(--pp-muted); }
-
 /* ---- the clock strip ------------------------------------------------ */
 
 #console {

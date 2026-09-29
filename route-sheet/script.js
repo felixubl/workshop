@@ -99,7 +99,7 @@
         option.value = String(i);
         const km = Route.geo.cumulative(path.points);
         option.textContent =
-          `${path.name || `${path.kind} ${i + 1}`} — ${Route.geo.UNITS.metric.long(km[km.length - 1])}`;
+          `${path.name || `${path.kind} ${i + 1}`} · ${Route.geo.UNITS.metric.long(km[km.length - 1])}`;
         ui.pathPick.append(option);
       });
       ui.pathGroup.hidden = route.paths.length < 2;
@@ -159,13 +159,8 @@
     const off = opts.tiles === "off";
     ui.custodyNote.dataset.live = off ? "" : "on";
     ui.custodyText.innerHTML = off
-      ? "Nothing has left this page. With the map set to <em>None</em> the tool " +
-        "opens no socket: the file is read here, the turns are worked out here, " +
-        "and the PDF is written here byte by byte."
-      : "The map is on, so this page asks <code>tile.openstreetmap.org</code> for " +
-        "the squares your route crosses — which carries your IP address and, in " +
-        "the squares themselves, where you are going. Nothing is uploaded and " +
-        "nothing is kept. Set the map to <em>None</em> to close the socket.";
+      ? "Nothing leaves this page. With a map, tiles come from <code>tile.openstreetmap.org</code>."
+      : "Map tiles come from <code>tile.openstreetmap.org</code>. Nothing is uploaded.";
   }
 
   /* --- fetching the map ---------------------------------------------------- */
@@ -198,11 +193,7 @@
       drawPreview();
       say("");
     } catch (err) {
-      say(
-        `The map could not be fetched — ${err.message}. The sheet still prints; ` +
-        `it prints without a map under the route.`,
-        "bad"
-      );
+      say(`Map not fetched (${err.message}). The sheet prints without it.`, "bad");
     } finally {
       if (job === state.job) {
         ui.mapBusy.hidden = true;
@@ -426,17 +417,15 @@
     if (fetched) {
       ui.mapCredit.innerHTML =
         'Map data © <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap contributors</a>' +
-        (fetched.missing ? ` — ${fetched.missing} square${fetched.missing === 1 ? "" : "s"} did not arrive` : "");
+        (fetched.missing ? `, ${fetched.missing} square${fetched.missing === 1 ? "" : "s"} missing` : "");
     }
 
     ui.mapNote.textContent = plan.single
-      ? "One map around the place, and its coordinates. There is no route here to cut into pages."
+      ? "One map around the place."
       : plan.sections.length
-      ? `The sheet is ${sheet.panels.length} map${sheet.panels.length === 1 ? "" : "s"}: ` +
-        `this overview and ${plan.sections.length} detail page${plan.sections.length === 1 ? "" : "s"}, ` +
-        `then the instructions.`
-      : "One overview map, then the instructions. Ask for detail pages to have " +
-        "the route cut into stretches, each drawn close enough to tell one junction from the next.";
+      ? `${sheet.panels.length} maps: this overview and ` +
+        `${plan.sections.length} detail page${plan.sections.length === 1 ? "" : "s"}.`
+      : "One overview map, then the instructions.";
   }
 
   /* --- the panels beside the map --------------------------------------------- */
@@ -509,18 +498,13 @@
     const gone = Route.pdf.lost([plan.name, ...plan.cues.map((c) => c.text)].join(" "));
     if (gone.length) {
       notes.push(
-        `The PDF is set in the fonts every reader already has, and those cannot ` +
-        `carry ${gone.slice(0, 12).map((c) => `“${c}”`).join(" ")}` +
+        `The PDF cannot print ${gone.slice(0, 12).map((c) => `“${c}”`).join(" ")}` +
         `${gone.length > 12 ? ` and ${gone.length - 12} more` : ""}. ` +
-        `Accented Latin letters come through with the accent dropped; these are ` +
-        `left out. Rename the route if that matters.`
+        `Rename the route if that matters.`
       );
     }
     if (plan.straightLines) {
-      notes.unshift(
-        "The dashed line is drawn straight between the stops. It is not a road, " +
-        "and its length is not how far you will travel."
-      );
+      notes.unshift("The dashed line is not a road. Its length is not the travel distance.");
     }
     for (const note of notes) {
       const p = document.createElement("p");
@@ -590,21 +574,17 @@
     }
 
     if (plan.single) {
-      ui.cueNote.textContent =
-        "One place, so there is nothing to give instructions about. The sheet " +
-        "is a locator: a map around the point and the coordinates in full.";
+      ui.cueNote.textContent = "One place, so no instructions.";
       return;
     }
 
     const derived = plan.cues.filter((c) => c.source === "shape").length;
     ui.cueNote.textContent = derived === plan.cues.length - 2 && derived > 0
-      ? `All ${derived} turns were worked out from the shape of the path — this ` +
-        `file carried no written instructions, which is normal for a recorded track. ` +
-        `They cannot name a street, so the map beside them is doing half the work.`
+      ? `All ${derived} turns come from the path’s shape, so they name no streets.`
       : derived === 0
-        ? "Every instruction here came out of the file, street names and all."
-        : `${plan.cues.length - derived - 2} instructions came from the file; ` +
-          `${derived} were worked out from the shape of the path.`;
+        ? "All instructions come from the file."
+        : `${plan.cues.length - derived - 2} instructions from the file, ` +
+          `${derived} from the path’s shape.`;
   }
 
   /* --- output ------------------------------------------------------------------ */
@@ -641,9 +621,9 @@
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 4000);
       const kb = Math.round(bytes.length / 102.4) / 10;
-      say(`Written — ${state.sheet.pages.length + 1} pages or so, ${kb} kB.`, "good");
+      say(`Saved, about ${state.sheet.pages.length + 1} pages, ${kb} kB.`, "good");
     } catch (err) {
-      say(`The PDF could not be written — ${err.message}`, "bad");
+      say(`Could not write the PDF: ${err.message}`, "bad");
     } finally {
       ui.download.disabled = false;
     }
@@ -664,8 +644,8 @@
       );
     }
     navigator.clipboard.writeText(lines.join("\n")).then(
-      () => say("The instructions are on the clipboard.", "good"),
-      () => say("The browser would not let this page write to the clipboard.", "bad")
+      () => say("Instructions copied.", "good"),
+      () => say("The browser blocked the clipboard.", "bad")
     );
   }
 
@@ -695,7 +675,7 @@
 
   ui.read.addEventListener("click", () => {
     const text = ui.pasted.value.trim();
-    if (!text) { say("Paste a link, some coordinates or an encoded polyline first.", "bad"); return; }
+    if (!text) { say("Paste a link or coordinates first.", "bad"); return; }
     load(() => Route.parse.fromText(text, ""), "");
   });
   ui.pasted.addEventListener("keydown", (e) => {

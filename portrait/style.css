@@ -3,6 +3,10 @@
    is here is the stage — one big sheet with the result on it — and the rail of
    method samples beside it. */
 
+.lede {
+  margin: 0 0 0.9rem;
+}
+
 /* The drop target has two sizes. Open, it fills the page and is the only thing
    to do. Once a picture is loaded it drops to a line: still a target, no
    longer an invitation. */
@@ -117,7 +121,7 @@
   margin-right: 0.4rem;
   border-radius: 50%;
   /* The same colours the class map is drawn in, so the tab and the picture
-     under "how the head was found" agree about which part is which. */
+     under "Head detection" agree about which part is which. */
   vertical-align: baseline;
 }
 

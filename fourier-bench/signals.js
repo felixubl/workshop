@@ -86,14 +86,14 @@
     {
       id: 'sine',
       name: 'Sine',
-      says: 'One partial and nothing else. Anything the bench reports beyond a single peak is the window, not the sound.',
+      says: 'One partial.',
       make: (rate, sec, hz) => build(rate, sec, (t) => Math.sin(TAU * hz * t)),
       truth: (hz) => series(hz, [1]),
     },
     {
       id: 'square',
       name: 'Square',
-      says: 'Odd harmonics at 4/πn, nothing on the even ones. The oldest worked example there is.',
+      says: 'Odd harmonics at 4/πn.',
       make: (rate, sec, hz) =>
         additive(rate, sec, hz, (n) => (n % 2 ? 4 / (Math.PI * n) : 0)),
       truth: (hz) => series(hz, Array.from({ length: 32 }, (_, i) =>
@@ -102,7 +102,7 @@
     {
       id: 'saw',
       name: 'Sawtooth',
-      says: 'Every harmonic, at 2/πn. The same falloff as a square with the gaps filled in.',
+      says: 'Every harmonic, at 2/πn.',
       make: (rate, sec, hz) =>
         additive(rate, sec, hz, (n) => (n % 2 ? 1 : -1) * (2 / (Math.PI * n))),
       truth: (hz) => series(hz, Array.from({ length: 32 }, (_, i) => 2 / (Math.PI * (i + 1)))),
@@ -110,7 +110,7 @@
     {
       id: 'triangle',
       name: 'Triangle',
-      says: 'Odd harmonics at 8/π²n², falling four times faster than a square. Why it sounds closer to a sine.',
+      says: 'Odd harmonics at 8/π²n².',
       make: (rate, sec, hz) =>
         additive(rate, sec, hz, (n) =>
           n % 2 ? ((n - 1) / 2 % 2 ? -1 : 1) * (8 / (Math.PI * Math.PI * n * n)) : 0),
@@ -120,7 +120,7 @@
     {
       id: 'pair',
       name: 'Two close tones',
-      says: 'Two sines a whole tone apart, then 3 Hz apart. The second pair needs a window long enough to separate them, and shows what happens when it is not.',
+      says: 'Two sines a whole tone apart, then 3 Hz apart.',
       make: (rate, sec, hz) =>
         build(rate, sec, (t) =>
           t < sec / 2
@@ -131,7 +131,7 @@
     {
       id: 'chirp',
       name: 'Chirp',
-      says: 'A sweep from the fundamental to sixteen times it. A diagonal line, and the width of that line is the window.',
+      says: 'A sweep from the set frequency to 16 times it.',
       make: (rate, sec, hz) => {
         const k = (hz * 15) / sec;
         return build(rate, sec, (t) => Math.sin(TAU * (hz * t + (k * t * t) / 2)));
@@ -141,7 +141,7 @@
     {
       id: 'pluck',
       name: 'Plucked string',
-      says: 'Harmonics that decay faster the higher they are, over a stiff string. The bench should recover both the pitch and the stiffness.',
+      says: 'A stiff string. Higher harmonics fade faster.',
       make: (rate, sec, hz) => {
         const B = 3.5e-4;
         return build(rate, sec, (t) => {
@@ -159,7 +159,7 @@
     {
       id: 'bell',
       name: 'Bell',
-      says: 'Partials at 0.5, 1, 1.2, 1.5, 2, 2.5 and 3 times the strike note — a real bell\'s ratios, and not a harmonic series. Most of these get no harmonic number, which is the correct answer.',
+      says: 'Partials that are not a harmonic series.',
       make: (rate, sec, hz) => {
         const ratios = [0.5, 1, 1.2, 1.5, 2, 2.5, 3, 4];
         const decay = [0.6, 1.1, 1.6, 2.2, 2.8, 3.6, 4.4, 6];
@@ -177,7 +177,7 @@
     {
       id: 'vibrato',
       name: 'Vibrato',
-      says: 'One partial, wobbling a semitone at 5 Hz. A single frame cannot see a wobble; the track across frames can.',
+      says: 'One partial, wobbling a semitone at 5 Hz.',
       make: (rate, sec, hz) =>
         build(rate, sec, (t) =>
           Math.sin(TAU * hz * (t + (0.03 / (TAU * 5)) * Math.sin(TAU * 5 * t)))),
@@ -186,7 +186,7 @@
     {
       id: 'noise',
       name: 'White noise',
-      says: 'No partials at all. Every peak the bench finds here is a peak in noise, which is what the floor control is for.',
+      says: 'No partials at all.',
       make: (rate, sec) => {
         // A fixed seed, so the same noise comes back and two runs can be
         // compared. Math.random would make every result unrepeatable.
