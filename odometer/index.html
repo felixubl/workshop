@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Odometer — Felix' Workshop</title>
+<meta name="description" content="A row of reels that counts in any base from 2 to 16. Each reel has one tooth that pushes the next reel on its way back to 0, so a run of full reels tips over one after another.">
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=5">
+<script src="../assets/preprint/js/mode.js"></script>
+<link rel="stylesheet" href="../assets/preprint/styles.css">
+<link rel="stylesheet" href="../assets/preprint/core.css">
+<link rel="stylesheet" href="../assets/preprint/controls.css">
+<link rel="stylesheet" href="../assets/base.css">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <!-- The ceiling lamp, drawn in assets/site.css and swung by
+       assets/lamp.js. The span is the fixture and hangs behind the page; the
+       button is the switch and sits over the shade, and swings with it. The
+       rose is the only part fixed to the ceiling: the flex turns under it, and
+       the head — the shade and the light it throws — turns again where the flex
+       ends, because a weight on a cord arrives after the cord does. -->
+    <span class="lamp" aria-hidden="true">
+      <span class="lamp__hang">
+        <span class="lamp__flex"></span>
+        <span class="lamp__head">
+          <span class="lamp__beam"></span>
+          <svg class="lamp__head-art" viewBox="-70 0 140 96" fill="none">
+            <circle class="lamp__bulb" cx="0" cy="70" r="13"></circle>
+            <g class="lamp__rig">
+              <path class="lamp__shade" d="M-16 0H16L62 62H-62Z"></path>
+              <path class="lamp__rim" d="M-64 62H64"></path>
+            </g>
+          </svg>
+        </span>
+      </span>
+      <svg class="lamp__rose" viewBox="-30 0 60 20" fill="none">
+        <path class="lamp__canopy" d="M-28 0H28V9H-28Z"></path>
+        <g class="lamp__rig">
+          <path class="lamp__grip" d="M-8 9H8L5 16H-5Z"></path>
+        </g>
+      </svg>
+    </span>
+    <button class="lamp-switch" type="button" data-mode-toggle aria-label="Switch colour mode"></button>
+
+    <div>
+      <a class="back-link" href="../">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M13.5 8h-10M7.5 4l-4 4 4 4"></path></svg>
+        Felix' Workshop
+      </a>
+      <div class="title-row">
+        <h1 class="tool-title">Odometer</h1>
+        <button class="share-btn" type="button" data-share data-tip="Copy a link to this tool, to hand it to somebody else">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="square" aria-hidden="true"><path d="M9.5 4.5h3v3M12.5 4.5 9 8M6.5 11.5h-3v-3M3.5 11.5 7 8"></path></svg>
+          <span data-share-label>copy link</span>
+        </button>
+        <button class="share-btn pin-btn" type="button" data-pin="odometer" aria-label="Pin this tool to the top of the workshop"><span class="pin-head" aria-hidden="true"></span><span data-pin-label>pin</span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="spine"></div>
+
+  <p class="lede">
+    A row of reels. Each one shows a digit from 0 up to one less than the base.
+    When a reel passes its last digit it goes back to 0 and pushes the reel on
+    its left up by one.
+  </p>
+
+  <div class="toolbar">
+    <div class="group">
+      <label for="base">Base</label>
+      <button class="btn-ghost preset" type="button" data-base="2">2</button>
+      <button class="btn-ghost preset" type="button" data-base="3">3</button>
+      <button class="btn-ghost preset" type="button" data-base="8">8</button>
+      <button class="btn-ghost preset" type="button" data-base="10">10</button>
+      <button class="btn-ghost preset" type="button" data-base="16">16</button>
+      <input class="field" type="number" id="base" min="2" max="16" step="1" value="2" aria-label="Base" data-tip="How many digits each reel has, from 2 to 16. Past 9 the digits are A to F">
+    </div>
+
+    <div class="group">
+      <label for="wheels">Reels</label>
+      <input class="field" type="number" id="wheels" min="1" max="12" step="1" value="8" aria-label="Number of reels">
+      <span class="tag readout" id="capOut">0 to 255</span>
+    </div>
+
+    <div class="group">
+      <label for="speed">Speed</label>
+      <input class="field" type="number" id="speed" min="1" max="30" step="1" value="2" aria-label="Counts per second when running" data-tip="Counts per second while running. A long carry takes the time it takes, so a run pauses on it">
+    </div>
+
+    <div class="group">
+      <label for="jump">Set to</label>
+      <input class="field field--wide" type="number" id="jump" min="0" step="1" value="0" aria-label="Set the reels to a number" data-tip="Type a number in base 10 and the reels show it">
+    </div>
+
+    <div class="group">
+      <button class="btn-ghost" type="button" id="down" data-tip="Count one down. Arrow down does the same">−1</button>
+      <button class="btn-ghost" type="button" id="up" data-tip="Count one up. Arrow up does the same">+1</button>
+      <button class="btn-ghost" type="button" id="run">run</button>
+      <button class="btn-ghost" type="button" id="reset">reset</button>
+    </div>
+  </div>
+
+  <div class="deck">
+    <div class="machine">
+      <!-- The number the reels hold, in base 10, sits on the reading line to
+         their right. The box reserves room for the longest number the reels
+         can hold, so the reels never move as it grows. -->
+      <div class="reels-box" id="reelsBox">
+        <div class="reels" id="reels">
+          <p class="reading">
+            <span class="reading-eq" aria-hidden="true">=</span>
+            <output id="valueOut">0</output>
+            <span class="reading-base">in base 10</span>
+          </p>
+        </div>
+      </div>
+    </div>
+    <button class="key-slab" type="button" id="slab" aria-label="Count one up">
+      <span class="key-cap">+1</span>
+      <span class="key-say">or click a reel to add its worth</span>
+    </button>
+  </div>
+
+  <div class="result-bar">
+    <p class="section-label">Place values</p>
+    <span class="tag" id="rollOut" hidden>ran off the last reel, back to 0</span>
+  </div>
+  <code class="sum" id="sumOut"></code>
+  <div class="other" id="otherOut"></div>
+
+  <p class="note">
+    A reel with b digits has to turn b times to come back to 0. So one full turn
+    of a reel is one step of the reel on its left, and each reel is worth b
+    times the one on its right: 1, 2, 4, 8 in base 2, and 1, 10, 100 in base 10.
+  </p>
+
+  <p class="note">
+    The reels are geared to each other, and differently on each side. On its
+    right edge a reel has one tooth per digit. On its left edge it has a single
+    red tooth, where it passes from its last digit back to 0. A reel turns
+    freely until that tooth comes round; then the tooth catches the tooth of
+    the reel on its left and pushes it up one. A reel showing its last digit
+    has its red tooth waiting just under its neighbour's, so a run of them tips
+    over one after another, each a moment after the one that pushes it.
+  </p>
+
+  <p class="note">
+    The teeth are drawn only around the reading line. Anywhere else, a red tooth
+    moving one digit would run into a tooth of its neighbour's full row, which
+    is why a real counter has a small transfer wheel behind the frame at exactly
+    this one spot, doing the pushing.
+  </p>
+</div>
+
+<script src="script.js"></script>
+<script src="../assets/preprint/js/controls.js"></script>
+<script src="../assets/lamp.js"></script>
+<script src="../assets/share.js"></script>
+<script src="../assets/favourites.js"></script>
+</body>
+</html>

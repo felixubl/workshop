@@ -1,0 +1,361 @@
+/* Tool-specific layout only. Faces, buttons, tags, fields, the title and the
+   toolbar come from ../assets/base.css over the vendored system. */
+
+.lede {
+  max-width: var(--pp-measure);
+  margin: 0 0 0.4rem;
+}
+
+input[type='number'].field {
+  width: 76px;
+  font-family: var(--pp-font-mono);
+}
+
+input[type='number'].field--wide {
+  width: 120px;
+}
+
+.readout {
+  min-width: 62px;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--pp-muted);
+}
+
+.deck {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  gap: var(--pp-space-3);
+  align-items: stretch;
+  margin-bottom: var(--pp-space-5);
+}
+
+.machine {
+  min-width: 0;
+  padding: var(--pp-space-4);
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-lg);
+  background: var(--pp-surface);
+}
+
+/* The box reserves room on its right for the longest number the reels can
+   hold (--len characters), so the reels never move as the number grows. The
+   type size is chosen from that length rather than from the reels, which is
+   what lets the reserve be worked out before the reels are. */
+.reels-box {
+  --len: 3;
+  --f0: clamp(1.3rem, calc(12rem / var(--len)), 3.2rem);
+  container-type: inline-size;
+  padding-right: calc((var(--len) + 2) * 0.6 * var(--f0) + var(--pp-space-4));
+}
+
+/* One reel's width follows the room there is, so twelve reels fit a phone and
+   eight do not sprawl across a desk. The gap is just wide enough for the two
+   rows of teeth to overlap in it. */
+.reels {
+  --k: 0.17;
+  --w: min(84px, 100cqi / (var(--n) + (var(--n) - 1) * var(--k)));
+  --gap: calc(var(--w) * var(--k));
+  --reach: calc(var(--gap) * 0.72);
+  --f: min(var(--f0), calc(var(--w) * 0.62));
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--n), var(--w));
+  gap: var(--gap);
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.wheel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.place {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  line-height: 1.4;
+  color: var(--pp-faint);
+  white-space: nowrap;
+}
+
+.place-pow {
+  font-size: 0.78rem;
+  color: var(--pp-muted);
+}
+
+/* ---- a reel ---- */
+
+.reel {
+  position: relative;
+  display: block;
+  width: var(--w);
+  height: calc(var(--w) * 2);
+  padding: 0;
+  overflow: hidden;
+  border: var(--pp-rule-line) solid var(--pp-line);
+  border-radius: var(--pp-radius-sm);
+  background: var(--pp-paper);
+  color: inherit;
+  font: inherit;
+  user-select: none;
+}
+
+.reel:hover {
+  border-color: var(--pp-edge);
+}
+
+.reel:active {
+  transform: var(--w-press);
+}
+
+/* The half cells above and below the window are the drum turning away from
+   you: the same paper, pulled back. */
+.reel::before,
+.reel::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  height: calc(var(--w) * 0.5);
+  background: color-mix(in srgb, var(--pp-paper) 64%, transparent);
+}
+
+.reel::before { top: 0; }
+.reel::after { bottom: 0; }
+
+.reel-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(-30%);
+}
+
+.reel-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--w);
+  font-family: var(--pp-font-mono);
+  font-size: calc(var(--w) * 0.62);
+  line-height: 1;
+}
+
+/* The reading line: where the numeral is read, across every reel at once. */
+.reel-band {
+  position: absolute;
+  top: calc(var(--w) * 0.5 - 1px);
+  left: -10px;
+  right: -10px;
+  z-index: 2;
+  height: calc(var(--w) + 2px);
+  border-top: var(--pp-rule-structure) solid var(--pp-edge);
+  border-bottom: var(--pp-rule-structure) solid var(--pp-edge);
+  pointer-events: none;
+}
+
+/* ---- the teeth ---- */
+
+/* A column of teeth beside a reel, cut a little wider than the reading window:
+   wide enough to show a waiting carry tooth whole, short of the next tooth up
+   or down. The strip in it is five digits tall like the reel's own and moves
+   with it. */
+.teeth {
+  position: absolute;
+  top: calc(var(--w) * 0.3);
+  z-index: 1;
+  width: var(--reach);
+  height: calc(var(--w) * 1.4);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.teeth--own {
+  left: var(--w);
+}
+
+.teeth--carry {
+  left: calc(var(--reach) * -1);
+}
+
+.teeth-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--w) * 5);
+  transform: translateY(-36%);
+}
+
+/* One tooth per digit, centred on the digit: a hard-stop pattern. */
+.teeth--own .teeth-strip {
+  background: repeating-linear-gradient(to bottom,
+    transparent 0 calc(var(--w) * 0.4),
+    var(--pp-ink) calc(var(--w) * 0.4) calc(var(--w) * 0.6),
+    transparent calc(var(--w) * 0.6) var(--w));
+}
+
+/* The one tooth that carries. Plate 2 marks the part of the machine that does
+   the carrying, the way the Morse tape marks the mark still being sent. */
+.tooth {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: calc(var(--w) * 0.2);
+  margin-top: calc(var(--w) * -0.1);
+  background: var(--pp-plate-2);
+}
+
+/* ---- the number ---- */
+
+/* On the reading line, to the right of the last reel, at the reels' own size:
+   the same line read a second way. */
+.reading {
+  position: absolute;
+  top: calc(var(--w) * 0.5);
+  left: calc(100% + var(--pp-space-4));
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  height: var(--w);
+  margin: 0;
+  font-family: var(--pp-font-mono);
+  font-size: var(--f);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.reading-eq {
+  color: var(--pp-muted);
+}
+
+.reading-base {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-label);
+  color: var(--pp-faint);
+}
+
+/* ---- the key ---- */
+
+/* The Morse Key's slab: a thing you hit, on the page's one hard cast, which
+   collapses under the press exactly as far as the slab travels. */
+.key-slab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 128px;
+  max-height: 280px;
+  padding: var(--pp-space-3);
+  border: var(--pp-rule-structure) solid var(--pp-edge);
+  border-radius: var(--pp-radius-md);
+  background: var(--pp-paper);
+  box-shadow: 3px 3px 0 var(--pp-edge);
+  cursor: var(--pp-cursor-point);
+  user-select: none;
+}
+
+.key-slab:hover {
+  background: var(--pp-tint);
+}
+
+.key-slab:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--pp-edge);
+  background: var(--pp-ink);
+  color: var(--pp-paper);
+}
+
+.key-cap {
+  font-family: var(--pp-font-mono);
+  font-size: 1.5rem;
+  letter-spacing: var(--w-track-mono);
+}
+
+.key-say {
+  font-family: var(--pp-font-mono);
+  font-size: var(--pp-size-label);
+  letter-spacing: var(--w-track-label);
+  text-align: center;
+  color: var(--pp-muted);
+}
+
+.key-slab:active .key-say {
+  color: var(--pp-paper);
+}
+
+/* ---- place values ---- */
+
+.sum {
+  display: block;
+  padding: var(--pp-space-3) 0;
+  border-top: var(--pp-rule-structure) solid var(--pp-edge);
+  border-bottom: var(--pp-rule-hairline) solid var(--pp-hair);
+  margin-bottom: var(--pp-space-3);
+  font-family: var(--pp-font-mono);
+  font-size: 0.9rem;
+  color: var(--pp-muted);
+  overflow-wrap: anywhere;
+}
+
+.other {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: var(--pp-space-5);
+}
+
+.other .tag {
+  white-space: pre;
+  color: var(--pp-muted);
+}
+
+/* On a phone the number moves under the reels rather than beside them, where
+   it would take half the width. */
+@media (max-width: 620px) {
+  .deck {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .key-slab {
+    min-height: 88px;
+  }
+
+  .machine {
+    padding: var(--pp-space-3);
+  }
+
+  .reels-box {
+    padding-right: 0;
+  }
+
+  .reading {
+    position: relative;
+    top: auto;
+    left: auto;
+    grid-column: 1 / -1;
+    justify-self: end;
+    height: auto;
+    margin: var(--pp-space-2) 0 var(--pp-space-4);
+  }
+
+  .reading-base {
+    left: auto;
+    right: 0;
+  }
+}
