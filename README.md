@@ -425,7 +425,7 @@ figure or another file rather than a rendering.
   in up to ten dimensions, seeded and reproducible, with summary statistics and
   CSV/JSON export.
 
-- [Alphabet Distance](abecedarian/) — *billowy* and *almost* are already in
+- [Abecedarian Distance](abecedarian/) — *billowy* and *almost* are already in
   alphabetical order; most other words would be under some other alphabet. This
   finds the nearest such alphabet and counts the letter swaps needed to reach
   it — the minimum Cayley distance over all 26! orderings. That claim cannot be
