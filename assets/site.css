@@ -229,7 +229,7 @@ body {
      step. The mouth width is in drawing units instead, because that end of the
      beam is a part of the fixture and has to keep up with it. */
   --w-lamp-reach: 130vh;
-  --w-lamp-beam-mouth: calc(58 * var(--w-lamp-unit));
+  --w-lamp-beam-mouth: calc(60 * var(--w-lamp-unit));
   --w-lamp-beam-width: calc(2 * (var(--w-lamp-beam-mouth) + var(--w-lamp-reach) / 6));
 }
 
@@ -334,8 +334,21 @@ body {
   fill: var(--pp-edge);
 }
 .lamp__grip,
-.lamp__shade {
+.lamp__cup {
   fill: var(--pp-paper);
+}
+/* A workshop shade is enamelled steel, dark outside, and it is the heaviest
+   thing on the fixture. Solid ink, like the canopy it hangs from. */
+.lamp__shade {
+  fill: var(--pp-edge);
+}
+/* The guard: bent wire around the bulb, the one thing that says a lamp is for
+   a bench and not a dining table. Thinner than the rig because it is wire, and
+   drawn over the bulb because it is in front of it. */
+.lamp__cage {
+  stroke: var(--pp-edge);
+  stroke-width: 1.6;
+  stroke-linecap: round;
 }
 /* THE FIXTURE DOES NOT CHANGE. Rose, flex, shade and rim are the same drawing in
    either mode — the page's ink on the page's paper, and nothing else. What
@@ -389,7 +402,7 @@ body {
    when one number changes. */
 .lamp__beam {
   position: absolute;
-  top: calc(62 * var(--w-lamp-unit));
+  top: calc(45 * var(--w-lamp-unit));
   left: calc(var(--w-lamp-beam-width) / -2);
   width: var(--w-lamp-beam-width);
   height: var(--w-lamp-reach);
@@ -406,7 +419,19 @@ body {
    mode duration to catch up. That order is the point: a bulb does not fade and
    the eye is what adjusts slowly. */
 [data-mode='dark'] .lamp__beam {
-  opacity: 1;
+  opacity: var(--w-lamp-level, 1);
+}
+
+/* The flicker. assets/lamp.js now and then drops --w-lamp-level for a few
+   hundredths of a second, the way an old bulb on a loose contact does, and the
+   bulb and the beam dip together because they are one light. No transition
+   while it happens: a flicker that faded would be a dimmer. */
+[data-mode='dark'] .lamp[data-flicker] .lamp__bulb {
+  fill: color-mix(in srgb, var(--w-mark-fill) calc(var(--w-lamp-level, 1) * 100%), var(--pp-surface));
+}
+.lamp[data-flicker] .lamp__bulb,
+.lamp[data-flicker] .lamp__beam {
+  transition: none;
 }
 
 /* The switch: a plain target over the shade, drawing nothing. It is sized to the
@@ -425,7 +450,7 @@ body {
    for the same reason on a desktop, where the drag would otherwise select the
    header's text behind it. */
 .lamp-switch {
-  --w-lamp-grip: calc((var(--w-lamp-drop) + 36) * var(--w-lamp-unit) - var(--pp-target-prominent-narrow) / 2);
+  --w-lamp-grip: calc((var(--w-lamp-drop) + 38) * var(--w-lamp-unit) - var(--pp-target-prominent-narrow) / 2);
   z-index: 5;
   width: var(--pp-target-prominent-narrow);
   height: var(--pp-target-prominent-narrow);
