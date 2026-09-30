@@ -1,4 +1,4 @@
-/* The workshop's ceiling lamp — the swing.
+/* The workshop's ceiling lamp: the swing, and the flicker at the end.
  *
  * The drawing is `.lamp` in assets/site.css. This is the mechanism: what the
  * fixture does when it is pushed, and what stops it doing that. Load it at the
@@ -13,6 +13,7 @@
  *   .lamp__hang          turned by --w-lamp-swing, the flex's angle
  *   .lamp__head          turned by --w-lamp-tilt, the shade's angle ON the flex
  *   .lamp-switch         the target, and the thing the hand takes hold of
+ *   .lamp[data-flicker]  set during a flicker, with --w-lamp-level on .lamp
  *
  * Both angles are written onto the header, which is the nearest element that
  * holds the drawing and the switch alike, and inherit down into everything that
@@ -394,11 +395,73 @@
     write();
   }
 
+  /* The flicker: an old bulb on a loose contact. Steady for a while, then a
+     stutter, at random, because a flicker on a timer reads as a sign blinking.
+     Switching on catches the same way.
+
+     At most three dips a second. The beam is a large field, and more than three
+     flashes a second over an area that size is the WCAG 2.3.1 seizure
+     threshold, so the dips are short and at least FLICKER_SPACE apart. */
+  var FLICKER_GAP = [7000, 22000];
+  var FLICKER_FIRST = [2000, 6000];
+  var FLICKER_SPACE = 350;
+
+  function between(range) {
+    return range[0] + Math.random() * (range[1] - range[0]);
+  }
+
+  function flicker(lamp) {
+    var root = document.documentElement;
+    var timer = 0, busy = false;
+
+    function lit() {
+      return root.getAttribute('data-mode') === 'dark' && !document.hidden;
+    }
+
+    function burst(dips) {
+      if (busy || !lit()) return;
+      busy = true;
+      lamp.setAttribute('data-flicker', '');
+      var left = dips;
+      (function dip() {
+        if (!left-- || !lit()) {
+          lamp.style.removeProperty('--w-lamp-level');
+          lamp.removeAttribute('data-flicker');
+          busy = false;
+          return;
+        }
+        var down = between([40, 90]);
+        lamp.style.setProperty('--w-lamp-level', between([0.25, 0.6]).toFixed(2));
+        setTimeout(function () {
+          lamp.style.setProperty('--w-lamp-level', '1');
+          setTimeout(dip, FLICKER_SPACE - down + between([0, 250]));
+        }, down);
+      })();
+    }
+
+    function schedule(range) {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        burst(Math.random() < 0.5 ? 2 : 3);
+        schedule(FLICKER_GAP);
+      }, between(range));
+    }
+
+    new MutationObserver(function () {
+      if (!lit()) return;
+      burst(3);
+      schedule(FLICKER_GAP);
+    }).observe(root, { attributes: true, attributeFilter: ['data-mode'] });
+
+    schedule(FLICKER_FIRST);
+  }
+
   function init() {
     Array.prototype.forEach.call(document.querySelectorAll('.lamp'), function (lamp) {
       var host = lamp.parentElement;
       var sw = host && host.querySelector('.lamp-switch');
       if (sw) rig(lamp, sw);
+      flicker(lamp);
     });
   }
 
