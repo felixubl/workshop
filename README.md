@@ -74,6 +74,25 @@ Raster and vector images, type, colour, audio and video.
   from what was heard. A song is a few kilobytes of integers, saved to a file
   rather than a server. Note entry wants a keyboard, and the page says so.
 
+  The same chip runs without the page.
+  [`chiptune-tracker/mcp/`](chiptune-tracker/mcp/) is an MCP server — no
+  dependencies and nothing to install — giving an agent five tools: read the
+  reference, check a song, render it, audition an instrument, open one somebody
+  saved. Ask Claude Code for eight bars in A minor and a WAV lands on disk,
+  beside a song file the page will open. `apu.js` and `song.js` touch neither
+  the DOM nor the Web Audio API, so they load into Node unchanged and there is
+  still only one 2A03 here; the test suite renders the demo song both ways and
+  asserts every sample matches.
+
+  What the server mostly does is listen on the composer's behalf, since
+  everything this chip refuses to do is obvious through a speaker and invisible
+  in a file: the notes the 11-bit timer could not reach and the ones they became
+  instead, the cents each one landed off, a fade written on the triangle that
+  will cut instead, a bend written on the noise channel that it discards, the
+  tempo asked for against the one the frame counter allows, a mix that clipped,
+  a render that came out silent. Mistakes are refused rather than clamped: a
+  misspelled `instuments` would otherwise render a minute of nothing.
+
 - [Sound Spectrum](fourier-bench/) — take a sound apart into the sinusoids it is
   made of. Drop in a file, record through the microphone, or start from a
   signal whose answer is already known. What comes back is a spectrogram with
