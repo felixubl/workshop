@@ -44,6 +44,14 @@
       this.ops = 0;
       this.unsure = 0;        // runs that could not be read, so may still hold text
       this.names = 0;
+      // Set by a reader that wants the text rather than a rewrite: called with
+      // each character and the box it occupies on the page. Left null here, so
+      // the walk below is exactly what it was. Reading a page is the same walk
+      // with no rectangles to cover anything — which is the point of putting
+      // the hook here rather than writing a second interpreter: there is one
+      // answer to where a glyph sits, and a search that disagreed with it
+      // would redact the wrong box and leave the word in the file.
+      this.onGlyph = null;
     }
 
     // --- what the blackouts cover ------------------------------------------
@@ -225,6 +233,8 @@
               PDF.mat.apply(trm, 0, DESCENT), PDF.mat.apply(trm, w0 / 1000, DESCENT),
               PDF.mat.apply(trm, w0 / 1000, ASCENT), PDF.mat.apply(trm, 0, ASCENT),
             ];
+
+            if (this.onGlyph) this.onGlyph(font.unicodeFor(code), box, gs);
 
             if (this.coverage(box) >= COVER) {
               dropped = true;
