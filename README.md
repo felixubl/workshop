@@ -74,24 +74,7 @@ Raster and vector images, type, colour, audio and video.
   from what was heard. A song is a few kilobytes of integers, saved to a file
   rather than a server. Note entry wants a keyboard, and the page says so.
 
-  The same chip runs without the page.
-  [`chiptune-tracker/mcp/`](chiptune-tracker/mcp/) is an MCP server — no
-  dependencies and nothing to install — giving an agent five tools: read the
-  reference, check a song, render it, audition an instrument, open one somebody
-  saved. Ask Claude Code for eight bars in A minor and a WAV lands on disk,
-  beside a song file the page will open. `apu.js` and `song.js` touch neither
-  the DOM nor the Web Audio API, so they load into Node unchanged and there is
-  still only one 2A03 here; the test suite renders the demo song both ways and
-  asserts every sample matches.
-
-  What the server mostly does is listen on the composer's behalf, since
-  everything this chip refuses to do is obvious through a speaker and invisible
-  in a file: the notes the 11-bit timer could not reach and the ones they became
-  instead, the cents each one landed off, a fade written on the triangle that
-  will cut instead, a bend written on the noise channel that it discards, the
-  tempo asked for against the one the frame counter allows, a mix that clipped,
-  a render that came out silent. Mistakes are refused rather than clamped: a
-  misspelled `instuments` would otherwise render a minute of nothing.
+  The chip also runs without the page: see [For agents](#for-agents).
 
 - [Sound Spectrum](fourier-bench/) — take a sound apart into the sinusoids it is
   made of. Drop in a file, record through the microphone, or start from a
@@ -380,6 +363,9 @@ browser, and this prints a file the reader supplied.
   field the file discloses about whoever made it — title, author, the program
   and version, the timestamps, the XMP packet beside the document, the file
   identifier — each with what it gives away, and a switch per field.
+
+  The engine runs without the page as well, redaction and all: see
+  [For agents](#for-agents).
 
   Because "covered" and "deleted" look identical on screen and differ only in
   the bytes, the claim is [checked against the saved
@@ -915,6 +901,55 @@ category, because it holds nothing built.
 Planned: odds and ends — webpage to PDF, an invoice photo to structured CSV, a
 slider comparing two image versions, a signature photo to a transparent PNG, a
 passport-photo sheet at exact print dimensions.
+
+## For agents
+
+[`mcp/`](mcp/) is an MCP server that gives the engines behind these tools to
+Claude Code and anything else that speaks the protocol. No dependencies, no
+build step, nothing to install: MCP over stdio is newline-delimited JSON-RPC,
+so it is a handful of plain `.mjs` files.
+
+```sh
+claude mcp add workshop -- node "$PWD/mcp/server.mjs"
+```
+
+It works because of how the tools here are already built. Every substantial one
+keeps its arithmetic in modules of its own and confines the DOM to `script.js`,
+so the engines load into Node unchanged — three of them ship a `selftest.js`
+that already said it ran there. Nothing is reimplemented and nothing is copied:
+a song rendered through the server is the tracker's own render, and a blackout
+applied through it removes the bytes the page removes. The test suite asserts
+the first of those sample for sample.
+
+Two sets of tools today.
+
+**Music** (`chiptune_*`) — read the reference, check a song, render it to a WAV,
+audition an instrument, open one somebody saved. Ask for eight bars in A minor
+and a WAV lands on disk, beside a song file the page will open. Most of what the
+server does is listen on the composer's behalf, since everything this chip
+refuses to do is obvious through a speaker and invisible in a file: the notes the
+11-bit timer could not reach and the ones they became instead, the cents each
+landed off, a fade written on the triangle that will cut instead, a bend written
+on the noise channel that it discards, the tempo asked for against the one the
+frame counter allows, a mix that clipped, a render that came out silent.
+
+**PDFs** (`pdf_*`) — inspect a file, read its text, redact words so they leave
+it, cut its metadata, rearrange its pages. The redaction is the reason this one
+is here: an agent asked to take a name out of a PDF cannot see the page, so it
+is given the words and the server finds the rectangles, off the same content-
+stream walk the redactor uses — a second interpreter would be a second opinion
+about where a glyph sits, and the two would disagree on exactly the material a
+second opinion is hard to come by on. Then it checks its own work, reporting
+whether each word left the extracted text and the raw bytes, and naming any it
+never found, because "removed 0 occurrences" and "removed them all" otherwise
+read the same.
+
+It is deliberately not an inventory of the site. Every tool's schema sits in the
+model's context in every conversation, whether or not anyone asks for music, so
+a tool earns its place by being something an agent cannot already do. Writing for
+four voices with no second chances, or taking text out of a file rather than
+painting over it, qualify. Drawing pixel art on a grid does not: an agent emits
+SVG on its own, and the tool's value is the canvas and the hand on it.
 
 ## The index
 

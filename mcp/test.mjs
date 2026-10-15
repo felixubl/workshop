@@ -3,7 +3,7 @@
 
        node chiptune-tracker/mcp/test.mjs
 
-   Three things are checked, in order of how badly they would matter.
+   Four things are checked, in order of how badly they would matter.
 
    First, that the compiler is lossless: the page's own demo song is taken apart
    into the format these tools accept, put back together, and rendered. Every
@@ -17,7 +17,15 @@
    the whole value of this server to something that cannot hear is that it
    refuses to quietly render nonsense.
 
-   Third, that the protocol works: a real child process, a real handshake, and
+   Third, that a redaction actually redacts. A word is found by searching the
+   text, removed without anybody saying where on the page it was, and then
+   looked for again — in the re-extracted text, and in the raw bytes the way
+   `strings` would read them — while its neighbours are checked to have
+   survived. That assertion is the whole claim of the PDF half: painting a
+   black rectangle over a name is what most tools do and what every leaked
+   redaction is, and it looks identical.
+
+   Fourth, that the protocol works: a real child process, a real handshake, and
    every tool called over stdin and stdout.
 
    No framework, because a test file that needs installing is a test file that
@@ -28,11 +36,17 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
-import { APU, Song } from './engine.mjs';
-import { compile, decompile, parseNote, formatNote } from './song-format.mjs';
-import { analyse } from './analyse.mjs';
-import { EXAMPLE_SONG } from './reference.mjs';
+const require = createRequire(import.meta.url);
+
+import { APU, Song } from './chiptune/engine.mjs';
+import { compile, decompile, parseNote, formatNote } from './chiptune/song-format.mjs';
+import { analyse } from './chiptune/analyse.mjs';
+import { EXAMPLE_SONG } from './chiptune/reference.mjs';
+import { PDF, parse as parsePdf } from './pdf/engine.mjs';
+import { readPage, findInLines, marksFor } from './pdf/text.mjs';
+import { tools as pdfTools } from './pdf/tools.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SERVER = path.join(HERE, 'server.mjs');
@@ -265,7 +279,184 @@ section('the documented example is as clean as it claims');
   }
 }
 
-/* ── 6. The protocol ───────────────────────────────────────────────────────── */
+/* ── 6. The PDF engine, and whether a redaction redacts ───────────────────── */
+
+/* The toolkit's own selftest, run here rather than reimplemented: it is the
+   file that pins the bug where a page's instructions were rewritten correctly
+   and the original stream stayed in the file as an orphan nothing referred to.
+   The page looked right, the words were still there, and `strings` found them. */
+section('the PDF toolkit passes its own selftest under node');
+{
+  const PDFTest = require('../pdf-toolkit/selftest.js');
+  const results = PDFTest.run();
+  const passed = results.filter((r) => r.pass).length;
+  ok('all of its assertions hold', passed === results.length,
+    passed + '/' + results.length + ' — failed: ' +
+    results.filter((r) => !r.pass).map((r) => r.name).join('; '));
+  ok('there are assertions to run', results.length >= 13, results.length + ' assertions');
+}
+
+section('text comes off a page with the boxes to find it by');
+{
+  const PDFTest = require('../pdf-toolkit/selftest.js');
+  const doc = parsePdf(PDFTest.probe(), 'probe');
+  const read = readPage(doc, doc.pages[0]);
+
+  ok('every glyph is seen', read.glyphCount === 42, read.glyphCount + ' glyphs');
+  ok('nothing was unreadable', read.unsure === 0, read.unsure + ' unreadable runs');
+  ok('the four lines come back in reading order',
+    read.lines.map((l) => l.text).join('|') === 'PUBLICHEADING|SECRETWORD|HIGHLIGHTME|TAILTEXT',
+    read.lines.map((l) => l.text).join('|'));
+
+  /* The probe is written at 18pt with baselines 40 apart and the left edge at
+     x=72, so the boxes can be checked against the arithmetic rather than
+     against themselves. */
+  const line = read.lines[1];
+  ok('a line starts at the left edge it was written at', Math.abs(line.x0 - 72) < 0.01, 'x0 ' + line.x0);
+  ok('and is as tall as 18pt of type', Math.abs((line.y1 - line.y0) - 19.8) < 0.1, 'height ' + (line.y1 - line.y0));
+  ok('the text is upright', line.upright);
+
+  const whole = findInLines(read.lines, ['SECRETWORD'], {});
+  const part = findInLines(read.lines, ['SECRET'], {});
+  ok('a search finds the word', whole.length === 1 && whole[0].line === 1, JSON.stringify(whole));
+  ok('a search is case-insensitive by default',
+    findInLines(read.lines, ['secretword'], {}).length === 1);
+  ok('and case-sensitive when asked',
+    findInLines(read.lines, ['secretword'], { caseSensitive: true }).length === 0);
+  ok('a regular expression works', findInLines(read.lines, ['SEC.ET\\w+'], { regex: true }).length === 1);
+  ok('a bad regular expression is refused', (() => {
+    try { findInLines(read.lines, ['('], { regex: true }); return false; } catch { return true; }
+  })());
+  ok('something absent is simply not found', findInLines(read.lines, ['NOTHERE'], {}).length === 0);
+
+  /* Six of ten characters, so the box should be six tenths as wide and start
+     in the same place. This is what makes redacting a substring safe. */
+  ok('a substring gets a narrower box than the whole word',
+    Math.abs((part[0].x1 - part[0].x0) / (whole[0].x1 - whole[0].x0) - 0.6) < 0.01,
+    'ratio ' + ((part[0].x1 - part[0].x0) / (whole[0].x1 - whole[0].x0)));
+  ok('and starts at the same place', Math.abs(part[0].x0 - whole[0].x0) < 0.01);
+
+  /* No margin: a matched glyph is wholly inside its own box, while a
+     neighbour that merely touches it keeps its ink, because the redactor drops
+     a glyph only once about a third of it is covered. */
+  const marks = marksFor(whole);
+  ok('the mark is a censor the redactor will act on', marks.length === 1 && marks[0].kind === 'censor');
+  ok('with the box of exactly the matched glyphs',
+    Math.abs(marks[0].x - whole[0].x0) < 1e-9 && Math.abs(marks[0].w - (whole[0].x1 - whole[0].x0)) < 1e-9);
+}
+
+section('a redaction takes the word out of the file');
+{
+  const PDFTest = require('../pdf-toolkit/selftest.js');
+  const doc = parsePdf(PDFTest.probe(), 'probe');
+  const read = readPage(doc, doc.pages[0]);
+
+  /* Found by searching the text. Nothing here says where on the page it is —
+     which is the point, since an agent cannot look. */
+  const hits = findInLines(read.lines, ['SECRETWORD'], {});
+  const report = {};
+  const bytes = PDF.ops.assemble(
+    [{ doc, pageIndex: 0, rotate: doc.pages[0].rotate, marks: marksFor(hits) }], { report });
+
+  ok('one blackout was applied', report.censored === 1, JSON.stringify(report));
+  ok('no run went uninterpreted', report.unsure === 0, report.unsure + ' unsure');
+
+  const after = parsePdf(bytes, 'output');
+  const text = readPage(after, after.pages[0]).lines.map((l) => l.text);
+  ok('the word is gone from the extracted text', !text.includes('SECRETWORD'), JSON.stringify(text));
+  ok('its neighbours are all still there',
+    ['PUBLICHEADING', 'HIGHLIGHTME', 'TAILTEXT'].every((w) => text.includes(w)), JSON.stringify(text));
+
+  /* The assertion that matters: not "gone from the page" but "gone from the
+     FILE". Those came apart once in this engine's history. */
+  const raw = PDF.bytesToLatin1(bytes);
+  ok('and gone from the bytes, as `strings` would read them', !raw.includes('SECRETWORD'));
+  ok('while the neighbours survive in the bytes too',
+    ['PUBLICHEADING', 'HIGHLIGHTME', 'TAILTEXT'].every((w) => raw.includes(w)));
+  ok('the page itself survived', after.pageCount === 1, after.pageCount + ' pages');
+}
+
+section('the PDF tools do what they say');
+{
+  const PDFTest = require('../pdf-toolkit/selftest.js');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'workshop-pdf-'));
+  const call = (name, args) => pdfTools.find((t) => t.name === name).run(args);
+  try {
+    const doc = parsePdf(PDFTest.probe(), 'probe');
+    const source = path.join(dir, 'source.pdf');
+    fs.writeFileSync(source, Buffer.from(PDF.ops.assemble(
+      [0, 0, 0].map(() => ({ doc, pageIndex: 0, rotate: 0, marks: [] })), {})));
+
+    const inspected = call('pdf_inspect_file', { path: source, response_format: 'json' });
+    const info = JSON.parse(inspected.text);
+    ok('inspect counts the pages', info.pageCount === 3, info.pageCount);
+    ok('inspect reads the text on each', info.pages.every((p) => p.glyphs === 42));
+    ok('inspect names the font', info.pages[0].fonts.includes('Helvetica'), JSON.stringify(info.pages[0].fonts));
+    ok('inspect rates the author as disclosing a lot',
+      info.metadata.some((m) => m.key === '/Author' && m.risk === PDF.metadata.HIGH),
+      JSON.stringify(info.metadata.map((m) => m.key)));
+
+    const redacted = path.join(dir, 'out.pdf');
+    const result = call('pdf_redact_text', { path: source, out: redacted, text: ['SECRETWORD', 'NOTHERE'] });
+    ok('redact reports every occurrence across every page', result.text.includes('3 occurrences'), result.text);
+    ok('redact says the word left the text', result.text.includes('gone from the text'));
+    ok('redact says the word left the bytes', result.text.includes('gone from the raw bytes'));
+    ok('redact names what it could not find', result.text.includes('"NOTHERE" matched nothing'), result.text);
+    ok('redact did not touch the original',
+      PDF.bytesToLatin1(fs.readFileSync(source)).includes('SECRETWORD'));
+    ok('and the copy has no trace of it',
+      !PDF.bytesToLatin1(fs.readFileSync(redacted)).includes('SECRETWORD'));
+    ok('while keeping all three pages', parsePdf(fs.readFileSync(redacted), 'out').pageCount === 3);
+
+    /* A redaction that finds nothing must not write a file and call it done:
+       "removed 0 occurrences" and "removed them all" read the same otherwise. */
+    const nothing = call('pdf_redact_text', {
+      path: source, out: path.join(dir, 'never.pdf'), text: ['ABSENTWORD'],
+    });
+    ok('a redaction that matches nothing is an error', nothing.isError === true);
+    ok('and writes no file', !fs.existsSync(path.join(dir, 'never.pdf')));
+
+    const cleaned = path.join(dir, 'clean.pdf');
+    const meta = JSON.parse(call('pdf_edit_metadata',
+      { path: source, out: cleaned, cut: ['all'], response_format: 'json' }).text);
+    ok('metadata went in', meta.before.some((r) => r.key === '/Author'));
+    ok('and is gone after', !meta.after.some((r) => r.key === '/Author'), JSON.stringify(meta.after.map((r) => r.key)));
+    ok('the author name is not in the bytes either',
+      !PDF.bytesToLatin1(fs.readFileSync(cleaned)).includes('JaneWhistleblower'));
+    ok('an unknown field name is refused with the list', (() => {
+      try { call('pdf_edit_metadata', { path: source, out: cleaned, cut: ['Auther'] }); return false; }
+      catch (err) { return err.message.includes('Author'); }
+    })());
+
+    const moved = JSON.parse(call('pdf_rearrange_pages',
+      { paths: [source], out: path.join(dir, 'moved.pdf'), pages: '3,1', rotate: 90,
+        response_format: 'json' }).text);
+    ok('rearrange keeps the pages asked for, in order',
+      JSON.stringify(moved.kept) === '[3,1]', JSON.stringify(moved.kept));
+    const movedDoc = parsePdf(fs.readFileSync(moved.written[0].file), 'moved');
+    ok('and drops the rest', movedDoc.pageCount === 2, movedDoc.pageCount);
+    ok('and turns them', movedDoc.pages.every((p) => p.rotate === 90),
+      JSON.stringify(movedDoc.pages.map((p) => p.rotate)));
+
+    const merged = JSON.parse(call('pdf_rearrange_pages',
+      { paths: [source, cleaned], out: path.join(dir, 'm.pdf'), response_format: 'json' }).text);
+    ok('rearrange joins two files end to end', merged.joined === 6, merged.joined);
+
+    const split = JSON.parse(call('pdf_rearrange_pages',
+      { paths: [source], out: path.join(dir, 'part.pdf'), splitEvery: 2, response_format: 'json' }).text);
+    ok('splitEvery writes a numbered file per group', split.written.length === 2,
+      JSON.stringify(split.written.map((w) => w.file)));
+    ok('with the right page counts',
+      split.written[0].pages === 2 && split.written[1].pages === 1,
+      JSON.stringify(split.written.map((w) => w.pages)));
+    ok('and no rotation was invented',
+      parsePdf(fs.readFileSync(split.written[0].file), 'part').pages.every((p) => p.rotate === 0));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/* ── 7. The protocol ───────────────────────────────────────────────────────── */
 
 /* A real child process over real pipes. Mocking the transport here would test
    the thing least likely to be wrong. */
@@ -328,23 +519,41 @@ section('the server speaks MCP over stdio');
     ok('initialize answers', !!init.result, JSON.stringify(init.error));
     ok('agrees the protocol version', init.result.protocolVersion === '2025-06-18', init.result.protocolVersion);
     ok('declares the tools capability', !!(init.result.capabilities && init.result.capabilities.tools));
-    ok('names itself', init.result.serverInfo.name === 'chiptune-mcp-server', init.result.serverInfo.name);
+    ok('names itself', init.result.serverInfo.name === 'workshop-mcp-server', init.result.serverInfo.name);
+    ok('says what it is for in its instructions',
+      /chiptune/i.test(init.result.instructions) && /pdf/i.test(init.result.instructions));
 
     c.notify('notifications/initialized', {});
     ok('a notification gets no reply', true);
 
     const list = await c.request('tools/list', {});
     const tools = list.result.tools;
-    ok('lists five tools', tools.length === 5, tools.length + ': ' + tools.map((t) => t.name).join(', '));
+    ok('lists both tool sets', tools.length === 10, tools.length + ': ' + tools.map((t) => t.name).join(', '));
     for (const name of ['chiptune_get_reference', 'chiptune_check_song', 'chiptune_render_song',
-      'chiptune_audition_instrument', 'chiptune_open_song']) {
+      'chiptune_audition_instrument', 'chiptune_open_song',
+      'pdf_inspect_file', 'pdf_read_text', 'pdf_redact_text', 'pdf_edit_metadata',
+      'pdf_rearrange_pages']) {
       ok('lists ' + name, tools.some((t) => t.name === name));
     }
     ok('every tool has a schema and annotations',
       tools.every((t) => t.inputSchema && t.inputSchema.type === 'object' && t.annotations));
     ok('the read-only tools say so',
-      tools.filter((t) => ['chiptune_get_reference', 'chiptune_check_song', 'chiptune_open_song'].includes(t.name))
+      tools.filter((t) => ['chiptune_get_reference', 'chiptune_check_song', 'chiptune_open_song',
+        'pdf_inspect_file', 'pdf_read_text'].includes(t.name))
         .every((t) => t.annotations.readOnlyHint === true));
+    ok('the tools that write say so',
+      tools.filter((t) => ['chiptune_render_song', 'pdf_redact_text', 'pdf_edit_metadata',
+        'pdf_rearrange_pages'].includes(t.name))
+        .every((t) => t.annotations.readOnlyHint === false));
+
+    /* Every schema sits in the model's context in every conversation, so the
+       size of them is a running cost and worth a test rather than a habit.
+       Inlining the song as nested JSON Schema cost 2,300 tokens in each of the
+       two tools that take one; the prose description it was replaced with says
+       more in less. */
+    const schemaChars = JSON.stringify(tools).length;
+    ok('the whole tool surface stays modest', schemaChars < 24000,
+      Math.round(schemaChars / 4) + ' tokens for ' + tools.length + ' tools');
 
     const ping = await c.request('ping', {});
     ok('answers ping', !!ping.result);
